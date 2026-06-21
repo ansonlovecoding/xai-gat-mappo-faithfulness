@@ -1,0 +1,42 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Env / secrets — keep `.env.example` committed as the template.
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Experiments / artifacts
+runs/
+logs/
+checkpoints/
+wandb/
+mlruns/
+outputs/
+
+# SUMO
+*.sumocfg.bak
+sumo-gui.log
