@@ -1,0 +1,21 @@
+{
+  "area": "central_park",
+  "description": "Chongqing Central Park (中央公园), Yubei. Includes Central Park Tunnel.",
+  "bbox": [
+    106.523,
+    29.708,
+    106.555,
+    29.736
+  ],
+  "seed": 42,
+  "n_trips_background": 300,
+  "n_tunnel_edges": 6,
+  "tunnel_edges": [
+    "1009414286#1",
+    "367507476",
+    "367507508#1",
+    "400982574#7",
+    "529205710",
+    "529205711"
+  ]
+}

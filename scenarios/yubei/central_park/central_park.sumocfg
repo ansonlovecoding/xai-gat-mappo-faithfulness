@@ -1,0 +1,16 @@
+<configuration>
+  <input>
+    <net-file value="central_park.net.xml"/>
+    <route-files value="central_park.rou.xml,central_park_taxis.rou.xml"/>
+  </input>
+  <time>
+    <begin value="0"/>
+    <end value="1200"/>
+  </time>
+  <processing>
+    <device.taxi.dispatch-algorithm value="traci"/>
+  </processing>
+  <report>
+    <ignore-route-errors value="true"/>
+  </report>
+</configuration>

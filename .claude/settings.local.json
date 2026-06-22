@@ -9,7 +9,8 @@
       "Bash(/opt/homebrew/bin/python3.11 -m venv .venv)",
       "Bash(.venv/bin/python -m pip install --upgrade pip setuptools wheel)",
       "Bash(.venv/bin/python --version)",
-      "Bash(.venv/bin/pip install *)"
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/python scripts/preview_tunnels.py --area central_park)"
     ]
   }
 }

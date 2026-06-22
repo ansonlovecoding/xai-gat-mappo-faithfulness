@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='utf-8'?>
+<routes>
+  <vType id="taxi" vClass="taxi" personCapacity="4" color="1,1,0" width="3.0" length="7.0">
+    <param key="has.taxi.device" value="true" />
+    <param key="device.taxi.idle-algorithm" value="randomCircling" />
+    <param key="device.taxi.end-time" value="-1" />
+  </vType>
+  <trip from="1015836889#4" to="-367507447#6" id="taxi_0" type="taxi" depart="0" />
+  <trip from="529205685#1" to="529205498#2" id="taxi_1" type="taxi" depart="0" />
+  <trip from="367700177#5-AddedOnRampEdge" to="1025810593#3-AddedOnRampEdge" id="taxi_2" type="taxi" depart="0" />
+  <trip from="1009414291#1" to="1009414275#1" id="taxi_3" type="taxi" depart="0" />
+  <trip from="696493929#4" to="-529205498#3" id="taxi_4" type="taxi" depart="0" />
+  <trip from="-529205424#3" to="1009414284" id="taxi_5" type="taxi" depart="0" />
+  <trip from="367700177#1" to="529205421#12" id="taxi_6" type="taxi" depart="0" />
+  <trip from="948247716#1" to="-367507447#9" id="taxi_7" type="taxi" depart="0" />
+  <trip from="367507515#1" to="696493929#3" id="taxi_8" type="taxi" depart="0" />
+  <trip from="367700177#2" to="782694995#0" id="taxi_9" type="taxi" depart="0" />
+  <trip from="529205685#3" to="-1015836893" id="taxi_10" type="taxi" depart="0" />
+  <trip from="137863743#0" to="696493929#4" id="taxi_11" type="taxi" depart="0" />
+  <trip from="529205714" to="529205685#3" id="taxi_12" type="taxi" depart="0" />
+  <trip from="1363349537" to="367700134#0" id="taxi_13" type="taxi" depart="0" />
+  <trip from="529205710" to="1009414291#1" id="taxi_14" type="taxi" depart="0" />
+  <trip from="1009414279#1-AddedOnRampEdge" to="529231521#0" id="taxi_15" type="taxi" depart="0" />
+  <trip from="1009414290#0" to="529205730#6" id="taxi_16" type="taxi" depart="0" />
+  <trip from="529205718#1" to="529205661#0" id="taxi_17" type="taxi" depart="0" />
+  <trip from="-529205739#4" to="782695805#0" id="taxi_18" type="taxi" depart="0" />
+  <trip from="1016067617" to="529205741#6" id="taxi_19" type="taxi" depart="0" />
+  <person id="rider_44" depart="32" color="0,1,1">
+    <ride from="529205705#2-AddedOnRampEdge" to="-782695805#0" lines="taxi" />
+  </person>
+  <person id="rider_2" depart="46" color="0,1,1">
+    <ride from="400982574#7" to="529205699#2" lines="taxi" />
+  </person>
+  <person id="rider_19" depart="48" color="0,1,1">
+    <ride from="1015836889#0" to="1352337331#1" lines="taxi" />
+  </person>
+  <person id="rider_10" depart="57" color="0,1,1">
+    <ride from="403113950" to="-529205498#3" lines="taxi" />
+  </person>
+  <person id="rider_43" depart="60" color="0,1,1">
+    <ride from="403113950" to="-782694995#5" lines="taxi" />
+  </person>
+  <person id="rider_12" depart="67" color="0,1,1">
+    <ride from="367700114#3" to="529205701#5" lines="taxi" />
+  </person>
+  <person id="rider_7" depart="73" color="0,1,1">
+    <ride from="367507434#1" to="529205498#2" lines="taxi" />
+  </person>
+  <person id="rider_0" depart="80" color="0,1,1">
+    <ride from="529205699#7" to="529205731#0" lines="taxi" />
+  </person>
+  <person id="rider_3" depart="81" color="0,1,1">
+    <ride from="529205421#12" to="1009414291#0-AddedOffRampEdge" lines="taxi" />
+  </person>
+  <person id="rider_49" depart="96" color="0,1,1">
+    <ride from="1009414290#0" to="733209695#0" lines="taxi" />
+  </person>
+  <person id="rider_24" depart="114" color="0,1,1">
+    <ride from="529205699#7" to="733209695#2" lines="taxi" />
+  </person>
+  <person id="rider_31" depart="114" color="0,1,1">
+    <ride from="529205731#2" to="529205700#8" lines="taxi" />
+  </person>
+  <person id="rider_23" depart="117" color="0,1,1">
+    <ride from="529205670#1" to="529205714" lines="taxi" />
+  </person>
+  <person id="rider_35" depart="131" color="0,1,1">
+    <ride from="823815658#1" to="1452803226#1" lines="taxi" />
+  </person>
+  <person id="rider_15" depart="142" color="0,1,1">
+    <ride from="529205498#5" to="529205600#0" lines="taxi" />
+  </person>
+  <person id="rider_25" depart="161" color="0,1,1">
+    <ride from="782694997#0" to="-1015836889#5" lines="taxi" />
+  </person>
+  <person id="rider_20" depart="163" color="0,1,1">
+    <ride from="696493929#4" to="-733209687#7" lines="taxi" />
+  </person>
+  <person id="rider_8" depart="167" color="0,1,1">
+    <ride from="782695805#4" to="529205741#7" lines="taxi" />
+  </person>
+  <person id="rider_13" depart="217" color="0,1,1">
+    <ride from="845440126#1" to="529231576#5" lines="taxi" />
+  </person>
+  <person id="rider_42" depart="225" color="0,1,1">
+    <ride from="-1016067616#1" to="-782695805#0" lines="taxi" />
+  </person>
+  <person id="rider_32" depart="245" color="0,1,1">
+    <ride from="-733209687#1" to="529205424#0" lines="taxi" />
+  </person>
+  <person id="rider_40" depart="253" color="0,1,1">
+    <ride from="367700177#8" to="-733209687#7" lines="taxi" />
+  </person>
+  <person id="rider_26" depart="269" color="0,1,1">
+    <ride from="879444099#0" to="367507440#3-AddedOnRampEdge" lines="taxi" />
+  </person>
+  <person id="rider_36" depart="271" color="0,1,1">
+    <ride from="733209689#1" to="367700114#3" lines="taxi" />
+  </person>
+  <person id="rider_9" depart="276" color="0,1,1">
+    <ride from="367700177#10" to="529205704#4" lines="taxi" />
+  </person>
+  <person id="rider_11" depart="323" color="0,1,1">
+    <ride from="529231576#8-AddedOnRampEdge" to="529205670#3" lines="taxi" />
+  </person>
+  <person id="rider_30" depart="331" color="0,1,1">
+    <ride from="835676515#14" to="-1352337337" lines="taxi" />
+  </person>
+  <person id="rider_41" depart="346" color="0,1,1">
+    <ride from="-367507447#11" to="529205421#0" lines="taxi" />
+  </person>
+  <person id="rider_6" depart="363" color="0,1,1">
+    <ride from="367700114#0" to="529205670#1" lines="taxi" />
+  </person>
+  <person id="rider_17" depart="370" color="0,1,1">
+    <ride from="367700177#10" to="1025810593#3" lines="taxi" />
+  </person>
+  <person id="rider_5" depart="373" color="0,1,1">
+    <ride from="1452803223" to="529205739#4" lines="taxi" />
+  </person>
+  <person id="rider_29" depart="382" color="0,1,1">
+    <ride from="137863743#1-AddedOnRampEdge" to="-1015836889#0" lines="taxi" />
+  </person>
+  <person id="rider_4" depart="389" color="0,1,1">
+    <ride from="529205685#3" to="782694997#0" lines="taxi" />
+  </person>
+  <person id="rider_21" depart="394" color="0,1,1">
+    <ride from="529231573#0" to="782699129#1" lines="taxi" />
+  </person>
+  <person id="rider_38" depart="408" color="0,1,1">
+    <ride from="529205740#4" to="733209695#5" lines="taxi" />
+  </person>
+  <person id="rider_14" depart="469" color="0,1,1">
+    <ride from="1229065693" to="529205669" lines="taxi" />
+  </person>
+  <person id="rider_48" depart="484" color="0,1,1">
+    <ride from="529231723#2" to="367507491#2" lines="taxi" />
+  </person>
+  <person id="rider_34" depart="497" color="0,1,1">
+    <ride from="-782694996#0" to="1016067631" lines="taxi" />
+  </person>
+  <person id="rider_46" depart="497" color="0,1,1">
+    <ride from="367700133#3" to="1025810587#0" lines="taxi" />
+  </person>
+  <person id="rider_27" depart="519" color="0,1,1">
+    <ride from="1015836880#1-AddedOffRampEdge" to="529205700#11-AddedOffRampEdge" lines="taxi" />
+  </person>
+  <person id="rider_28" depart="519" color="0,1,1">
+    <ride from="367507515#1" to="1352337331#1" lines="taxi" />
+  </person>
+  <person id="rider_18" depart="521" color="0,1,1">
+    <ride from="835676515#4" to="1009414279#1" lines="taxi" />
+  </person>
+  <person id="rider_45" depart="526" color="0,1,1">
+    <ride from="529205421#8" to="529205685#3-AddedOnRampEdge" lines="taxi" />
+  </person>
+  <person id="rider_39" depart="529" color="0,1,1">
+    <ride from="782694996#0" to="1016067608" lines="taxi" />
+  </person>
+  <person id="rider_22" depart="541" color="0,1,1">
+    <ride from="529205504#3" to="-1016084886" lines="taxi" />
+  </person>
+  <person id="rider_37" depart="552" color="0,1,1">
+    <ride from="367507530#0-AddedOffRampEdge" to="529205701#14" lines="taxi" />
+  </person>
+  <person id="rider_33" depart="580" color="0,1,1">
+    <ride from="-782695807#0" to="-879444100#1" lines="taxi" />
+  </person>
+  <person id="rider_47" depart="584" color="0,1,1">
+    <ride from="782775020#2" to="529205424#3" lines="taxi" />
+  </person>
+  <person id="rider_1" depart="591" color="0,1,1">
+    <ride from="367507491#4" to="-782694996#1" lines="taxi" />
+  </person>
+  <person id="rider_16" depart="598" color="0,1,1">
+    <ride from="733209689#6" to="529231576#7" lines="taxi" />
+  </person>
+</routes>

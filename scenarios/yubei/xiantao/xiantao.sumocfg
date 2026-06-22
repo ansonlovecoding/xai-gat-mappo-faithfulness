@@ -1,0 +1,16 @@
+<configuration>
+  <input>
+    <net-file value="xiantao.net.xml"/>
+    <route-files value="xiantao.rou.xml,xiantao_taxis.rou.xml"/>
+  </input>
+  <time>
+    <begin value="0"/>
+    <end value="1200"/>
+  </time>
+  <processing>
+    <device.taxi.dispatch-algorithm value="traci"/>
+  </processing>
+  <report>
+    <ignore-route-errors value="true"/>
+  </report>
+</configuration>

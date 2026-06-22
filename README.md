@@ -6,9 +6,21 @@ telemetry degradation. The research focus is **explanation faithfulness** and
 whether the explanation channel can be **decoupled** from the policy without
 trading off control performance.
 
-> Status: early scaffolding. Currently only the SUMO simulator pipeline is
-> wired up. The multi-agent env, GAT-MAPPO policy, telemetry degradation
-> layer, and faithfulness metrics are not yet implemented.
+> Status: early scaffolding. The SUMO simulator pipeline is wired up and three
+> Chongqing Yubei District scenarios with tunnel-edge manifests are built. The
+> multi-agent env, GAT-MAPPO policy, telemetry degradation layer, and
+> faithfulness metrics are not yet implemented.
+
+## Why Yubei? Tunnels as physical degradation zones
+
+The experimental scenarios are three tunnel-rich slices of Chongqing's Yubei
+District: **Central Park (中央公园)**, **Yuelai (悦来)**, and **Xiantao Data
+Valley (仙桃数据谷)**. Inside a tunnel, real fleet vehicles lose GPS and V2X
+signal — this is a *physically grounded* source of telemetry degradation,
+which is a stronger framing for the dissertation than synthetic Gaussian
+noise. Each scenario's `tunnels.json` lists the SUMO edges that pass through
+real tunnels (extracted from the OSM `tunnel=yes` tag) so the env's
+degradation layer can trigger on tunnel entry/exit per agent.
 
 ## Requirements
 
@@ -76,16 +88,103 @@ Simulation stats: {'total_departed': 100, 'max_concurrent': 67}
 OK — SUMO end-to-end pipeline is healthy.
 ```
 
+## Yubei scenarios
+
+The three scenarios under `scenarios/yubei/` are built from live
+OpenStreetMap data via the Overpass API. Each one consists of: the raw OSM
+extract, a SUMO network with tunnel attributes preserved, baseline random
+trips for traffic, a `.sumocfg`, and a `tunnels.json` manifest listing the
+SUMO edges that pass through tunnels.
+
+### Build (or rebuild) all scenarios
+
+```bash
+python scripts/build_yubei.py --all              # build the three areas
+python scripts/build_yubei.py --area central_park
+python scripts/build_yubei.py --all --force      # re-fetch OSM and rebuild
+```
+
+Per-area pipeline: `osmGet.py` (Overpass API) → `netconvert` (with
+`--osm.extra-attributes tunnel,bridge,layer`) → `randomTrips.py` →
+`tunnels.json` (extracted from `<param key="tunnel">` on edges).
+
+Current tunnel-edge counts:
+
+| Area | Tunnel edges | Notes |
+|---|---|---|
+| `central_park` | 6 | Bbox as originally specified |
+| `yuelai` | 19 | Bbox shifted ~3 km south — the New Town tunnels are not yet mapped in OSM, so the bbox now sits over the Liangjiang corridor (Huangmaoping, Xinchun, etc.). Cite this honestly when reporting results. |
+| `xiantao` | 16 | Bbox as originally specified |
+
+The bounding boxes are first-pass approximations defined in
+`scripts/build_yubei.py`. If you change them, rerun the build and the
+manifest updates automatically. Each `.osm.xml` is committed to pin the
+network you trained on — OSM evolves, but your experiments do not.
+
+### Add a taxi fleet and ride demand
+
+```bash
+python scripts/add_taxis.py --all                                  # 20 taxis, 50 rides each
+python scripts/add_taxis.py --all --taxis 30 --rides 80 --end-time 1800
+python scripts/add_taxis.py --area central_park                    # one area only
+```
+
+This writes `<area>_taxis.rou.xml` (taxi fleet vehicles + person ride
+requests) alongside the existing `<area>.rou.xml` background traffic, and
+rewrites `<area>.sumocfg` to load both files and set
+`device.taxi.dispatch-algorithm = traci`. With that setting SUMO performs
+**no** automatic dispatch — the MARL policy will call
+`traci.vehicle.dispatchTaxi(taxi_id, [reservation_id])` itself. This is the
+correct production config for the experiments.
+
+Taxi vehicles are configured with `has.taxi.device=true`,
+`device.taxi.idle-algorithm=randomCircling`, and `device.taxi.end-time=-1`,
+so they stay alive and remain dispatchable for the whole episode. (Note:
+`vClass="taxi"` alone is *not* enough to attach the taxi device — that's a
+road-permissions class. The explicit `has.taxi.device` param is required,
+otherwise `traci.vehicle.getTaxiFleet()` will return empty silently.)
+
+Quick visual sanity check (overrides traci dispatch with the built-in greedy
+matcher so you can watch taxis actually serve riders without writing a
+controller):
+
+```bash
+sumo-gui -c scenarios/yubei/central_park/central_park.sumocfg \
+         --device.taxi.dispatch-algorithm greedy
+```
+
+### Visually verify tunnel highlights
+
+```bash
+python scripts/preview_tunnels.py --area yuelai     # one area
+python scripts/preview_tunnels.py --all             # walk through all three
+```
+
+This generates a `tunnel_highlights.add.xml` per area, then launches
+`sumo-gui` with magenta polylines overlaid on every tunnel edge so you can
+confirm the auto-extracted edges actually pass through real tunnels. Pan,
+zoom, hit play to see vehicles flow. Close the window to exit (or, in
+`--all` mode, advance to the next area).
+
+Requires XQuartz (see Setup §3).
+
 ## Repository layout
 
 ```
 .
-├── .env.example          # template for project env vars (SUMO_HOME, DISPLAY, …)
-├── requirements.txt      # pinned env-stack deps
+├── .env.example                # template for project env vars (SUMO_HOME, DISPLAY, …)
+├── requirements.txt            # pinned env-stack deps
 ├── scenarios/
-│   └── smoke/            # generated grid scenario (gitignored)
+│   ├── smoke/                  # generated 3×3 grid (gitignored)
+│   └── yubei/
+│       ├── central_park/       # .osm.xml + .net.xml + .rou.xml + _taxis.rou.xml + .sumocfg + tunnels.json
+│       ├── yuelai/
+│       └── xiantao/
 └── scripts/
-    └── smoke_test.py     # SUMO + TraCI integration test
+    ├── smoke_test.py           # SUMO + TraCI integration test
+    ├── build_yubei.py          # OSM → SUMO network → trips → tunnel manifest
+    ├── add_taxis.py            # taxi fleet + ride demand → updated sumocfg
+    └── preview_tunnels.py      # sumo-gui with tunnel edges highlighted in magenta
 ```
 
 The MARL package (`src/`), training entry points, and experiment configs will
@@ -93,12 +192,25 @@ be added in subsequent commits.
 
 ## Troubleshooting
 
-- **`SUMO_HOME not set`** — copy `.env.example` to `.env`. The smoke test also
+- **`SUMO_HOME not set`** — copy `.env.example` to `.env`. Every script also
   auto-resolves common install paths as a fallback.
 - **`FXApp::openDisplay: unable to open display :0.0`** — XQuartz isn't
   running. Run `open -a XQuartz`, or log out and back in once after install
   so macOS auto-starts it on demand.
 - **`FatalTraCIError: Could not connect in 1 tries`** — usually a knock-on
   from the display error above; fix XQuartz first.
+- **`pj_obj_create: Cannot find proj.db`** — SUMO's PROJ library can't find
+  its coordinate-projection database. Harmless: SUMO falls back to a built-in
+  projection. Networks build correctly.
+- **`Removed invalid stop ... non existing edge`** (during `build_yubei.py`)
+  — public-transit stops from OSM that reference edges filtered out by our
+  `--keep-edges.by-vclass passenger` rule. Expected and harmless.
+- **`tunnels.json` reports `n_tunnel_edges: 0`** — the bbox is in the wrong
+  place, or the tunnels aren't mapped in OSM for that area. Either adjust the
+  bbox in `scripts/build_yubei.py` or pick a different sub-area.
+- **`traci.vehicle.getTaxiFleet(0)` returns 0 even though taxis are running**
+  — the taxi device isn't attached. `vClass="taxi"` alone is not enough; the
+  vType needs `<param key="has.taxi.device" value="true"/>`. `scripts/add_taxis.py`
+  sets this; rerun it if you've manually edited the route file.
 - **`Fontconfig warning: invalid constant`** — cosmetic, comes from Homebrew's
   fontconfig interacting with XQuartz. Safe to ignore.
