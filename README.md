@@ -22,6 +22,22 @@ noise. Each scenario's `tunnels.json` lists the SUMO edges that pass through
 real tunnels (extracted from the OSM `tunnel=yes` tag) so the env's
 degradation layer can trigger on tunnel entry/exit per agent.
 
+Tunnel edges are split into two sets in the manifest:
+
+- **`tunnel_edges`** — *navigable* tunnels: edges with both incoming and
+  outgoing SUMO connections. These are the canonical degradation set the
+  env code should use.
+- **`orphan_tunnel_edges`** — tunnel edges with one side of connectivity
+  missing (`orphan-source` = vehicles can't drive in; `orphan-sink` =
+  vehicles can drive in but not out). These are recorded for transparency
+  but excluded from `tunnel_edges`, because the env can't realistically
+  apply degradation to a tunnel no vehicle ever reaches.
+
+Orphans are a known artifact of running `netconvert --keep-edges.by-vclass
+passenger` over OSM data: separated-tube tunnels sometimes lose the
+connector ramp at one end during filtering. Cite this in the methods
+section if asked why effective tunnel counts differ from raw OSM counts.
+
 ## Requirements
 
 - macOS (tested on Darwin 23, Apple Silicon)
@@ -106,20 +122,26 @@ python scripts/build_yubei.py --all --force      # re-fetch OSM and rebuild
 
 Per-area pipeline: `osmGet.py` (Overpass API) → `netconvert` (with
 `--osm.extra-attributes tunnel,bridge,layer`) → `randomTrips.py` →
-`tunnels.json` (extracted from `<param key="tunnel">` on edges).
+`tunnels.json` (tunnel edges extracted from `<param key="tunnel">` and split
+into navigable vs. orphan by connectivity check).
 
-Current tunnel-edge counts:
+Current tunnel-edge counts (navigable / orphaned):
 
-| Area | Tunnel edges | Notes |
-|---|---|---|
-| `central_park` | 6 | Bbox as originally specified |
-| `yuelai` | 19 | Bbox shifted ~3 km south — the New Town tunnels are not yet mapped in OSM, so the bbox now sits over the Liangjiang corridor (Huangmaoping, Xinchun, etc.). Cite this honestly when reporting results. |
-| `xiantao` | 16 | Bbox as originally specified |
+| Area | Navigable | Orphans | Notes |
+|---|---:|---:|---|
+| `central_park` | **3** | 3 | Bbox as originally specified |
+| `yuelai` | **17** | 2 | Bbox shifted ~3 km south — the New Town tunnels are not yet mapped in OSM, so the bbox now sits over the Liangjiang corridor (Huangmaoping, Xinchun, etc.). Cite this honestly when reporting results. |
+| `xiantao` | **12** | 4 | Bbox as originally specified |
 
 The bounding boxes are first-pass approximations defined in
 `scripts/build_yubei.py`. If you change them, rerun the build and the
 manifest updates automatically. Each `.osm.xml` is committed to pin the
 network you trained on — OSM evolves, but your experiments do not.
+
+> **Heads-up**: rerunning `build_yubei.py` rewrites each `.sumocfg` with the
+> bare network + background-trips config, which overwrites any taxi fleet
+> previously added by `scripts/add_taxis.py`. After every rebuild, re-run
+> `python scripts/add_taxis.py --all` to restore the taxi config.
 
 ### Add a taxi fleet and ride demand
 
@@ -161,10 +183,33 @@ python scripts/preview_tunnels.py --all             # walk through all three
 ```
 
 This generates a `tunnel_highlights.add.xml` per area, then launches
-`sumo-gui` with magenta polylines overlaid on every tunnel edge so you can
-confirm the auto-extracted edges actually pass through real tunnels. Pan,
-zoom, hit play to see vehicles flow. Close the window to exit (or, in
-`--all` mode, advance to the next area).
+`sumo-gui` with magenta polylines overlaid on every *navigable* tunnel edge
+so you can confirm they trace real tunnel sections of the road. Orphan
+tunnels are not drawn (the env can't reach them either). Pan, zoom, hit
+play to see vehicles flow. Close the window to exit (or, in `--all` mode,
+advance to the next area).
+
+The launched sumo-gui uses `--delay 200 --no-warnings` by default — slow
+enough to watch traffic, quiet enough to ignore the "ends idling in a
+cul-de-sac" messages that `randomCircling` produces when an idle taxi
+wanders into a dead end (those taxis remain alive and dispatchable; the
+warning is informational).
+
+Tips for finding traffic that crosses tunnels:
+
+- With dispatch=traci (default), taxis just randomCircle — tunnel
+  crossings are rare. Override with greedy dispatch to see real
+  pickup/dropoff routes that more often cross tunnels:
+  ```bash
+  sumo-gui -c scenarios/yubei/central_park/central_park.sumocfg \
+           --additional-files scenarios/yubei/central_park/tunnel_highlights.add.xml \
+           --device.taxi.dispatch-algorithm greedy --delay 200 --no-warnings
+  ```
+- Press **F9** → *Vehicles* tab → set *Exaggerate size by* to `5` or `10`
+  so taxis are visible without zooming way in.
+- Right-click any taxi → *Show Current Route* to draw its planned route.
+- **Ctrl+L** → *Edge* → paste a tunnel edge ID from `tunnels.json` to
+  jump-zoom to that tunnel.
 
 Requires XQuartz (see Setup §3).
 
@@ -208,6 +253,14 @@ be added in subsequent commits.
 - **`tunnels.json` reports `n_tunnel_edges: 0`** — the bbox is in the wrong
   place, or the tunnels aren't mapped in OSM for that area. Either adjust the
   bbox in `scripts/build_yubei.py` or pick a different sub-area.
+- **Tunnel counts dropped after a rebuild** — `build_yubei.py` now filters
+  to *navigable* tunnels only (incoming + outgoing connections). Orphans are
+  preserved in `orphan_tunnel_edges` for transparency; if you need to relax
+  the filter, edit `_extract_tunnel_edges` in `scripts/build_yubei.py`.
+- **`Vehicle 'taxi_N' ends idling in a cul-de-sac`** — `randomCircling`
+  walked the taxi into a dead-end road and can't choose a next edge. Taxi
+  stays parked there but remains dispatchable. Cosmetic; suppressed by
+  `--no-warnings` in `preview_tunnels.py`.
 - **`traci.vehicle.getTaxiFleet(0)` returns 0 even though taxis are running**
   — the taxi device isn't attached. `vClass="taxi"` alone is not enough; the
   vType needs `<param key="has.taxi.device" value="true"/>`. `scripts/add_taxis.py`

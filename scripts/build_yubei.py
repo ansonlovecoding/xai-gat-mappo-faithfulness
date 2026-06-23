@@ -160,20 +160,56 @@ def _run_netconvert(osm_file: Path, net_file: Path) -> None:
     )
 
 
-def _extract_tunnel_edges(net_file: Path) -> list[str]:
-    """Return SUMO edge IDs whose source OSM way had tunnel=yes."""
+def _extract_tunnel_edges(net_file: Path) -> tuple[list[str], list[dict]]:
+    """Find tunnel edges and split into navigable vs. orphan.
+
+    A tunnel edge is "navigable" if SUMO has at least one <connection> with
+    `to=<edge>` AND at least one with `from=<edge>` — i.e. the edge can be
+    reached by driving and a vehicle on it has somewhere to go. Tunnels that
+    fail either side are returned as orphans with a reason, so the manifest
+    can record what was excluded and why.
+
+    Returns (navigable_edge_ids, orphan_records).
+    """
     tree = ET.parse(net_file)
     root = tree.getroot()
+
+    # Pre-index connections so we can look up by 'from' / 'to' edge in O(1).
+    conn_from: dict[str, int] = {}
+    conn_to: dict[str, int] = {}
+    for conn in root.findall("connection"):
+        if (eid := conn.get("from")):
+            conn_from[eid] = conn_from.get(eid, 0) + 1
+        if (eid := conn.get("to")):
+            conn_to[eid] = conn_to.get(eid, 0) + 1
+
     tunnel_truthy = {"yes", "true", "1"}
-    tunnel_edges = []
+    navigable: list[str] = []
+    orphans: list[dict] = []
     for edge in root.findall("edge"):
         if edge.get("function") == "internal":
             continue
+        is_tunnel = False
         for param in edge.findall("param"):
             if param.get("key") == "tunnel" and param.get("value") in tunnel_truthy:
-                tunnel_edges.append(edge.get("id"))
+                is_tunnel = True
                 break
-    return tunnel_edges
+        if not is_tunnel:
+            continue
+        edge_id = edge.get("id")
+        n_in = conn_to.get(edge_id, 0)
+        n_out = conn_from.get(edge_id, 0)
+        if n_in > 0 and n_out > 0:
+            navigable.append(edge_id)
+        else:
+            if n_in == 0 and n_out == 0:
+                reason = "isolated"
+            elif n_in == 0:
+                reason = "orphan-source"  # can't drive in
+            else:
+                reason = "orphan-sink"    # can drive in but not out
+            orphans.append({"edge": edge_id, "reason": reason, "n_in": n_in, "n_out": n_out})
+    return navigable, orphans
 
 
 def _random_trips(net_file: Path, rou_file: Path, n_trips: int, seed: int) -> None:
@@ -220,7 +256,7 @@ def build(area: Area, out_root: Path, *, force: bool = False, seed: int = 42) ->
     else:
         print(f"  net exists ({net_file.name}) — skip")
 
-    tunnel_edges = _extract_tunnel_edges(net_file)
+    tunnel_edges, orphan_tunnels = _extract_tunnel_edges(net_file)
 
     rou_file = out_dir / f"{area.name}.rou.xml"
     _random_trips(net_file, rou_file, area.n_trips, seed)
@@ -235,13 +271,23 @@ def build(area: Area, out_root: Path, *, force: bool = False, seed: int = 42) ->
         "seed": seed,
         "n_trips_background": area.n_trips,
         "n_tunnel_edges": len(tunnel_edges),
+        # Navigable tunnels — both incoming and outgoing connections exist,
+        # so a vehicle can reach the edge and continue past it. Env code
+        # should treat these as the canonical degradation set.
         "tunnel_edges": tunnel_edges,
+        # Orphans are tunnel edges in OSM that survived netconvert but are
+        # missing one side of connectivity (orphan-source = can't enter,
+        # orphan-sink = can enter but not leave). They're recorded for
+        # transparency but excluded from the env-facing tunnel set.
+        "n_orphan_tunnels": len(orphan_tunnels),
+        "orphan_tunnel_edges": orphan_tunnels,
     }
     manifest_file = out_dir / "tunnels.json"
     manifest_file.write_text(json.dumps(manifest, indent=2, ensure_ascii=False))
 
-    flag = "" if tunnel_edges else "  ⚠  NO TUNNEL EDGES — bbox may be wrong"
-    print(f"  → {len(tunnel_edges)} tunnel edges, cfg: {cfg_file}{flag}")
+    flag = "" if tunnel_edges else "  ⚠  NO NAVIGABLE TUNNEL EDGES — bbox or filter may need adjustment"
+    orphan_note = f" (+{len(orphan_tunnels)} orphaned)" if orphan_tunnels else ""
+    print(f"  → {len(tunnel_edges)} navigable tunnel edges{orphan_note}, cfg: {cfg_file}{flag}")
     return manifest
 
 

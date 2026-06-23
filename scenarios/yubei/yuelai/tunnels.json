@@ -9,7 +9,7 @@
   ],
   "seed": 42,
   "n_trips_background": 300,
-  "n_tunnel_edges": 19,
+  "n_tunnel_edges": 17,
   "tunnel_edges": [
     "-782690072#0",
     "1008258581",
@@ -17,11 +17,9 @@
     "1009801182#1",
     "1009801184#2",
     "1010913003#3",
-    "1016084878",
     "1016084878-AddedOffRampEdge",
     "1093306835#1",
     "1093306836",
-    "1123828739#2",
     "1123828739#2-AddedOnRampEdge",
     "1463438620",
     "1463438620-AddedOffRampEdge",
@@ -30,5 +28,20 @@
     "782686831#1",
     "782690078",
     "782690087#5"
+  ],
+  "n_orphan_tunnels": 2,
+  "orphan_tunnel_edges": [
+    {
+      "edge": "1016084878",
+      "reason": "orphan-source",
+      "n_in": 0,
+      "n_out": 2
+    },
+    {
+      "edge": "1123828739#2",
+      "reason": "orphan-sink",
+      "n_in": 1,
+      "n_out": 0
+    }
   ]
 }
