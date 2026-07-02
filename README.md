@@ -6,10 +6,16 @@ telemetry degradation. The research focus is **explanation faithfulness** and
 whether the explanation channel can be **decoupled** from the policy without
 trading off control performance.
 
-> Status: early scaffolding. The SUMO simulator pipeline is wired up and three
-> Chongqing Yubei District scenarios with tunnel-edge manifests are built. The
-> multi-agent env, GAT-MAPPO policy, telemetry degradation layer, and
-> faithfulness metrics are not yet implemented.
+> Status: SUMO scenarios, taxi fleet + demand, PettingZoo env, telemetry-
+> degradation layer, GAT-MAPPO policy, MAPPO training loop with
+> best-checkpoint tracking, and non-learning baselines are all implemented
+> and verified end-to-end. Faithfulness metrics and the decoupled
+> explanation head are next.
+>
+> **See [`src/dispatch_marl/README.md`](src/dispatch_marl/README.md) for
+> the MARL package's design rationale — layer by layer, including the
+> reward-shaping lesson and the coupled-vs-decoupled explanation framing
+> the dissertation is built around.**
 
 ## Why Yubei? Tunnels as physical degradation zones
 
@@ -213,27 +219,123 @@ Tips for finding traffic that crosses tunnels:
 
 Requires XQuartz (see Setup §3).
 
+## MARL: env, policy, training, evaluation
+
+The `src/dispatch_marl/` package implements a PettingZoo `ParallelEnv`
+wrapping SUMO/TraCI, a hand-rolled GAT-MAPPO policy (attention weights
+exposed as the coupled-explanation channel), a MAPPO training loop with
+GAE + clipped PPO, a telemetry-degradation layer with `tunnel_triggered`
+and `random_dropout` modes, and non-learning baselines (Random, Nearest,
+plus SUMO's built-in greedy dispatcher for reference).
+
+**Design rationale, layer by layer, is documented in
+[`src/dispatch_marl/README.md`](src/dispatch_marl/README.md)** — that file
+explains *why* the observation is a self-centric graph, why the reward
+looks the way it does (with the v0→v1 shaping lesson), why the GAT is
+hand-rolled instead of `torch-geometric`, and how the whole architecture
+serves the coupled-vs-decoupled explanation experiment.
+
+### Run baselines
+
+```bash
+python scripts/run_baselines.py                                      # all areas × all policies
+python scripts/run_baselines.py --areas central_park --policies random,nearest
+python scripts/run_baselines.py --save-json runs/baselines.json
+```
+
+Reports pickups, reward, and mean pending wait per (area × policy). The
+`sumo_greedy` row is measured by shelling out to `sumo` with the built-in
+matcher and reading `--statistic-output` — it's the strong non-learning
+upper reference.
+
+### Train a GAT-MAPPO policy
+
+```bash
+python scripts/train.py --area central_park --epochs 300 \
+  --pickup-reward 10.0 --dispatch-reward 0.5 --wait-lambda 0.001 \
+  --best-window 10 --save-every 50
+```
+
+Writes to `runs/mappo/<area>_<timestamp>/`:
+
+- `train_log.jsonl` — one metrics row per epoch (pickups, reward, losses,
+  rolling mean, best marker)
+- `ckpt_epoch_XXXX.pt` — periodic snapshots (`--save-every` controls the
+  cadence)
+- `ckpt_best.pt` — best-so-far by rolling mean of training pickups
+- `best_metadata.json` — which epoch and rolling-mean value won
+
+Best-checkpoint tracking is important because PPO's classic entropy-
+collapse failure mode makes the *final* checkpoint often the *worst*.
+The rolling-mean-based selection kept the current best result usable
+even after the late-run degradation described in each preserved run's
+`SUMMARY.md`.
+
+### Evaluate a checkpoint
+
+```bash
+python scripts/eval_policy.py <ckpt.pt> --episodes 5 --stochastic
+python scripts/eval_policy.py <ckpt.pt> --episodes 5 --degradation tunnel_triggered
+```
+
+Cross-device checkpoints work transparently: a Colab CUDA-trained `.pt`
+loads on local MPS without any changes, via `torch.load(map_location=…)`
+plus a runtime override of `PolicyConfig.device`.
+
+### Train on Colab (GPU)
+
+For iteration speed the training loop runs on a Colab T4/L4 without
+modification. Setup — install SUMO 1.27 from the DLR PPA, clone the repo,
+run training, download the checkpoint — is walked through cell-by-cell in
+[`docs/COLAB.md`](docs/COLAB.md).
+
+### Preserved training runs
+
+Curated "keeper" runs live under `results/` — see
+[`results/README.md`](results/README.md) for the index. Each keeper has
+its own `SUMMARY.md` with the exact hyperparameters, the evaluation table
+against baselines, and findings worth citing in the dissertation.
+
 ## Repository layout
 
 ```
 .
 ├── .env.example                # template for project env vars (SUMO_HOME, DISPLAY, …)
 ├── requirements.txt            # pinned env-stack deps
+├── docs/
+│   └── COLAB.md                # step-by-step: train on a Colab GPU, bring weights back
 ├── scenarios/
 │   ├── smoke/                  # generated 3×3 grid (gitignored)
 │   └── yubei/
 │       ├── central_park/       # .osm.xml + .net.xml + .rou.xml + _taxis.rou.xml + .sumocfg + tunnels.json
 │       ├── yuelai/
 │       └── xiantao/
+├── src/
+│   └── dispatch_marl/          # the MARL package — see README.md inside for design rationale
+│       ├── README.md           # WHY each layer looks the way it does
+│       ├── _sumo.py            # resolves SUMO_HOME once, on import
+│       ├── scenario.py         # loads a built Yubei scenario + tunnel manifest
+│       ├── degradation.py      # telemetry-degradation layer (off / tunnel_triggered / random_dropout)
+│       ├── env.py              # PettingZoo ParallelEnv wrapping SUMO via TraCI
+│       ├── policies.py         # non-learning baselines (Random, Nearest, NoOp)
+│       ├── training.py         # rollout + GAE + PPO update
+│       └── models/
+│           ├── gat.py          # hand-rolled multi-head graph attention layer
+│           └── policy.py       # DispatchGATPolicy (encoder + actor + critic)
+├── results/
+│   └── mappo_central_park_reshaped_v1/   # first keeper training run — see SUMMARY.md
+├── runs/                       # scratch — timestamped training / baseline outputs (gitignored)
 └── scripts/
     ├── smoke_test.py           # SUMO + TraCI integration test
     ├── build_yubei.py          # OSM → SUMO network → trips → tunnel manifest
     ├── add_taxis.py            # taxi fleet + ride demand → updated sumocfg
-    └── preview_tunnels.py      # sumo-gui with tunnel edges highlighted in magenta
+    ├── preview_tunnels.py      # sumo-gui with tunnel edges highlighted in magenta
+    ├── run_random_policy.py    # sanity-check the env with a uniform-random policy
+    ├── test_policy.py          # shape / NaN / attention smoke test for the GAT-MAPPO policy
+    ├── run_baselines.py        # random + nearest + sumo_greedy comparison table
+    ├── train.py                # MAPPO training loop with best-checkpoint tracking
+    └── eval_policy.py          # evaluate a trained .pt on any area / degradation mode
 ```
-
-The MARL package (`src/`), training entry points, and experiment configs will
-be added in subsequent commits.
 
 ## Troubleshooting
 
