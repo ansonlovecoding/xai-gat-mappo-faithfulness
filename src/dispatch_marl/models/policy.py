@@ -53,7 +53,8 @@ class PolicyConfig:
     k_neighbors: int = 5
     k_reservations: int = 5
     # Per-type input feature widths must match env.py's constants.
-    self_feat_dim: int = 3
+    # self: [x_norm, y_norm, episode_time_norm, velocity_norm, aoi_norm]
+    self_feat_dim: int = 5
     taxi_feat_dim: int = 4
     res_feat_dim: int = 5
     hidden_dim: int = 64

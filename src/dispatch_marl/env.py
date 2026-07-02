@@ -29,9 +29,8 @@ import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
-from . import _sumo  # noqa: F401  — ensures SUMO_HOME is set before traci import
+from ._sumo import traci  # libsumo if available, else traci
 import sumolib  # noqa: E402
-import traci  # noqa: E402
 
 from .degradation import DegradationConfig, DegradationLayer
 from .scenario import Scenario, load_scenario
@@ -39,9 +38,19 @@ from .scenario import Scenario, load_scenario
 
 # Observation feature widths — kept in module-level constants so the GAT
 # encoder later can import the same numbers.
-SELF_FEAT_DIM = 3
+#
+# Self feature layout:
+#   [x_norm, y_norm, episode_time_norm, velocity_norm, aoi_norm]
+# where velocity_norm is speed / 30 m/s (~108 km/h) clipped to [0, 1], and
+# aoi_norm is Age of Information / AOI_MAX_S clipped to [0, 1].
+SELF_FEAT_DIM = 5
 TAXI_FEAT_DIM = 4
 RES_FEAT_DIM = 5
+
+# Normalisation constants used by the observation builder. Set explicitly here
+# so the policy and any future faithfulness code can import them.
+VELOCITY_MAX_MS = 30.0
+AOI_MAX_S = 300.0
 
 
 @dataclass
@@ -125,6 +134,9 @@ class DispatchEnv(ParallelEnv):
             self._degradation = DegradationLayer(
                 self.config.degradation, self.scenario.tunnel_edges, self._rng
             )
+        # Always clear per-agent AoI state; a fresh episode starts every taxi
+        # with no history of trusted readings.
+        self._degradation.reset()
 
         # Prefer traci.load() to restart the same SUMO subprocess between
         # episodes — avoids process-startup overhead AND avoids the "label
@@ -356,13 +368,21 @@ class DispatchEnv(ParallelEnv):
 
         # ------------- self -------------
         x_true, y_true = all_taxi_positions[agent]
+        try:
+            v_true = float(traci.vehicle.getSpeed(agent))
+        except traci.exceptions.TraCIException:
+            v_true = 0.0
         current_edge = traci.vehicle.getRoadID(agent)
         degraded = self._degradation.is_degraded(current_edge)
         x, y = self._degradation.apply_position(x_true, y_true, degraded)
+        v = self._degradation.apply_velocity(v_true, degraded)
+        aoi = self._degradation.update_and_get_aoi(agent, self._sim_time, degraded)
         self_feat = np.array([
             self._norm_x(x),
             self._norm_y(y),
             min(1.0, self._sim_time / max(1.0, self._end_time)),
+            min(1.0, max(0.0, v) / VELOCITY_MAX_MS),
+            min(1.0, aoi / AOI_MAX_S),
         ], dtype=np.float32)
 
         # ------------- neighbouring taxis -------------

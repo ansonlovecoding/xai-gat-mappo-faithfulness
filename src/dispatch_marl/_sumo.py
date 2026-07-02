@@ -1,7 +1,19 @@
-"""Locate SUMO_HOME once, on import.
+"""Locate SUMO_HOME once, and pick the fastest available Python backend.
 
-Centralises the copy-pasted resolution block from `scripts/*.py`. Every module
-in this package that needs `sumolib` or `traci` should import from here.
+Two responsibilities:
+
+1. Resolve `SUMO_HOME` on import (SUMO looks up its data via this env var).
+2. Import the SUMO Python bindings, preferring `libsumo` (which runs SUMO
+   in-process, ~5-10× faster than the socket-based `traci`), and falling
+   back to `traci` if libsumo isn't available.
+
+Every module inside this package that needs a `traci`-shaped API should
+`from ._sumo import traci` — do not `import traci` directly, otherwise
+you bypass the libsumo speedup.
+
+`USING_LIBSUMO` is exposed so callers can branch on backend when the two
+differ semantically (only real difference at time of writing: libsumo has
+no GUI support).
 """
 from __future__ import annotations
 
@@ -33,3 +45,27 @@ def resolve_sumo_home() -> Path:
 
 
 SUMO_HOME = resolve_sumo_home()
+
+
+# ---- Backend selection -----------------------------------------------------
+
+def _load_backend():
+    """Try libsumo first, fall back to traci."""
+    if os.environ.get("DISPATCH_MARL_FORCE_TRACI") == "1":
+        import traci as backend
+        return backend, False
+    try:
+        import libsumo as backend
+        # libsumo has no `switch` (single in-process connection, so no need
+        # to route commands to a specific connection). Env code uses switch
+        # to disambiguate multiple resets, so give it a no-op stand-in and
+        # let the same env code path work on both backends.
+        if not hasattr(backend, "switch"):
+            backend.switch = lambda label: None
+        return backend, True
+    except ImportError:
+        import traci as backend
+        return backend, False
+
+
+traci, USING_LIBSUMO = _load_backend()

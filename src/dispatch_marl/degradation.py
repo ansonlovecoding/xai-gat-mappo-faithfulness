@@ -36,7 +36,16 @@ class DegradationConfig:
 
 
 class DegradationLayer:
-    """Per-step degradation. Consumes fresh randomness each apply()."""
+    """Per-step degradation. Consumes fresh randomness each apply().
+
+    Also owns per-agent **Age of Information (AoI)** bookkeeping. Whenever
+    a taxi produces a *trusted* reading (i.e. it isn't currently degraded),
+    the timestamp is refreshed; when the taxi is degraded, `update_and_get_aoi`
+    returns the seconds elapsed since the last trusted reading. Both the
+    binary `position_valid` flag and the continuous AoI are surfaced to the
+    policy as observation features — that lets the policy condition on
+    *how stale* its reading is, not merely on whether it's currently offline.
+    """
 
     def __init__(
         self,
@@ -47,6 +56,13 @@ class DegradationLayer:
         self.config = config
         self.tunnel_edges = tunnel_edges
         self.rng = rng
+        # Per-agent timestamp of the last trusted (non-degraded) observation.
+        # Reset on env.reset() via `reset()` below.
+        self._last_valid_time: dict[str, float] = {}
+
+    def reset(self) -> None:
+        """Clear AoI bookkeeping. Call at env.reset()."""
+        self._last_valid_time.clear()
 
     def is_degraded(self, current_edge: str) -> bool:
         mode = self.config.mode
@@ -64,3 +80,38 @@ class DegradationLayer:
             return x, y
         noise = self.rng.normal(0.0, self.config.position_noise_m, size=2)
         return float(x + noise[0]), float(y + noise[1])
+
+    def apply_velocity(self, v: float, degraded: bool) -> float:
+        """Return possibly-noised velocity (m/s). No-op if not degraded.
+
+        Velocity noise scale is tied to position noise: a σ_pos over one
+        step_length_s window is roughly a σ_v = σ_pos / step_length_s
+        velocity uncertainty. We approximate step_length_s = 10 s (the env
+        default) and back off if configured otherwise via σ_pos alone.
+        """
+        if not degraded or self.config.position_noise_m <= 0:
+            return v
+        sigma_v = self.config.position_noise_m / 10.0
+        return float(v + self.rng.normal(0.0, sigma_v))
+
+    def update_and_get_aoi(
+        self, taxi_id: str, current_sim_time: float, degraded: bool
+    ) -> float:
+        """Return AoI in seconds for `taxi_id` at `current_sim_time`.
+
+        On a non-degraded step: reset the taxi's last-valid timestamp and
+        return AoI = 0.
+
+        On a degraded step: return `current_sim_time − last_valid_time`.
+        If we've never seen this taxi trusted before (first ever observation
+        happens to be degraded), record the current time and return 0 to
+        avoid an unbounded "AoI = full episode length" spike on step 0.
+        """
+        if not degraded:
+            self._last_valid_time[taxi_id] = current_sim_time
+            return 0.0
+        last = self._last_valid_time.get(taxi_id)
+        if last is None:
+            self._last_valid_time[taxi_id] = current_sim_time
+            return 0.0
+        return max(0.0, current_sim_time - last)

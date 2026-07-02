@@ -17,6 +17,33 @@ trading off control performance.
 > reward-shaping lesson and the coupled-vs-decoupled explanation framing
 > the dissertation is built around.**
 
+## Progress checklist
+
+Quick-glance view of what's done and what's left. Update as pieces land.
+
+| Layer | Status |
+|---|---|
+| SUMO scenarios (3 Yubei areas + tunnels + taxi fleet + ride demand) | ✅ done |
+| PettingZoo environment + TraCI bridge | ✅ done |
+| Telemetry-degradation layer (`off` / `tunnel_triggered` / `random_dropout`) | ✅ done |
+| GAT-MAPPO policy (with **coupled** attention explanation channel) | ✅ done |
+| MAPPO training loop + best-checkpoint tracking | ✅ done |
+| Non-learning baselines (Random / Nearest / SUMO greedy) | ✅ done |
+| First trained checkpoint (7.7 pickups on central_park; beats random & nearest) | ✅ done |
+| Colab GPU training workflow | ✅ done |
+| **Faithfulness metrics** (comprehensiveness / sufficiency / attention-vs-gradient) | ❌ **next** |
+| **Decoupled explanation head** (the dissertation's headline contribution) | ❌ blocked by faithfulness metric choice |
+| Stronger training run (close the gap to SUMO greedy's 30 pickups) | ⚠️ partial |
+| Degradation experiments (tunnel_triggered vs matched-rate random ablation) | ❌ not started |
+| Thesis figures / result tables / write-up | ❌ not started |
+
+**Why "faithfulness metrics" is next, not stronger training:** the dissertation's
+core claim is about *whether attention faithfully explains the policy's
+decisions*, not about beating a benchmark on pickup count. A faithfulness
+metric can be computed on any policy (even weakly trained), and it defines
+the objective the decoupled explanation head has to satisfy. Without it,
+the decoupled head has nothing concrete to optimise against.
+
 ## Why Yubei? Tunnels as physical degradation zones
 
 The experimental scenarios are three tunnel-rich slices of Chongqing's Yubei

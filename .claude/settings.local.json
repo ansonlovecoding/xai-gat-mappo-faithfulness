@@ -10,7 +10,9 @@
       "Bash(.venv/bin/python -m pip install --upgrade pip setuptools wheel)",
       "Bash(.venv/bin/python --version)",
       "Bash(.venv/bin/pip install *)",
-      "Bash(.venv/bin/python scripts/preview_tunnels.py --area central_park)"
+      "Bash(.venv/bin/python scripts/preview_tunnels.py --area central_park)",
+      "Bash(.venv/bin/python -c ' *)",
+      "Bash(.venv/bin/python scripts/update_proposal.py)"
     ]
   }
 }

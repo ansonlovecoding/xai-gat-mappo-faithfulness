@@ -330,6 +330,83 @@ single-epoch noise adequately. If the dissertation's final numbers demand
 tighter selection, an offline pass over saved checkpoints with
 `scripts/eval_policy.py --episodes N` is trivial to add.
 
+## Design justification: decentralised vs. classical fleet dispatch
+
+An informed reader may notice that the observation graph is **heterogeneous
+and self-centric** (self + neighbour taxis + candidate reservations) rather
+than the vehicle-only graph one usually sees in fleet-dispatch papers, and
+that each vehicle makes its own accept/no-op decision rather than a
+central dispatcher computing a global matching. This is deliberate, and
+it matters for the dissertation's core claim about explanation
+faithfulness. This section states the choice explicitly.
+
+### Two families of fleet-dispatch formulations
+
+Classical fleet-dispatch literature splits into two lineages:
+
+- **Centralised dispatch** — a single dispatcher computes a global matching
+  between all idle vehicles and all pending orders (bipartite matching, ILP,
+  or a learned central network that reads the whole fleet's state).
+  Vehicle-only graph, one attention distribution per dispatch step.
+- **Decentralised dispatch** — each vehicle independently decides which
+  order (if any) to accept, given a local view of nearby peers and
+  candidate orders. Lin et al. 2018, Li et al. 2019, and Al-Abbasi et al.
+  2019 all follow this framing. Per-agent graph, one attention
+  distribution per acting vehicle per step.
+
+This package implements the **decentralised** variant.
+
+### Why decentralised is the right choice *for this dissertation*
+
+1. **Attention rows map one-to-one onto individual decisions.**
+   A per-agent heterogeneous graph produces one attention distribution per
+   acting vehicle per RL step — so DEF and WAMSN are measured over
+   ~1500–2400 independent decisions per episode instead of ~120 aggregate
+   dispatcher outputs. That is an order-of-magnitude gain in statistical
+   power for the faithfulness analysis, on the same simulation budget.
+
+2. **AoI is defined per node; the WAMSN summand is per node.**
+   The WAMSN definition sums `α_i · (AoI_i / AoI_max)` over graph nodes.
+   The shape is a direct match for a per-agent graph in which `α_i` is the
+   acting vehicle's attention weight over node `i`, and `AoI_i` is that
+   node's Age of Information. In a centralised, vehicle-only graph it
+   would be unclear whose AoI enters the numerator when multiple vehicles
+   are simultaneously stale.
+
+3. **The dissertation's causal chain is per-agent.**
+   The proposal's Figure 1 causal graph — telemetry degradation → AoI ↑
+   → attention drift → WAMSN ↑ → DEF ↓ — is inherently local: one
+   vehicle enters a tunnel, its own AoI rises, its own attention drifts,
+   its own decision becomes less faithful. In a centralised model,
+   multiple agents' AoI changes propagate simultaneously through one
+   dispatcher's attention, muddling attribution.
+
+### The known weakness, turned into a research question
+
+Decentralised dispatch has a well-known failure mode: with no explicit
+coordination channel, multiple vehicles can converge on the same order.
+Our `NearestReservationPolicy` baseline demonstrates this explicitly —
+it *loses* to random on central_park (1 pickup vs 3 pickups) because
+20 taxis all rush the same nearest reservation.
+
+Rather than a bug, this is precisely the phenomenon the dissertation is
+positioned to study: **does the GAT's attention over neighbouring vehicles
+(the peer-node type in the heterogeneous graph) faithfully encode the
+implicit coordination the learned policy uses?** The coupled-explanation
+channel already surfaces which peers are being attended to; the
+decoupled channel (still to be added) will provide a comparison point.
+If either mechanism is faithful, attention on peer-vehicles should
+correlate with actual coordination behaviour — which is directly a DEF
+question.
+
+### Consequences for how results are reported
+
+Because attention is per-decision, **DEF and WAMSN distributions should
+be reported over agent-step samples, not per-episode averages**.
+Bootstrapping confidence intervals over per-decision samples gives
+substantially tighter bounds than bootstrapping over episodes. Worth
+noting now so it doesn't drift when the results section is drafted.
+
 ## Architectural overall — why this shape serves the dissertation
 
 The package is designed around **two experimental axes the dissertation
