@@ -40,3 +40,4 @@ outputs/
 # SUMO
 *.sumocfg.bak
 sumo-gui.log
+results/

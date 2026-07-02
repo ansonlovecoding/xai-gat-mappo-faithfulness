@@ -1,0 +1,66 @@
+"""Telemetry degradation layer applied at the env→agent observation boundary.
+
+Two modes:
+
+- `tunnel_triggered` (dissertation's primary): each taxi's self-observation
+  is corrupted (position noise + a `position_valid=0` flag) whenever the
+  taxi's current edge is in the tunnel set. Deterministic w.r.t. network
+  geometry — a taxi on a given tunnel edge is *always* degraded.
+
+- `random_dropout`: independent Bernoulli mask per agent per step. Used as
+  the matched-rate ablation against `tunnel_triggered` (same overall
+  corruption rate, but uncorrelated with location).
+
+- `off`: no-op.
+
+Applied to *observations only* — the policy sees degraded readings, but the
+underlying SUMO simulator remains ground truth. That's what lets us measure
+"how much did degradation cost the policy" without changing the environment
+itself.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+import numpy as np
+
+
+@dataclass
+class DegradationConfig:
+    mode: Literal["off", "tunnel_triggered", "random_dropout"] = "off"
+    # Std dev of Gaussian noise added to (x, y) when degradation is active.
+    position_noise_m: float = 20.0
+    # For random_dropout mode: per-step probability that an agent is degraded.
+    dropout_rate: float = 0.0
+
+
+class DegradationLayer:
+    """Per-step degradation. Consumes fresh randomness each apply()."""
+
+    def __init__(
+        self,
+        config: DegradationConfig,
+        tunnel_edges: frozenset[str],
+        rng: np.random.Generator,
+    ) -> None:
+        self.config = config
+        self.tunnel_edges = tunnel_edges
+        self.rng = rng
+
+    def is_degraded(self, current_edge: str) -> bool:
+        mode = self.config.mode
+        if mode == "off":
+            return False
+        if mode == "tunnel_triggered":
+            return current_edge in self.tunnel_edges
+        if mode == "random_dropout":
+            return bool(self.rng.random() < self.config.dropout_rate)
+        raise ValueError(f"unknown degradation mode: {mode}")
+
+    def apply_position(self, x: float, y: float, degraded: bool) -> tuple[float, float]:
+        """Return possibly-noised (x, y). No-op if not degraded."""
+        if not degraded or self.config.position_noise_m <= 0:
+            return x, y
+        noise = self.rng.normal(0.0, self.config.position_noise_m, size=2)
+        return float(x + noise[0]), float(y + noise[1])
