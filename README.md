@@ -419,19 +419,60 @@ against baselines, and findings worth citing in the dissertation.
 │           ├── gat.py          # hand-rolled multi-head graph attention layer
 │           └── policy.py       # DispatchGATPolicy (encoder + actor + critic)
 ├── results/
-│   └── mappo_central_park_reshaped_v1/   # first keeper training run — see SUMMARY.md
-├── runs/                       # scratch — timestamped training / baseline outputs (gitignored)
+│   ├── mappo_central_park_reshaped_v1/    # first "keeper" trained model — see SUMMARY.md
+│   └── ab_centralised_critic_v1_seed42/   # A/B: centralised critic +18 % pickups — see SUMMARY.md
+├── runs/                       # scratch dir — timestamped training / baseline outputs (gitignored)
 └── scripts/
-    ├── smoke_test.py           # SUMO + TraCI integration test
-    ├── build_yubei.py          # OSM → SUMO network → trips → tunnel manifest
-    ├── add_taxis.py            # taxi fleet + ride demand → updated sumocfg
-    ├── preview_tunnels.py      # sumo-gui with tunnel edges highlighted in magenta
-    ├── run_random_policy.py    # sanity-check the env with a uniform-random policy
-    ├── test_policy.py          # shape / NaN / attention smoke test for the GAT-MAPPO policy
-    ├── run_baselines.py        # random + nearest + sumo_greedy comparison table
-    ├── train.py                # MAPPO training loop with best-checkpoint tracking
-    └── eval_policy.py          # evaluate a trained .pt on any area / degradation mode
+    ├── build_yubei.py          # scenario setup: OSM → SUMO network → tunnel manifest, per Yubei area
+    ├── add_taxis.py            # scenario setup: add taxi fleet + rider demand to a built scenario
+    ├── smoke_test.py           # smoke test: SUMO + TraCI end-to-end on a 3×3 grid (install check)
+    ├── test_policy.py          # smoke test: GAT-MAPPO forward-pass shape / NaN / attention softmax
+    ├── run_baselines.py        # main workflow: Random / Nearest / SUMO-greedy comparison table
+    ├── train.py                # main workflow: MAPPO training loop (CTDE default) + best-ckpt tracking
+    ├── eval_policy.py          # main workflow: evaluate a trained .pt on any area / degradation mode
+    ├── preview_tunnels.py      # visualisation: sumo-gui with tunnel edges highlighted in magenta
+    └── update_proposal.py      # docs maintenance: audited text substitutions on the proposal .docx
 ```
+
+### What each script is for, in one line
+
+- **`build_yubei.py`** — Fetch OpenStreetMap for a Yubei-district bounding
+  box, convert to a SUMO `.net.xml` with tunnel-tag preservation, generate
+  reproducible background traffic via `randomTrips.py`, and emit a
+  `tunnels.json` that splits tunnel edges into *navigable* vs *orphan*.
+  Run this once per area (or after changing a bbox).
+- **`add_taxis.py`** — Add a taxi fleet (`has.taxi.device=true`,
+  `randomCircling` idle behaviour, cyan riders) to a built scenario and
+  rewrite its `.sumocfg` to `dispatch-algorithm=traci`. Run this after
+  every `build_yubei.py` (which rewrites `.sumocfg` without the fleet).
+- **`smoke_test.py`** — Boots SUMO on a synthetic 3×3 grid and steps
+  through TraCI. Use it to verify a fresh Python venv, `SUMO_HOME`, and
+  XQuartz install (Colab, new machine, dependency bump). Not tied to the
+  Yubei scenarios.
+- **`test_policy.py`** — Instantiates a fresh `DispatchGATPolicy`, feeds
+  it a real observation from the env, and asserts shapes / no NaN / valid
+  attention softmax. ~15 s, no training. Useful when refactoring the
+  policy/env interface.
+- **`run_baselines.py`** — Runs the three non-learning baselines (Random,
+  NearestReservation, SUMO's built-in greedy dispatcher) across the three
+  Yubei areas and prints the comparison table. Outputs JSON to
+  `runs/baselines.json` for later plotting.
+- **`train.py`** — The main MAPPO training loop. Rollout → GAE → clipped
+  PPO update → best-checkpoint tracking. Default is CTDE (centralised
+  critic); use `--no-centralised-critic` for the ablation. Writes to
+  `runs/mappo/<area>_<ts>/` (JSONL log, periodic snapshots, `ckpt_best.pt`).
+- **`eval_policy.py`** — Loads a `.pt` checkpoint and runs N evaluation
+  episodes on any area with any degradation mode. Handles cross-device
+  loading (Colab CUDA → local MPS). Emits a `.eval.json` summary next to
+  the checkpoint.
+- **`preview_tunnels.py`** — Launches `sumo-gui` with magenta polylines
+  overlaid on the navigable tunnel edges of a chosen scenario. Used to
+  visually verify a new bbox actually intersects tunnels and to generate
+  screenshots for the dissertation.
+- **`update_proposal.py`** — Applies a versioned list of text
+  substitutions to `docs/Research_Proposal_Faithfulness_Decoupling.docx`,
+  preserving formatting via per-run edits. Serves as an audit trail of
+  every code-vs-proposal alignment change made so far.
 
 ## Troubleshooting
 
