@@ -44,7 +44,11 @@ from .scenario import Scenario, load_scenario
 # where velocity_norm is speed / 30 m/s (~108 km/h) clipped to [0, 1], and
 # aoi_norm is Age of Information / AOI_MAX_S clipped to [0, 1].
 SELF_FEAT_DIM = 5
-TAXI_FEAT_DIM = 4
+# Neighbour-taxi features: [dx, dy, is_empty, dist_norm, aoi_norm]. AoI was
+# added to expose per-node staleness for the WAMSN metric (§7.4). Neighbours'
+# AoI is refreshed every sim step by the DegradationLayer, whether or not
+# the neighbour happens to be the acting agent.
+TAXI_FEAT_DIM = 5
 RES_FEAT_DIM = 5
 
 # Normalisation constants used by the observation builder. Set explicitly here
@@ -328,19 +332,31 @@ class DispatchEnv(ParallelEnv):
             return {}
         # Cache expensive per-step queries.
         try:
+            alive = set(traci.vehicle.getIDList())
             all_taxi_positions = {
                 a: traci.vehicle.getPosition(a) for a in self.possible_agents
-                if a in traci.vehicle.getIDList()
+                if a in alive
             }
             empty_ids = set(traci.vehicle.getTaxiFleet(0))
             reservations = list(traci.person.getTaxiReservations(0))
+            # Refresh AoI for EVERY alive taxi this step, not just the ones
+            # currently acting. Otherwise a neighbour taxi that's mid-ride
+            # (never in `agents`) would have its AoI grow forever even when
+            # it's on a non-degraded edge. Snapshot the dict so per-agent
+            # obs building below can look up neighbour AoIs directly.
+            aoi_by_taxi: dict[str, float] = {}
+            for taxi_id in [a for a in self.possible_agents if a in alive]:
+                current_edge = traci.vehicle.getRoadID(taxi_id)
+                aoi_by_taxi[taxi_id] = self._degradation.refresh_and_get_aoi(
+                    taxi_id, current_edge, self._sim_time
+                )
         except traci.exceptions.TraCIException:
             return {a: self._empty_obs() for a in agents}
 
         obs = {}
         for agent in agents:
             obs[agent] = self._build_agent_obs(
-                agent, all_taxi_positions, empty_ids, reservations
+                agent, all_taxi_positions, empty_ids, reservations, aoi_by_taxi
             )
         return obs
 
@@ -362,6 +378,7 @@ class DispatchEnv(ParallelEnv):
         all_taxi_positions: dict[str, tuple[float, float]],
         empty_ids: set[str],
         reservations: list[Any],
+        aoi_by_taxi: dict[str, float],
     ) -> dict[str, np.ndarray]:
         if agent not in all_taxi_positions:
             return self._empty_obs()
@@ -373,10 +390,11 @@ class DispatchEnv(ParallelEnv):
         except traci.exceptions.TraCIException:
             v_true = 0.0
         current_edge = traci.vehicle.getRoadID(agent)
-        degraded = self._degradation.is_degraded(current_edge)
+        degraded = self._degradation.is_degraded(agent, current_edge, self._sim_time)
         x, y = self._degradation.apply_position(x_true, y_true, degraded)
         v = self._degradation.apply_velocity(v_true, degraded)
-        aoi = self._degradation.update_and_get_aoi(agent, self._sim_time, degraded)
+        # Self's AoI was already refreshed in _build_all_obs.
+        aoi = aoi_by_taxi.get(agent, 0.0)
         self_feat = np.array([
             self._norm_x(x),
             self._norm_y(y),
@@ -394,9 +412,14 @@ class DispatchEnv(ParallelEnv):
         for i, (other, ox, oy) in enumerate(others[:K_n]):
             dx, dy = ox - x_true, oy - y_true
             dist = float(np.hypot(dx, dy))
-            taxi_feat[i] = [dx / self._net_diag, dy / self._net_diag,
-                            1.0 if other in empty_ids else 0.0,
-                            dist / self._net_diag]
+            other_aoi = aoi_by_taxi.get(other, 0.0)
+            taxi_feat[i] = [
+                dx / self._net_diag,
+                dy / self._net_diag,
+                1.0 if other in empty_ids else 0.0,
+                dist / self._net_diag,
+                min(1.0, other_aoi / AOI_MAX_S),  # NEW: neighbour's AoI
+            ]
             taxi_mask[i] = 1
 
         # ------------- pending reservations -------------

@@ -1,6 +1,14 @@
 """Multi-agent RL environment for fleet dispatch under telemetry degradation."""
 from .degradation import DegradationConfig
 from .env import DispatchEnv, DispatchEnvConfig
+from .faithfulness import (
+    DecisionFaithfulness,
+    FaithfulnessConfig,
+    FaithfulnessEvaluator,
+    aggregate_node_attention,
+    compute_attention_drift,
+    compute_wamsn,
+)
 from .policies import (
     NearestReservationPolicy,
     NoOpPolicy,
@@ -31,4 +39,10 @@ __all__ = [
     "collect_rollout",
     "compute_gae",
     "ppo_update",
+    "FaithfulnessConfig",
+    "DecisionFaithfulness",
+    "FaithfulnessEvaluator",
+    "aggregate_node_attention",
+    "compute_attention_drift",
+    "compute_wamsn",
 ]

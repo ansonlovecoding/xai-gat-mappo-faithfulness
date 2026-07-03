@@ -56,15 +56,41 @@ class DegradationLayer:
         self.config = config
         self.tunnel_edges = tunnel_edges
         self.rng = rng
-        # Per-agent timestamp of the last trusted (non-degraded) observation.
+        # Per-taxi timestamp of the last trusted (non-degraded) observation.
         # Reset on env.reset() via `reset()` below.
         self._last_valid_time: dict[str, float] = {}
+        # Per (taxi_id, sim_time) cache of the degradation decision. Ensures
+        # multiple queries within the same sim step get a consistent answer —
+        # critical for `random_dropout` mode where every fresh call would
+        # otherwise draw an independent Bernoulli.
+        self._step_cache: dict[tuple[str, float], bool] = {}
 
     def reset(self) -> None:
         """Clear AoI bookkeeping. Call at env.reset()."""
         self._last_valid_time.clear()
+        self._step_cache.clear()
 
-    def is_degraded(self, current_edge: str) -> bool:
+    def is_degraded(
+        self,
+        taxi_id: str,
+        current_edge: str,
+        sim_time: float,
+    ) -> bool:
+        """Return whether this taxi is currently degraded.
+
+        Cached per (taxi_id, sim_time) so that faithfulness-time queries and
+        obs-build queries agree, and so that random_dropout mode doesn't
+        emit different verdicts for the same taxi at the same step.
+        """
+        key = (taxi_id, sim_time)
+        cached = self._step_cache.get(key)
+        if cached is not None:
+            return cached
+        result = self._compute_degraded(current_edge)
+        self._step_cache[key] = result
+        return result
+
+    def _compute_degraded(self, current_edge: str) -> bool:
         mode = self.config.mode
         if mode == "off":
             return False
@@ -115,3 +141,21 @@ class DegradationLayer:
             self._last_valid_time[taxi_id] = current_sim_time
             return 0.0
         return max(0.0, current_sim_time - last)
+
+    def refresh_and_get_aoi(
+        self,
+        taxi_id: str,
+        current_edge: str,
+        sim_time: float,
+    ) -> float:
+        """Refresh a taxi's AoI based on its current tunnel/degradation state.
+
+        Unlike `update_and_get_aoi` (which the caller already told whether
+        the taxi is degraded), this method decides degradation itself via
+        `is_degraded` — so it can be called for *neighbour* taxis that
+        aren't the acting agent. Combined with `is_degraded`'s per-step
+        cache, this keeps neighbour AoI up to date every sim step, not
+        only when the neighbour happens to be the one dispatching.
+        """
+        degraded = self.is_degraded(taxi_id, current_edge, sim_time)
+        return self.update_and_get_aoi(taxi_id, sim_time, degraded)

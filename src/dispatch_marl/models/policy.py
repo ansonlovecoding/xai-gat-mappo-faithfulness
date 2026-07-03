@@ -53,9 +53,10 @@ class PolicyConfig:
     k_neighbors: int = 5
     k_reservations: int = 5
     # Per-type input feature widths must match env.py's constants.
-    # self: [x_norm, y_norm, episode_time_norm, velocity_norm, aoi_norm]
+    # self:  [x_norm, y_norm, episode_time_norm, velocity_norm, aoi_norm]
+    # taxi:  [dx, dy, is_empty, dist_norm, aoi_norm]  ← aoi added for WAMSN
     self_feat_dim: int = 5
-    taxi_feat_dim: int = 4
+    taxi_feat_dim: int = 5
     res_feat_dim: int = 5
     hidden_dim: int = 64
     n_gat_layers: int = 2

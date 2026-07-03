@@ -8,11 +8,18 @@ comparison table.
 Deterministic by default (argmax over action logits). Pass --stochastic to
 sample instead, which matches training-time behaviour.
 
+Faithfulness: pass --faithfulness to compute DEF / WAMSN for every decision
+(§7.4 metrics). Per-decision records go to `<ckpt>.faithfulness.jsonl` and
+episode/run aggregates are folded into the `.eval.json` summary. Because
+each decision requires ~36 counterfactual forwards, use --faithfulness-every
+to sub-sample when running long episodes.
+
 Usage:
   python scripts/eval_policy.py runs/mappo/central_park_<ts>/ckpt_epoch_0299.pt
   python scripts/eval_policy.py <ckpt> --episodes 5
   python scripts/eval_policy.py <ckpt> --episodes 5 --stochastic
   python scripts/eval_policy.py <ckpt> --degradation tunnel_triggered
+  python scripts/eval_policy.py <ckpt> --faithfulness --faithfulness-every 5
 """
 from __future__ import annotations
 
@@ -34,6 +41,8 @@ from dispatch_marl import (  # noqa: E402
     DegradationConfig,
     DispatchEnv,
     DispatchEnvConfig,
+    FaithfulnessConfig,
+    FaithfulnessEvaluator,
 )
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
@@ -64,12 +73,25 @@ def _run_episode(
     policy: DispatchGATPolicy,
     device: str,
     stochastic: bool,
-) -> dict:
+    faithfulness_evaluator: FaithfulnessEvaluator | None = None,
+    faithfulness_every: int = 1,
+    episode_index: int = 0,
+) -> tuple[dict, list[dict]]:
+    """Run one eval episode; return (episode summary, per-decision faithfulness records).
+
+    The faithfulness records list is empty unless `faithfulness_evaluator` is
+    provided. Records are lightweight dicts (no attention arrays) suitable
+    for JSONL streaming.
+    """
     obs_dict, _ = env.reset()
     total_reward = 0.0
     total_pickups = 0
     step = 0
     last_wait = 0.0
+    faith_records: list[dict] = []
+    # A global counter over decisions is what we sub-sample against, so the
+    # cadence is consistent regardless of how many agents act on a given step.
+    decision_counter = 0
 
     while not env.done:
         if obs_dict:
@@ -82,7 +104,33 @@ def _run_episode(
                     action = dist.sample()
                 else:
                     action = logits.argmax(dim=-1)
-            actions = {a: int(action[i].item()) for i, a in enumerate(agents)}
+            actions_np = action.cpu().numpy().astype(int)
+            actions = {a: int(actions_np[i]) for i, a in enumerate(agents)}
+
+            if faithfulness_evaluator is not None:
+                for i, a in enumerate(agents):
+                    if decision_counter % faithfulness_every == 0:
+                        single = {k: v[i : i + 1] for k, v in batched.items()}
+                        n_valid_res = int(single["reservations_mask"].sum().item())
+                        result = faithfulness_evaluator.evaluate_decision(
+                            single, action=int(actions_np[i])
+                        )
+                        faith_records.append({
+                            "episode": episode_index,
+                            "rl_step": step,
+                            "agent": a,
+                            "action": result.action,
+                            "pi_full": round(result.pi_full, 4),
+                            "def": round(result.def_score, 4),
+                            "g_comp": round(result.g_comp, 4),
+                            "g_suff": round(result.g_suff, 4),
+                            "comp": round(result.comp, 4),
+                            "suff": round(result.suff, 4),
+                            "wamsn": round(result.wamsn, 4),
+                            "valid_reservations": n_valid_res,
+                            "n_k_evaluated": len(result.per_k),
+                        })
+                    decision_counter += 1
         else:
             actions = {}
 
@@ -95,11 +143,52 @@ def _run_episode(
             last_wait = float(info.get("mean_wait_time", last_wait))
         step += 1
 
-    return {
+    summary = {
         "total_pickups": total_pickups,
         "total_reward": round(total_reward, 3),
         "final_mean_pending_wait_s": round(last_wait, 1),
         "rl_steps": step,
+    }
+    return summary, faith_records
+
+
+def _summarise_faithfulness(records: list[dict]) -> dict:
+    """Aggregate per-decision records into scalar stats worth writing to JSON.
+
+    Filters out degenerate decisions (0 valid reservations → pi_full trivially
+    1.0 on the no-op, no signal) from the DEF stats; those decisions still
+    count in `n_decisions_total`.
+    """
+    if not records:
+        return {"n_decisions_total": 0, "n_decisions_scored": 0}
+
+    non_trivial = [r for r in records if r["valid_reservations"] > 0]
+    n_total = len(records)
+    n_scored = len(non_trivial)
+
+    if n_scored == 0:
+        return {
+            "n_decisions_total": n_total,
+            "n_decisions_scored": 0,
+            "note": "all decisions had 0 valid reservations (no-op-only regime)",
+        }
+
+    def_scores = np.array([r["def"] for r in non_trivial])
+    g_comps = np.array([r["g_comp"] for r in non_trivial])
+    g_suffs = np.array([r["g_suff"] for r in non_trivial])
+    wamsns = np.array([r["wamsn"] for r in records])  # WAMSN uses all records
+    return {
+        "n_decisions_total": n_total,
+        "n_decisions_scored": n_scored,
+        "def_mean": float(def_scores.mean()),
+        "def_std": float(def_scores.std()),
+        "def_p05": float(np.percentile(def_scores, 5)),
+        "def_p50": float(np.percentile(def_scores, 50)),
+        "def_p95": float(np.percentile(def_scores, 95)),
+        "g_comp_mean": float(g_comps.mean()),
+        "g_suff_mean": float(g_suffs.mean()),
+        "wamsn_mean": float(wamsns.mean()),
+        "wamsn_std": float(wamsns.std()),
     }
 
 
@@ -117,6 +206,14 @@ def main() -> int:
     parser.add_argument("--dropout-rate", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default=None)
+    parser.add_argument("--faithfulness", action="store_true",
+                        help="compute DEF/WAMSN per decision; ~36 extra forwards per decision")
+    parser.add_argument("--faithfulness-every", type=int, default=1,
+                        help="only score 1-in-N decisions when --faithfulness is set")
+    parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3],
+                        help="top-k values used for Comp/Suff (averaged)")
+    parser.add_argument("--faithfulness-random-baselines", type=int, default=5,
+                        help="random subsets sampled per k for the DEF baseline")
     args = parser.parse_args()
 
     if not args.checkpoint.exists():
@@ -134,25 +231,58 @@ def main() -> int:
     )
     env = DispatchEnv(env_cfg)
 
+    faith_evaluator: FaithfulnessEvaluator | None = None
+    if args.faithfulness:
+        faith_cfg = FaithfulnessConfig(
+            top_k_values=tuple(args.faithfulness_top_k),
+            n_random_baselines=args.faithfulness_random_baselines,
+            seed=args.seed,
+        )
+        faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
+
     print(f"checkpoint: {args.checkpoint.name}  (epoch {ckpt.get('epoch', '?')}, {n_params:,} params)")
     print(f"env:        {area}  |  degradation: {args.degradation}  |  device: {device}")
     print(f"policy:     {'stochastic' if args.stochastic else 'argmax (deterministic)'}")
+    if args.faithfulness:
+        print(f"faith:      k={args.faithfulness_top_k}  "
+              f"random_baselines={args.faithfulness_random_baselines}  "
+              f"every={args.faithfulness_every}")
     print()
-    print(f"{'ep':>3}  {'pickups':>7}  {'reward':>10}  {'mean_wait_s':>11}  {'rl_steps':>8}  {'wall_s':>7}")
-    print("-" * 60)
+    header_extra = "     DEF_mean  WAMSN_mean" if args.faithfulness else ""
+    print(f"{'ep':>3}  {'pickups':>7}  {'reward':>10}  {'mean_wait_s':>11}  "
+          f"{'rl_steps':>8}  {'wall_s':>7}{header_extra}")
+    print("-" * (60 + len(header_extra)))
 
-    results = []
+    results: list[dict] = []
+    all_faith_records: list[dict] = []
     for ep in range(args.episodes):
         t0 = time.time()
-        r = _run_episode(env, policy, device, args.stochastic)
+        r, faith_records = _run_episode(
+            env, policy, device, args.stochastic,
+            faithfulness_evaluator=faith_evaluator,
+            faithfulness_every=args.faithfulness_every,
+            episode_index=ep,
+        )
         r["wall_s"] = round(time.time() - t0, 1)
         results.append(r)
+        all_faith_records.extend(faith_records)
+
+        extra = ""
+        if args.faithfulness and faith_records:
+            ep_summary = _summarise_faithfulness(faith_records)
+            r["faithfulness"] = ep_summary
+            if ep_summary["n_decisions_scored"] > 0:
+                extra = f"     {ep_summary['def_mean']:+.3f}     {ep_summary['wamsn_mean']:.3f}"
+            else:
+                extra = "         n/a         n/a"
+
         print(f"{ep:>3}  {r['total_pickups']:>7}  {r['total_reward']:>+10.2f}  "
-              f"{r['final_mean_pending_wait_s']:>11}  {r['rl_steps']:>8}  {r['wall_s']:>7.1f}")
+              f"{r['final_mean_pending_wait_s']:>11}  {r['rl_steps']:>8}  "
+              f"{r['wall_s']:>7.1f}{extra}")
 
     env.close()
 
-    # Aggregate.
+    # Aggregate policy metrics.
     pickups = np.array([r["total_pickups"] for r in results])
     rewards = np.array([r["total_reward"] for r in results])
     waits = np.array([r["final_mean_pending_wait_s"] for r in results])
@@ -162,9 +292,39 @@ def main() -> int:
     print(f"  reward:    {rewards.mean():+.2f} ± {rewards.std():.2f}")
     print(f"  mean_wait: {waits.mean():.1f}s")
 
+    # Aggregate faithfulness across all episodes' records — same filtering
+    # rules as the per-episode summary. Report distribution stats since DEF
+    # is per-decision and heavy-tailed.
+    faith_run_summary: dict = {}
+    if args.faithfulness:
+        faith_run_summary = _summarise_faithfulness(all_faith_records)
+        if faith_run_summary.get("n_decisions_scored", 0) > 0:
+            print(
+                f"  DEF:       {faith_run_summary['def_mean']:+.3f} ± "
+                f"{faith_run_summary['def_std']:.3f}  "
+                f"(p05={faith_run_summary['def_p05']:+.3f}, "
+                f"p50={faith_run_summary['def_p50']:+.3f}, "
+                f"p95={faith_run_summary['def_p95']:+.3f}, "
+                f"n={faith_run_summary['n_decisions_scored']})"
+            )
+            print(
+                f"  WAMSN:     {faith_run_summary['wamsn_mean']:.3f} ± "
+                f"{faith_run_summary['wamsn_std']:.3f}"
+            )
+        else:
+            print(f"  faithfulness: no scorable decisions ({faith_run_summary.get('note', '')})")
+
+    # Emit per-decision faithfulness records as JSONL alongside the summary.
+    if args.faithfulness and all_faith_records:
+        jsonl_path = args.checkpoint.with_suffix(".faithfulness.jsonl")
+        with jsonl_path.open("w") as f:
+            for rec in all_faith_records:
+                f.write(json.dumps(rec) + "\n")
+        print(f"faithfulness records: {jsonl_path} ({len(all_faith_records)} decisions)")
+
     # Emit machine-readable summary for downstream comparison.
     summary_path = args.checkpoint.with_suffix(".eval.json")
-    summary_path.write_text(json.dumps({
+    summary: dict = {
         "checkpoint": str(args.checkpoint),
         "epoch": ckpt.get("epoch"),
         "area": area,
@@ -177,7 +337,15 @@ def main() -> int:
         "std_pickups": float(pickups.std()),
         "mean_reward": float(rewards.mean()),
         "std_reward": float(rewards.std()),
-    }, indent=2))
+    }
+    if args.faithfulness:
+        summary["faithfulness_summary"] = faith_run_summary
+        summary["faithfulness_config"] = {
+            "top_k_values": list(args.faithfulness_top_k),
+            "n_random_baselines": args.faithfulness_random_baselines,
+            "faithfulness_every": args.faithfulness_every,
+        }
+    summary_path.write_text(json.dumps(summary, indent=2))
     print(f"summary: {summary_path}")
     return 0
 
