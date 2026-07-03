@@ -75,6 +75,13 @@ def main() -> int:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--n-gat-layers", type=int, default=2)
     parser.add_argument("--n-heads", type=int, default=4)
+    parser.add_argument("--centralised-critic",
+                        action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help="MAPPO CTDE: critic is fed a joint pooled embedding "
+                             "over all agents in the batch (proposal §7.7). "
+                             "DEFAULT: enabled. Use --no-centralised-critic to "
+                             "fall back to a per-agent V.")
     parser.add_argument("--save-every", type=int, default=10)
     # Best-checkpoint tracking: after each epoch, compute the mean of the last
     # `--best-window` training-episode pickup counts. Whenever that rolling
@@ -117,6 +124,7 @@ def main() -> int:
         hidden_dim=args.hidden_dim,
         n_gat_layers=args.n_gat_layers,
         n_heads=args.n_heads,
+        centralised_critic=args.centralised_critic,
         device=device,
     )
     policy = DispatchGATPolicy(pol_cfg)

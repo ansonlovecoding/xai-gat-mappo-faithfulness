@@ -111,6 +111,73 @@ REPLACEMENTS = [
         "itself one of the questions DEF is designed to answer. "
         "A lightweight grid simulator",
     ),
+    # Remove the "lightweight grid simulator fallback" line from the fleet-
+    # environment description (para 42). The feature was described but
+    # never implemented; keeping the sentence would misrepresent scope.
+    (
+        "answer. A lightweight grid simulator (Lin et al. [1]) is kept "
+        "as a fast fallback if SUMO stepping is too slow.",
+        "answer.",
+    ),
+    # And remove the "falls back to the lightweight grid simulator" clause
+    # from the Risk-mitigation list (para 97). The other mitigations
+    # (reused MAPPO, reduced fleet size, prioritising DEF/WAMSN) still
+    # stand.
+    (
+        "reduces fleet size and model complexity, falls back to the "
+        "lightweight grid simulator (§7.1), and prioritises",
+        "reduces fleet size and model complexity, and prioritises",
+    ),
+    # §7.7 fix (1/3): actor description — replace the GATv2 + zone-based
+    # action-space fragment with the hand-rolled multi-head attention +
+    # Discrete(K+1) formulation that the code actually implements.
+    (
+        "a GATv2 encoder over the vehicle graph feeding an action head "
+        "over {stay, reposition to a neighbour zone, accept order} with "
+        "invalid-action masking",
+        "a hand-rolled multi-head attention encoder over the per-agent "
+        "heterogeneous graph (self + K nearest neighbouring vehicles + "
+        "K nearest pending reservations) feeding an action head of "
+        "Discrete(K+1) — either stay idle or accept one of the K "
+        "candidate reservations — with invalid-reservation masking",
+    ),
+    # §7.7 fix (2/3): reward shaping — drop the "small penalty for empty
+    # repositioning" clause since repositioning is not an action, and
+    # replace with the actual pickup / dispatch / wait triple used in
+    # env.py (see paragraph 42).
+    (
+        "Reward shaping encourages cooperation: positive for orders "
+        "served, negative for waiting time, small penalty for empty "
+        "repositioning.",
+        "Reward shaping encourages cooperation: positive per completed "
+        "pickup and per successful dispatch attempt, negative in "
+        "proportion to the mean pending-rider waiting time. No "
+        "repositioning penalty is used because repositioning is not "
+        "part of the action space.",
+    ),
+    # §7.7 fix (3/3): implementation stack — replace the "reused MAPPO
+    # library + PyTorch Geometric GAT encoder" line with the reality
+    # (hand-rolled MAPPO + hand-rolled GAT, motivated by the need for
+    # first-class attention access in §7.4). Kept as a rationale sentence
+    # rather than a bare stack list to preserve the paragraph's flow.
+    (
+        "PPO is reused from a maintained MAPPO library with a PyTorch "
+        "Geometric GAT encoder, not reimplemented.",
+        "The MAPPO training loop and the multi-head attention encoder "
+        "are implemented from scratch in `src/dispatch_marl/` so that "
+        "attention weights remain first-class outputs of the policy's "
+        "forward pass — a requirement for the faithfulness pipeline of "
+        "§7.4 rather than a design preference.",
+    ),
+    # §7.8 fix: drop torch-geometric from the Colab install list — we
+    # don't depend on it (see §7.7 above). Everything else in the list
+    # stays.
+    (
+        "eclipse-sumo, libsumo, traci, torch, torch-geometric, "
+        "pettingzoo, pandas, pyarrow, numpy, matplotlib",
+        "eclipse-sumo, libsumo, traci, torch, pettingzoo, pandas, "
+        "pyarrow, numpy, matplotlib",
+    ),
 ]
 
 
@@ -127,25 +194,28 @@ def main() -> int:
     hits = 0
     for pi, para in enumerate(doc.paragraphs):
         for old, new in REPLACEMENTS:
-            if old in para.text:
-                # Single-run edit is the safest path — para.text setter
-                # wipes formatting; direct run-text substitution preserves it.
-                if len(para.runs) == 1:
-                    para.runs[0].text = para.runs[0].text.replace(old, new)
-                    print(f"[para {pi}] applied replacement ({len(old)} → {len(new)} chars)")
-                    hits += 1
-                else:
-                    # Multi-run paragraph: replace text and warn about
-                    # potential formatting loss.
-                    print(f"[para {pi}] WARNING: {len(para.runs)} runs; "
-                          "replacement may lose sub-run formatting")
-                    joined = "".join(r.text for r in para.runs)
-                    joined = joined.replace(old, new)
-                    # Wipe all but the first run; put the new text into the first.
-                    for r in para.runs[1:]:
-                        r.text = ""
-                    para.runs[0].text = joined
-                    hits += 1
+            if old not in para.text:
+                continue
+            # First try a run-local edit — if OLD is fully contained inside
+            # one run, we can modify only that run's text and preserve every
+            # other run's formatting (bold labels, italics, hyperlinks, ...).
+            applied_in_run = False
+            for run in para.runs:
+                if old in run.text:
+                    run.text = run.text.replace(old, new)
+                    applied_in_run = True
+                    print(f"[para {pi}] applied in-run replacement ({len(old)} → {len(new)} chars)")
+                    break
+            if not applied_in_run:
+                # OLD spans multiple runs — no clean way to keep sub-run
+                # formatting. Fall back to join-and-replace with a warning.
+                print(f"[para {pi}] WARNING: OLD text spans {len(para.runs)} runs; "
+                      "fell back to join-and-replace (sub-run formatting may be lost)")
+                joined = "".join(r.text for r in para.runs).replace(old, new)
+                for r in para.runs[1:]:
+                    r.text = ""
+                para.runs[0].text = joined
+            hits += 1
 
     if hits == 0:
         print("ERROR: no replacement matched. The proposal text has drifted "

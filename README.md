@@ -19,30 +19,99 @@ trading off control performance.
 
 ## Progress checklist
 
-Quick-glance view of what's done and what's left. Update as pieces land.
+Organised by the proposal's objectives and milestones (M1 = 19 Jul, M2 = 9
+Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not started.
 
-| Layer | Status |
-|---|---|
-| SUMO scenarios (3 Yubei areas + tunnels + taxi fleet + ride demand) | ✅ done |
-| PettingZoo environment + TraCI bridge | ✅ done |
-| Telemetry-degradation layer (`off` / `tunnel_triggered` / `random_dropout`) | ✅ done |
-| GAT-MAPPO policy (with **coupled** attention explanation channel) | ✅ done |
-| MAPPO training loop + best-checkpoint tracking | ✅ done |
-| Non-learning baselines (Random / Nearest / SUMO greedy) | ✅ done |
-| First trained checkpoint (7.7 pickups on central_park; beats random & nearest) | ✅ done |
-| Colab GPU training workflow | ✅ done |
-| **Faithfulness metrics** (comprehensiveness / sufficiency / attention-vs-gradient) | ❌ **next** |
-| **Decoupled explanation head** (the dissertation's headline contribution) | ❌ blocked by faithfulness metric choice |
-| Stronger training run (close the gap to SUMO greedy's 30 pickups) | ⚠️ partial |
-| Degradation experiments (tunnel_triggered vs matched-rate random ablation) | ❌ not started |
-| Thesis figures / result tables / write-up | ❌ not started |
+### A. Simulator & environment (WP1 · Objective 2 · Milestone M1)
 
-**Why "faithfulness metrics" is next, not stronger training:** the dissertation's
-core claim is about *whether attention faithfully explains the policy's
-decisions*, not about beating a benchmark on pickup count. A faithfulness
-metric can be computed on any policy (even weakly trained), and it defines
-the objective the decoupled explanation head has to satisfy. Without it,
-the decoupled head has nothing concrete to optimise against.
+| Item | Status | Notes |
+|---|---|---|
+| SUMO scenarios (3 Yubei areas + tunnels) | ✅ | `scenarios/yubei/central_park/`, `yuelai/`, `xiantao/` |
+| Taxi fleet + ride demand via `add_taxis.py` | ✅ | 20 taxis, 50 riders per scenario; `has.taxi.device=true` |
+| PettingZoo `ParallelEnv` bridging SUMO via **libsumo** | ✅ | libsumo preferred, TraCI fallback (`_sumo.py`) |
+| Decentralised action space `Discrete(K+1)` (no-op / accept k-th reservation) | ✅ | Section 7.1 aligned |
+| Per-agent heterogeneous graph observation (self + K neighbours + K reservations) | ✅ | Section 7.1 aligned |
+| Vehicle features: position, velocity, availability, AoI | ✅ | `SELF_FEAT_DIM=5`; AoI tracked per agent |
+| Telemetry-degradation layer (`off` / `tunnel_triggered` / `random_dropout`) | ✅ | Section 7.2 aligned |
+| AoI = current_time − last_valid_time bookkeeping | ✅ | in `DegradationLayer.update_and_get_aoi` |
+
+### B. GAT-MAPPO dispatcher (WP2, WP3 · Objective 1 · Milestone M1)
+
+| Item | Status | Notes |
+|---|---|---|
+| Hand-rolled multi-head GAT layer with softmax attention exposed | ✅ | `models/gat.py` |
+| MAPPO training loop (rollout + GAE + clipped PPO) | ✅ | `training.py` |
+| Best-checkpoint tracking (rolling-mean pickups) | ✅ | `train.py --best-window` |
+| Colab GPU workflow with libsumo + Drive persistence | ✅ | `docs/COLAB.md` |
+| First trained checkpoint on central_park (7.67 ± 2.05 pickups) | ✅ | `results/mappo_central_park_reshaped_v1/ckpt_epoch_0050.pt` |
+| **Centralised critic** V(s) for CTDE (proposal §7.7) | ✅ | default ON since the A/B in `results/ab_centralised_critic_v1_seed42/`: +18 % mean pickups vs. per-agent V, and mitigates late-run entropy collapse. Toggle with `--no-centralised-critic`. |
+| Stronger training run closing gap to SUMO greedy (30 pickups) | ⚠️ | best rolling-mean now 8.80 pickups (CTDE, seed 42); baseline v1 was 7.67. Still ~4× short of SUMO greedy — needs longer runs and possibly entropy-coefficient tuning next. |
+
+### C. Baselines (Section 7.5)
+
+| Baseline | Status | Notes |
+|---|---|---|
+| **B0** — Greedy dispatch (SUMO built-in bipartite matcher) | ✅ | via `scripts/run_baselines.py --policies sumo_greedy` |
+| **B1** — MAPPO + MLP (no graph) | ❌ | needs a plain-MLP policy variant + separate training run |
+| **B2** — GAT-MAPPO (proposed) | ✅ | current `DispatchGATPolicy` |
+| **B3** — GAT-MAPPO without AoI (ablation, AoI-unaware) | ❌ | needs obs-shape config flag to drop the AoI feature |
+| Extras: Random, NearestReservation (naive baselines beyond proposal) | ✅ | useful as lower bounds; kept in `policies.py` |
+
+### D. Faithfulness evaluation infrastructure (Section 7.4 · Objectives 3 & 5 · Milestone M2 — **the core novel contribution**)
+
+| Item | Status | Notes |
+|---|---|---|
+| Attention weights exposed by `policy.forward()` (Method A) | ✅ | `(L, B, H, N, N)` tensor already returned |
+| Node-occlusion Method B: mask node i, measure ΔP(a*) | ❌ | need a `faithfulness.py` module wrapping counterfactual forward passes |
+| **DEF metric** (normalised comprehensiveness + sufficiency gains) | ❌ | formula in §7.4 (proposal eqs. Comp/Suff/g_comp/g_suff/DEF) |
+| **Attention drift** (JS divergence between clean and degraded α) | ❌ | requires paired clean/degraded rollouts |
+| **WAMSN metric** (Σ α_i · AoI_i / AoI_max / Σ α_i) | ❌ | formula in §7.4; env already carries per-node AoI |
+| Random-explanation baseline for the DEF gain terms | ❌ | needs a size-matched random subset sampler |
+| Performance-degradation rate & faithfulness-degradation rate | ❌ | derivable from clean vs degraded runs once DEF exists |
+| Faithfulness-decoupling operationalisation ((i) DEF vs perf gap, (ii) WAMSN–DEF correlation) | ❌ | analysis script on top of the metric module |
+| Decoupled explanation head (architectural comparison against coupled attention) | ❌ | design depends on DEF/WAMSN — deliberately deferred |
+
+### E. Dataset & experimental protocol (Section 7.6 · Milestone M2)
+
+| Item | Status | Notes |
+|---|---|---|
+| OSM → SUMO network build reproducible from committed `.osm.xml` | ✅ | `scripts/build_yubei.py` |
+| Ride-demand generation via `randomTrips.py`, seed-pinned | ✅ | seed=42 baked in |
+| Fixed-length episodes (1200 s ≈ 1 h equivalent) | ✅ | `sumocfg` end=1200 |
+| Chronological train/val/test split 70/15/15 | ❌ | current runs are single-episode; needs an episode-index pipeline |
+| Multiple degradation severity levels (paired clean/degraded variants) | ❌ | `DegradationConfig` supports one severity per run; sweep script missing |
+| Versioned dataset manifest (`.npz`/Parquet + seed/version hash) | ⚠️ | `tunnels.json` versions the network; episode-level manifest missing |
+
+### F. Main experiment (Section 7.5 · WP4 · Objective 4 · Milestone M2)
+
+| Item | Status | Notes |
+|---|---|---|
+| Sweep {B0, B1, B2, B3} × severity × seed | ❌ | blocked on B1, B3, and DEF/WAMSN |
+| Paired significance tests over matched clean/degraded episodes | ❌ | requires the paired-variant dataset from E |
+| **H1** — degradation ↑ → DEF ↓ | ❌ | tests DEF against severity |
+| **H2** — DEF declines faster than performance (decoupling) | ❌ | headline hypothesis of the dissertation |
+| **H3** — degradation ↑ → WAMSN ↑ | ❌ | tests attention allocation to stale nodes |
+| **H4** — WAMSN and DEF negatively correlated | ❌ | correlational test across severities |
+| **H5** — AoI-aware training changes the DEF trajectory (RQ4 mitigation) | ❌ | needs a training run with degradation ON |
+
+### G. Write-up & release (WP5, WP6 · Objective 6 · Milestone M3)
+
+| Item | Status | Notes |
+|---|---|---|
+| MSc dissertation chapters (Intro / LR / Method / Experiments / Discussion / Conclusion) | ❌ | starts after M2 |
+| IEEE paper submission (ITSC / ICTAI / ICC / GLOBECOM) | ❌ | condensed version of the dissertation |
+| Open-source repo release (benchmark + degradation ops + DEF/WAMSN code) | ⚠️ | repo exists; needs public README polish, license header, install pipeline |
+| Reproducible dataset release (episodes + degradation manifests) | ❌ | depends on E being done |
+
+### Where the critical path runs
+
+By milestone budget:
+
+- **M1 (19 Jul)** — mostly done. Missing: **B1** MAPPO+MLP baseline and **B3** AoI-unaware ablation (§C). Neither is conceptually hard: B1 needs a plain-MLP policy variant sharing the same MAPPO trainer; B3 is a `SELF_FEAT_DIM=4` obs-shape flag plus a separate training run.
+- **M2 (9 Aug)** — nothing done yet. Blocking work: sections D and F. This is where the dissertation's actual contribution gets built. Everything in E and F transitively depends on D.
+- **M3 (1 Sep)** — write-up, unblocked once M2 lands.
+
+**Next best thing to work on is section D** — specifically DEF + WAMSN as concrete Python functions in a new `src/dispatch_marl/faithfulness.py`. Attention weights and per-agent AoI are both already produced by the env/policy pipeline, so wiring them into the metric formulae from §7.4 of the proposal is now the smallest self-contained deliverable that unlocks the largest downstream chain.
 
 ## Why Yubei? Tunnels as physical degradation zones
 
