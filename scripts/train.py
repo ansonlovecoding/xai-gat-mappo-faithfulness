@@ -8,10 +8,17 @@ Logs to stdout as a table AND appends a JSONL row per epoch under
 ``runs/mappo/<area>_<timestamp>/train_log.jsonl``. Model checkpoints saved at
 ``ckpt_epoch_<N>.pt`` in the same dir.
 
+Optional faithfulness sampling: pass --faith-every-epochs N to evaluate
+DEF/WAMSN on a random sample of decisions from each Nth epoch's rollout.
+Aggregate stats land in the JSONL row under `faithfulness`, ready for a
+"faithfulness vs training progress" figure. Off by default because a
+faithfulness pass adds ~1000 counterfactual forwards per triggering epoch.
+
 Usage:
   python scripts/train.py --area central_park --epochs 50
   python scripts/train.py --area yuelai --epochs 20 --lr 1e-4
   python scripts/train.py --area central_park --degradation tunnel_triggered
+  python scripts/train.py --area central_park --epochs 100 --faith-every-epochs 5
 """
 from __future__ import annotations
 
@@ -21,6 +28,7 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import torch
 from dotenv import load_dotenv
 
@@ -34,12 +42,15 @@ from src.dispatch_marl import (  # noqa: E402
     DegradationConfig,
     DispatchEnv,
     DispatchEnvConfig,
+    FaithfulnessConfig,
+    FaithfulnessEvaluator,
     PPOConfig,
     collect_rollout,
     compute_gae,
     ppo_update,
 )
 from src.dispatch_marl.models import DispatchGATPolicy, PolicyConfig  # noqa: E402
+from src.dispatch_marl.training import AgentStep  # noqa: E402
 
 
 def choose_device() -> str:
@@ -48,6 +59,71 @@ def choose_device() -> str:
     if torch.cuda.is_available():
         return "cuda"
     return "cpu"
+
+
+def _sample_faithfulness(
+    buffer: list[AgentStep],
+    evaluator: FaithfulnessEvaluator,
+    sample_size: int,
+    device: str,
+    rng: np.random.Generator,
+) -> dict:
+    """Evaluate DEF/WAMSN on a random sub-sample of decisions from the rollout.
+
+    The buffer is already collected under the current policy weights, and
+    each AgentStep carries the exact obs used to make its decision. That's
+    what the faithfulness metrics need — no extra environment steps.
+
+    Called between `collect_rollout` and `compute_gae` so the metrics reflect
+    the same policy that produced the rollout.
+
+    Returns aggregate stats suitable for a JSONL row; filters out decisions
+    with zero valid reservations from DEF stats (their DEF is trivially 0
+    and would bias the mean down).
+    """
+    n = min(sample_size, len(buffer))
+    if n == 0:
+        return {"n_scored": 0, "n_total": 0}
+
+    # Random subset without replacement — keeps eval cheap and lets us
+    # bootstrap CIs later if needed.
+    idx = rng.choice(len(buffer), size=n, replace=False)
+
+    def_scores: list[float] = []
+    g_comps: list[float] = []
+    g_suffs: list[float] = []
+    wamsns: list[float] = []
+    n_scored = 0
+    for i in idx:
+        step = buffer[int(i)]
+        # obs dict is per-agent numpy; add batch dim and move to device.
+        obs = {
+            k: torch.as_tensor(v, dtype=torch.float32, device=device).unsqueeze(0)
+            for k, v in step.obs.items()
+        }
+        result = evaluator.evaluate_decision(obs, action=step.action)
+        # WAMSN is meaningful for every decision (needs no valid-reservation
+        # signal), DEF is only meaningful when there's at least one non-self
+        # ablatable node. Filter DEF to match the ablation logic in
+        # eval_policy._summarise_faithfulness.
+        n_valid_res = int(step.obs["reservations_mask"].sum())
+        wamsns.append(result.wamsn)
+        if n_valid_res > 0:
+            def_scores.append(result.def_score)
+            g_comps.append(result.g_comp)
+            g_suffs.append(result.g_suff)
+            n_scored += 1
+
+    out: dict = {"n_scored": n_scored, "n_total": n}
+    if n_scored > 0:
+        out["def_mean"] = float(np.mean(def_scores))
+        out["def_std"] = float(np.std(def_scores))
+        out["g_comp_mean"] = float(np.mean(g_comps))
+        out["g_suff_mean"] = float(np.mean(g_suffs))
+    if wamsns:
+        out["wamsn_mean"] = float(np.mean(wamsns))
+        out["wamsn_std"] = float(np.std(wamsns))
+    return out
 
 
 def main() -> int:
@@ -91,6 +167,16 @@ def main() -> int:
     # rollout per epoch) to keep training cheap.
     parser.add_argument("--best-window", type=int, default=10,
                         help="epochs to average for rolling-mean best tracking; 0 disables")
+    # Faithfulness sampling. Off by default because a full pass adds
+    # ~sample_size × 25 counterfactual forwards on top of the epoch.
+    parser.add_argument("--faith-every-epochs", type=int, default=0,
+                        help="evaluate DEF/WAMSN on rollout every Nth epoch; 0 disables")
+    parser.add_argument("--faith-sample-size", type=int, default=128,
+                        help="agent-steps sampled from the rollout buffer per faith eval")
+    parser.add_argument("--faith-top-k", type=int, nargs="+", default=[1, 2, 3],
+                        help="top-k values used for DEF's comp/suff terms")
+    parser.add_argument("--faith-random-baselines", type=int, default=3,
+                        help="random subsets per k; kept lower than eval-time (5) for speed")
     parser.add_argument("--log-dir", type=Path, default=PROJECT_ROOT / "runs" / "mappo")
     parser.add_argument("--device", default=None,
                         help="cpu, cuda, or mps; default: auto")
@@ -141,6 +227,21 @@ def main() -> int:
         max_grad_norm=args.max_grad_norm,
     )
 
+    # ---- faithfulness sampler (built once so the RNG stays consistent)
+    faith_evaluator: FaithfulnessEvaluator | None = None
+    faith_rng: np.random.Generator | None = None
+    if args.faith_every_epochs > 0:
+        faith_cfg = FaithfulnessConfig(
+            top_k_values=tuple(args.faith_top_k),
+            n_random_baselines=args.faith_random_baselines,
+            seed=args.seed,
+        )
+        faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
+        faith_rng = np.random.default_rng(args.seed)
+        print(f"faith:   every {args.faith_every_epochs} epochs, "
+              f"sample_size={args.faith_sample_size}, "
+              f"top_k={args.faith_top_k}, random_baselines={args.faith_random_baselines}")
+
     # ---- table header
     header = ("epoch", "pickups", "reward", "n_steps", "π_loss", "V_loss", "H", "KL", "clipfrac", "wall_s")
     fmt = "{:>5}  {:>7}  {:>+8.2f}  {:>7}  {:>8.4f}  {:>8.4f}  {:>7.3f}  {:>7.4f}  {:>8.3f}  {:>6.1f}"
@@ -184,6 +285,18 @@ def main() -> int:
         # 1. rollout
         buffer, ep_stats = collect_rollout(env, policy, device=device)
 
+        # 1b. Optional faithfulness sample on the just-rolled-out buffer.
+        # Done before compute_gae/ppo_update so the metrics reflect the same
+        # policy weights that produced the rollout.
+        faith_stats: dict | None = None
+        if (faith_evaluator is not None
+                and faith_rng is not None
+                and epoch % args.faith_every_epochs == 0):
+            faith_stats = _sample_faithfulness(
+                buffer, faith_evaluator, args.faith_sample_size,
+                device=device, rng=faith_rng,
+            )
+
         # 2. GAE
         compute_gae(buffer, gamma=args.gamma, gae_lambda=args.gae_lambda)
 
@@ -218,10 +331,18 @@ def main() -> int:
             "is_new_best": is_new_best,
             **{k: round(v, 5) for k, v in loss_d.items()},
         }
+        if faith_stats is not None:
+            # Round for readability; consumers of the JSONL still get 4 decimals.
+            row["faithfulness"] = {
+                k: (round(v, 4) if isinstance(v, float) else v)
+                for k, v in faith_stats.items()
+            }
         with log_file.open("a") as f:
             f.write(json.dumps(row) + "\n")
 
         marker = "  ★ new best" if is_new_best else ""
+        if faith_stats is not None and faith_stats.get("n_scored", 0) > 0:
+            marker = f"  DEF={faith_stats['def_mean']:+.3f} WAMSN={faith_stats.get('wamsn_mean', 0.0):.3f}{marker}"
         print(fmt.format(
             epoch,
             ep_stats.total_pickups,
