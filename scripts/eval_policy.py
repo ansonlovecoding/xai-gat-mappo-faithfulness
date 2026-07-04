@@ -92,10 +92,20 @@ def _run_episode(
     # A global counter over decisions is what we sub-sample against, so the
     # cadence is consistent regardless of how many agents act on a given step.
     decision_counter = 0
+    # Empirical degradation rate — fraction of agent-obs pairs where
+    # position_valid == 0. Used by the degradation ablation script to
+    # calibrate the matched-rate random_dropout baseline.
+    n_degraded_obs = 0
+    n_total_obs = 0
 
     while not env.done:
         if obs_dict:
             batched, agents = obs_dict_to_tensors(obs_dict, device=device)
+            # Track empirical degradation rate. position_valid is (B, 1) int8:
+            # 1 = trustworthy obs, 0 = degraded.
+            pv = batched["position_valid"]
+            n_total_obs += int(pv.numel())
+            n_degraded_obs += int((pv == 0).sum().item())
             with torch.no_grad():
                 out = policy.forward(batched)
                 logits = out["logits"]
@@ -148,6 +158,9 @@ def _run_episode(
         "total_reward": round(total_reward, 3),
         "final_mean_pending_wait_s": round(last_wait, 1),
         "rl_steps": step,
+        "empirical_degradation_rate": (
+            round(n_degraded_obs / n_total_obs, 4) if n_total_obs > 0 else 0.0
+        ),
     }
     return summary, faith_records
 

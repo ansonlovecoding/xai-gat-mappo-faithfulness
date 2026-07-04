@@ -99,9 +99,16 @@ nodes = 1 (self) + K_n (nearest other taxis) + K_r (nearest pending reservations
 
 | Node type | Dim | Fields |
 |---|---:|---|
-| self | 3 | `[x_norm, y_norm, episode_time_norm]` |
-| neighbour taxi | 4 | `[dx, dy, is_empty, dist_norm]` |
+| self | 5 | `[x_norm, y_norm, episode_time_norm, velocity_norm, aoi_norm]` |
+| neighbour taxi | 5 | `[dx, dy, is_empty, dist_norm, aoi_norm]` |
 | reservation | 5 | `[dx_pickup, dy_pickup, dx_dropoff, dy_dropoff, wait_norm]` |
+
+`aoi_norm` on both vehicle-type nodes is Age-of-Information divided by
+`AOI_MAX_S` (clipped to [0, 1]) — required so per-node WAMSN in the
+faithfulness pipeline (§7.4) can multiply attention by a *per-node*
+staleness. Neighbour AoI is refreshed every sim step by the
+`DegradationLayer`, whether or not the neighbour happens to be the acting
+agent (otherwise a taxi that's mid-ride would accumulate AoI forever).
 
 Neighbour/reservation coordinates are stored **relative to self**, and all
 distances are divided by the network diagonal. Two consequences:
