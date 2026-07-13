@@ -98,6 +98,7 @@ def _sample_faithfulness(
     idx = rng.choice(len(buffer), size=n, replace=False)
 
     def_scores: list[float] = []
+    def_margins: list[float] = []
     g_comps: list[float] = []
     g_suffs: list[float] = []
     wamsns: list[float] = []
@@ -118,6 +119,7 @@ def _sample_faithfulness(
         wamsns.append(result.wamsn)
         if n_valid_res > 0:
             def_scores.append(result.def_score)
+            def_margins.append(result.def_margin)
             g_comps.append(result.g_comp)
             g_suffs.append(result.g_suff)
             n_scored += 1
@@ -126,6 +128,8 @@ def _sample_faithfulness(
     if n_scored > 0:
         out["def_mean"] = float(np.mean(def_scores))
         out["def_std"] = float(np.std(def_scores))
+        out["def_m_mean"] = float(np.mean(def_margins))
+        out["def_m_std"] = float(np.std(def_margins))
         out["g_comp_mean"] = float(np.mean(g_comps))
         out["g_suff_mean"] = float(np.mean(g_suffs))
     if wamsns:

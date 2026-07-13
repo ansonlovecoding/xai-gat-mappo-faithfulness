@@ -169,6 +169,8 @@ def _run_episode(
                             "action": result.action,
                             "pi_full": round(result.pi_full, 4),
                             "def": round(result.def_score, 4),
+                            "def_m": round(result.def_margin, 4),
+                            "m_full": round(result.m_full, 4),
                             "g_comp": round(result.g_comp, 4),
                             "g_suff": round(result.g_suff, 4),
                             "comp": round(result.comp, 4),
@@ -240,6 +242,12 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         "wamsn_mean": float(wamsns.mean()),
         "wamsn_std": float(wamsns.std()),
     }
+    # Logit-margin DEF (absent in records from pre-margin checkpoints/runs).
+    def_ms = np.array([r["def_m"] for r in non_trivial if "def_m" in r])
+    if def_ms.size > 0:
+        out["def_m_mean"] = float(def_ms.mean())
+        out["def_m_std"] = float(def_ms.std())
+        out["def_m_p50"] = float(np.percentile(def_ms, 50))
     # Attention drift — like WAMSN, meaningful for every decision.
     drifts = np.array([r["drift"] for r in records if "drift" in r])
     if drifts.size > 0:
@@ -384,6 +392,11 @@ def main() -> int:
                 f"p95={faith_run_summary['def_p95']:+.3f}, "
                 f"n={faith_run_summary['n_decisions_scored']})"
             )
+            if "def_m_mean" in faith_run_summary:
+                print(
+                    f"  DEF_m:     {faith_run_summary['def_m_mean']:+.3f} ± "
+                    f"{faith_run_summary['def_m_std']:.3f}  (logit margin)"
+                )
             print(
                 f"  WAMSN:     {faith_run_summary['wamsn_mean']:.3f} ± "
                 f"{faith_run_summary['wamsn_std']:.3f}"

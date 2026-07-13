@@ -65,6 +65,11 @@ class FaithfulnessConfig:
     n_random_baselines: int = 5
     # AoI normalisation constant. Must match env's AOI_MAX_S.
     aoi_max_s: float = AOI_MAX_S
+    # Clamp for the logit-margin metric. Margins hit ±inf when an ablation
+    # masks the chosen action out of the candidate set (its logit → -inf)
+    # or leaves it unopposed; the cap keeps DEF_margin finite and bounds a
+    # single decision's influence on the mean.
+    margin_cap: float = 10.0
     # How to reduce (L, H) → per-node attention. "mean" or "last" (last layer).
     aggregate_layers: str = "mean"
     # Deterministic random-baseline sampling.
@@ -87,6 +92,16 @@ class DecisionFaithfulness:
     wamsn: float                      # WAMSN ∈ [0, 1]
     attention_row: np.ndarray         # (N,) — for later drift computation
     node_mask: np.ndarray             # (N,) bool — which nodes were valid
+    # Logit-margin variants of the DEF terms. Probability-based DEF loses
+    # signal when the policy saturates (entropy → 0 makes π(a*) ≈ 1
+    # insensitive to occlusion); the margin logit[a*] − max_other keeps
+    # moving. Computed from the SAME counterfactual forwards, so free.
+    # Units are logits (clamped to ±margin_cap), not probabilities —
+    # comparable within a checkpoint, not across differently-scaled ones.
+    m_full: float = 0.0               # margin on the full graph
+    def_margin: float = 0.0           # ½ (g_comp_m + g_suff_m)
+    g_comp_m: float = 0.0
+    g_suff_m: float = 0.0
     per_k: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
@@ -200,6 +215,25 @@ def compute_wamsn(
     return float(numer / denom)
 
 
+def decision_margin(logits: torch.Tensor, action: int, cap: float) -> float:
+    """Logit margin of `action` over its best alternative, clamped to ±cap.
+
+    Handles the two ablation edge cases explicitly:
+    - the chosen action was masked out of the candidate set (its logit is
+      -inf after occlusion) → −cap: the ablation destroyed the decision;
+    - every alternative is masked (unopposed decision) → +cap.
+    """
+    arr = logits.detach().cpu().numpy().astype(np.float64).ravel()
+    a = arr[action]
+    others = np.delete(arr, action)
+    others = others[np.isfinite(others)]
+    if not np.isfinite(a):
+        return -cap
+    if others.size == 0:
+        return cap
+    return float(np.clip(a - others.max(), -cap, cap))
+
+
 # ------------------------------------------------------------ evaluator
 
 
@@ -240,8 +274,17 @@ class FaithfulnessEvaluator:
         self,
         obs: dict[str, torch.Tensor],
         action: int | None = None,
+        importance_row: np.ndarray | None = None,
     ) -> DecisionFaithfulness:
-        """Compute the full DEF/WAMSN bundle for a single-decision obs (B=1)."""
+        """Compute the full DEF/WAMSN bundle for a single-decision obs (B=1).
+
+        By default the explanation being scored is the coupled channel (the
+        GAT attention row). Pass `importance_row` — any (N,) non-negative
+        per-node importance — to score a different explanation over the
+        same decision, e.g. the decoupled explainer head. Top-k selection
+        AND WAMSN then use that row; `attention_row` in the result stays
+        the raw attention (so drift remains well-defined either way).
+        """
         self._check_batch_one(obs)
         self.policy.eval()
 
@@ -256,10 +299,13 @@ class FaithfulnessEvaluator:
         if action is None:
             action = int(probs.argmax(dim=-1).item())
         pi_full = float(probs[0, action].item())
+        m_full = decision_margin(logits[0], action, self.config.margin_cap)
 
         attention_row = aggregate_node_attention(
             attention, from_node=0, layer_agg=self.config.aggregate_layers
         )
+        scored_row = attention_row if importance_row is None else \
+            np.asarray(importance_row, dtype=np.float64)
 
         K_n = self.policy.config.k_neighbors
         K_r = self.policy.config.k_reservations
@@ -276,23 +322,29 @@ class FaithfulnessEvaluator:
             if k > len(non_self_valid):
                 continue
 
-            # Top-k by attention among the valid non-self nodes
-            attn_at_valid = attention_row[non_self_valid]
+            # Top-k by the scored explanation among the valid non-self nodes
+            attn_at_valid = scored_row[non_self_valid]
             order = np.argsort(-attn_at_valid)  # descending
             top_k_idx = non_self_valid[order[:k]]
 
-            comp_k = self._comp(obs, top_k_idx, action, pi_full)
-            suff_k = self._suff(obs, top_k_idx, action, pi_full)
+            comp_k, comp_m_k = self._comp(obs, top_k_idx, action, pi_full, m_full)
+            suff_k, suff_m_k = self._suff(obs, top_k_idx, action, pi_full, m_full)
 
-            comp_rand_k = 0.0
-            suff_rand_k = 0.0
+            comp_rand_k = suff_rand_k = 0.0
+            comp_m_rand_k = suff_m_rand_k = 0.0
             for _ in range(self.config.n_random_baselines):
                 rand_idx = self._rng.choice(non_self_valid, size=k, replace=False)
-                comp_rand_k += self._comp(obs, rand_idx, action, pi_full)
-                suff_rand_k += self._suff(obs, rand_idx, action, pi_full)
+                c, cm = self._comp(obs, rand_idx, action, pi_full, m_full)
+                s, sm = self._suff(obs, rand_idx, action, pi_full, m_full)
+                comp_rand_k += c
+                suff_rand_k += s
+                comp_m_rand_k += cm
+                suff_m_rand_k += sm
             n_rand = max(1, self.config.n_random_baselines)
             comp_rand_k /= n_rand
             suff_rand_k /= n_rand
+            comp_m_rand_k /= n_rand
+            suff_m_rand_k /= n_rand
 
             per_k[k] = {
                 "comp": comp_k,
@@ -301,6 +353,10 @@ class FaithfulnessEvaluator:
                 "suff_rand": suff_rand_k,
                 "g_comp": comp_k - comp_rand_k,
                 "g_suff": suff_rand_k - suff_k,
+                "comp_m": comp_m_k,
+                "suff_m": suff_m_k,
+                "g_comp_m": comp_m_k - comp_m_rand_k,
+                "g_suff_m": suff_m_rand_k - suff_m_k,
             }
 
         if per_k:
@@ -311,9 +367,13 @@ class FaithfulnessEvaluator:
             g_comp = float(np.mean([p["g_comp"] for p in per_k.values()]))
             g_suff = float(np.mean([p["g_suff"] for p in per_k.values()]))
             def_score = 0.5 * (g_comp + g_suff)
+            g_comp_m = float(np.mean([p["g_comp_m"] for p in per_k.values()]))
+            g_suff_m = float(np.mean([p["g_suff_m"] for p in per_k.values()]))
+            def_margin = 0.5 * (g_comp_m + g_suff_m)
         else:
             comp = suff = comp_rand = suff_rand = 0.0
             g_comp = g_suff = def_score = 0.0
+            g_comp_m = g_suff_m = def_margin = 0.0
 
         # --- WAMSN
         aoi_per_node = self._extract_aoi_per_node(obs, K_n, K_r)
@@ -322,7 +382,7 @@ class FaithfulnessEvaluator:
         node_is_vehicle[1:1 + K_n] = True                # taxi slots
         node_is_vehicle &= node_mask                     # keep only valid
         wamsn = compute_wamsn(
-            attention_row, aoi_per_node, node_is_vehicle, self.config.aoi_max_s
+            scored_row, aoi_per_node, node_is_vehicle, self.config.aoi_max_s
         )
 
         return DecisionFaithfulness(
@@ -338,6 +398,10 @@ class FaithfulnessEvaluator:
             wamsn=float(wamsn),
             attention_row=attention_row,
             node_mask=node_mask,
+            m_full=float(m_full),
+            def_margin=float(def_margin),
+            g_comp_m=float(g_comp_m),
+            g_suff_m=float(g_suff_m),
             per_k=per_k,
         )
 
@@ -351,11 +415,18 @@ class FaithfulnessEvaluator:
                 "Slice the batched obs to one agent before calling."
             )
 
-    def _forward_prob(self, obs: dict[str, torch.Tensor], action: int) -> float:
+    def _forward_stats(
+        self, obs: dict[str, torch.Tensor], action: int
+    ) -> tuple[float, float]:
+        """One forward pass → (π(a*), decision margin). Both metrics share
+        the same counterfactual forward, so the margin variant is free."""
         with torch.no_grad():
             out = self.policy.forward(obs)
-            probs = torch.softmax(out["logits"], dim=-1)
-        return float(probs[0, action].item())
+            logits = out["logits"]
+            probs = torch.softmax(logits, dim=-1)
+        pi = float(probs[0, action].item())
+        margin = decision_margin(logits[0], action, self.config.margin_cap)
+        return pi, margin
 
     def _comp(
         self,
@@ -363,11 +434,12 @@ class FaithfulnessEvaluator:
         node_idx: np.ndarray,
         action: int,
         pi_full: float,
-    ) -> float:
-        """π(a*|G) − π(a*|G\\R_k)."""
+        m_full: float,
+    ) -> tuple[float, float]:
+        """(π and margin) drops when the explanation's nodes are removed."""
         obs_ablated = self._mask_out(obs, node_idx)
-        pi_ablated = self._forward_prob(obs_ablated, action)
-        return pi_full - pi_ablated
+        pi, m = self._forward_stats(obs_ablated, action)
+        return pi_full - pi, m_full - m
 
     def _suff(
         self,
@@ -375,11 +447,12 @@ class FaithfulnessEvaluator:
         node_idx: np.ndarray,
         action: int,
         pi_full: float,
-    ) -> float:
-        """π(a*|G) − π(a*|R_k)."""
+        m_full: float,
+    ) -> tuple[float, float]:
+        """(π and margin) drops when ONLY the explanation's nodes are kept."""
         obs_kept = self._keep_only(obs, node_idx)
-        pi_kept = self._forward_prob(obs_kept, action)
-        return pi_full - pi_kept
+        pi, m = self._forward_stats(obs_kept, action)
+        return pi_full - pi, m_full - m
 
     def _mask_out(
         self,

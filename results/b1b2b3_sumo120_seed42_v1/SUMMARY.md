@@ -55,6 +55,47 @@ per cell, stochastic actions, per-decision records (~8k decisions).
   (dropout ρ=+0.71; tunnel ρ=+0.11; both p=1e-4). Cleanest result.
 - **H4** (WAMSN–DEF negative): supported (ρ=−0.30, p=1e-4, pooled).
 
+## Margin-DEF + decoupled explanation head (added same week)
+
+**Margin-DEF** (`def_m`): logit-margin variant of DEF computed from the
+same counterfactual forwards. Motivation: finding 2 below — on this
+saturated checkpoint probability-DEF has mean |·| ≈ 0.0015 while
+margin-DEF has ≈ 0.73, i.e. ~500× the signal. Re-run of the sweep with
+both metrics (`sweep_B2_margin/`):
+
+- H1 supported on the dropout axis under BOTH metrics
+  (prob ρ=−0.23 p=1e-4; margin ρ=−0.045 p=0.0017); still not on the
+  tunnel-noise axis.
+- **H2 supported on both axes under both metrics** in this sweep
+  (dropout: p=0.0084 prob / 0.0227 margin; tunnel: p=0.0327 / 0.0264).
+  Caution: the previous same-config sweep (`sweep_B2_stoch/`) gave
+  p=0.099 on the dropout axis — with n=12 cells H2 is fragile to the
+  episode draw. Treat as "consistent direction, needs more seeds", not
+  as a settled result.
+- H3/H4 unchanged (strongly supported).
+
+**Decoupled explanation head** (`explainer/`): a scorer MLP over the
+policy's detached post-GAT node embeddings (never feeds the actor),
+trained by occlusion distillation — targets are per-node Δmargin,
+KL loss. Held-out Spearman(pred, occlusion) = **+0.600 ± 0.329**.
+Paired coupled-vs-decoupled DEF on fresh episodes (seeds 42/43,
+~870 decisions, identical random baselines per decision):
+
+| condition | margin-DEF coupled | margin-DEF decoupled | Δ | p |
+|---|---:|---:|---:|---:|
+| clean | −0.507 ± 0.388 | −0.381 ± 0.401 | **+0.126** | 0.0001 |
+| tunnel_triggered | −0.504 ± 0.378 | −0.371 ± 0.439 | **+0.133** | 0.0001 |
+
+Two headline observations:
+1. **Both channels score below the random baseline** (negative DEF) —
+   this policy's attention does not concentrate on the nodes that
+   causally drive its decisions (often not even the chosen reservation's
+   node). "Attention is not explanation" reproduced in-domain.
+2. **The decoupled head is significantly more faithful than the coupled
+   attention, and its advantage is stable under degradation** (+0.126
+   clean vs +0.133 tunnel) — the dissertation's architectural claim, in
+   its first empirical form.
+
 ## Findings worth citing
 
 1. **Argmax evaluation degenerates on entropy-collapsed policies.** All

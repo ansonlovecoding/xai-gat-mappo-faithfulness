@@ -125,7 +125,7 @@ def load_sweep(sweep_dir: Path) -> tuple[dict, list[dict]]:
 def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
     axis, level, seed = [], [], []
-    def_, wamsn, drift, valid_res = [], [], [], []
+    def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
     for c in cells:
         meta = c["cell"]
         for r in c.get("faith_records", []):
@@ -133,6 +133,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             level.append(meta["level"])
             seed.append(meta["seed"])
             def_.append(r["def"])
+            def_m.append(r.get("def_m", np.nan))  # absent in pre-margin sweeps
             wamsn.append(r["wamsn"])
             drift.append(r.get("drift", np.nan))
             valid_res.append(r["valid_reservations"])
@@ -141,6 +142,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "level": np.array(level, dtype=np.float64),
         "seed": np.array(seed),
         "def": np.array(def_, dtype=np.float64),
+        "def_m": np.array(def_m, dtype=np.float64),
         "wamsn": np.array(wamsn, dtype=np.float64),
         "drift": np.array(drift, dtype=np.float64),
         "valid_res": np.array(valid_res, dtype=np.int64),
@@ -163,8 +165,9 @@ def hypothesis_h1_h3(
 ) -> dict:
     """Shared machinery: monotone association between severity and a metric."""
     m = _axis_mask(frame, axis)
-    if metric == "def":
+    if metric in ("def", "def_m"):
         m = m & (frame["valid_res"] > 0)  # DEF undefined in no-op-only regime
+    m = m & np.isfinite(frame[metric])
     x = frame["level"][m]
     y = frame[metric][m]
     if len(x) < 10 or len(np.unique(x)) < 2:
@@ -179,6 +182,7 @@ def hypothesis_h1_h3(
 def hypothesis_h2(
     cells: list[dict], axis: str,
     n_permutations: int, rng: np.random.Generator,
+    def_key: str = "def_mean",
 ) -> dict:
     """Decoupling: faith-degradation rate minus perf-degradation rate > 0.
 
@@ -203,9 +207,9 @@ def hypothesis_h2(
         if clean is None:
             continue
         p_clean = clean["mean_pickups"]
-        d_clean = clean["faithfulness"].get("def_mean")
+        d_clean = clean["faithfulness"].get(def_key)
         p_s = c["mean_pickups"]
-        d_s = c["faithfulness"].get("def_mean")
+        d_s = c["faithfulness"].get(def_key)
         if d_clean is None or d_s is None:
             continue
         if p_clean <= 0:
@@ -299,6 +303,7 @@ def main() -> int:
     # ---- hypothesis tests
     results: dict = {"manifest": {"checkpoint": manifest["checkpoint"],
                                   "git_rev": manifest.get("git_rev")}}
+    has_margin = bool(np.isfinite(frame["def_m"]).any())
     for axis in ("dropout_rate", "tunnel_noise"):
         results[f"H1_{axis}"] = hypothesis_h1_h3(
             frame, axis, "def", "less", args.n_permutations, rng)
@@ -306,6 +311,11 @@ def main() -> int:
             cells, axis, args.n_permutations, rng)
         results[f"H3_{axis}"] = hypothesis_h1_h3(
             frame, axis, "wamsn", "greater", args.n_permutations, rng)
+        if has_margin:
+            results[f"H1m_{axis}"] = hypothesis_h1_h3(
+                frame, axis, "def_m", "less", args.n_permutations, rng)
+            results[f"H2m_{axis}"] = hypothesis_h2(
+                cells, axis, args.n_permutations, rng, def_key="def_m_mean")
     results["H4_pooled"] = hypothesis_h4(frame, args.n_permutations, rng)
 
     def _verdict(r: dict, label: str) -> str:
@@ -319,7 +329,11 @@ def main() -> int:
     print("hypothesis tests (α = 0.05, one-sided):")
     for axis in ("dropout_rate", "tunnel_noise"):
         print(" ", _verdict(results[f"H1_{axis}"], f"H1 (DEF ↓ with {axis})"))
+        if f"H1m_{axis}" in results:
+            print(" ", _verdict(results[f"H1m_{axis}"], f"H1m (margin-DEF ↓ with {axis})"))
         print(" ", _verdict(results[f"H2_{axis}"], f"H2 (faith declines faster, {axis})"))
+        if f"H2m_{axis}" in results:
+            print(" ", _verdict(results[f"H2m_{axis}"], f"H2m (margin-faith declines faster, {axis})"))
         print(" ", _verdict(results[f"H3_{axis}"], f"H3 (WAMSN ↑ with {axis})"))
     print(" ", _verdict(results["H4_pooled"], "H4 (WAMSN–DEF negative, pooled)"))
 

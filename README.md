@@ -68,6 +68,7 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | Attention weights exposed by `policy.forward()` (Method A) | ✅ | `(L, B, H, N, N)` tensor already returned |
 | Node-occlusion Method B: mask node i, measure ΔP(a*) | ✅ | `FaithfulnessEvaluator._comp/_suff` in `src/dispatch_marl/faithfulness.py` — counterfactual forwards with node masks |
 | **DEF metric** (normalised comprehensiveness + sufficiency gains) | ✅ | `FaithfulnessEvaluator.evaluate_decision`; per-k Comp/Suff vs size-matched random baseline, DEF = ½(g_comp + g_suff) |
+| **Margin-DEF** (logit-margin variant, saturation-robust) | ✅ | same counterfactual forwards (zero extra cost); probability-DEF loses signal on entropy-collapsed policies (π(a*)≈1 → Δπ≈0), the margin logit[a*]−max_other keeps ~500× the signal on B2's best ckpt; `def_m` in records, `H1m/H2m` in the analysis |
 | **Attention drift** (JS divergence between clean and degraded α) | ✅ | `emit_clean_obs` env flag builds the clean twin of every obs; `eval_policy.py --drift` scores JS(α_clean, α_degraded) per decision; on by default in the degradation ablation |
 | **WAMSN metric** (Σ α_i · AoI_i / AoI_max / Σ α_i) | ✅ | `compute_wamsn` over vehicle nodes; AoI reversed from obs features |
 | Random-explanation baseline for the DEF gain terms | ✅ | size-matched random subsets, `n_random_baselines` per k, seeded RNG |
@@ -76,7 +77,7 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | Structured-vs-random degradation ablation | ✅ | `eval_degradation_ablation.py`: off / tunnel_triggered / matched-rate random_dropout; plot via `plot_ablation.py` |
 | Performance-degradation rate & faithfulness-degradation rate | ✅ | `scripts/sweep_severity.py`: dropout-rate axis × tunnel-noise axis × seeds, per-decision records + manifest |
 | Faithfulness-decoupling operationalisation ((i) DEF vs perf gap, (ii) WAMSN–DEF correlation) | ✅ | `scripts/analyze_hypotheses.py`: H1–H4 with permutation Spearman, paired sign-flip (H2), bootstrap CIs — numpy-only |
-| Decoupled explanation head (architectural comparison against coupled attention) | ❌ | metrics now exist — design unblocked |
+| Decoupled explanation head (architectural comparison against coupled attention) | ⚠️ | `DecoupledExplainerHead` (reads detached post-GAT node embeddings, never feeds the actor) trained by occlusion distillation (`scripts/distill_explainer.py`: per-node Δmargin targets, KL loss, held-out Spearman report); paired coupled-vs-decoupled DEF via `scripts/eval_explainer.py`; first full run in progress |
 
 ### E. Dataset & experimental protocol (Section 7.6 · Milestone M2)
 
