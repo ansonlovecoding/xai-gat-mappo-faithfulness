@@ -1,0 +1,36 @@
+{
+  "checkpoint": "runs/mappo/central_park_1782935166/ckpt_epoch_0050.pt",
+  "epoch": 50,
+  "area": "central_park",
+  "degradation": "off",
+  "stochastic": true,
+  "seed": 42,
+  "episodes": 3,
+  "per_episode": [
+    {
+      "total_pickups": 8,
+      "total_reward": 40.791,
+      "final_mean_pending_wait_s": 896.1,
+      "rl_steps": 120,
+      "wall_s": 16.7
+    },
+    {
+      "total_pickups": 5,
+      "total_reward": 8.658,
+      "final_mean_pending_wait_s": 896.4,
+      "rl_steps": 120,
+      "wall_s": 3.1
+    },
+    {
+      "total_pickups": 10,
+      "total_reward": 81.219,
+      "final_mean_pending_wait_s": 601.0,
+      "rl_steps": 93,
+      "wall_s": 2.2
+    }
+  ],
+  "mean_pickups": 7.666666666666667,
+  "std_pickups": 2.0548046676563256,
+  "mean_reward": 43.556000000000004,
+  "std_reward": 29.687355321752726
+}

@@ -9,8 +9,12 @@ trading off control performance.
 > Status: SUMO scenarios, taxi fleet + demand, PettingZoo env, telemetry-
 > degradation layer, GAT-MAPPO policy, MAPPO training loop with
 > best-checkpoint tracking, and non-learning baselines are all implemented
-> and verified end-to-end. Faithfulness metrics and the decoupled
-> explanation head are next.
+> and verified end-to-end. The faithfulness stack (DEF + WAMSN +
+> attention-drift function, eval-time scoring, train-time sampling, and the
+> structured-vs-random degradation ablation) is implemented in
+> `src/dispatch_marl/faithfulness.py` + `scripts/eval_degradation_ablation.py`.
+> Next: B1/B3 baselines, the paired clean/degraded drift harness, the
+> severity sweep, and the decoupled explanation head.
 >
 > **See [`src/dispatch_marl/README.md`](src/dispatch_marl/README.md) for
 > the MARL package's design rationale — layer by layer, including the
@@ -52,9 +56,9 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | Baseline | Status | Notes |
 |---|---|---|
 | **B0** — Greedy dispatch (SUMO built-in bipartite matcher) | ✅ | via `scripts/run_baselines.py --policies sumo_greedy` |
-| **B1** — MAPPO + MLP (no graph) | ❌ | needs a plain-MLP policy variant + separate training run |
+| **B1** — MAPPO + MLP (no graph) | ⚠️ | `DispatchMLPPolicy` implemented (`--policy mlp`, ~param-matched to the GAT, verified end-to-end); full training run pending |
 | **B2** — GAT-MAPPO (proposed) | ✅ | current `DispatchGATPolicy` |
-| **B3** — GAT-MAPPO without AoI (ablation, AoI-unaware) | ❌ | needs obs-shape config flag to drop the AoI feature |
+| **B3** — GAT-MAPPO without AoI (ablation, AoI-unaware) | ⚠️ | `aoi_unaware` env flag implemented (`--aoi-unaware`, zeroes the AoI feature, shapes unchanged, verified end-to-end); full training run pending |
 | Extras: Random, NearestReservation (naive baselines beyond proposal) | ✅ | useful as lower bounds; kept in `policies.py` |
 
 ### D. Faithfulness evaluation infrastructure (Section 7.4 · Objectives 3 & 5 · Milestone M2 — **the core novel contribution**)
@@ -62,14 +66,17 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | Item | Status | Notes |
 |---|---|---|
 | Attention weights exposed by `policy.forward()` (Method A) | ✅ | `(L, B, H, N, N)` tensor already returned |
-| Node-occlusion Method B: mask node i, measure ΔP(a*) | ❌ | need a `faithfulness.py` module wrapping counterfactual forward passes |
-| **DEF metric** (normalised comprehensiveness + sufficiency gains) | ❌ | formula in §7.4 (proposal eqs. Comp/Suff/g_comp/g_suff/DEF) |
-| **Attention drift** (JS divergence between clean and degraded α) | ❌ | requires paired clean/degraded rollouts |
-| **WAMSN metric** (Σ α_i · AoI_i / AoI_max / Σ α_i) | ❌ | formula in §7.4; env already carries per-node AoI |
-| Random-explanation baseline for the DEF gain terms | ❌ | needs a size-matched random subset sampler |
-| Performance-degradation rate & faithfulness-degradation rate | ❌ | derivable from clean vs degraded runs once DEF exists |
-| Faithfulness-decoupling operationalisation ((i) DEF vs perf gap, (ii) WAMSN–DEF correlation) | ❌ | analysis script on top of the metric module |
-| Decoupled explanation head (architectural comparison against coupled attention) | ❌ | design depends on DEF/WAMSN — deliberately deferred |
+| Node-occlusion Method B: mask node i, measure ΔP(a*) | ✅ | `FaithfulnessEvaluator._comp/_suff` in `src/dispatch_marl/faithfulness.py` — counterfactual forwards with node masks |
+| **DEF metric** (normalised comprehensiveness + sufficiency gains) | ✅ | `FaithfulnessEvaluator.evaluate_decision`; per-k Comp/Suff vs size-matched random baseline, DEF = ½(g_comp + g_suff) |
+| **Attention drift** (JS divergence between clean and degraded α) | ✅ | `emit_clean_obs` env flag builds the clean twin of every obs; `eval_policy.py --drift` scores JS(α_clean, α_degraded) per decision; on by default in the degradation ablation |
+| **WAMSN metric** (Σ α_i · AoI_i / AoI_max / Σ α_i) | ✅ | `compute_wamsn` over vehicle nodes; AoI reversed from obs features |
+| Random-explanation baseline for the DEF gain terms | ✅ | size-matched random subsets, `n_random_baselines` per k, seeded RNG |
+| Eval-time faithfulness scoring | ✅ | `eval_policy.py --faithfulness` → per-decision JSONL + summary |
+| Train-time faithfulness sampling | ✅ | `train.py --faith-every-epochs N` → per-epoch DEF/WAMSN in `train_log.jsonl`; plot via `plot_train_faithfulness.py` |
+| Structured-vs-random degradation ablation | ✅ | `eval_degradation_ablation.py`: off / tunnel_triggered / matched-rate random_dropout; plot via `plot_ablation.py` |
+| Performance-degradation rate & faithfulness-degradation rate | ✅ | `scripts/sweep_severity.py`: dropout-rate axis × tunnel-noise axis × seeds, per-decision records + manifest |
+| Faithfulness-decoupling operationalisation ((i) DEF vs perf gap, (ii) WAMSN–DEF correlation) | ✅ | `scripts/analyze_hypotheses.py`: H1–H4 with permutation Spearman, paired sign-flip (H2), bootstrap CIs — numpy-only |
+| Decoupled explanation head (architectural comparison against coupled attention) | ❌ | metrics now exist — design unblocked |
 
 ### E. Dataset & experimental protocol (Section 7.6 · Milestone M2)
 
@@ -86,13 +93,13 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 
 | Item | Status | Notes |
 |---|---|---|
-| Sweep {B0, B1, B2, B3} × severity × seed | ❌ | blocked on B1, B3, and DEF/WAMSN |
-| Paired significance tests over matched clean/degraded episodes | ❌ | requires the paired-variant dataset from E |
-| **H1** — degradation ↑ → DEF ↓ | ❌ | tests DEF against severity |
-| **H2** — DEF declines faster than performance (decoupling) | ❌ | headline hypothesis of the dissertation |
-| **H3** — degradation ↑ → WAMSN ↑ | ❌ | tests attention allocation to stale nodes |
-| **H4** — WAMSN and DEF negatively correlated | ❌ | correlational test across severities |
-| **H5** — AoI-aware training changes the DEF trajectory (RQ4 mitigation) | ❌ | needs a training run with degradation ON |
+| Sweep {B0, B1, B2, B3} × severity × seed | ⚠️ | `sweep_severity.py` runs one GAT ckpt × severity × seed; multi-checkpoint orchestration + B0/B1 rows still manual |
+| Paired significance tests over matched clean/degraded episodes | ⚠️ | H2's paired sign-flip pairs each degraded cell with the same-seed clean cell; per-episode demand variants still pending (section E) |
+| **H1** — degradation ↑ → DEF ↓ | ⚠️ | test implemented in `analyze_hypotheses.py` (one-sided permutation Spearman, both axes); needs a trained ckpt + sweep to run |
+| **H2** — DEF declines faster than performance (decoupling) | ⚠️ | implemented: faith-rate vs perf-rate per (level × seed), sign-flip test |
+| **H3** — degradation ↑ → WAMSN ↑ | ⚠️ | implemented alongside H1 |
+| **H4** — WAMSN and DEF negatively correlated | ⚠️ | implemented: pooled per-decision Spearman |
+| **H5** — AoI-aware training changes the DEF trajectory (RQ4 mitigation) | ❌ | needs a training run with degradation ON (`train.py --degradation tunnel_triggered --faith-every-epochs N` already supports it) |
 
 ### G. Write-up & release (WP5, WP6 · Objective 6 · Milestone M3)
 
@@ -108,10 +115,19 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 By milestone budget:
 
 - **M1 (19 Jul)** — mostly done. Missing: **B1** MAPPO+MLP baseline and **B3** AoI-unaware ablation (§C). Neither is conceptually hard: B1 needs a plain-MLP policy variant sharing the same MAPPO trainer; B3 is a `SELF_FEAT_DIM=4` obs-shape flag plus a separate training run.
-- **M2 (9 Aug)** — nothing done yet. Blocking work: sections D and F. This is where the dissertation's actual contribution gets built. Everything in E and F transitively depends on D.
+- **M2 (9 Aug)** — section D's metric core is done (DEF, WAMSN, occlusion,
+  random baseline, eval- and train-time scoring, structured-vs-random
+  ablation). Remaining blockers: the paired clean/degraded drift harness,
+  the severity sweep, the E-section protocol (episode manifest + split),
+  the H1–H5 analysis script, and the decoupled explanation head.
 - **M3 (1 Sep)** — write-up, unblocked once M2 lands.
 
-**Next best thing to work on is section D** — specifically DEF + WAMSN as concrete Python functions in a new `src/dispatch_marl/faithfulness.py`. Attention weights and per-agent AoI are both already produced by the env/policy pipeline, so wiring them into the metric formulae from §7.4 of the proposal is now the smallest self-contained deliverable that unlocks the largest downstream chain.
+**Next best things to work on:** (1) close M1 with the B1 MAPPO+MLP baseline
+and B3 AoI-unaware ablation; (2) the paired clean/degraded attention-drift
+harness (the degradation layer only mutates observations, so the env can
+emit clean obs alongside degraded ones in `infos` — no paired-episode
+machinery needed); (3) the severity-sweep script that generates the dataset
+H1–H4 are tested on.
 
 ## Why Yubei? Tunnels as physical degradation zones
 
@@ -142,10 +158,34 @@ section if asked why effective tunnel counts differ from raw OSM counts.
 
 ## Requirements
 
-- macOS (tested on Darwin 23, Apple Silicon)
+- macOS (originally Darwin 23 / Apple Silicon; now also running on
+  Darwin 24 / Intel — see the Intel note below)
 - Python 3.11
-- [SUMO](https://eclipse.dev/sumo/) 1.27.0 (DLR Homebrew tap)
+- [SUMO](https://eclipse.dev/sumo/) 1.27.0 (DLR Homebrew tap) on Apple
+  Silicon / Linux; **1.20.0 via the `eclipse-sumo` PyPI wheel on Intel
+  macs** (no newer Intel build exists — the DLR pkg is arm64-only and
+  PyPI wheels for x86_64 macOS stop at 1.20)
 - [XQuartz](https://www.xquartz.org/) (only needed for `sumo-gui` visualisation)
+
+### Intel-mac note (July 2026 machine migration)
+
+The dev machine changed from Apple Silicon to an Intel i9. On Intel:
+
+- `pip install eclipse-sumo==1.20.0 libsumo==1.20.0 traci==1.20.0
+  sumolib==1.20.0` into the venv. `src/dispatch_marl/_sumo.py`
+  auto-resolves the wheel as `SUMO_HOME`; no framework install needed.
+- The committed networks declare `<net version="1.20">`, so SUMO 1.20
+  loads them natively — no rebuild required.
+- torch wheels for Intel macOS stop at **2.2.2**, which requires
+  `numpy<2` — install `numpy==1.26.4` over the pinned 2.4.6.
+- The wheel's binaries link Homebrew dylibs, including **xerces-c 3.2**
+  specifically (3.3 is ABI-incompatible): `brew tap-new local/pins &&
+  brew extract --version=3.2.5 xerces-c local/pins && brew install
+  local/pins/xerces-c@3.2.5`, plus `brew install fox proj gettext
+  fontconfig freetype jpeg-turbo libpng libtiff mesa mesa-glu libx11
+  libxext libxft libxcursor libxrender libxrandr libxfixes libxi`.
+- Keep `requirements.txt` at the 1.27 pins for Colab/Apple-Silicon
+  reproducibility; the deviations above are machine-local only.
 
 ## Setup
 

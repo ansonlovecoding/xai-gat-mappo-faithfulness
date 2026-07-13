@@ -40,7 +40,20 @@ outputs/
 # SUMO
 *.sumocfg.bak
 sumo-gui.log
-results/
+# results/: keep the bulk (periodic checkpoint snapshots) out of git, but
+# COMMIT the citable artefacts: summaries, configs, logs, eval JSONs, and
+# the specific "trained model" checkpoints each SUMMARY.md cites.
+results/**
+!results/**/
+!results/README.md
+!results/**/SUMMARY.md
+!results/**/args.json
+!results/**/best_metadata.json
+!results/**/*.eval.json
+!results/**/*.json
+!results/**/train_log.jsonl
+!results/**/ckpt_best.pt
+!results/mappo_central_park_reshaped_v1/ckpt_epoch_0050.pt
 docs/.~search_Proposal_Faithfulness_Decoupling.docx
 docs/Research_Proposal_Faithfulness_Decoupling.backup.docx
-.claude/
+.claude/!results/**/*.png
