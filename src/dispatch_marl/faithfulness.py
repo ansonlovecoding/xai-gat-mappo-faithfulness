@@ -222,6 +222,20 @@ class FaithfulnessEvaluator:
 
     # -------------------------------------------------- public
 
+    def attention_row(self, obs: dict[str, torch.Tensor]) -> np.ndarray:
+        """Aggregated per-node attention row for a single-decision obs (B=1).
+
+        One plain forward — used by the attention-drift pipeline to score a
+        counterfactual (e.g. clean-twin) obs without the full DEF machinery.
+        """
+        self._check_batch_one(obs)
+        self.policy.eval()
+        with torch.no_grad():
+            out = self.policy.forward(obs)
+        return aggregate_node_attention(
+            out["attention"], from_node=0, layer_agg=self.config.aggregate_layers
+        )
+
     def evaluate_decision(
         self,
         obs: dict[str, torch.Tensor],

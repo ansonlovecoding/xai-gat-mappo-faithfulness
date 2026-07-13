@@ -1,0 +1,154 @@
+"""B1 baseline: MAPPO + plain MLP (no graph structure).
+
+Proposal §7.5's B1 — identical observation, action space, reward, and MAPPO
+trainer as the GAT policy (B2), but the encoder is a flat MLP over the
+concatenated obs vector. The point of the baseline: isolate how much of
+B2's performance comes from the *graph attention* inductive bias rather
+than from MAPPO + reward shaping.
+
+Interface-compatible with `DispatchGATPolicy` everywhere the training and
+evaluation loops touch it (`forward` → logits/value, `get_action_and_value`
+→ action/log_prob/entropy/value). Deliberately NOT compatible with the
+faithfulness pipeline: an MLP has no attention channel, so there is no
+coupled explanation to score. `forward()` returns no "attention" key —
+any attempt to run DEF/WAMSN against B1 fails loudly rather than
+silently producing nonsense.
+
+Design notes:
+
+- **Input layout.** The obs dict is flattened in a fixed order:
+  self ‖ neighbor_taxis ‖ neighbor_taxis_mask ‖ reservations ‖
+  reservations_mask ‖ position_valid. Masks are included as inputs — the
+  MLP has no masking mechanism of its own, so the mask bits are the only
+  way it can distinguish "padded slot" from "valid node at the origin".
+- **Invalid reservation actions are still masked to -inf** in the logits,
+  exactly as in the GAT policy. Action-space semantics are identical.
+- **Centralised critic** mirrors the GAT policy's CTDE shortcut: mean-pool
+  the trunk embedding across the batch (one RL step's acting agents during
+  rollout), feed the critic head once, broadcast the team V. Same
+  approximation, same caveats — see PolicyConfig's docstring in policy.py.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+import torch
+import torch.nn as nn
+
+
+@dataclass
+class MLPPolicyConfig:
+    # Must match DispatchEnvConfig.k_neighbors / k_reservations.
+    k_neighbors: int = 5
+    k_reservations: int = 5
+    # Per-type input feature widths must match env.py's constants.
+    self_feat_dim: int = 5
+    taxi_feat_dim: int = 5
+    res_feat_dim: int = 5
+    # 176 puts the default B1 at ~106k params vs the default GAT's ~114k,
+    # so the B1-vs-B2 comparison is encoder-vs-encoder at matched capacity.
+    hidden_dim: int = 176
+    n_layers: int = 3
+    # Same CTDE trade-off as the GAT policy; default matches B2 so the
+    # B1-vs-B2 comparison isolates the encoder, not the critic regime.
+    centralised_critic: bool = True
+    device: str = "cpu"
+
+    @property
+    def input_dim(self) -> int:
+        K_n, K_r = self.k_neighbors, self.k_reservations
+        return (
+            self.self_feat_dim
+            + K_n * self.taxi_feat_dim + K_n      # neighbours + their mask
+            + K_r * self.res_feat_dim + K_r       # reservations + their mask
+            + 1                                    # position_valid
+        )
+
+
+class DispatchMLPPolicy(nn.Module):
+    """Flat-MLP actor-critic over the flattened dispatch observation."""
+
+    def __init__(self, config: MLPPolicyConfig | None = None):
+        super().__init__()
+        self.config = config or MLPPolicyConfig()
+        c = self.config
+        d = c.hidden_dim
+
+        layers: list[nn.Module] = [nn.Linear(c.input_dim, d), nn.GELU()]
+        for _ in range(c.n_layers - 1):
+            layers += [nn.Linear(d, d), nn.GELU()]
+        self.trunk = nn.Sequential(*layers)
+
+        self.actor_head = nn.Linear(d, c.k_reservations + 1)
+        self.critic_head = nn.Sequential(
+            nn.Linear(d, d),
+            nn.GELU(),
+            nn.Linear(d, 1),
+        )
+
+        self.to(c.device)
+
+    # ------------------------------------------------------------------ forward
+
+    def _flatten_obs(self, obs: dict[str, torch.Tensor]) -> torch.Tensor:
+        B = obs["self"].shape[0]
+        parts = [
+            obs["self"],
+            obs["neighbor_taxis"].reshape(B, -1),
+            obs["neighbor_taxis_mask"].float(),
+            obs["reservations"].reshape(B, -1),
+            obs["reservations_mask"].float(),
+            obs["position_valid"].float(),
+        ]
+        return torch.cat(parts, dim=1)
+
+    def forward(self, obs: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """Returns {"logits": (B, K_r+1), "value": (B,)}.
+
+        No "attention" key, by design — B1 has no explanation channel.
+        """
+        x = self._flatten_obs(obs)
+        h = self.trunk(x)  # (B, D)
+
+        logits = self.actor_head(h)  # (B, K_r + 1)
+        res_mask = obs["reservations_mask"].bool()
+        logits = torch.cat(
+            [
+                logits[:, :1],
+                logits[:, 1:].masked_fill(~res_mask, float("-inf")),
+            ],
+            dim=1,
+        )
+
+        if self.config.centralised_critic:
+            B = h.shape[0]
+            team_value = self.critic_head(h.mean(dim=0, keepdim=True)).squeeze()
+            value = team_value.expand(B)
+        else:
+            value = self.critic_head(h).squeeze(-1)
+
+        return {"logits": logits, "value": value}
+
+    # ------------------------------------------------------------------ MAPPO API
+
+    def get_action_and_value(
+        self,
+        obs: dict[str, torch.Tensor],
+        action: torch.Tensor | None = None,
+    ) -> dict[str, Any]:
+        """Same contract as DispatchGATPolicy.get_action_and_value, minus the
+        attention/node_emb aux outputs (an MLP has neither)."""
+        out = self.forward(obs)
+        dist = torch.distributions.Categorical(logits=out["logits"])
+        if action is None:
+            action = dist.sample()
+        log_prob = dist.log_prob(action)
+        entropy = dist.entropy()
+        return {
+            "action": action,
+            "log_prob": log_prob,
+            "entropy": entropy,
+            "logits": out["logits"],
+            "value": out["value"],
+        }

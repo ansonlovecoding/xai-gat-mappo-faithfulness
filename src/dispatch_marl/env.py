@@ -74,6 +74,27 @@ class DispatchEnvConfig:
     wait_penalty_lambda: float = 0.001
     seed: int = 42
     degradation: DegradationConfig = field(default_factory=DegradationConfig)
+    # B3 ablation (proposal §7.5): AoI-unaware observations. When True the
+    # continuous aoi_norm feature is zeroed on the self node (index 4) and
+    # on every neighbour-taxi node (column 4), so the policy cannot condition
+    # on telemetry staleness. Feature *shapes* are unchanged — checkpoints,
+    # the GAT encoder, and the faithfulness code all keep working. The binary
+    # position_valid flag is left intact: B3 removes the *age* signal, not
+    # the instantaneous validity bit. AoI bookkeeping still runs underneath
+    # (WAMSN can still be computed against ground-truth staleness; the obs
+    # simply hides it from the policy) — but note the obs-derived AoI used
+    # by FaithfulnessEvaluator._extract_aoi_per_node reads zeros under this
+    # flag, so WAMSN is not meaningful for B3 runs.
+    aoi_unaware: bool = False
+    # Attention-drift measurement (§7.4): when True, every obs build also
+    # produces the *clean* counterfactual of the same observation — what the
+    # agent would have seen with degradation off (true position/velocity,
+    # AoI = 0, position_valid = 1). Exposed via `env.last_clean_obs`, keyed
+    # like the returned obs dict. Because the degradation layer only mutates
+    # observations (never simulator state), the clean twin is exact — no
+    # paired-episode machinery needed. Costs one extra feature-array build
+    # per agent per step; leave False for training.
+    emit_clean_obs: bool = False
     # For debugging / smoke tests. Never set True in a training run.
     use_gui: bool = False
 
@@ -93,6 +114,8 @@ class DispatchEnv(ParallelEnv):
         # so an action index in {1..K} can be translated back to a concrete
         # reservation ID at step time.
         self._pending_res_map: dict[str, list[str]] = {}
+        # Clean counterfactual of the latest obs build (emit_clean_obs only).
+        self._last_clean_obs: dict[str, dict[str, np.ndarray]] = {}
         # Bookkeeping.
         self._sumo_started = False
         self._sumo_label: str | None = None  # unique TraCI connection label
@@ -292,6 +315,17 @@ class DispatchEnv(ParallelEnv):
     def sim_time(self) -> float:
         return self._sim_time
 
+    @property
+    def last_clean_obs(self) -> dict[str, dict[str, np.ndarray]]:
+        """Clean counterfactuals of the most recent obs build.
+
+        Only populated when `config.emit_clean_obs` is True; keys mirror the
+        obs dict returned by the same reset()/step() call. Used by the
+        attention-drift evaluation: forward the degraded obs and its clean
+        twin through the policy and compare attention rows.
+        """
+        return self._last_clean_obs
+
     def close(self) -> None:
         if self._sumo_started:
             try:
@@ -327,6 +361,7 @@ class DispatchEnv(ParallelEnv):
     # -------------------------------------------------------------- observations
 
     def _build_all_obs(self, agents: list[str]) -> dict[str, dict[str, np.ndarray]]:
+        self._last_clean_obs = {}
         if not agents:
             self._pending_res_map = {}
             return {}
@@ -395,12 +430,13 @@ class DispatchEnv(ParallelEnv):
         v = self._degradation.apply_velocity(v_true, degraded)
         # Self's AoI was already refreshed in _build_all_obs.
         aoi = aoi_by_taxi.get(agent, 0.0)
+        aoi_unaware = self.config.aoi_unaware
         self_feat = np.array([
             self._norm_x(x),
             self._norm_y(y),
             min(1.0, self._sim_time / max(1.0, self._end_time)),
             min(1.0, max(0.0, v) / VELOCITY_MAX_MS),
-            min(1.0, aoi / AOI_MAX_S),
+            0.0 if aoi_unaware else min(1.0, aoi / AOI_MAX_S),
         ], dtype=np.float32)
 
         # ------------- neighbouring taxis -------------
@@ -418,7 +454,7 @@ class DispatchEnv(ParallelEnv):
                 dy / self._net_diag,
                 1.0 if other in empty_ids else 0.0,
                 dist / self._net_diag,
-                min(1.0, other_aoi / AOI_MAX_S),  # NEW: neighbour's AoI
+                0.0 if aoi_unaware else min(1.0, other_aoi / AOI_MAX_S),
             ]
             taxi_mask[i] = 1
 
@@ -456,7 +492,7 @@ class DispatchEnv(ParallelEnv):
             res_ids.append(r.id)
         self._pending_res_map[agent] = res_ids
 
-        return {
+        obs = {
             "self": self_feat,
             "neighbor_taxis": taxi_feat,
             "neighbor_taxis_mask": taxi_mask,
@@ -464,6 +500,29 @@ class DispatchEnv(ParallelEnv):
             "reservations_mask": res_mask,
             "position_valid": np.array([0 if degraded else 1], dtype=np.int8),
         }
+
+        if self.config.emit_clean_obs:
+            # The clean twin: identical world state, telemetry not degraded.
+            # Degradation touches only the self node's absolute position and
+            # velocity, the AoI features, and position_valid — neighbour and
+            # reservation geometry is already computed from true positions.
+            clean_self = self_feat.copy()
+            clean_self[0] = self._norm_x(x_true)
+            clean_self[1] = self._norm_y(y_true)
+            clean_self[3] = min(1.0, max(0.0, v_true) / VELOCITY_MAX_MS)
+            clean_self[4] = 0.0  # fresh reading ⇒ AoI = 0
+            clean_taxis = taxi_feat.copy()
+            clean_taxis[:, 4] = 0.0
+            self._last_clean_obs[agent] = {
+                "self": clean_self,
+                "neighbor_taxis": clean_taxis,
+                "neighbor_taxis_mask": taxi_mask.copy(),
+                "reservations": res_feat.copy(),
+                "reservations_mask": res_mask.copy(),
+                "position_valid": np.ones(1, dtype=np.int8),
+            }
+
+        return obs
 
     def _norm_x(self, x: float) -> float:
         return (x - self._net_bbox[0]) / max(1.0, self._net_bbox[2] - self._net_bbox[0])

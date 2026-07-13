@@ -75,16 +75,29 @@ def _run_condition(
     dropout_rate: float,
     faith_evaluator: FaithfulnessEvaluator,
     faith_every: int,
+    aoi_unaware: bool = False,
+    position_noise_m: float = 20.0,
+    keep_records: bool = False,
+    stochastic: bool = False,
 ) -> dict:
     """Run `episodes` eval episodes under one degradation condition.
 
     Returns a dict with policy metrics, empirical degradation rate, and
     aggregate faithfulness stats over all decisions across all episodes.
+    With `keep_records`, the raw per-decision faithfulness dicts are
+    included under "faith_records" (used by the severity sweep, whose
+    analysis bootstraps over decisions rather than episodes).
     """
     env_cfg = DispatchEnvConfig(
         area=area,
         seed=seed,
-        degradation=DegradationConfig(mode=degradation_mode, dropout_rate=dropout_rate),
+        degradation=DegradationConfig(
+            mode=degradation_mode,
+            dropout_rate=dropout_rate,
+            position_noise_m=position_noise_m,
+        ),
+        aoi_unaware=aoi_unaware,
+        emit_clean_obs=True,  # attention drift vs the clean twin, per decision
     )
     env = DispatchEnv(env_cfg)
 
@@ -94,10 +107,11 @@ def _run_condition(
     for ep in range(episodes):
         summary, faith_records = _run_episode(
             env, policy, device,
-            stochastic=False,
+            stochastic=stochastic,
             faithfulness_evaluator=faith_evaluator,
             faithfulness_every=faith_every,
             episode_index=ep,
+            compute_drift=True,
         )
         per_episode.append(summary)
         all_faith.extend(faith_records)
@@ -109,9 +123,10 @@ def _run_condition(
     deg_rates = np.array([e["empirical_degradation_rate"] for e in per_episode])
     faith_summary = _summarise_faithfulness(all_faith)
 
-    return {
+    out = {
         "condition": degradation_mode,
         "configured_dropout_rate": dropout_rate if degradation_mode == "random_dropout" else None,
+        "position_noise_m": position_noise_m,
         "empirical_degradation_rate": float(deg_rates.mean()),
         "mean_pickups": float(pickups.mean()),
         "std_pickups": float(pickups.std()),
@@ -122,6 +137,9 @@ def _run_condition(
         "n_faith_records": len(all_faith),
         "wall_s": round(time.time() - t0, 1),
     }
+    if keep_records:
+        out["faith_records"] = all_faith
+    return out
 
 
 def _fmt_faith(f: dict, key: str, fmt: str = "+.3f", nan: str = "n/a") -> str:
@@ -157,7 +175,12 @@ def main() -> int:
 
     device = args.device or _choose_device()
     policy, ckpt = _load_policy(args.checkpoint, device)
+    if ckpt.get("policy_type", "gat") == "mlp":
+        parser.error("the degradation ablation scores DEF/WAMSN, which needs "
+                     "a GAT checkpoint — the MLP baseline (B1) has no "
+                     "attention channel")
     area = args.area or ckpt["env_config"]["area"]
+    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
 
     # One evaluator shared across conditions — its RNG is reseeded per
     # __init__, so we're consistent. Sub-samples the same set of decisions
@@ -186,6 +209,7 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="tunnel_triggered", dropout_rate=0.0,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
+        aoi_unaware=aoi_unaware,
     )
     tunnel_rate = tunnel["empirical_degradation_rate"]
     matched_rate = args.matched_rate if args.matched_rate is not None else tunnel_rate
@@ -197,6 +221,7 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="random_dropout", dropout_rate=matched_rate,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
+        aoi_unaware=aoi_unaware,
     )
 
     print("[3/3] off (clean baseline)…")
@@ -204,14 +229,15 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="off", dropout_rate=0.0,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
+        aoi_unaware=aoi_unaware,
     )
 
     # --- Comparison table ---
     conditions = {"off": off, "tunnel_triggered": tunnel, "random_dropout": random_dropout}
     print()
     print(f"{'condition':<20} {'deg_rate':>9} {'pickups':>8} {'reward':>9} "
-          f"{'wait_s':>7} {'DEF_mean':>9} {'DEF_std':>8} {'WAMSN':>8}")
-    print("-" * 85)
+          f"{'wait_s':>7} {'DEF_mean':>9} {'DEF_std':>8} {'WAMSN':>8} {'drift':>7}")
+    print("-" * 93)
     for cond_name in CONDITION_ORDER:
         r = conditions[cond_name]
         f = r["faithfulness"]
@@ -223,7 +249,8 @@ def main() -> int:
             f"{r['mean_wait_s']:>7.1f} "
             f"{_fmt_faith(f, 'def_mean'):>9} "
             f"{_fmt_faith(f, 'def_std', '.3f'):>8} "
-            f"{_fmt_faith(f, 'wamsn_mean', '.3f'):>8}"
+            f"{_fmt_faith(f, 'wamsn_mean', '.3f'):>8} "
+            f"{_fmt_faith(f, 'drift_mean', '.4f'):>7}"
         )
 
     # --- Ablation-specific commentary ---
@@ -240,6 +267,10 @@ def main() -> int:
         print(f"  ΔDEF     = {d_def:+.3f}   (tunnel more faithful if positive)")
         print(f"  ΔWAMSN   = {d_wamsn:+.3f}   (tunnel puts more attention on stale nodes if positive)")
         print(f"  Δpickups = {d_pickups:+.2f}")
+        if tunnel["faithfulness"].get("drift_mean") is not None and \
+           random_dropout["faithfulness"].get("drift_mean") is not None:
+            d_drift = tunnel["faithfulness"]["drift_mean"] - random_dropout["faithfulness"]["drift_mean"]
+            print(f"  Δdrift   = {d_drift:+.4f}   (tunnel shifts attention more if positive)")
 
     # --- Save comparison JSON ---
     out_path = args.output or args.checkpoint.with_suffix(".ablation.json")

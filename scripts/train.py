@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import sys
 import time
 from pathlib import Path
@@ -49,12 +50,19 @@ from src.dispatch_marl import (  # noqa: E402
     compute_gae,
     ppo_update,
 )
-from src.dispatch_marl.models import DispatchGATPolicy, PolicyConfig  # noqa: E402
+from src.dispatch_marl.models import (  # noqa: E402
+    DispatchGATPolicy,
+    DispatchMLPPolicy,
+    MLPPolicyConfig,
+    PolicyConfig,
+)
 from src.dispatch_marl.training import AgentStep  # noqa: E402
 
 
 def choose_device() -> str:
-    if torch.backends.mps.is_available():
+    # MPS on Intel macs (AMD GPUs) is broken in torch 2.2 (multi-dim
+    # reduction kernels assert) and removed in 2.3+ — Apple Silicon only.
+    if torch.backends.mps.is_available() and platform.machine() == "arm64":
         return "mps"
     if torch.cuda.is_available():
         return "cuda"
@@ -133,6 +141,10 @@ def main() -> int:
     parser.add_argument("--degradation", default="off",
                         choices=["off", "tunnel_triggered", "random_dropout"])
     parser.add_argument("--dropout-rate", type=float, default=0.2)
+    parser.add_argument("--aoi-unaware", action="store_true",
+                        help="B3 ablation: zero the AoI feature on self + "
+                             "neighbour nodes so the policy can't condition "
+                             "on telemetry staleness (obs shapes unchanged)")
     # Reward shaping.
     parser.add_argument("--pickup-reward", type=float, default=10.0)
     parser.add_argument("--dispatch-reward", type=float, default=0.5)
@@ -148,9 +160,19 @@ def main() -> int:
     parser.add_argument("--vf-coef", type=float, default=0.5)
     parser.add_argument("--ent-coef", type=float, default=0.01)
     parser.add_argument("--max-grad-norm", type=float, default=0.5)
+    parser.add_argument("--policy", default="gat", choices=["gat", "mlp"],
+                        help="gat = GAT-MAPPO (B2, the proposed model); "
+                             "mlp = MAPPO+MLP baseline (B1, no graph — "
+                             "no attention channel, so faithfulness "
+                             "sampling is unavailable)")
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--n-gat-layers", type=int, default=2)
     parser.add_argument("--n-heads", type=int, default=4)
+    parser.add_argument("--mlp-hidden-dim", type=int, default=176,
+                        help="hidden width for --policy mlp (176 ≈ param-"
+                             "matches the default GAT config: ~106k vs ~114k)")
+    parser.add_argument("--mlp-layers", type=int, default=3,
+                        help="trunk depth for --policy mlp")
     parser.add_argument("--centralised-critic",
                         action=argparse.BooleanOptionalAction,
                         default=True,
@@ -182,6 +204,10 @@ def main() -> int:
                         help="cpu, cuda, or mps; default: auto")
     args = parser.parse_args()
 
+    if args.faith_every_epochs > 0 and args.policy == "mlp":
+        parser.error("--faith-every-epochs requires --policy gat: the MLP "
+                     "baseline has no attention channel to score")
+
     device = args.device or choose_device()
 
     run_dir = args.log_dir / f"{args.area}_{int(time.time())}"
@@ -200,22 +226,34 @@ def main() -> int:
         dispatch_reward=args.dispatch_reward,
         wait_penalty_lambda=args.wait_lambda,
         degradation=DegradationConfig(mode=args.degradation, dropout_rate=args.dropout_rate),
+        aoi_unaware=args.aoi_unaware,
     )
     env = DispatchEnv(env_cfg)
 
     # ---- policy
-    pol_cfg = PolicyConfig(
-        k_neighbors=env_cfg.k_neighbors,
-        k_reservations=env_cfg.k_reservations,
-        hidden_dim=args.hidden_dim,
-        n_gat_layers=args.n_gat_layers,
-        n_heads=args.n_heads,
-        centralised_critic=args.centralised_critic,
-        device=device,
-    )
-    policy = DispatchGATPolicy(pol_cfg)
+    if args.policy == "mlp":
+        pol_cfg = MLPPolicyConfig(
+            k_neighbors=env_cfg.k_neighbors,
+            k_reservations=env_cfg.k_reservations,
+            hidden_dim=args.mlp_hidden_dim,
+            n_layers=args.mlp_layers,
+            centralised_critic=args.centralised_critic,
+            device=device,
+        )
+        policy = DispatchMLPPolicy(pol_cfg)
+    else:
+        pol_cfg = PolicyConfig(
+            k_neighbors=env_cfg.k_neighbors,
+            k_reservations=env_cfg.k_reservations,
+            hidden_dim=args.hidden_dim,
+            n_gat_layers=args.n_gat_layers,
+            n_heads=args.n_heads,
+            centralised_critic=args.centralised_critic,
+            device=device,
+        )
+        policy = DispatchGATPolicy(pol_cfg)
     optimizer = torch.optim.Adam(policy.parameters(), lr=args.lr)
-    print(f"policy:  {sum(p.numel() for p in policy.parameters()):,} params")
+    print(f"policy:  {args.policy} — {sum(p.numel() for p in policy.parameters()):,} params")
 
     ppo_cfg = PPOConfig(
         lr=args.lr,
@@ -259,6 +297,7 @@ def main() -> int:
     def _save_best(epoch: int, rolling_mean: float) -> None:
         torch.save({
             "epoch": epoch,
+            "policy_type": args.policy,
             "model": policy.state_dict(),
             "optimizer": optimizer.state_dict(),
             "policy_config": pol_cfg.__dict__,
@@ -361,6 +400,7 @@ def main() -> int:
             ckpt = run_dir / f"ckpt_epoch_{epoch:04d}.pt"
             torch.save({
                 "epoch": epoch,
+                "policy_type": args.policy,
                 "model": policy.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "policy_config": pol_cfg.__dict__,

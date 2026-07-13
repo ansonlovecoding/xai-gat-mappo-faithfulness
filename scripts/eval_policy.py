@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import sys
 import time
 from pathlib import Path
@@ -43,26 +44,41 @@ from dispatch_marl import (  # noqa: E402
     DispatchEnvConfig,
     FaithfulnessConfig,
     FaithfulnessEvaluator,
+    compute_attention_drift,
 )
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
+    DispatchMLPPolicy,
+    MLPPolicyConfig,
     PolicyConfig,
     obs_dict_to_tensors,
 )
 
 
 def _choose_device() -> str:
-    if torch.backends.mps.is_available():
+    # MPS on Intel macs (AMD GPUs) is broken in torch 2.2 (multi-dim
+    # reduction kernels assert) and removed in 2.3+ — Apple Silicon only.
+    if torch.backends.mps.is_available() and platform.machine() == "arm64":
         return "mps"
     if torch.cuda.is_available():
         return "cuda"
     return "cpu"
 
 
-def _load_policy(ckpt_path: Path, device: str) -> tuple[DispatchGATPolicy, dict]:
+def _load_policy(ckpt_path: Path, device: str):
+    """Load a checkpoint, instantiating the class recorded in policy_type.
+
+    Checkpoints saved before the B1 baseline landed have no "policy_type"
+    key — they are all GAT.
+    """
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
-    pol_cfg = PolicyConfig(**{**ckpt["policy_config"], "device": device})
-    policy = DispatchGATPolicy(pol_cfg)
+    policy_type = ckpt.get("policy_type", "gat")
+    if policy_type == "mlp":
+        pol_cfg = MLPPolicyConfig(**{**ckpt["policy_config"], "device": device})
+        policy = DispatchMLPPolicy(pol_cfg)
+    else:
+        pol_cfg = PolicyConfig(**{**ckpt["policy_config"], "device": device})
+        policy = DispatchGATPolicy(pol_cfg)
     policy.load_state_dict(ckpt["model"])
     policy.eval()
     return policy, ckpt
@@ -76,12 +92,18 @@ def _run_episode(
     faithfulness_evaluator: FaithfulnessEvaluator | None = None,
     faithfulness_every: int = 1,
     episode_index: int = 0,
+    compute_drift: bool = False,
 ) -> tuple[dict, list[dict]]:
     """Run one eval episode; return (episode summary, per-decision faithfulness records).
 
     The faithfulness records list is empty unless `faithfulness_evaluator` is
     provided. Records are lightweight dicts (no attention arrays) suitable
     for JSONL streaming.
+
+    With `compute_drift` (requires the env to be built with
+    emit_clean_obs=True), each sampled decision also gets a "drift" field:
+    JS divergence between the attention row on the degraded obs and on its
+    clean twin. Trivially ~0 when degradation is off — a useful sanity check.
     """
     obs_dict, _ = env.reset()
     total_reward = 0.0
@@ -118,6 +140,8 @@ def _run_episode(
             actions = {a: int(actions_np[i]) for i, a in enumerate(agents)}
 
             if faithfulness_evaluator is not None:
+                # Snapshot the clean twins BEFORE env.step() rebuilds them.
+                clean_obs_by_agent = dict(env.last_clean_obs) if compute_drift else {}
                 for i, a in enumerate(agents):
                     if decision_counter % faithfulness_every == 0:
                         single = {k: v[i : i + 1] for k, v in batched.items()}
@@ -125,7 +149,20 @@ def _run_episode(
                         result = faithfulness_evaluator.evaluate_decision(
                             single, action=int(actions_np[i])
                         )
+                        drift = None
+                        if compute_drift and a in clean_obs_by_agent:
+                            clean_single = {
+                                k: torch.as_tensor(
+                                    v, dtype=torch.float32, device=device
+                                ).unsqueeze(0)
+                                for k, v in clean_obs_by_agent[a].items()
+                            }
+                            clean_row = faithfulness_evaluator.attention_row(clean_single)
+                            drift = compute_attention_drift(
+                                clean_row, result.attention_row
+                            )
                         faith_records.append({
+                            **({"drift": round(drift, 4)} if drift is not None else {}),
                             "episode": episode_index,
                             "rl_step": step,
                             "agent": a,
@@ -190,7 +227,7 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
     g_comps = np.array([r["g_comp"] for r in non_trivial])
     g_suffs = np.array([r["g_suff"] for r in non_trivial])
     wamsns = np.array([r["wamsn"] for r in records])  # WAMSN uses all records
-    return {
+    out = {
         "n_decisions_total": n_total,
         "n_decisions_scored": n_scored,
         "def_mean": float(def_scores.mean()),
@@ -203,6 +240,14 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         "wamsn_mean": float(wamsns.mean()),
         "wamsn_std": float(wamsns.std()),
     }
+    # Attention drift — like WAMSN, meaningful for every decision.
+    drifts = np.array([r["drift"] for r in records if "drift" in r])
+    if drifts.size > 0:
+        out["drift_mean"] = float(drifts.mean())
+        out["drift_std"] = float(drifts.std())
+        out["drift_p95"] = float(np.percentile(drifts, 95))
+        out["n_drift_scored"] = int(drifts.size)
+    return out
 
 
 def main() -> int:
@@ -227,7 +272,16 @@ def main() -> int:
                         help="top-k values used for Comp/Suff (averaged)")
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5,
                         help="random subsets sampled per k for the DEF baseline")
+    parser.add_argument("--drift", action="store_true",
+                        help="also compute attention drift per sampled decision: "
+                             "JS(α_clean, α_degraded) against the clean twin of "
+                             "the same obs (requires --faithfulness; ~0 unless "
+                             "--degradation is on)")
     args = parser.parse_args()
+
+    if args.drift and not args.faithfulness:
+        parser.error("--drift requires --faithfulness (drift is recorded "
+                     "into the per-decision faithfulness records)")
 
     if not args.checkpoint.exists():
         parser.error(f"checkpoint not found: {args.checkpoint}")
@@ -237,14 +291,22 @@ def main() -> int:
     n_params = sum(p.numel() for p in policy.parameters())
 
     area = args.area or ckpt["env_config"]["area"]
+    # B3 checkpoints must be evaluated with the same AoI-unaware obs they
+    # were trained on; older checkpoints predate the flag, hence .get().
+    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
     env_cfg = DispatchEnvConfig(
         area=area,
         seed=args.seed,
         degradation=DegradationConfig(mode=args.degradation, dropout_rate=args.dropout_rate),
+        aoi_unaware=aoi_unaware,
+        emit_clean_obs=args.drift,
     )
     env = DispatchEnv(env_cfg)
 
     faith_evaluator: FaithfulnessEvaluator | None = None
+    if args.faithfulness and ckpt.get("policy_type", "gat") == "mlp":
+        parser.error("--faithfulness requires a GAT checkpoint: the MLP "
+                     "baseline (B1) has no attention channel to score")
     if args.faithfulness:
         faith_cfg = FaithfulnessConfig(
             top_k_values=tuple(args.faithfulness_top_k),
@@ -254,7 +316,8 @@ def main() -> int:
         faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
 
     print(f"checkpoint: {args.checkpoint.name}  (epoch {ckpt.get('epoch', '?')}, {n_params:,} params)")
-    print(f"env:        {area}  |  degradation: {args.degradation}  |  device: {device}")
+    print(f"env:        {area}  |  degradation: {args.degradation}  |  device: {device}"
+          + ("  |  AoI-unaware (B3)" if aoi_unaware else ""))
     print(f"policy:     {'stochastic' if args.stochastic else 'argmax (deterministic)'}")
     if args.faithfulness:
         print(f"faith:      k={args.faithfulness_top_k}  "
@@ -275,6 +338,7 @@ def main() -> int:
             faithfulness_evaluator=faith_evaluator,
             faithfulness_every=args.faithfulness_every,
             episode_index=ep,
+            compute_drift=args.drift,
         )
         r["wall_s"] = round(time.time() - t0, 1)
         results.append(r)
@@ -324,6 +388,13 @@ def main() -> int:
                 f"  WAMSN:     {faith_run_summary['wamsn_mean']:.3f} ± "
                 f"{faith_run_summary['wamsn_std']:.3f}"
             )
+            if "drift_mean" in faith_run_summary:
+                print(
+                    f"  drift:     {faith_run_summary['drift_mean']:.4f} ± "
+                    f"{faith_run_summary['drift_std']:.4f}  "
+                    f"(p95={faith_run_summary['drift_p95']:.4f}, "
+                    f"n={faith_run_summary['n_drift_scored']})"
+                )
         else:
             print(f"  faithfulness: no scorable decisions ({faith_run_summary.get('note', '')})")
 
