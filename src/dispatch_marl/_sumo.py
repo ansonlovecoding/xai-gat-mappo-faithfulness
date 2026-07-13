@@ -28,11 +28,27 @@ _SUMO_HOME_CANDIDATES = [
 ]
 
 
+def _pypi_wheel_candidate() -> str | None:
+    """The `eclipse-sumo` PyPI wheel ships the full SUMO distribution as an
+    importable `sumo` package (bin/ + tools/ + data/ inside site-packages).
+    Resolving it here makes the repo work on any machine where the wheel is
+    installed, without a system-level SUMO."""
+    try:
+        import sumo  # type: ignore[import-not-found]
+        return str(Path(sumo.__file__).parent)
+    except ImportError:
+        return None
+
+
 def resolve_sumo_home() -> Path:
     env_value = os.environ.get("SUMO_HOME")
     if env_value and Path(env_value, "tools").is_dir():
         return Path(env_value)
-    for candidate in _SUMO_HOME_CANDIDATES:
+    candidates = list(_SUMO_HOME_CANDIDATES)
+    wheel = _pypi_wheel_candidate()
+    if wheel is not None:
+        candidates.append(wheel)
+    for candidate in candidates:
         if Path(candidate, "tools").is_dir():
             os.environ["SUMO_HOME"] = candidate
             bin_dir = str(Path(candidate, "bin"))
@@ -40,7 +56,7 @@ def resolve_sumo_home() -> Path:
                 os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
             return Path(candidate)
     raise RuntimeError(
-        f"SUMO not found. Set SUMO_HOME or install SUMO. Checked: {_SUMO_HOME_CANDIDATES}"
+        f"SUMO not found. Set SUMO_HOME or install SUMO. Checked: {candidates}"
     )
 
 

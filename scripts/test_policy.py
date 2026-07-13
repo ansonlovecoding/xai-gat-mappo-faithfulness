@@ -12,6 +12,7 @@ we're verifying the tensor plumbing.
 """
 from __future__ import annotations
 
+import platform
 import sys
 from pathlib import Path
 
@@ -32,7 +33,8 @@ from dispatch_marl.models import (  # noqa: E402
 
 
 def main() -> int:
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    device = ("mps" if torch.backends.mps.is_available()
+              and platform.machine() == "arm64" else "cpu")
     print(f"device: {device}")
 
     env_cfg = DispatchEnvConfig(area="central_park")

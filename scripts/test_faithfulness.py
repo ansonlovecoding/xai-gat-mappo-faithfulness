@@ -13,6 +13,7 @@ training" here; we're only verifying the evaluator plumbing.
 """
 from __future__ import annotations
 
+import platform
 import sys
 from pathlib import Path
 
@@ -92,7 +93,8 @@ def _slice_batch(obs: dict[str, torch.Tensor], i: int) -> dict[str, torch.Tensor
 
 
 def test_evaluator_end_to_end() -> None:
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    device = ("mps" if torch.backends.mps.is_available()
+              and platform.machine() == "arm64" else "cpu")
     print(f"  device: {device}")
 
     env_cfg = DispatchEnvConfig(area="central_park")
