@@ -1,25 +1,25 @@
 {
   "manifest": {
     "checkpoint": "runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt",
-    "git_rev": "e6a4c3a"
+    "git_rev": "e7407a2"
   },
   "H1_dropout_rate": {
-    "n": 4157,
-    "rho": -0.2301493588179859,
+    "n": 11137,
+    "rho": -0.23001047867654018,
     "p_one_sided": 9.999000099990002e-05,
     "per_level_mean": {
-      "0": -0.001588496583143508,
-      "0.05": -0.0016967153284671533,
-      "0.1": -0.0017609870740305522,
-      "0.2": -0.0018547408343868518,
-      "0.4": -0.002174355828220859
+      "0": -0.001609727626459144,
+      "0.05": -0.001691772151898734,
+      "0.1": -0.0017501986754966889,
+      "0.2": -0.0018727396021699818,
+      "0.4": -0.0021667447306791565
     }
   },
   "H2_dropout_rate": {
-    "n": 12,
+    "n": 32,
     "n_skipped_perf_floor": 0,
-    "mean_delta_faith_minus_perf": 0.3912780231850688,
-    "p_one_sided": 0.008399160083991601,
+    "mean_delta_faith_minus_perf": 0.31422512107205103,
+    "p_one_sided": 9.999000099990002e-05,
     "cells": [
       {
         "level": 0.05,
@@ -40,6 +40,36 @@
         "faith_rate": 0.0691
       },
       {
+        "level": 0.05,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0607
+      },
+      {
+        "level": 0.05,
+        "seed": 46,
+        "perf_rate": -0.0769,
+        "faith_rate": 0.0294
+      },
+      {
+        "level": 0.05,
+        "seed": 47,
+        "perf_rate": 0.1538,
+        "faith_rate": 0.0071
+      },
+      {
+        "level": 0.05,
+        "seed": 48,
+        "perf_rate": -0.1538,
+        "faith_rate": 0.0576
+      },
+      {
+        "level": 0.05,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0524
+      },
+      {
         "level": 0.1,
         "seed": 42,
         "perf_rate": -0.1,
@@ -56,6 +86,36 @@
         "seed": 44,
         "perf_rate": 0.1176,
         "faith_rate": 0.0859
+      },
+      {
+        "level": 0.1,
+        "seed": 45,
+        "perf_rate": -0.3333,
+        "faith_rate": 0.1029
+      },
+      {
+        "level": 0.1,
+        "seed": 46,
+        "perf_rate": -0.0769,
+        "faith_rate": 0.0944
+      },
+      {
+        "level": 0.1,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.0708
+      },
+      {
+        "level": 0.1,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0294
+      },
+      {
+        "level": 0.1,
+        "seed": 49,
+        "perf_rate": -0.2727,
+        "faith_rate": 0.0795
       },
       {
         "level": 0.2,
@@ -76,6 +136,36 @@
         "faith_rate": 0.144
       },
       {
+        "level": 0.2,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.1692
+      },
+      {
+        "level": 0.2,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.1471
+      },
+      {
+        "level": 0.2,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.1329
+      },
+      {
+        "level": 0.2,
+        "seed": 48,
+        "perf_rate": 0.0769,
+        "faith_rate": 0.1878
+      },
+      {
+        "level": 0.2,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.1693
+      },
+      {
         "level": 0.4,
         "seed": 42,
         "perf_rate": -0.4,
@@ -92,38 +182,68 @@
         "seed": 44,
         "perf_rate": 0.1765,
         "faith_rate": 0.3245
+      },
+      {
+        "level": 0.4,
+        "seed": 45,
+        "perf_rate": -0.1667,
+        "faith_rate": 0.3511
+      },
+      {
+        "level": 0.4,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.3051
+      },
+      {
+        "level": 0.4,
+        "seed": 47,
+        "perf_rate": 0.1538,
+        "faith_rate": 0.3286
+      },
+      {
+        "level": 0.4,
+        "seed": 48,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.3311
+      },
+      {
+        "level": 0.4,
+        "seed": 49,
+        "perf_rate": -0.2727,
+        "faith_rate": 0.3491
       }
     ]
   },
   "H3_dropout_rate": {
-    "n": 4457,
-    "rho": 0.721945407953251,
+    "n": 11937,
+    "rho": 0.7159863186494344,
     "p_one_sided": 9.999000099990002e-05,
     "per_level_mean": {
       "0": 0.0,
-      "0.05": 0.001742857142857143,
-      "0.1": 0.0036891328210757403,
-      "0.2": 0.007844418331374853,
-      "0.4": 0.020891200000000002
+      "0.05": 0.0016994940978077573,
+      "0.1": 0.003478432989690722,
+      "0.2": 0.007837099494097806,
+      "0.4": 0.020880827886710238
     }
   },
   "H1m_dropout_rate": {
-    "n": 4157,
-    "rho": -0.04498839617006284,
-    "p_one_sided": 0.0016998300169983002,
+    "n": 11137,
+    "rho": -0.04701412192292963,
+    "p_one_sided": 9.999000099990002e-05,
     "per_level_mean": {
-      "0": -0.4927301822323462,
-      "0.05": -0.515184306569343,
-      "0.1": -0.5146118683901293,
-      "0.2": -0.5195313527180784,
-      "0.4": -0.5413413496932515
+      "0": -0.5105944660613921,
+      "0.05": -0.5243160036166366,
+      "0.1": -0.5190827814569535,
+      "0.2": -0.5308981012658228,
+      "0.4": -0.5483382669789229
     }
   },
   "H2m_dropout_rate": {
-    "n": 12,
+    "n": 32,
     "n_skipped_perf_floor": 0,
-    "mean_delta_faith_minus_perf": 0.27465223797126126,
-    "p_one_sided": 0.0226977302269773,
+    "mean_delta_faith_minus_perf": 0.19209290042921395,
+    "p_one_sided": 0.0004999500049995,
     "cells": [
       {
         "level": 0.05,
@@ -144,6 +264,36 @@
         "faith_rate": 0.0169
       },
       {
+        "level": 0.05,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0302
+      },
+      {
+        "level": 0.05,
+        "seed": 46,
+        "perf_rate": -0.0769,
+        "faith_rate": -0.0055
+      },
+      {
+        "level": 0.05,
+        "seed": 47,
+        "perf_rate": 0.1538,
+        "faith_rate": -0.0162
+      },
+      {
+        "level": 0.05,
+        "seed": 48,
+        "perf_rate": -0.1538,
+        "faith_rate": 0.0259
+      },
+      {
+        "level": 0.05,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0473
+      },
+      {
         "level": 0.1,
         "seed": 42,
         "perf_rate": -0.1,
@@ -160,6 +310,36 @@
         "seed": 44,
         "perf_rate": 0.1176,
         "faith_rate": 0.0212
+      },
+      {
+        "level": 0.1,
+        "seed": 45,
+        "perf_rate": -0.3333,
+        "faith_rate": 0.041
+      },
+      {
+        "level": 0.1,
+        "seed": 46,
+        "perf_rate": -0.0769,
+        "faith_rate": -0.0107
+      },
+      {
+        "level": 0.1,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": -0.0276
+      },
+      {
+        "level": 0.1,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0223
+      },
+      {
+        "level": 0.1,
+        "seed": 49,
+        "perf_rate": -0.2727,
+        "faith_rate": 0.0308
       },
       {
         "level": 0.2,
@@ -180,6 +360,36 @@
         "faith_rate": 0.0862
       },
       {
+        "level": 0.2,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0071
+      },
+      {
+        "level": 0.2,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.0154
+      },
+      {
+        "level": 0.2,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.0042
+      },
+      {
+        "level": 0.2,
+        "seed": 48,
+        "perf_rate": 0.0769,
+        "faith_rate": 0.0437
+      },
+      {
+        "level": 0.2,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0826
+      },
+      {
         "level": 0.4,
         "seed": 42,
         "perf_rate": -0.4,
@@ -196,26 +406,56 @@
         "seed": 44,
         "perf_rate": 0.1765,
         "faith_rate": 0.0802
+      },
+      {
+        "level": 0.4,
+        "seed": 45,
+        "perf_rate": -0.1667,
+        "faith_rate": 0.0493
+      },
+      {
+        "level": 0.4,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.0178
+      },
+      {
+        "level": 0.4,
+        "seed": 47,
+        "perf_rate": 0.1538,
+        "faith_rate": 0.0884
+      },
+      {
+        "level": 0.4,
+        "seed": 48,
+        "perf_rate": -0.2308,
+        "faith_rate": 0.0295
+      },
+      {
+        "level": 0.4,
+        "seed": 49,
+        "perf_rate": -0.2727,
+        "faith_rate": 0.116
       }
     ]
   },
   "H1_tunnel_noise": {
-    "n": 4142,
-    "rho": -0.008326488374410152,
-    "p_one_sided": 0.3040695930406959,
+    "n": 11288,
+    "rho": -0.010128237934096711,
+    "p_one_sided": 0.13758624137586242,
     "per_level_mean": {
-      "0": -0.001588496583143508,
-      "10": -0.0016372881355932202,
-      "20": -0.0016069938650306746,
-      "40": -0.0015902597402597401,
-      "80": -0.0016209847596717467
+      "0": -0.001609727626459144,
+      "10": -0.001644400352733686,
+      "20": -0.001624642857142857,
+      "40": -0.0016332125056637968,
+      "80": -0.0016318584070796462
     }
   },
   "H2_tunnel_noise": {
-    "n": 12,
+    "n": 32,
     "n_skipped_perf_floor": 0,
-    "mean_delta_faith_minus_perf": 0.22706815080846612,
-    "p_one_sided": 0.0326967303269673,
+    "mean_delta_faith_minus_perf": 0.1493896417188451,
+    "p_one_sided": 0.001999800019998,
     "cells": [
       {
         "level": 10.0,
@@ -236,6 +476,36 @@
         "faith_rate": 0.0239
       },
       {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": -0.25,
+        "faith_rate": 0.0279
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.1538,
+        "faith_rate": -0.0109
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": -0.1538,
+        "faith_rate": 0.0051
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.034
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0909,
+        "faith_rate": 0.0233
+      },
+      {
         "level": 20.0,
         "seed": 42,
         "perf_rate": -0.4,
@@ -252,6 +522,36 @@
         "seed": 44,
         "perf_rate": -0.0588,
         "faith_rate": -0.0063
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.3333,
+        "faith_rate": 0.0225
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": -0.1538,
+        "faith_rate": -0.0059
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": -0.0769,
+        "faith_rate": 0.0031
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0769,
+        "faith_rate": 0.0188
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": -0.3636,
+        "faith_rate": -0.001
       },
       {
         "level": 40.0,
@@ -272,6 +572,36 @@
         "faith_rate": -0.0193
       },
       {
+        "level": 40.0,
+        "seed": 45,
+        "perf_rate": -0.0833,
+        "faith_rate": 0.0348
+      },
+      {
+        "level": 40.0,
+        "seed": 46,
+        "perf_rate": 0.1538,
+        "faith_rate": -0.0021
+      },
+      {
+        "level": 40.0,
+        "seed": 47,
+        "perf_rate": -0.0769,
+        "faith_rate": 0.0221
+      },
+      {
+        "level": 40.0,
+        "seed": 48,
+        "perf_rate": -0.3077,
+        "faith_rate": 0.017
+      },
+      {
+        "level": 40.0,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0338
+      },
+      {
         "level": 80.0,
         "seed": 42,
         "perf_rate": -0.2,
@@ -288,38 +618,68 @@
         "seed": 44,
         "perf_rate": 0.4706,
         "faith_rate": 0.015
+      },
+      {
+        "level": 80.0,
+        "seed": 45,
+        "perf_rate": 0.0833,
+        "faith_rate": 0.0387
+      },
+      {
+        "level": 80.0,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": -0.0059
+      },
+      {
+        "level": 80.0,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": -0.0095
+      },
+      {
+        "level": 80.0,
+        "seed": 48,
+        "perf_rate": -0.3846,
+        "faith_rate": 0.0172
+      },
+      {
+        "level": 80.0,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0089
       }
     ]
   },
   "H3_tunnel_noise": {
-    "n": 4442,
-    "rho": 0.08720767490913815,
+    "n": 12088,
+    "rho": 0.08594164880351735,
     "p_one_sided": 9.999000099990002e-05,
     "per_level_mean": {
       "0": 0.0,
-      "10": 0.00905,
-      "20": 0.007324571428571429,
-      "40": 0.008534698795180724,
-      "80": 0.006115991237677984
+      "10": 0.009256713344316308,
+      "20": 0.009065375,
+      "40": 0.008123320659062103,
+      "80": 0.00689793388429752
     }
   },
   "H1m_tunnel_noise": {
-    "n": 4142,
-    "rho": -0.015774930496455855,
-    "p_one_sided": 0.1558844115588441,
+    "n": 11288,
+    "rho": -0.01320197836522319,
+    "p_one_sided": 0.0786921307869213,
     "per_level_mean": {
-      "0": -0.4927301822323462,
-      "10": -0.5060716707021793,
-      "20": -0.5043312883435582,
-      "40": -0.5062223376623377,
-      "80": -0.5159186400937865
+      "0": -0.5105944660613921,
+      "10": -0.5191440035273368,
+      "20": -0.5129086160714286,
+      "40": -0.5209524694154961,
+      "80": -0.5168530973451327
     }
   },
   "H2m_tunnel_noise": {
-    "n": 12,
+    "n": 32,
     "n_skipped_perf_floor": 0,
-    "mean_delta_faith_minus_perf": 0.24267502719360826,
-    "p_one_sided": 0.0263973602639736,
+    "mean_delta_faith_minus_perf": 0.14841333602384005,
+    "p_one_sided": 0.0040995900409959,
     "cells": [
       {
         "level": 10.0,
@@ -340,6 +700,36 @@
         "faith_rate": 0.0165
       },
       {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": -0.25,
+        "faith_rate": 0.0066
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.1538,
+        "faith_rate": -0.0091
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": -0.1538,
+        "faith_rate": 0.0106
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0014
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0909,
+        "faith_rate": 0.043
+      },
+      {
         "level": 20.0,
         "seed": 42,
         "perf_rate": -0.4,
@@ -356,6 +746,36 @@
         "seed": 44,
         "perf_rate": -0.0588,
         "faith_rate": -0.0103
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.3333,
+        "faith_rate": 0.0032
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": -0.1538,
+        "faith_rate": -0.0299
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": -0.0769,
+        "faith_rate": -0.0263
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0769,
+        "faith_rate": 0.0001
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": -0.3636,
+        "faith_rate": 0.0202
       },
       {
         "level": 40.0,
@@ -376,6 +796,36 @@
         "faith_rate": -0.0228
       },
       {
+        "level": 40.0,
+        "seed": 45,
+        "perf_rate": -0.0833,
+        "faith_rate": 0.0185
+      },
+      {
+        "level": 40.0,
+        "seed": 46,
+        "perf_rate": 0.1538,
+        "faith_rate": -0.0254
+      },
+      {
+        "level": 40.0,
+        "seed": 47,
+        "perf_rate": -0.0769,
+        "faith_rate": 0.0575
+      },
+      {
+        "level": 40.0,
+        "seed": 48,
+        "perf_rate": -0.3077,
+        "faith_rate": 0.0011
+      },
+      {
+        "level": 40.0,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0239
+      },
+      {
         "level": 80.0,
         "seed": 42,
         "perf_rate": -0.2,
@@ -392,12 +842,42 @@
         "seed": 44,
         "perf_rate": 0.4706,
         "faith_rate": 0.0264
+      },
+      {
+        "level": 80.0,
+        "seed": 45,
+        "perf_rate": 0.0833,
+        "faith_rate": -0.0204
+      },
+      {
+        "level": 80.0,
+        "seed": 46,
+        "perf_rate": -0.2308,
+        "faith_rate": -0.0281
+      },
+      {
+        "level": 80.0,
+        "seed": 47,
+        "perf_rate": -0.2308,
+        "faith_rate": -0.0169
+      },
+      {
+        "level": 80.0,
+        "seed": 48,
+        "perf_rate": -0.3846,
+        "faith_rate": -0.0244
+      },
+      {
+        "level": 80.0,
+        "seed": 49,
+        "perf_rate": -0.1818,
+        "faith_rate": 0.0477
       }
     ]
   },
   "H4_pooled": {
-    "n": 6543,
-    "rho": -0.3034144866264632,
+    "n": 17799,
+    "rho": -0.3057973941274738,
     "p_one_sided": 9.999000099990002e-05
   }
 }

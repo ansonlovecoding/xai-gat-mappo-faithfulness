@@ -66,12 +66,15 @@ both metrics (`sweep_B2_margin/`):
 - H1 supported on the dropout axis under BOTH metrics
   (prob ρ=−0.23 p=1e-4; margin ρ=−0.045 p=0.0017); still not on the
   tunnel-noise axis.
-- **H2 supported on both axes under both metrics** in this sweep
-  (dropout: p=0.0084 prob / 0.0227 margin; tunnel: p=0.0327 / 0.0264).
-  Caution: the previous same-config sweep (`sweep_B2_stoch/`) gave
-  p=0.099 on the dropout axis — with n=12 cells H2 is fragile to the
-  episode draw. Treat as "consistent direction, needs more seeds", not
-  as a settled result.
+- **H2 supported on both axes under both metrics.** The sweep was
+  extended from 3 to **8 seeds (42–49; n=32 cells per axis)** after the
+  n=12 version proved fragile across repetitions (p=0.099 in
+  `sweep_B2_stoch/` vs 0.0084 here). At n=32: dropout axis p=0.0001
+  (prob) / 0.0005 (margin); tunnel axis p=0.0020 / 0.0041. The
+  qualitative picture: pickups stay flat (6.2→7.1 across dropout
+  levels — no performance decline) while DEF declines and WAMSN rises,
+  i.e. the explanation channel degrades while control does not: the
+  faithfulness-decoupling effect.
 - H3/H4 unchanged (strongly supported).
 
 **Decoupled explanation head** (`explainer/`): a scorer MLP over the
