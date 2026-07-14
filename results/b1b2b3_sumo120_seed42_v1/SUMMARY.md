@@ -99,6 +99,32 @@ Two headline observations:
    clean vs +0.133 tunnel) — the dissertation's architectural claim, in
    its first empirical form.
 
+## H5: degradation-aware training reverses the decoupling (`H5_gat_degtrain/`, `sweep_H5_margin/`)
+
+Same config as B2 except `--degradation tunnel_triggered` during
+training (300 epochs, seed 42). Best epoch 39 (rolling 7.5); clean eval
+**7.60 ± 1.62** — no clean-performance cost vs B2's 5.80 ± 1.72.
+Identical 72-cell sweep grid as B2's. Side by side:
+
+| | B2 (trained clean) | H5 (trained degraded) |
+|---|---:|---:|
+| DEF level | −0.002 (below random) | **+0.003 (above random)** |
+| H1: DEF vs dropout severity | falls (ρ=−0.23, p=1e-4) | **rises** (ρ=+0.18) |
+| H2: faith declines faster | supported, both axes | not supported (nothing declines) |
+| H3: WAMSN vs severity | ρ=+0.72 | ρ=+0.72 (unchanged) |
+| H4: WAMSN–DEF correlation | **−0.31** | **+0.22** |
+
+Reading: with degradation experienced during training, the attention
+channel becomes (slightly) more faithful than random, and *more*
+faithful as telemetry degrades — attention still shifts onto stale
+nodes exactly as before (H3 identical), but for the H5 policy that
+shift coincides with *better* explanations rather than worse (H4 flips
+sign). Faithfulness-decoupling is a property of degradation-naive
+training, and AoI-aware training under degradation is an effective
+mitigation (proposal RQ4). Caveats: one training seed per condition;
+absolute DEF levels remain small (saturation); same clustering caveat
+as below.
+
 ## Findings worth citing
 
 1. **Argmax evaluation degenerates on entropy-collapsed policies.** All
