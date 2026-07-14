@@ -203,6 +203,12 @@ def main() -> int:
                         help="top-k values used for DEF's comp/suff terms")
     parser.add_argument("--faith-random-baselines", type=int, default=3,
                         help="random subsets per k; kept lower than eval-time (5) for speed")
+    parser.add_argument("--demand-split", default=None,
+                        choices=["train", "val", "test"],
+                        help="rotate rider-demand variants from this chronological "
+                             "split (demand_manifest.json) round-robin across "
+                             "epochs. Default: the single committed demand file, "
+                             "as before. Use 'train' for protocol-compliant runs.")
     parser.add_argument("--log-dir", type=Path, default=PROJECT_ROOT / "runs" / "mappo")
     parser.add_argument("--device", default=None,
                         help="cpu, cuda, or mps; default: auto")
@@ -233,6 +239,14 @@ def main() -> int:
         aoi_unaware=args.aoi_unaware,
     )
     env = DispatchEnv(env_cfg)
+
+    # Demand-variant rotation (E-section protocol).
+    demand_files: list[str] = []
+    if args.demand_split:
+        from src.dispatch_marl.scenario import demand_split_files
+        demand_files = demand_split_files(args.area, args.demand_split)
+        print(f"demand:  {len(demand_files)} '{args.demand_split}' variants, "
+              f"rotated round-robin per epoch")
 
     # ---- policy
     if args.policy == "mlp":
@@ -325,8 +339,12 @@ def main() -> int:
     for epoch in range(args.epochs):
         t0 = time.time()
 
-        # 1. rollout
-        buffer, ep_stats = collect_rollout(env, policy, device=device)
+        # 1. rollout (on this epoch's demand variant, if rotation is on)
+        reset_options = None
+        if demand_files:
+            reset_options = {"taxi_route_file": demand_files[epoch % len(demand_files)]}
+        buffer, ep_stats = collect_rollout(env, policy, device=device,
+                                           reset_options=reset_options)
 
         # 1b. Optional faithfulness sample on the just-rolled-out buffer.
         # Done before compute_gae/ppo_update so the metrics reflect the same

@@ -22,6 +22,30 @@ class Scenario:
     bbox: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0)
 
 
+def load_demand_manifest(area: str, root: Path | None = None) -> dict | None:
+    """Return the demand-variant manifest for an area, or None if the
+    variants haven't been generated (scripts/add_taxis.py --variants N)."""
+    root = root or YUBEI_ROOT
+    path = root / area / "demand_manifest.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+
+def demand_split_files(area: str, split: str, root: Path | None = None) -> list[str]:
+    """Variant filenames for one chronological split ('train'/'val'/'test')."""
+    manifest = load_demand_manifest(area, root)
+    if manifest is None:
+        raise FileNotFoundError(
+            f"no demand_manifest.json for '{area}' — run "
+            f"`python scripts/add_taxis.py --area {area} --variants N` first"
+        )
+    try:
+        return list(manifest["split"][split])
+    except KeyError:
+        raise KeyError(f"unknown split {split!r}; expected train/val/test") from None
+
+
 def load_scenario(area: str, root: Path | None = None) -> Scenario:
     root = root or YUBEI_ROOT
     scenario_dir = root / area

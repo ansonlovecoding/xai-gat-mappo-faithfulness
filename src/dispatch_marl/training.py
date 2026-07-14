@@ -73,12 +73,17 @@ def collect_rollout(
     env: DispatchEnv,
     policy: DispatchGATPolicy,
     device: str = "cpu",
+    reset_options: dict | None = None,
 ) -> tuple[list[AgentStep], EpisodeStats]:
-    """Run one full episode with the current policy, return per-agent-step records."""
+    """Run one full episode with the current policy, return per-agent-step records.
+
+    `reset_options` is forwarded to env.reset() — used by the demand-variant
+    protocol to rotate rider files per episode.
+    """
     buffer: list[AgentStep] = []
     stats = EpisodeStats()
 
-    obs_dict, _ = env.reset()
+    obs_dict, _ = env.reset(options=reset_options)
     policy.eval()
 
     while not env.done:

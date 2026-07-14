@@ -86,9 +86,9 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | OSM → SUMO network build reproducible from committed `.osm.xml` | ✅ | `scripts/build_yubei.py` |
 | Ride-demand generation via `randomTrips.py`, seed-pinned | ✅ | seed=42 baked in |
 | Fixed-length episodes (1200 s ≈ 1 h equivalent) | ✅ | `sumocfg` end=1200 |
-| Chronological train/val/test split 70/15/15 | ❌ | current runs are single-episode; needs an episode-index pipeline |
-| Multiple degradation severity levels (paired clean/degraded variants) | ❌ | `DegradationConfig` supports one severity per run; sweep script missing |
-| Versioned dataset manifest (`.npz`/Parquet + seed/version hash) | ⚠️ | `tunnels.json` versions the network; episode-level manifest missing |
+| Chronological train/val/test split 70/15/15 | ✅ | `add_taxis.py --variants N` writes seeded rider-demand variants + `demand_manifest.json` (fleet identical, demand varies); `train.py --demand-split train` rotates per epoch, `eval_policy.py --demand-split test` evaluates held-out demand |
+| Multiple degradation severity levels (paired clean/degraded variants) | ✅ | `scripts/sweep_severity.py`: clean + dropout-rate axis + tunnel-noise axis × seeds |
+| Versioned dataset manifest (`.npz`/Parquet + seed/version hash) | ✅ | `tunnels.json` (network) + `demand_manifest.json` (demand variants + split) + per-sweep `manifest.json` (cells × seeds + ckpt) |
 
 ### F. Main experiment (Section 7.5 · WP4 · Objective 4 · Milestone M2)
 
@@ -292,7 +292,16 @@ network you trained on — OSM evolves, but your experiments do not.
 python scripts/add_taxis.py --all                                  # 20 taxis, 50 rides each
 python scripts/add_taxis.py --all --taxis 30 --rides 80 --end-time 1800
 python scripts/add_taxis.py --area central_park                    # one area only
+python scripts/add_taxis.py --area central_park --variants 20      # + 20 demand variants
 ```
+
+`--variants N` additionally writes N rider-demand variant files
+(`<area>_taxis_vNNN.rou.xml`) plus `demand_manifest.json` with a
+chronological 70/15/15 train/val/test split (proposal §7.6). The taxi
+fleet is identical across variants — only the rider demand changes — so
+episodes differ in exactly one factor. The base `.sumocfg` is untouched;
+variants are opt-in: `train.py --demand-split train` rotates them per
+epoch, `eval_policy.py --demand-split test` evaluates on held-out demand.
 
 This writes `<area>_taxis.rou.xml` (taxi fleet vehicles + person ride
 requests) alongside the existing `<area>.rou.xml` background traffic, and

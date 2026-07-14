@@ -92,6 +92,7 @@ def _run_episode(
     faithfulness_evaluator: FaithfulnessEvaluator | None = None,
     faithfulness_every: int = 1,
     episode_index: int = 0,
+    reset_options: dict | None = None,
     compute_drift: bool = False,
 ) -> tuple[dict, list[dict]]:
     """Run one eval episode; return (episode summary, per-decision faithfulness records).
@@ -105,7 +106,7 @@ def _run_episode(
     JS divergence between the attention row on the degraded obs and on its
     clean twin. Trivially ~0 when degradation is off — a useful sanity check.
     """
-    obs_dict, _ = env.reset()
+    obs_dict, _ = env.reset(options=reset_options)
     total_reward = 0.0
     total_pickups = 0
     step = 0
@@ -280,6 +281,13 @@ def main() -> int:
                         help="top-k values used for Comp/Suff (averaged)")
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5,
                         help="random subsets sampled per k for the DEF baseline")
+    parser.add_argument("--demand-split", default=None,
+                        choices=["train", "val", "test"],
+                        help="rotate rider-demand variants from this chronological "
+                             "split per episode (episode i → variant i mod N). "
+                             "Use 'test' for held-out protocol evaluation.")
+    parser.add_argument("--demand-variant", default=None,
+                        help="single demand-variant filename to use for every episode")
     parser.add_argument("--drift", action="store_true",
                         help="also compute attention drift per sampled decision: "
                              "JS(α_clean, α_degraded) against the clean twin of "
@@ -337,17 +345,35 @@ def main() -> int:
           f"{'rl_steps':>8}  {'wall_s':>7}{header_extra}")
     print("-" * (60 + len(header_extra)))
 
+    # Demand-variant selection (E-section protocol).
+    demand_files: list[str] = []
+    if args.demand_split and args.demand_variant:
+        parser.error("--demand-split and --demand-variant are mutually exclusive")
+    if args.demand_split:
+        from dispatch_marl.scenario import demand_split_files
+        demand_files = demand_split_files(area, args.demand_split)
+        print(f"demand:     {len(demand_files)} '{args.demand_split}' variants, "
+              f"rotated per episode")
+    elif args.demand_variant:
+        demand_files = [args.demand_variant]
+
     results: list[dict] = []
     all_faith_records: list[dict] = []
     for ep in range(args.episodes):
         t0 = time.time()
+        reset_options = None
+        if demand_files:
+            reset_options = {"taxi_route_file": demand_files[ep % len(demand_files)]}
         r, faith_records = _run_episode(
             env, policy, device, args.stochastic,
             faithfulness_evaluator=faith_evaluator,
             faithfulness_every=args.faithfulness_every,
             episode_index=ep,
             compute_drift=args.drift,
+            reset_options=reset_options,
         )
+        if reset_options:
+            r["demand_variant"] = reset_options["taxi_route_file"]
         r["wall_s"] = round(time.time() - t0, 1)
         results.append(r)
         all_faith_records.extend(faith_records)
