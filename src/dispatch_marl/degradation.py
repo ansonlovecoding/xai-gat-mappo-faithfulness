@@ -1,22 +1,32 @@
 """Telemetry degradation layer applied at the env→agent observation boundary.
 
-Two modes:
+Semantics (proposal §7.2): when a vehicle's signal drops, it *stops
+transmitting* — its telemetry **freezes at the last valid reading** and every
+observer (the vehicle itself and all peers) acts on that last-known state
+while its Age of Information grows. This is the "freeze" corruption mode and
+the dissertation's primary mechanism. A legacy "noise" mode (Gaussian jitter
+on the true state) is kept for backward comparison only.
 
-- `tunnel_triggered` (dissertation's primary): each taxi's self-observation
-  is corrupted (position noise + a `position_valid=0` flag) whenever the
-  taxi's current edge is in the tunnel set. Deterministic w.r.t. network
-  geometry — a taxi on a given tunnel edge is *always* degraded.
+Trigger modes:
 
-- `random_dropout`: independent Bernoulli mask per agent per step. Used as
-  the matched-rate ablation against `tunnel_triggered` (same overall
-  corruption rate, but uncorrelated with location).
-
+- `tunnel_triggered` (primary): the trigger fires while the taxi's current
+  edge is in the tunnel set. Deterministic w.r.t. network geometry.
+- `random_dropout`: independent Bernoulli trigger per taxi per step —
+  the matched-rate ablation with no spatial structure.
 - `off`: no-op.
 
-Applied to *observations only* — the policy sees degraded readings, but the
+Severity (proposal §7.2 ladder — "maximum AoI"): `outage_duration_s`. Once
+triggered, the signal stays lost until the taxi's AoI reaches this many
+seconds, even after it leaves the trigger zone. The ladder used in the
+experiments is {5, 15, 30, 60} s. Geography puts a floor under the maximum
+AoI actually reached (a tunnel transit longer than the level keeps the
+signal down for the whole transit), so the empirical AoI distribution is
+reported alongside each level.
+
+Applied to *observations only* — the policy sees stale readings, but the
 underlying SUMO simulator remains ground truth. That's what lets us measure
-"how much did degradation cost the policy" without changing the environment
-itself.
+"how much did degradation cost the policy" without changing the environment,
+and what makes the per-decision clean twin (drift measurement) exact.
 """
 from __future__ import annotations
 
@@ -29,22 +39,36 @@ import numpy as np
 @dataclass
 class DegradationConfig:
     mode: Literal["off", "tunnel_triggered", "random_dropout"] = "off"
-    # Std dev of Gaussian noise added to (x, y) when degradation is active.
+    # How degraded telemetry is corrupted:
+    #   "freeze" (default; proposal §7.2): serve the last valid
+    #            (position, velocity) snapshot to ALL observers.
+    #   "noise":  legacy Gaussian jitter on the true state (pre-freeze
+    #             results in results/b1b2b3_sumo120_seed42_v1 used this).
+    corruption: Literal["freeze", "noise"] = "freeze"
+    # Severity knob: once triggered, the signal stays lost until AoI
+    # reaches this many seconds ("maximum AoI" in the proposal's ladder).
+    # 0 = outage lasts only as long as the trigger itself.
+    outage_duration_s: float = 0.0
+    # Std dev of Gaussian noise added to (x, y) in "noise" mode.
     position_noise_m: float = 20.0
-    # For random_dropout mode: per-step probability that an agent is degraded.
+    # For random_dropout mode: per-step probability that the trigger fires.
     dropout_rate: float = 0.0
 
 
-class DegradationLayer:
-    """Per-step degradation. Consumes fresh randomness each apply().
+class ObservedState(tuple):
+    """(x, y, v, degraded, aoi) — the telemetry every observer sees."""
+    __slots__ = ()
 
-    Also owns per-agent **Age of Information (AoI)** bookkeeping. Whenever
-    a taxi produces a *trusted* reading (i.e. it isn't currently degraded),
-    the timestamp is refreshed; when the taxi is degraded, `update_and_get_aoi`
-    returns the seconds elapsed since the last trusted reading. Both the
-    binary `position_valid` flag and the continuous AoI are surfaced to the
-    policy as observation features — that lets the policy condition on
-    *how stale* its reading is, not merely on whether it's currently offline.
+
+class DegradationLayer:
+    """Per-step degradation with per-taxi freeze snapshots and AoI.
+
+    `observe()` is the single entry point: the env calls it once per alive
+    taxi per step, and the returned reading is what *everyone* sees for
+    that taxi — the taxi itself (self node) and its peers (neighbour
+    nodes). Results are cached per (taxi, sim_time) so repeated queries
+    within a step are consistent (critical for random_dropout, and for
+    faithfulness-time re-queries).
     """
 
     def __init__(
@@ -56,41 +80,83 @@ class DegradationLayer:
         self.config = config
         self.tunnel_edges = tunnel_edges
         self.rng = rng
-        # Per-taxi timestamp of the last trusted (non-degraded) observation.
-        # Reset on env.reset() via `reset()` below.
+        # Per-taxi timestamp of the last trusted reading.
         self._last_valid_time: dict[str, float] = {}
-        # Per (taxi_id, sim_time) cache of the degradation decision. Ensures
-        # multiple queries within the same sim step get a consistent answer —
-        # critical for `random_dropout` mode where every fresh call would
-        # otherwise draw an independent Bernoulli.
-        self._step_cache: dict[tuple[str, float], bool] = {}
+        # Per-taxi (x, y, v) snapshot at the last trusted reading.
+        self._snapshot: dict[str, tuple[float, float, float]] = {}
+        # Per-taxi sim-time until which the signal stays lost (outage
+        # extension implementing the max-AoI severity ladder).
+        self._outage_until: dict[str, float] = {}
+        # Per (taxi, sim_time) cache of the full observed reading.
+        self._obs_cache: dict[tuple[str, float], tuple] = {}
 
     def reset(self) -> None:
-        """Clear AoI bookkeeping. Call at env.reset()."""
+        """Clear all bookkeeping. Call at env.reset()."""
         self._last_valid_time.clear()
-        self._step_cache.clear()
+        self._snapshot.clear()
+        self._outage_until.clear()
+        self._obs_cache.clear()
 
-    def is_degraded(
+    # ------------------------------------------------------------- observe
+
+    def observe(
         self,
         taxi_id: str,
+        x_true: float,
+        y_true: float,
+        v_true: float,
         current_edge: str,
         sim_time: float,
-    ) -> bool:
-        """Return whether this taxi is currently degraded.
+    ) -> tuple[float, float, float, bool, float]:
+        """Return (x, y, v, degraded, aoi) — the reading ALL observers get.
 
-        Cached per (taxi_id, sim_time) so that faithfulness-time queries and
-        obs-build queries agree, and so that random_dropout mode doesn't
-        emit different verdicts for the same taxi at the same step.
+        Not degraded → the true state, AoI 0, snapshot refreshed.
+        Degraded    → the frozen snapshot ("freeze") or noised true state
+                      ("noise" legacy), with AoI = time since last trusted
+                      reading.
+        First-ever reading while degraded → treated as trusted (grace), to
+        avoid an artificial episode-length AoI spike at spawn.
         """
         key = (taxi_id, sim_time)
-        cached = self._step_cache.get(key)
+        cached = self._obs_cache.get(key)
         if cached is not None:
             return cached
-        result = self._compute_degraded(current_edge)
-        self._step_cache[key] = result
+
+        trigger = self._compute_trigger(current_edge)
+        last_valid = self._last_valid_time.get(taxi_id)
+
+        if last_valid is None:
+            # Grace: never seen trusted; adopt the current reading.
+            degraded = False
+        else:
+            if trigger:
+                # Extend the outage so the signal stays lost until AoI
+                # reaches outage_duration_s (the level's "maximum AoI").
+                self._outage_until[taxi_id] = max(
+                    self._outage_until.get(taxi_id, 0.0),
+                    last_valid + self.config.outage_duration_s,
+                )
+            degraded = trigger or sim_time < self._outage_until.get(taxi_id, 0.0)
+
+        if not degraded:
+            self._last_valid_time[taxi_id] = sim_time
+            self._snapshot[taxi_id] = (x_true, y_true, v_true)
+            result = (x_true, y_true, v_true, False, 0.0)
+        else:
+            aoi = max(0.0, sim_time - last_valid)
+            if self.config.corruption == "freeze":
+                x, y, v = self._snapshot[taxi_id]
+            else:  # legacy noise
+                x, y = self._apply_position_noise(x_true, y_true)
+                v = self._apply_velocity_noise(v_true)
+            result = (float(x), float(y), float(v), True, aoi)
+
+        self._obs_cache[key] = result
         return result
 
-    def _compute_degraded(self, current_edge: str) -> bool:
+    # ------------------------------------------------------------ internals
+
+    def _compute_trigger(self, current_edge: str) -> bool:
         mode = self.config.mode
         if mode == "off":
             return False
@@ -100,62 +166,29 @@ class DegradationLayer:
             return bool(self.rng.random() < self.config.dropout_rate)
         raise ValueError(f"unknown degradation mode: {mode}")
 
-    def apply_position(self, x: float, y: float, degraded: bool) -> tuple[float, float]:
-        """Return possibly-noised (x, y). No-op if not degraded."""
-        if not degraded or self.config.position_noise_m <= 0:
+    def _apply_position_noise(self, x: float, y: float) -> tuple[float, float]:
+        if self.config.position_noise_m <= 0:
             return x, y
         noise = self.rng.normal(0.0, self.config.position_noise_m, size=2)
         return float(x + noise[0]), float(y + noise[1])
 
-    def apply_velocity(self, v: float, degraded: bool) -> float:
-        """Return possibly-noised velocity (m/s). No-op if not degraded.
-
-        Velocity noise scale is tied to position noise: a σ_pos over one
-        step_length_s window is roughly a σ_v = σ_pos / step_length_s
-        velocity uncertainty. We approximate step_length_s = 10 s (the env
-        default) and back off if configured otherwise via σ_pos alone.
-        """
-        if not degraded or self.config.position_noise_m <= 0:
+    def _apply_velocity_noise(self, v: float) -> float:
+        if self.config.position_noise_m <= 0:
             return v
-        sigma_v = self.config.position_noise_m / 10.0
-        return float(v + self.rng.normal(0.0, sigma_v))
+        # σ_v tied to σ_pos over one 10 s env step.
+        return float(v + self.rng.normal(0.0, self.config.position_noise_m / 10.0))
 
-    def update_and_get_aoi(
-        self, taxi_id: str, current_sim_time: float, degraded: bool
-    ) -> float:
-        """Return AoI in seconds for `taxi_id` at `current_sim_time`.
+    # ------------------------------------------------- back-compat helpers
 
-        On a non-degraded step: reset the taxi's last-valid timestamp and
-        return AoI = 0.
+    def is_degraded(self, taxi_id: str, current_edge: str, sim_time: float) -> bool:
+        """Degradation verdict only (uses the same per-step cache).
 
-        On a degraded step: return `current_sim_time − last_valid_time`.
-        If we've never seen this taxi trusted before (first ever observation
-        happens to be degraded), record the current time and return 0 to
-        avoid an unbounded "AoI = full episode length" spike on step 0.
+        NOTE: requires the true state for snapshot upkeep, so this helper
+        is only safe AFTER observe() was called for this (taxi, step) —
+        which the env's obs build guarantees.
         """
-        if not degraded:
-            self._last_valid_time[taxi_id] = current_sim_time
-            return 0.0
-        last = self._last_valid_time.get(taxi_id)
-        if last is None:
-            self._last_valid_time[taxi_id] = current_sim_time
-            return 0.0
-        return max(0.0, current_sim_time - last)
-
-    def refresh_and_get_aoi(
-        self,
-        taxi_id: str,
-        current_edge: str,
-        sim_time: float,
-    ) -> float:
-        """Refresh a taxi's AoI based on its current tunnel/degradation state.
-
-        Unlike `update_and_get_aoi` (which the caller already told whether
-        the taxi is degraded), this method decides degradation itself via
-        `is_degraded` — so it can be called for *neighbour* taxis that
-        aren't the acting agent. Combined with `is_degraded`'s per-step
-        cache, this keeps neighbour AoI up to date every sim step, not
-        only when the neighbour happens to be the one dispatching.
-        """
-        degraded = self.is_degraded(taxi_id, current_edge, sim_time)
-        return self.update_and_get_aoi(taxi_id, sim_time, degraded)
+        cached = self._obs_cache.get((taxi_id, sim_time))
+        if cached is not None:
+            return bool(cached[3])
+        # Fallback: trigger-only verdict (no snapshot upkeep).
+        return self._compute_trigger(current_edge)

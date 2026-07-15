@@ -304,7 +304,10 @@ def main() -> int:
     results: dict = {"manifest": {"checkpoint": manifest["checkpoint"],
                                   "git_rev": manifest.get("git_rev")}}
     has_margin = bool(np.isfinite(frame["def_m"]).any())
-    for axis in ("dropout_rate", "tunnel_noise"):
+    # Axes are discovered from the sweep itself (old sweeps: dropout_rate /
+    # tunnel_noise; ladder sweeps: max_aoi / dropout_max_aoi).
+    axes = sorted({c["cell"]["axis"] for c in cells} - {"clean"})
+    for axis in axes:
         results[f"H1_{axis}"] = hypothesis_h1_h3(
             frame, axis, "def", "less", args.n_permutations, rng)
         results[f"H2_{axis}"] = hypothesis_h2(
@@ -327,7 +330,7 @@ def main() -> int:
         return f"{label}: {sig}  (stat={stat:+.3f}, p={p:.4f}, n={r['n']})"
 
     print("hypothesis tests (α = 0.05, one-sided):")
-    for axis in ("dropout_rate", "tunnel_noise"):
+    for axis in axes:
         print(" ", _verdict(results[f"H1_{axis}"], f"H1 (DEF ↓ with {axis})"))
         if f"H1m_{axis}" in results:
             print(" ", _verdict(results[f"H1m_{axis}"], f"H1m (margin-DEF ↓ with {axis})"))

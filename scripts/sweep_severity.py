@@ -1,27 +1,28 @@
-"""Severity sweep: the dataset H1–H4 are tested on.
+"""Severity sweep: the dataset the dissertation's story is tested on.
 
-Runs one checkpoint across a grid of degradation severities × seeds and
-writes one JSON per cell plus a versioned manifest. Two severity axes,
-matching the two degradation modes:
+Primary (and default only) axis — **max-AoI ladder** (proposal §7.2):
+tunnel-triggered signal loss with freeze corruption, severity = the
+"maximum AoI" level {5, 15, 30, 60} s implemented as the outage duration
+(the signal stays lost until AoI reaches the level; long tunnel transits
+put a geography floor under it, so the empirical AoI is recorded too).
+The clean condition (level 0) is the shared reference point.
 
-  * **random_dropout axis** — severity = dropout rate, at fixed position
-    noise. The clean condition (rate 0) is the shared reference point.
-  * **tunnel_triggered axis** — the degradation *rate* is fixed by network
-    geography (a taxi is degraded iff it's in a tunnel), so severity =
-    position-noise magnitude instead.
+Appendix axis (opt-in, `--with-dropout-axis`): matched-structure
+random_dropout at the same outage ladder — same staleness depth, no
+spatial correlation. Kept out of the main text per the simplified
+three-act story.
 
-Per cell we record policy metrics (pickups / reward / wait), the empirical
-degradation rate, aggregate DEF/WAMSN/drift, and the raw per-decision
-faithfulness records (the hypothesis analysis bootstraps over decisions —
-see `src/dispatch_marl/README.md` §"Consequences for how results are
-reported").
+Episodes run on the held-out **test** demand split by default
+(`demand_manifest.json`; disable with `--demand-split none` for legacy
+comparison). Per cell we record policy metrics, empirical degradation
+rate and AoI, aggregate DEF/WAMSN/drift, and raw per-decision records.
 
 Downstream: `scripts/analyze_hypotheses.py <sweep-dir>`.
 
 Usage:
   python scripts/sweep_severity.py <ckpt>
   python scripts/sweep_severity.py <ckpt> --episodes 3 --seeds 42 43 44
-  python scripts/sweep_severity.py <ckpt> --dropout-rates 0.1 0.3 --noise-levels 20 80
+  python scripts/sweep_severity.py <ckpt> --aoi-levels 15 60 --with-dropout-axis
 """
 from __future__ import annotations
 
@@ -43,6 +44,7 @@ from eval_policy import _choose_device, _load_policy  # noqa: E402
 from eval_degradation_ablation import _run_condition  # noqa: E402
 
 from dispatch_marl import FaithfulnessConfig, FaithfulnessEvaluator  # noqa: E402
+from dispatch_marl.scenario import demand_split_files  # noqa: E402
 
 
 def _git_rev() -> str:
@@ -61,23 +63,30 @@ def main() -> int:
     parser.add_argument("--area", default=None,
                         help="override area; default: the checkpoint's training area")
     parser.add_argument("--episodes", type=int, default=3,
-                        help="episodes per (cell × seed)")
+                        help="episodes per (cell × seed); rotates through the "
+                             "demand-split variants, so 3 covers all 3 test files")
     parser.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44])
-    parser.add_argument("--dropout-rates", type=float, nargs="+",
-                        default=[0.05, 0.1, 0.2, 0.4],
-                        help="random_dropout severity axis (0 = clean is always run)")
-    parser.add_argument("--noise-levels", type=float, nargs="+",
-                        default=[10.0, 20.0, 40.0, 80.0],
-                        help="tunnel_triggered severity axis: position noise σ in metres")
-    parser.add_argument("--dropout-noise-m", type=float, default=20.0,
-                        help="fixed position noise σ used on the random_dropout axis")
+    parser.add_argument("--aoi-levels", type=float, nargs="+",
+                        default=[5.0, 15.0, 30.0, 60.0],
+                        help="max-AoI severity ladder in seconds (proposal §7.2); "
+                             "0 = clean is always run")
+    parser.add_argument("--with-dropout-axis", action="store_true",
+                        help="ALSO run the matched random_dropout axis at the same "
+                             "AoI ladder (appendix robustness check)")
+    parser.add_argument("--dropout-rate", type=float, default=0.05,
+                        help="trigger rate for the appendix dropout axis")
+    parser.add_argument("--demand-split", default="test",
+                        choices=["test", "val", "train", "none"],
+                        help="which demand variants episodes run on (default: "
+                             "held-out test). 'none' = the single committed "
+                             "demand file (legacy)")
+    parser.add_argument("--corruption", default="freeze", choices=["freeze", "noise"],
+                        help="freeze = proposal semantics (default); noise = legacy")
     parser.add_argument("--deterministic", action="store_true",
                         help="argmax actions instead of sampling. Default is "
-                             "STOCHASTIC: it matches the training-time and "
-                             "comparison-table protocol, and argmax on an "
-                             "entropy-collapsed policy degenerates to all-"
-                             "no-op (0 pickups), which makes H2's performance "
-                             "rate vacuous")
+                             "STOCHASTIC: argmax on an entropy-collapsed policy "
+                             "degenerates to all-no-op, making the performance "
+                             "axis vacuous")
     parser.add_argument("--faithfulness-every", type=int, default=5)
     parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5)
@@ -97,6 +106,10 @@ def main() -> int:
     area = args.area or ckpt["env_config"]["area"]
     aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
 
+    demand_files: list[str] = []
+    if args.demand_split != "none":
+        demand_files = demand_split_files(area, args.demand_split)
+
     out_dir = args.out or (PROJECT_ROOT / "runs" / "sweeps"
                            / f"{args.checkpoint.stem}_{int(time.time())}")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -105,16 +118,17 @@ def main() -> int:
     # script never has to reverse-engineer them from the config.
     cells: list[dict] = [
         {"axis": "clean", "level": 0.0, "mode": "off",
-         "dropout_rate": 0.0, "noise_m": 0.0},
+         "dropout_rate": 0.0, "outage_s": 0.0},
     ]
-    for r in args.dropout_rates:
-        cells.append({"axis": "dropout_rate", "level": float(r),
-                      "mode": "random_dropout",
-                      "dropout_rate": float(r), "noise_m": args.dropout_noise_m})
-    for n in args.noise_levels:
-        cells.append({"axis": "tunnel_noise", "level": float(n),
+    for s in args.aoi_levels:
+        cells.append({"axis": "max_aoi", "level": float(s),
                       "mode": "tunnel_triggered",
-                      "dropout_rate": 0.0, "noise_m": float(n)})
+                      "dropout_rate": 0.0, "outage_s": float(s)})
+    if args.with_dropout_axis:
+        for s in args.aoi_levels:
+            cells.append({"axis": "dropout_max_aoi", "level": float(s),
+                          "mode": "random_dropout",
+                          "dropout_rate": args.dropout_rate, "outage_s": float(s)})
 
     manifest = {
         "checkpoint": str(args.checkpoint),
@@ -122,8 +136,11 @@ def main() -> int:
         "policy_type": ckpt.get("policy_type", "gat"),
         "area": area,
         "aoi_unaware": aoi_unaware,
+        "corruption": args.corruption,
         "episodes_per_cell_seed": args.episodes,
         "stochastic": not args.deterministic,
+        "demand_split": args.demand_split,
+        "demand_files": demand_files,
         "seeds": args.seeds,
         "cells": cells,
         "faithfulness_config": {
@@ -138,7 +155,8 @@ def main() -> int:
 
     n_total = len(cells) * len(args.seeds)
     print(f"sweep: {len(cells)} cells × {len(args.seeds)} seeds = {n_total} runs "
-          f"× {args.episodes} episodes")
+          f"× {args.episodes} episodes  |  corruption={args.corruption}  "
+          f"demand={args.demand_split}")
     print(f"out:   {out_dir}")
     print()
 
@@ -166,9 +184,11 @@ def main() -> int:
                 faith_evaluator=evaluator,
                 faith_every=args.faithfulness_every,
                 aoi_unaware=aoi_unaware,
-                position_noise_m=cell["noise_m"],
                 keep_records=True,
                 stochastic=not args.deterministic,
+                outage_duration_s=cell["outage_s"],
+                corruption=args.corruption,
+                demand_files=demand_files or None,
             )
             result["cell"] = {**cell, "seed": seed}
             cell_path.write_text(json.dumps(result, indent=2))
@@ -176,7 +196,7 @@ def main() -> int:
             print(f"[{i:>3}/{n_total}] {cell_name}: "
                   f"pickups={result['mean_pickups']:.1f}  "
                   f"deg_rate={result['empirical_degradation_rate']:.3f}  "
-                  f"DEF={f.get('def_mean', float('nan')):+.3f}  "
+                  f"DEF_m={f.get('def_m_mean', float('nan')):+.3f}  "
                   f"WAMSN={f.get('wamsn_mean', float('nan')):.3f}  "
                   f"drift={f.get('drift_mean', float('nan')):.4f}  "
                   f"({time.time() - t0:.0f}s)")

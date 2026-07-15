@@ -145,6 +145,10 @@ def main() -> int:
     parser.add_argument("--degradation", default="off",
                         choices=["off", "tunnel_triggered", "random_dropout"])
     parser.add_argument("--dropout-rate", type=float, default=0.2)
+    parser.add_argument("--outage-duration", type=float, default=0.0,
+                        help="max-AoI severity (s): once triggered, the signal "
+                             "stays lost until AoI reaches this (proposal §7.2 "
+                             "ladder: 5/15/30/60)")
     parser.add_argument("--aoi-unaware", action="store_true",
                         help="B3 ablation: zero the AoI feature on self + "
                              "neighbour nodes so the policy can't condition "
@@ -235,7 +239,9 @@ def main() -> int:
         pickup_reward=args.pickup_reward,
         dispatch_reward=args.dispatch_reward,
         wait_penalty_lambda=args.wait_lambda,
-        degradation=DegradationConfig(mode=args.degradation, dropout_rate=args.dropout_rate),
+        degradation=DegradationConfig(mode=args.degradation,
+                                      dropout_rate=args.dropout_rate,
+                                      outage_duration_s=args.outage_duration),
         aoi_unaware=args.aoi_unaware,
     )
     env = DispatchEnv(env_cfg)

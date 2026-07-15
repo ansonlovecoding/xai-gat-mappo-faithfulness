@@ -79,6 +79,9 @@ def _run_condition(
     position_noise_m: float = 20.0,
     keep_records: bool = False,
     stochastic: bool = False,
+    outage_duration_s: float = 0.0,
+    corruption: str = "freeze",
+    demand_files: list[str] | None = None,
 ) -> dict:
     """Run `episodes` eval episodes under one degradation condition.
 
@@ -95,6 +98,8 @@ def _run_condition(
             mode=degradation_mode,
             dropout_rate=dropout_rate,
             position_noise_m=position_noise_m,
+            outage_duration_s=outage_duration_s,
+            corruption=corruption,
         ),
         aoi_unaware=aoi_unaware,
         emit_clean_obs=True,  # attention drift vs the clean twin, per decision
@@ -105,6 +110,9 @@ def _run_condition(
     all_faith: list[dict] = []
     t0 = time.time()
     for ep in range(episodes):
+        reset_options = None
+        if demand_files:
+            reset_options = {"taxi_route_file": demand_files[ep % len(demand_files)]}
         summary, faith_records = _run_episode(
             env, policy, device,
             stochastic=stochastic,
@@ -112,6 +120,7 @@ def _run_condition(
             faithfulness_every=faith_every,
             episode_index=ep,
             compute_drift=True,
+            reset_options=reset_options,
         )
         per_episode.append(summary)
         all_faith.extend(faith_records)
@@ -126,7 +135,10 @@ def _run_condition(
     out = {
         "condition": degradation_mode,
         "configured_dropout_rate": dropout_rate if degradation_mode == "random_dropout" else None,
+        "corruption": corruption,
+        "outage_duration_s": outage_duration_s,
         "position_noise_m": position_noise_m,
+        "demand_files": demand_files,
         "empirical_degradation_rate": float(deg_rates.mean()),
         "mean_pickups": float(pickups.mean()),
         "std_pickups": float(pickups.std()),

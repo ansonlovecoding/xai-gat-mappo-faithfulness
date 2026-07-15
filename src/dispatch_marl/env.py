@@ -54,7 +54,11 @@ RES_FEAT_DIM = 5
 # Normalisation constants used by the observation builder. Set explicitly here
 # so the policy and any future faithfulness code can import them.
 VELOCITY_MAX_MS = 30.0
-AOI_MAX_S = 300.0
+# Matches the proposal's severity ladder (§7.2): the "Extreme" level is a
+# 60 s maximum AoI, so 60 s staleness normalises to 1.0. (Was 300 before
+# the freeze-mechanism rework; results produced under 300 live in
+# results/b1b2b3_sumo120_seed42_v1 and are not comparable on WAMSN scale.)
+AOI_MAX_S = 60.0
 
 
 @dataclass
@@ -390,25 +394,27 @@ class DispatchEnv(ParallelEnv):
         if not agents:
             self._pending_res_map = {}
             return {}
-        # Cache expensive per-step queries.
+        # One shared telemetry table per step (proposal §7.2): each taxi's
+        # reading is produced ONCE by the degradation layer and every
+        # observer — the taxi itself and all peers — sees the same, possibly
+        # frozen, last-known state. `true_state` is kept alongside for the
+        # exact clean twin (emit_clean_obs).
         try:
             alive = set(traci.vehicle.getIDList())
-            all_taxi_positions = {
-                a: traci.vehicle.getPosition(a) for a in self.possible_agents
-                if a in alive
-            }
             empty_ids = set(traci.vehicle.getTaxiFleet(0))
             reservations = list(traci.person.getTaxiReservations(0))
-            # Refresh AoI for EVERY alive taxi this step, not just the ones
-            # currently acting. Otherwise a neighbour taxi that's mid-ride
-            # (never in `agents`) would have its AoI grow forever even when
-            # it's on a non-degraded edge. Snapshot the dict so per-agent
-            # obs building below can look up neighbour AoIs directly.
-            aoi_by_taxi: dict[str, float] = {}
+            observed: dict[str, tuple[float, float, float, bool, float]] = {}
+            true_state: dict[str, tuple[float, float, float]] = {}
             for taxi_id in [a for a in self.possible_agents if a in alive]:
-                current_edge = traci.vehicle.getRoadID(taxi_id)
-                aoi_by_taxi[taxi_id] = self._degradation.refresh_and_get_aoi(
-                    taxi_id, current_edge, self._sim_time
+                x_t, y_t = traci.vehicle.getPosition(taxi_id)
+                try:
+                    v_t = float(traci.vehicle.getSpeed(taxi_id))
+                except traci.exceptions.TraCIException:
+                    v_t = 0.0
+                edge = traci.vehicle.getRoadID(taxi_id)
+                true_state[taxi_id] = (x_t, y_t, v_t)
+                observed[taxi_id] = self._degradation.observe(
+                    taxi_id, x_t, y_t, v_t, edge, self._sim_time
                 )
         except traci.exceptions.TraCIException:
             return {a: self._empty_obs() for a in agents}
@@ -416,7 +422,7 @@ class DispatchEnv(ParallelEnv):
         obs = {}
         for agent in agents:
             obs[agent] = self._build_agent_obs(
-                agent, all_taxi_positions, empty_ids, reservations, aoi_by_taxi
+                agent, observed, true_state, empty_ids, reservations
             )
         return obs
 
@@ -435,86 +441,92 @@ class DispatchEnv(ParallelEnv):
     def _build_agent_obs(
         self,
         agent: str,
-        all_taxi_positions: dict[str, tuple[float, float]],
+        observed: dict[str, tuple[float, float, float, bool, float]],
+        true_state: dict[str, tuple[float, float, float]],
         empty_ids: set[str],
         reservations: list[Any],
-        aoi_by_taxi: dict[str, float],
     ) -> dict[str, np.ndarray]:
-        if agent not in all_taxi_positions:
+        """Build one agent's obs from the shared observed-telemetry table.
+
+        All geometry — self position, neighbour relative vectors, neighbour
+        ordering, reservation relative vectors and ordering — is computed
+        from the *observed* (possibly frozen) states: the agent plans on
+        the last-known world, exactly as a real dispatch platform would.
+
+        When emit_clean_obs is on, a clean twin is built over the SAME
+        entities in the SAME slots (so per-slot attention comparison is
+        well-defined) with features from the true state and AoI = 0.
+        """
+        if agent not in observed:
             return self._empty_obs()
 
-        # ------------- self -------------
-        x_true, y_true = all_taxi_positions[agent]
-        try:
-            v_true = float(traci.vehicle.getSpeed(agent))
-        except traci.exceptions.TraCIException:
-            v_true = 0.0
-        current_edge = traci.vehicle.getRoadID(agent)
-        degraded = self._degradation.is_degraded(agent, current_edge, self._sim_time)
-        x, y = self._degradation.apply_position(x_true, y_true, degraded)
-        v = self._degradation.apply_velocity(v_true, degraded)
-        # Self's AoI was already refreshed in _build_all_obs.
-        aoi = aoi_by_taxi.get(agent, 0.0)
+        x, y, v, degraded, aoi = observed[agent]
+        x_true, y_true, v_true = true_state[agent]
         aoi_unaware = self.config.aoi_unaware
-        self_feat = np.array([
-            self._norm_x(x),
-            self._norm_y(y),
-            min(1.0, self._sim_time / max(1.0, self._end_time)),
-            min(1.0, max(0.0, v) / VELOCITY_MAX_MS),
-            0.0 if aoi_unaware else min(1.0, aoi / AOI_MAX_S),
-        ], dtype=np.float32)
+        emit_clean = self.config.emit_clean_obs
+        time_norm = min(1.0, self._sim_time / max(1.0, self._end_time))
 
-        # ------------- neighbouring taxis -------------
+        def _self_feat(sx, sy, sv, saoi):
+            return np.array([
+                self._norm_x(sx),
+                self._norm_y(sy),
+                time_norm,
+                min(1.0, max(0.0, sv) / VELOCITY_MAX_MS),
+                0.0 if aoi_unaware else min(1.0, saoi / AOI_MAX_S),
+            ], dtype=np.float32)
+
+        self_feat = _self_feat(x, y, v, aoi)
+
+        # ------------- neighbouring taxis (observed geometry) -------------
         K_n = self.config.k_neighbors
-        others = [(other, ox, oy) for other, (ox, oy) in all_taxi_positions.items() if other != agent]
-        others.sort(key=lambda t: (t[1] - x_true) ** 2 + (t[2] - y_true) ** 2)
+        others = [(oid, s[0], s[1], s[4]) for oid, s in observed.items() if oid != agent]
+        others.sort(key=lambda t: (t[1] - x) ** 2 + (t[2] - y) ** 2)
+        chosen = others[:K_n]
         taxi_feat = np.zeros((K_n, TAXI_FEAT_DIM), dtype=np.float32)
         taxi_mask = np.zeros(K_n, dtype=np.int8)
-        for i, (other, ox, oy) in enumerate(others[:K_n]):
-            dx, dy = ox - x_true, oy - y_true
-            dist = float(np.hypot(dx, dy))
-            other_aoi = aoi_by_taxi.get(other, 0.0)
+        for i, (oid, ox, oy, oaoi) in enumerate(chosen):
+            dx, dy = ox - x, oy - y
             taxi_feat[i] = [
                 dx / self._net_diag,
                 dy / self._net_diag,
-                1.0 if other in empty_ids else 0.0,
-                dist / self._net_diag,
-                0.0 if aoi_unaware else min(1.0, other_aoi / AOI_MAX_S),
+                1.0 if oid in empty_ids else 0.0,
+                float(np.hypot(dx, dy)) / self._net_diag,
+                0.0 if aoi_unaware else min(1.0, oaoi / AOI_MAX_S),
             ]
             taxi_mask[i] = 1
 
-        # ------------- pending reservations -------------
+        # ------------- pending reservations (relative to observed self) ---
         K_r = self.config.k_reservations
-        # Compute pickup coords for each reservation, sort by distance to us.
         res_with_coords = []
         for r in reservations:
             try:
                 px, py = traci.simulation.convert2D(r.fromEdge, 0.0, laneIndex=0)
-                dx_pu, dy_pu = px - x_true, py - y_true
-                dist = float(np.hypot(dx_pu, dy_pu))
-                res_with_coords.append((r, px, py, dist))
+                res_with_coords.append((r, px, py, float(np.hypot(px - x, py - y))))
             except traci.exceptions.TraCIException:
                 continue
         res_with_coords.sort(key=lambda t: t[3])
+        chosen_res = res_with_coords[:K_r]
 
         res_feat = np.zeros((K_r, RES_FEAT_DIM), dtype=np.float32)
         res_mask = np.zeros(K_r, dtype=np.int8)
         res_ids: list[str] = []
-        for i, (r, px, py, _) in enumerate(res_with_coords[:K_r]):
+        res_coords: list[tuple[float, float, float, float]] = []
+        for i, (r, px, py, _) in enumerate(chosen_res):
             try:
                 qx, qy = traci.simulation.convert2D(r.toEdge, 0.0, laneIndex=0)
             except traci.exceptions.TraCIException:
                 qx, qy = px, py
             wait = max(0.0, self._sim_time - r.reservationTime)
             res_feat[i] = [
-                (px - x_true) / self._net_diag,
-                (py - y_true) / self._net_diag,
-                (qx - x_true) / self._net_diag,
-                (qy - y_true) / self._net_diag,
+                (px - x) / self._net_diag,
+                (py - y) / self._net_diag,
+                (qx - x) / self._net_diag,
+                (qy - y) / self._net_diag,
                 min(1.0, wait / 600.0),
             ]
             res_mask[i] = 1
             res_ids.append(r.id)
+            res_coords.append((px, py, qx, qy))
         self._pending_res_map[agent] = res_ids
 
         obs = {
@@ -526,23 +538,37 @@ class DispatchEnv(ParallelEnv):
             "position_valid": np.array([0 if degraded else 1], dtype=np.int8),
         }
 
-        if self.config.emit_clean_obs:
-            # The clean twin: identical world state, telemetry not degraded.
-            # Degradation touches only the self node's absolute position and
-            # velocity, the AoI features, and position_valid — neighbour and
-            # reservation geometry is already computed from true positions.
-            clean_self = self_feat.copy()
-            clean_self[0] = self._norm_x(x_true)
-            clean_self[1] = self._norm_y(y_true)
-            clean_self[3] = min(1.0, max(0.0, v_true) / VELOCITY_MAX_MS)
-            clean_self[4] = 0.0  # fresh reading ⇒ AoI = 0
-            clean_taxis = taxi_feat.copy()
-            clean_taxis[:, 4] = 0.0
+        if emit_clean:
+            # Clean twin: same node identities per slot, features from the
+            # TRUE state with AoI = 0 everywhere. Both the self node and
+            # every neighbour un-freeze; reservation vectors re-anchor to
+            # the true self position (order data itself is never degraded).
+            clean_self = _self_feat(x_true, y_true, v_true, 0.0)
+            clean_taxis = np.zeros((K_n, TAXI_FEAT_DIM), dtype=np.float32)
+            for i, (oid, _, _, _) in enumerate(chosen):
+                tx, ty, _tv = true_state.get(oid, (0.0, 0.0, 0.0))
+                dx, dy = tx - x_true, ty - y_true
+                clean_taxis[i] = [
+                    dx / self._net_diag,
+                    dy / self._net_diag,
+                    taxi_feat[i][2],
+                    float(np.hypot(dx, dy)) / self._net_diag,
+                    0.0,
+                ]
+            clean_res = np.zeros((K_r, RES_FEAT_DIM), dtype=np.float32)
+            for i, (px, py, qx, qy) in enumerate(res_coords):
+                clean_res[i] = [
+                    (px - x_true) / self._net_diag,
+                    (py - y_true) / self._net_diag,
+                    (qx - x_true) / self._net_diag,
+                    (qy - y_true) / self._net_diag,
+                    res_feat[i][4],
+                ]
             self._last_clean_obs[agent] = {
                 "self": clean_self,
                 "neighbor_taxis": clean_taxis,
                 "neighbor_taxis_mask": taxi_mask.copy(),
-                "reservations": res_feat.copy(),
+                "reservations": clean_res,
                 "reservations_mask": res_mask.copy(),
                 "position_valid": np.ones(1, dtype=np.int8),
             }
