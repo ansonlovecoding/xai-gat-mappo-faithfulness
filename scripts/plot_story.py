@@ -231,7 +231,8 @@ def main() -> int:
         parser.error(f"no ladder cells found in {args.b2_sweep}")
     act1(b2, out)
     ladder_figure([(b2, BLUE, "degradation-naive (B2)")],
-                  "Act 2 — explanations degrade; performance doesn't",
+                  "Act 2 — attention shifts to stale data;\n"
+                  "faithfulness gives no warning and performance no signal",
                   "story_act2_decoupling.png", out)
     if args.h5_sweep and args.h5_sweep.exists():
         h5 = load_sweep(args.h5_sweep)
@@ -239,8 +240,9 @@ def main() -> int:
             ladder_figure(
                 [(b2, BLUE, "degradation-naive (B2)"),
                  (h5, AQUA, "degradation-aware (H5)")],
-                "Act 3 — degradation-aware training reverses the decoupling",
-                "story_act3_reversal.png", out)
+                "Act 3a — degradation-aware training does NOT repair\n"
+                "the built-in explanation channel",
+                "story_act3a_training_mitigation.png", out)
     act3b(args.compare, args.compare_tunnel, out)
     print(f"figures: {out}")
     return 0
