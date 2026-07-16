@@ -178,6 +178,78 @@ REPLACEMENTS = [
         "eclipse-sumo, libsumo, traci, torch, pettingzoo, pandas, "
         "pyarrow, numpy, matplotlib",
     ),
+    # ------------------------------------------------------------------
+    # July 2026 batch — methodology-description alignment after the
+    # freeze-mechanism rework. Confirmed with the author that the
+    # proposal is not yet frozen for assessment. Deliberately touches
+    # NO hypotheses, expectations, contributions or timeline (results
+    # must be judged against the ex-ante predictions).
+    # ------------------------------------------------------------------
+    # J1a (§7.2): tunnel transit time is fixed by geography once the map
+    # is chosen, so the severity level is operationalised as an outage
+    # duration (receiver re-acquisition delay) that bounds max AoI.
+    (
+        "This grounds staleness geographically and produces bursty, "
+        "realistic degradation, with severity controlled by the maximum "
+        "AoI reached.",
+        "This grounds staleness geographically and produces bursty, "
+        "realistic degradation, with severity controlled by the maximum "
+        "AoI reached. Because tunnel transit time is fixed by network "
+        "geography once the map is chosen, each severity level is "
+        "operationalised as a signal-outage duration: after the trigger, "
+        "the signal stays lost until the vehicle's AoI reaches the level "
+        "(physically, receiver re-acquisition delay), so the level bounds "
+        "the maximum AoI directly while long transits are reported via "
+        "the empirical AoI distribution.",
+    ),
+    # J1b (§7.2 table header): align the parenthetical with J1a.
+    (
+        "Maximum AoI (tunnel transit duration)",
+        "Maximum AoI (signal-outage duration)",
+    ),
+    # J2a (§7.6): degradation is applied live at the observation boundary
+    # with an exact per-decision clean twin — a strictly stronger paired
+    # design than degrading logged episodes offline.
+    (
+        "Apply the AoI staleness operator (7.2) — freezing telemetry on "
+        "tunnel edges — to the clean test logs at each severity, keeping "
+        "the clean copy aligned for paired comparison.",
+        "Apply the AoI staleness operator (7.2) — freezing telemetry on "
+        "tunnel edges — live at the observation boundary at each "
+        "severity; because the simulator state itself is never "
+        "corrupted, every degraded observation has an exact clean twin "
+        "generated in the same step, giving paired clean/degraded "
+        "comparisons per decision while also capturing the policy's "
+        "closed-loop behaviour under degradation (which offline replay "
+        "of logged episodes cannot).",
+    ),
+    # J2b (§7.6): artefact format — versioned JSON manifests, matching
+    # tunnels.json / demand_manifest.json / per-sweep manifest.json.
+    (
+        "Store the SUMO network/config, splits and settings as "
+        "compressed .npz/Parquet with a manifest (seed, parameters, "
+        "hash) so any result regenerates exactly.",
+        "Store the SUMO network/config, demand variants and their "
+        "chronological splits, and per-sweep settings as versioned JSON "
+        "manifests (seed, parameters, git revision) so any result "
+        "regenerates exactly.",
+    ),
+    # J3a (§7.5): trim the performance-metric list to what the study
+    # reports (completed pickups, pending-rider wait, episode reward).
+    (
+        "Metrics span dispatch performance (average response time, "
+        "fleet utilisation, task-completion rate, episode reward),",
+        "Metrics span dispatch performance (completed pickups per "
+        "episode, mean pending-rider waiting time, episode reward),",
+    ),
+    # J3b (§7.4): drop the binary-AMSN robustness check — graded WAMSN
+    # is used throughout and the check was cut in the simplification.
+    (
+        "approaching 1 as it concentrates on maximally stale ones (a "
+        "binary AMSN with a fixed threshold is reported as a robustness "
+        "check).",
+        "approaching 1 as it concentrates on maximally stale ones.",
+    ),
 ]
 
 
@@ -190,11 +262,23 @@ def main() -> int:
 
     # Concatenate all paragraph text so we can search for each snippet
     # without hard-coding paragraph indices (defends against future re-imports
-    # that renumber paragraphs).
+    # that renumber paragraphs). Tables (e.g. the §7.2 severity ladder) are
+    # walked too — their text lives outside doc.paragraphs.
+    all_paragraphs = list(doc.paragraphs)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                all_paragraphs.extend(cell.paragraphs)
+
     hits = 0
-    for pi, para in enumerate(doc.paragraphs):
+    for pi, para in enumerate(all_paragraphs):
         for old, new in REPLACEMENTS:
             if old not in para.text:
+                continue
+            # Idempotency guard: several NEW texts *contain* their OLD
+            # text (pure insertions), so a re-run would match again and
+            # duplicate the insertion. Skip if NEW is already in place.
+            if new in para.text:
                 continue
             # First try a run-local edit — if OLD is fully contained inside
             # one run, we can modify only that run's text and preserve every
