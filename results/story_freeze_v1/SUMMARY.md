@@ -69,6 +69,43 @@ and did NOT reproduce under the proposal-faithful freeze mechanism.
 Cite the freeze-era numbers; treat the noise-era reversal as a
 mechanism-sensitivity finding, not a result.
 
+## Capability spectrum + H5 across seeds (P3/P4 audit, `audit/capability_spectrum_clean.json`)
+
+Seven checkpoints spanning pickups 1→11.8, entropy 1.56→0.03, two
+architectures (B2/B3) and three H5′ training seeds, each scored under
+both baselines on clean test demand:
+
+| ckpt | pickups | uniform def_m | type-matched def_m |
+|---|---:|---:|---:|
+| B2 epoch 0 (untrained) | 1.0 | −1.35 | +0.16 [−0.12, +0.51] |
+| B2 epoch 50 | 6.2 | −0.47 | +0.00 |
+| B2 best (91) | 7.5 | −0.55 | −0.00 |
+| B3 best | 9.2 | **+1.69** | −0.01 |
+| H5′ s42 best (17) | 7.2 | −0.80 | +0.02 |
+| H5′ s43 best (91) | 3.0 | −0.49 | −0.01 |
+| H5′ s44 best (22) | 11.8 | **+1.78** | +0.01 |
+
+Two conclusions:
+1. **The uniform-baseline metric is uninterpretable**: it swings from
+   −1.35 to +1.78 across checkpoints — the artifact can manufacture
+   "far worse than random" AND "far better than random" from equally
+   uninformative channels. This instability is the strongest single
+   piece of evidence for the methodological contribution.
+2. **Under the type-matched baseline every checkpoint sits at ≈ 0**
+   (−0.01 … +0.02): "attention is uninformative" holds across the whole
+   capability range, both architectures, and all three H5 seeds —
+   answering the external-validity question (Q4 of the mock review)
+   with data.
+
+**Act 3a is therefore revised once more**: the earlier "degradation-aware
+training makes faithfulness WORSE (−0.77 vs −0.54)" was artifact-on-
+artifact. Under the fair baseline, H5′ ≈ B2 ≈ 0 across three seeds:
+degradation-aware training has **no detectable effect on explanation
+faithfulness in either direction** — H5's mitigation hypothesis is
+rejected in its weakest, most defensible form. (Training-collapse
+caveat from E2 still applies: two of three best checkpoints land at
+epochs 17–22.)
+
 ## Act 3b — architecture-side mitigation: small but real on clean data (decoupled head)
 
 Occlusion-distilled decoupled explainer (val Spearman +0.60) vs coupled
