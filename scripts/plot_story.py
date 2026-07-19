@@ -98,33 +98,76 @@ def boot_ci(x: list[float], n_boot: int = 2000, seed: int = 0) -> tuple[float, f
 # ------------------------------------------------------------------ figures
 
 
-def act1(b2: dict[float, dict], out: Path) -> None:
-    """Clean-telemetry margin-DEF distribution vs the random baseline (0)."""
+def act1(b2: dict[float, dict], out: Path,
+         audit_json: Path | None = None) -> None:
+    """Clean-telemetry margin-DEF under two random-baseline schemes.
+
+    The uniform baseline (standard occlusion protocol) says "worse than
+    random"; the type-matched control shows 98 % of that magnitude is the
+    occlusion=action-deletion artifact. The honest Act-1 claim is
+    "uninformative": the corrected figure shows both, decomposed.
+    """
     scores = np.asarray(b2.get(0.0, {}).get("def_m", []), dtype=np.float64)
     if scores.size == 0:
         print("act1: no clean-cell def_m records — skipped")
         return
     mean, lo, hi = boot_ci(list(scores))
-    fig, ax = plt.subplots(figsize=(6.4, 3.6))
+
+    tm = None
+    if audit_json is not None and audit_json.exists():
+        tm = json.loads(audit_json.read_text())
+
+    fig, (ax, axb) = plt.subplots(
+        1, 2, figsize=(9.2, 3.8), width_ratios=[1.5, 1.0])
+
+    # Left: distribution under the standard protocol (kept for context).
     ax.hist(scores, bins=41, color=BLUE, edgecolor=SURFACE, linewidth=0.4)
     ax.axvline(0.0, color=INK, linewidth=1.4)
-    ax.annotate("random explanation\n(zero line)", xy=(0, ax.get_ylim()[1] * 0.96),
-                xytext=(6, -2), textcoords="offset points",
-                ha="left", va="top", fontsize=9, color=INK)
     ax.axvline(mean, color=INK_2, linewidth=1.2, linestyle=(0, (4, 3)))
-    side = "left" if mean < 0 else "right"
-    off = -6 if mean < 0 else 6
-    ax.annotate(f"attention mean {mean:+.2f}\n95% CI [{lo:+.2f}, {hi:+.2f}]",
-                xy=(mean, ax.get_ylim()[1] * 0.70), xytext=(off, 0),
-                textcoords="offset points", ha="right" if side == "left" else "left",
+    ax.annotate(f"mean {mean:+.2f}", xy=(mean, ax.get_ylim()[1] * 0.85),
+                xytext=(-6, 0), textcoords="offset points", ha="right",
                 fontsize=9, color=INK_2)
-    ax.set_xlabel("margin-DEF per decision (clean telemetry)")
+    ax.set_xlabel("margin-DEF per decision\n(uniform random baseline — standard protocol)")
     ax.set_ylabel("decisions")
-    ax.set_title("Act 1 — the built-in explanation is no better than random on clean data")
-    fig.tight_layout()
+
+    # Right: the artifact decomposition (uniform vs type-matched baseline).
+    if tm is not None:
+        u = tm["uniform_baseline"]
+        t = tm["type_matched_baseline"]
+        xs = [0, 1]
+        vals = [u["def_m_mean"], t["def_m_mean"]]
+        errs = [
+            [vals[0] - u["ci95"][0], vals[1] - t["ci95"][0]],
+            [u["ci95"][1] - vals[0], t["ci95"][1] - vals[1]],
+        ]
+        bars = axb.bar(xs, vals, width=0.62, color=[BLUE, AQUA],
+                       edgecolor=SURFACE, linewidth=0.5)
+        axb.errorbar(xs, vals, yerr=errs, fmt="none", ecolor=INK,
+                     elinewidth=1.2, capsize=4)
+        axb.axhline(0.0, color=INK, linewidth=1.4)
+        axb.set_xticks(xs)
+        axb.set_xticklabels(["uniform\nbaseline", "type-matched\nbaseline"],
+                            fontsize=9)
+        for b, v in zip(bars, vals):
+            axb.annotate(f"{v:+.3f}", xy=(b.get_x() + b.get_width() / 2, v),
+                         xytext=(0, -12 if v < 0 else 4),
+                         textcoords="offset points", ha="center", fontsize=9,
+                         color=INK)
+        axb.set_ylabel("mean margin-DEF (clean)")
+        axb.annotate("98% of the deficit is the\nocclusion = action-deletion\nartifact",
+                     xy=(0.97, 0.40), xycoords="axes fraction", ha="right",
+                     va="center", fontsize=8.5, color=INK_2)
+    else:
+        axb.axis("off")
+
+    fig.suptitle("Act 1 — attention carries no measurable decision-relevant "
+                 "information\n(the 'worse than random' reading is a protocol artifact)",
+                 fontsize=11)
+    fig.tight_layout(rect=(0, 0, 1, 0.90))
     fig.savefig(out / "story_act1_clean_def.png", dpi=200)
     plt.close(fig)
-    print(f"act1: saved (n={scores.size}, mean={mean:+.3f} [{lo:+.3f},{hi:+.3f}])")
+    print(f"act1: saved (n={scores.size}, uniform mean={mean:+.3f}; "
+          f"type-matched {'included' if tm else 'MISSING'})")
 
 
 def _ladder_panels(ax_def, ax_perf, ax_wamsn, sweep: dict[float, dict],
@@ -219,6 +262,10 @@ def main() -> int:
     parser.add_argument("--compare", type=Path, default=None,
                         help="explainer_compare.json (clean condition)")
     parser.add_argument("--compare-tunnel", type=Path, default=None)
+    parser.add_argument("--type-matched-audit", type=Path,
+                        default=Path("results/story_freeze_v1/audit/type_matched_control.json"),
+                        help="type-matched control JSON for the Act-1 artifact "
+                             "decomposition panel")
     parser.add_argument("--out-dir", type=Path, default=None,
                         help="default: <b2-sweep>/../figs_story")
     args = parser.parse_args()
@@ -229,7 +276,7 @@ def main() -> int:
     b2 = load_sweep(args.b2_sweep)
     if not b2:
         parser.error(f"no ladder cells found in {args.b2_sweep}")
-    act1(b2, out)
+    act1(b2, out, audit_json=args.type_matched_audit)
     ladder_figure([(b2, BLUE, "degradation-naive (B2)")],
                   "Act 2 — attention shifts to stale data;\n"
                   "faithfulness gives no warning and performance no signal",

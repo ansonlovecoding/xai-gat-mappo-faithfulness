@@ -7,14 +7,29 @@ visible to all observers), max-AoI severity ladder {5, 15, 30, 60} s
 test demand**, 8 seeds × 3 episodes per cell, ~18k scored decisions per
 sweep. Figures in `figs/`.
 
-## Act 1 — the built-in explanation is unfaithful from the start (RQ1a)
+## Act 1 — the built-in explanation carries no measurable decision-relevant information (RQ1a)
 
-Clean-telemetry margin-DEF over 3 565 decisions: **−0.541**
-(95 % CI [−0.556, −0.527]) — occluding the nodes attention points at
-hurts the decision *less* than occluding random nodes. The proposal's
-reinterpretation clause ("if clean-data DEF is itself near zero,
-decoupling is reinterpreted accordingly") is triggered in its strongest
-form: the coupled channel is below random before any degradation.
+**Revised after the P2 construct-validity audit (`audit/`).** Under the
+standard occlusion protocol, clean-telemetry margin-DEF over 3 565
+decisions is **−0.541** (95 % CI [−0.556, −0.527]) — apparently "worse
+than random". The audit shows **98 % of that deficit is a protocol
+artifact**: in a candidate-action architecture, occluding a reservation
+node *deletes the corresponding action*, and uniform random baselines
+hit reservation nodes (clamping the margin) far more often than this
+policy's attention top-k does (clamp rates 14.6 % vs 1.8 %). With a
+**type-matched random baseline** (same taxi/reservation composition as
+the attention top-k, 1 199 paired decisions) clean margin-DEF is
+**−0.009** [CI −0.016, −0.001]; with the chosen reservation's node
+protected from occlusion, dispatch decisions' apparent +0.59 collapses
+to −0.02.
+
+The corrected Act-1 claim: **attention is uninformative — statistically
+indistinguishable from (marginally below) a composition-matched random
+explanation**. The proposal's reinterpretation clause for near-zero
+clean DEF applies as written. The artifact itself is a methodological
+finding with scope beyond this dissertation: ERASER-style occlusion
+baselines produce spurious "worse than random" verdicts whenever
+explanation units double as action candidates.
 
 ## Act 2 — attention silently shifts to stale data (H1–H4, B2 sweep)
 

@@ -77,6 +77,12 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--random-baselines", type=int, default=5)
     parser.add_argument("--n-permutations", type=int, default=10000)
+    parser.add_argument("--random-baseline", default="uniform",
+                        choices=["uniform", "type_matched"],
+                        help="type_matched = the P2 artifact control: random "
+                             "subsets share each channel's top-k node-type "
+                             "composition, so occlusion=action-deletion hits "
+                             "both sides equally")
     parser.add_argument("--device", default=None)
     parser.add_argument("--out", type=Path, default=None,
                         help="default <ckpt>.explainer_compare.json")
@@ -114,6 +120,7 @@ def main() -> int:
         faith_cfg = FaithfulnessConfig(
             top_k_values=tuple(args.top_k),
             n_random_baselines=args.random_baselines, seed=seed,
+            random_baseline=args.random_baseline,
         )
         ev_coupled = FaithfulnessEvaluator(policy, faith_cfg)
         ev_decoupled = FaithfulnessEvaluator(policy, faith_cfg)
