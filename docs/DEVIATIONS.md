@@ -114,7 +114,29 @@ drift measurement. Episode artefacts are versioned as JSON manifests
   entropy-collapse, and argmax evaluation degenerates to all-no-op,
   which would make every performance comparison vacuous.
 
-## 9. Additions beyond the proposal
+## 9. Audited refinements to the DEF protocol (post-hoc, disclosed as findings)
+
+The proposal's DEF (§7.4) draws random explanations **uniformly** from
+the valid non-self nodes. The construct-validity audit
+(`results/story_freeze_v1/audit/`) found that in a candidate-action
+architecture this baseline is confounded: occluding a reservation node
+*deletes the corresponding action*, and uniform draws hit reservation
+nodes far more often than the policy's attention top-k does (margin-
+clamp rates 14.6 % vs 1.8 %), producing spurious "worse/better than
+random" verdicts (−1.35 … +1.78 across checkpoints from equally
+uninformative channels). Two controls were added **after** this
+discovery: a **type-matched random baseline** (same node-type
+composition as the attended set) and an **exclusion variant** (the
+chosen action's node protected from occlusion).
+
+These refinements are deliberately NOT retro-fitted into the proposal:
+the dissertation reports the proposal-specified metric first, then the
+audit and the corrected numbers, because the artifact's discovery and
+characterisation is itself one of the work's contributions. All
+headline faithfulness claims cite the type-matched numbers; the
+uniform-baseline numbers are retained to document the artifact.
+
+## 10. Additions beyond the proposal
 
 - **Decoupled explanation head** (occlusion-distilled scorer over
   detached encoder embeddings) — an architectural mitigation on the
