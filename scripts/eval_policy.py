@@ -151,6 +151,7 @@ def _run_episode(
                             single, action=int(actions_np[i])
                         )
                         drift = None
+                        top3_churn = None
                         if compute_drift and a in clean_obs_by_agent:
                             clean_single = {
                                 k: torch.as_tensor(
@@ -162,6 +163,11 @@ def _run_episode(
                             drift = compute_attention_drift(
                                 clean_row, result.attention_row
                             )
+                            # How many of the explanation's top-3 nodes changed
+                            # identity vs the clean twin (self excluded).
+                            deg_top3 = set(np.argsort(-result.attention_row[1:])[:3])
+                            cln_top3 = set(np.argsort(-clean_row[1:])[:3])
+                            top3_churn = 3 - len(deg_top3 & cln_top3)
                         faith_records.append({
                             **({"drift": round(drift, 4)} if drift is not None else {}),
                             "episode": episode_index,
@@ -179,6 +185,16 @@ def _run_episode(
                             "wamsn": round(result.wamsn, 4),
                             "valid_reservations": n_valid_res,
                             "n_k_evaluated": len(result.per_k),
+                            "clamp_topk": round(result.clamp_topk_frac, 4),
+                            "clamp_rand": round(result.clamp_rand_frac, 4),
+                            "n_stale_veh": result.n_stale_vehicle,
+                            "max_aoi_s": round(result.max_aoi_s, 1),
+                            "stale_in_top3": result.stale_in_top3,
+                            **({"def_excl": round(result.def_excl, 4),
+                                "def_m_excl": round(result.def_m_excl, 4)}
+                               if result.excl_evaluated else {}),
+                            **({"top3_churn": top3_churn}
+                               if top3_churn is not None else {}),
                         })
                     decision_counter += 1
         else:
@@ -249,6 +265,25 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         out["def_m_mean"] = float(def_ms.mean())
         out["def_m_std"] = float(def_ms.std())
         out["def_m_p50"] = float(np.percentile(def_ms, 50))
+    # P2 audit aggregates (absent in pre-instrumentation records).
+    excl = np.array([r["def_m_excl"] for r in non_trivial if "def_m_excl" in r])
+    if excl.size > 0:
+        out["def_m_excl_mean"] = float(excl.mean())
+        out["n_excl_evaluated"] = int(excl.size)
+    clamps_t = np.array([r["clamp_topk"] for r in non_trivial if "clamp_topk" in r])
+    clamps_r = np.array([r["clamp_rand"] for r in non_trivial if "clamp_rand" in r])
+    if clamps_t.size > 0:
+        out["clamp_topk_mean"] = float(clamps_t.mean())
+        out["clamp_rand_mean"] = float(clamps_r.mean())
+    stale = np.array([r.get("n_stale_veh", 0) for r in records])
+    if "n_stale_veh" in (records[0] if records else {}):
+        stale_present = stale > 0
+        out["stale_exposure_rate"] = float(stale_present.mean())
+        cond = np.array([r["wamsn"] for r, sp in zip(records, stale_present) if sp])
+        if cond.size > 0:
+            out["wamsn_conditional_mean"] = float(cond.mean())
+        out["stale_in_top3_rate"] = float(np.mean(
+            [bool(r.get("stale_in_top3")) for r in records]))
     # Attention drift — like WAMSN, meaningful for every decision.
     drifts = np.array([r["drift"] for r in records if "drift" in r])
     if drifts.size > 0:

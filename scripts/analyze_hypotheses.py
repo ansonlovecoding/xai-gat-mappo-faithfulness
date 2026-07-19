@@ -124,7 +124,7 @@ def load_sweep(sweep_dir: Path) -> tuple[dict, list[dict]]:
 
 def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
-    axis, level, seed = [], [], []
+    axis, level, seed, episode = [], [], [], []
     def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
     for c in cells:
         meta = c["cell"]
@@ -132,6 +132,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             axis.append(meta["axis"])
             level.append(meta["level"])
             seed.append(meta["seed"])
+            episode.append(r.get("episode", 0))
             def_.append(r["def"])
             def_m.append(r.get("def_m", np.nan))  # absent in pre-margin sweeps
             wamsn.append(r["wamsn"])
@@ -141,6 +142,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "axis": np.array(axis),
         "level": np.array(level, dtype=np.float64),
         "seed": np.array(seed),
+        "episode": np.array(episode, dtype=np.int64),
         "def": np.array(def_, dtype=np.float64),
         "def_m": np.array(def_m, dtype=np.float64),
         "wamsn": np.array(wamsn, dtype=np.float64),
@@ -257,6 +259,170 @@ def hypothesis_h4(
     return {"n": int(len(x)), "rho": rho, "p_one_sided": p}
 
 
+# ------------------------------------------------- cluster-robust statistics
+#
+# The pooled per-decision tests above treat ~18k decisions as independent,
+# but severity is assigned per (level × seed) cell and decisions cluster
+# within episodes. The exchangeable unit under H0 is the episode block, so
+# the tests below are the ones a reviewer should trust:
+#
+#  * restricted permutation — shuffle LEVEL labels across episode blocks
+#    (within seed, respecting the crossed design), decisions move with
+#    their block;
+#  * episode-cluster bootstrap CI on rho — resample whole episodes;
+#  * within-episode stratified H4 — correlation computed inside each
+#    episode, aggregated across episodes (kills the between-level
+#    ecological confound).
+
+
+def _fast_spearman_levels(level_ranks: np.ndarray, ry_c: np.ndarray) -> float:
+    """Spearman when x is already rank-transformed and y-ranks centered."""
+    rx = level_ranks - level_ranks.mean()
+    denom = np.sqrt((rx**2).sum() * (ry_c**2).sum())
+    if denom == 0:
+        return 0.0
+    return float((rx * ry_c).sum() / denom)
+
+
+def _level_rank_map(levels: np.ndarray) -> dict[float, float]:
+    """Average rank for each distinct level value, given current counts."""
+    uniq, counts = np.unique(levels, return_counts=True)
+    ranks, start = {}, 0
+    for u, c in zip(uniq, counts):
+        ranks[float(u)] = start + (c + 1) / 2.0
+        start += c
+    return ranks
+
+
+def clustered_h1_h3(
+    frame: dict, axis: str, metric: str, alternative: str,
+    n_permutations: int, n_boot: int, rng: np.random.Generator,
+) -> dict:
+    """Episode-block restricted permutation + cluster bootstrap for H1/H3."""
+    m = _axis_mask(frame, axis)
+    if metric in ("def", "def_m"):
+        m = m & (frame["valid_res"] > 0)
+    m = m & np.isfinite(frame[metric])
+    if m.sum() < 10:
+        return {"n": int(m.sum()), "note": "insufficient data"}
+
+    levels = frame["level"][m]
+    y = frame[metric][m]
+    seeds = frame["seed"][m]
+    episodes = frame["episode"][m]
+
+    # Episode blocks: (seed, level, episode) uniquely identifies one episode.
+    # Fully vectorised: per permutation only the block→level assignment
+    # changes; per-decision level ranks are an O(n) array lookup.
+    block_key = np.array([f"{s}|{lv:g}|{e}" for s, lv, e in
+                          zip(seeds, levels, episodes)])
+    blocks, block_index = np.unique(block_key, return_inverse=True)
+    n_blocks = len(blocks)
+    first_idx = np.array([np.argmax(block_index == b) for b in range(n_blocks)])
+    block_level = levels[first_idx]                      # level per block
+    block_seed = seeds[first_idx]                        # seed per block
+    uniq_levels = np.unique(levels)
+    level_code_of = {float(lv): i for i, lv in enumerate(uniq_levels)}
+    block_code = np.array([level_code_of[float(lv)] for lv in block_level])
+
+    ry_c = _rank(y) - _rank(y).mean()
+    ry_c_norm = np.sqrt((ry_c**2).sum())
+
+    def _rho_for(block_codes: np.ndarray) -> float:
+        codes = block_codes[block_index]                 # per-decision level code
+        counts = np.bincount(codes, minlength=len(uniq_levels))
+        # average rank per level from cumulative counts
+        ends = np.cumsum(counts)
+        starts = ends - counts
+        rank_of_code = (starts + ends + 1) / 2.0
+        rx = rank_of_code[codes]
+        rx = rx - rx.mean()
+        denom = np.sqrt((rx**2).sum()) * ry_c_norm
+        return float((rx * ry_c).sum() / denom) if denom else 0.0
+
+    obs = _rho_for(block_code)
+
+    seed_groups = [np.where(block_seed == s)[0] for s in np.unique(block_seed)]
+    perm_code = block_code.copy()
+    count = 0
+    for _ in range(n_permutations):
+        for g in seed_groups:
+            perm_code[g] = block_code[g][rng.permutation(len(g))]
+        r = _rho_for(perm_code)
+        if alternative == "less" and r <= obs:
+            count += 1
+        elif alternative == "greater" and r >= obs:
+            count += 1
+    p = (count + 1) / (n_permutations + 1)
+
+    # Episode-cluster bootstrap CI on rho.
+    block_members = [np.where(block_index == b)[0] for b in range(n_blocks)]
+    rhos = []
+    for _ in range(n_boot):
+        picked = rng.integers(0, n_blocks, n_blocks)
+        idx = np.concatenate([block_members[i] for i in picked])
+        rhos.append(spearman(levels[idx], y[idx]))
+    ci = (float(np.percentile(rhos, 2.5)), float(np.percentile(rhos, 97.5)))
+
+    return {"n": int(m.sum()), "n_episode_blocks": n_blocks,
+            "rho": obs, "p_episode_perm": float(p),
+            "rho_cluster_ci95": ci}
+
+
+def stratified_h4(
+    frame: dict, n_permutations: int, rng: np.random.Generator,
+    def_key: str = "def",
+) -> dict:
+    """H4 with the between-level confound removed: rho(WAMSN, DEF) inside
+    each episode, aggregated across episodes; sign-flip test on episode
+    rhos (H0: mean rho >= 0)."""
+    m = (frame["axis"] != "clean") & (frame["valid_res"] > 0)
+    m = m & np.isfinite(frame[def_key])
+    seeds = frame["seed"][m]
+    levels = frame["level"][m]
+    episodes = frame["episode"][m]
+    x = frame["wamsn"][m]
+    y = frame[def_key][m]
+    block_key = np.array([f"{s}|{lv:g}|{e}" for s, lv, e in
+                          zip(seeds, levels, episodes)])
+    rhos = []
+    for b in np.unique(block_key):
+        idx = np.where(block_key == b)[0]
+        if len(idx) < 8 or np.allclose(x[idx], x[idx][0]):
+            continue  # too small or WAMSN constant inside the episode
+        rhos.append(spearman(x[idx], y[idx]))
+    if len(rhos) < 5:
+        return {"n_episodes": len(rhos), "note": "insufficient usable episodes"}
+    rhos_arr = np.array(rhos)
+    p = signflip_p(-rhos_arr, n_permutations, rng)  # test mean(rho) < 0
+    return {"n_episodes": len(rhos_arr),
+            "mean_rho_within_episode": float(rhos_arr.mean()),
+            "frac_negative": float((rhos_arr < 0).mean()),
+            "p_one_sided": float(p)}
+
+
+def holm(pvals: dict[str, float]) -> dict[str, float]:
+    """Holm–Bonferroni adjusted p-values for one confirmatory family."""
+    items = sorted(pvals.items(), key=lambda kv: kv[1])
+    adjusted, running = {}, 0.0
+    k = len(items)
+    for i, (name, p) in enumerate(items):
+        adj = min(1.0, (k - i) * p)
+        running = max(running, adj)  # enforce monotonicity
+        adjusted[name] = running
+    return adjusted
+
+
+def def_agreement(frame: dict) -> dict:
+    """Rank agreement between probability-DEF and margin-DEF (B3 check)."""
+    m = (frame["valid_res"] > 0) & np.isfinite(frame["def_m"])
+    if m.sum() < 10:
+        return {"n": int(m.sum()), "note": "insufficient data"}
+    return {"n": int(m.sum()),
+            "spearman_def_vs_def_m": spearman(frame["def"][m],
+                                              frame["def_m"][m])}
+
+
 # --------------------------------------------------------------- main
 
 
@@ -339,6 +505,75 @@ def main() -> int:
             print(" ", _verdict(results[f"H2m_{axis}"], f"H2m (margin-faith declines faster, {axis})"))
         print(" ", _verdict(results[f"H3_{axis}"], f"H3 (WAMSN ↑ with {axis})"))
     print(" ", _verdict(results["H4_pooled"], "H4 (WAMSN–DEF negative, pooled)"))
+
+    # ---- cluster-robust section (the statistics a reviewer should trust)
+    primary_axis = "max_aoi" if "max_aoi" in axes else axes[0]
+    robust: dict = {"primary_axis": primary_axis}
+    print()
+    print("cluster-robust statistics (episode-block permutation, primary):")
+    for label, metric, alt in (("H1_robust", "def", "less"),
+                               ("H1m_robust", "def_m", "less"),
+                               ("H3_robust", "wamsn", "greater")):
+        if metric == "def_m" and not has_margin:
+            continue
+        r = clustered_h1_h3(frame, primary_axis, metric, alt,
+                            args.n_permutations, args.n_bootstrap, rng)
+        robust[label] = r
+        if "note" in r:
+            print(f"  {label}: n/a ({r['note']})")
+        else:
+            print(f"  {label} ({metric} vs {primary_axis}): rho={r['rho']:+.3f}  "
+                  f"p_episode={r['p_episode_perm']:.4f}  "
+                  f"CI95=[{r['rho_cluster_ci95'][0]:+.3f}, {r['rho_cluster_ci95'][1]:+.3f}]  "
+                  f"(blocks={r['n_episode_blocks']})")
+    for label, key in (("H4_within_episode", "def"),
+                       ("H4m_within_episode", "def_m")):
+        if key == "def_m" and not has_margin:
+            continue
+        r = stratified_h4(frame, args.n_permutations, rng, def_key=key)
+        robust[label] = r
+        if "note" in r:
+            print(f"  {label}: n/a ({r['note']})")
+        else:
+            print(f"  {label}: mean within-episode rho={r['mean_rho_within_episode']:+.3f}  "
+                  f"({r['frac_negative']:.0%} episodes negative)  "
+                  f"p={r['p_one_sided']:.4f}  (episodes={r['n_episodes']})")
+
+    # ---- confirmatory family (proposal-preregistered H1-H4, probability-DEF,
+    # primary axis) with Holm correction; margin variants and secondary axes
+    # are exploratory by declaration.
+    family = {}
+    for name, key in (("H1", f"H1_{primary_axis}"), ("H2", f"H2_{primary_axis}"),
+                      ("H3", f"H3_{primary_axis}")):
+        p = results.get(key, {}).get("p_one_sided")
+        if p is not None:
+            family[name] = p
+    if "p_one_sided" in results.get("H4_pooled", {}):
+        family["H4"] = results["H4_pooled"]["p_one_sided"]
+    # Prefer the robust p-values where computed — they are the primary tests.
+    if "H1_robust" in robust and "p_episode_perm" in robust["H1_robust"]:
+        family["H1"] = robust["H1_robust"]["p_episode_perm"]
+    if "H3_robust" in robust and "p_episode_perm" in robust["H3_robust"]:
+        family["H3"] = robust["H3_robust"]["p_episode_perm"]
+    if "H4_within_episode" in robust and "p_one_sided" in robust["H4_within_episode"]:
+        family["H4"] = robust["H4_within_episode"]["p_one_sided"]
+    adj = holm(family)
+    robust["confirmatory_family_raw_p"] = family
+    robust["confirmatory_family_holm_p"] = adj
+    print()
+    print("confirmatory family (robust p where available) with Holm correction:")
+    for name in sorted(family):
+        verdict = "SUPPORTED" if adj[name] < 0.05 else "not supported"
+        print(f"  {name}: raw p={family[name]:.4f} → Holm p={adj[name]:.4f}  {verdict}")
+    print("  (margin-DEF variants and secondary axes are exploratory by "
+          "declaration — reported unadjusted, flagged as such)")
+
+    robust["def_agreement"] = def_agreement(frame)
+    da = robust["def_agreement"]
+    if "spearman_def_vs_def_m" in da:
+        print(f"\nprob-DEF vs margin-DEF rank agreement: "
+              f"rho={da['spearman_def_vs_def_m']:+.3f} (n={da['n']})")
+    results["robust"] = robust
 
     out_path = args.sweep_dir / "analysis.json"
     out_path.write_text(json.dumps(results, indent=2))

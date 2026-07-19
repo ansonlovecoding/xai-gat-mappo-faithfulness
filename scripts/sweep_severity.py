@@ -90,6 +90,11 @@ def main() -> int:
     parser.add_argument("--faithfulness-every", type=int, default=5)
     parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5)
+    parser.add_argument("--exclusion-variant", action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help="ALSO compute the construct-validity DEF variant "
+                             "with the chosen reservation's node protected from "
+                             "occlusion (~2x forwards per decision)")
     parser.add_argument("--device", default=None)
     parser.add_argument("--out", type=Path, default=None,
                         help="sweep output dir (default runs/sweeps/<ckpt-stem>_<ts>)")
@@ -176,6 +181,7 @@ def main() -> int:
                 top_k_values=tuple(args.faithfulness_top_k),
                 n_random_baselines=args.faithfulness_random_baselines,
                 seed=seed,
+                exclusion_variant=args.exclusion_variant,
             ))
             result = _run_condition(
                 policy, device, area, seed, args.episodes,

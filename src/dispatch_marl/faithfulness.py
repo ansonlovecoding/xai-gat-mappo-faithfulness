@@ -74,6 +74,22 @@ class FaithfulnessConfig:
     aggregate_layers: str = "mean"
     # Deterministic random-baseline sampling.
     seed: int = 42
+    # Construct-validity audit (P2): ALSO compute the exclusion-variant DEF,
+    # where the chosen action's reservation node is protected — never
+    # occluded in Comp, always kept in Suff, and excluded from both top-k
+    # and random candidate sets. Isolates how much of DEF comes from the
+    # "occlusion = action deletion" mechanical asymmetry (masking the
+    # chosen reservation removes the action itself and slams the margin to
+    # −cap). Roughly doubles the counterfactual forwards per decision.
+    exclusion_variant: bool = False
+    # Random-baseline sampling scheme. "uniform" (default, the standard
+    # protocol) draws size-k subsets uniformly from all valid non-self
+    # nodes. "type_matched" draws subsets with the SAME taxi/reservation
+    # composition as the attention top-k set — the P2 control for the
+    # no-op artifact, where uniform draws hit reservation nodes (and
+    # thereby delete competing actions, clamping the margin) far more
+    # often than the attention top-k does.
+    random_baseline: str = "uniform"
 
 
 @dataclass
@@ -102,6 +118,15 @@ class DecisionFaithfulness:
     def_margin: float = 0.0           # ½ (g_comp_m + g_suff_m)
     g_comp_m: float = 0.0
     g_suff_m: float = 0.0
+    # P2 construct-validity audit fields.
+    clamp_topk_frac: float = 0.0      # frac. of top-k forwards hitting ±cap
+    clamp_rand_frac: float = 0.0      # frac. of random-baseline forwards, same
+    def_excl: float = float("nan")    # DEF with chosen-reservation node protected
+    def_m_excl: float = float("nan")
+    excl_evaluated: bool = False
+    n_stale_vehicle: int = 0          # stale vehicle nodes visible this decision
+    max_aoi_s: float = 0.0            # max AoI (s) over visible vehicle nodes
+    stale_in_top3: bool = False       # a stale node made the explanation's top-3
     per_k: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
@@ -215,23 +240,35 @@ def compute_wamsn(
     return float(numer / denom)
 
 
-def decision_margin(logits: torch.Tensor, action: int, cap: float) -> float:
-    """Logit margin of `action` over its best alternative, clamped to ±cap.
+def decision_margin_ex(
+    logits: torch.Tensor, action: int, cap: float
+) -> tuple[float, bool]:
+    """(margin, clamped) — margin of `action` over its best alternative.
 
     Handles the two ablation edge cases explicitly:
     - the chosen action was masked out of the candidate set (its logit is
       -inf after occlusion) → −cap: the ablation destroyed the decision;
     - every alternative is masked (unopposed decision) → +cap.
+    `clamped` is True in both edge cases and whenever |raw margin| ≥ cap —
+    the P2 construct-validity audit counts these to quantify how much of
+    DEF is carried by the action-deletion mechanism rather than by
+    information relevance.
     """
     arr = logits.detach().cpu().numpy().astype(np.float64).ravel()
     a = arr[action]
     others = np.delete(arr, action)
     others = others[np.isfinite(others)]
     if not np.isfinite(a):
-        return -cap
+        return -cap, True
     if others.size == 0:
-        return cap
-    return float(np.clip(a - others.max(), -cap, cap))
+        return cap, True
+    raw = a - others.max()
+    return float(np.clip(raw, -cap, cap)), bool(abs(raw) >= cap)
+
+
+def decision_margin(logits: torch.Tensor, action: int, cap: float) -> float:
+    """Margin only (back-compat wrapper around decision_margin_ex)."""
+    return decision_margin_ex(logits, action, cap)[0]
 
 
 # ------------------------------------------------------------ evaluator
@@ -316,26 +353,196 @@ class FaithfulnessEvaluator:
             [i for i in range(1, N) if node_mask[i]], dtype=np.int64
         )
 
-        # --- DEF, per k
+        # --- DEF over the full candidate set (the standard protocol)
+        main = self._def_bundle(obs, action, pi_full, m_full,
+                                non_self_valid, scored_row)
+        per_k = main["per_k"]
+        comp, suff = main["comp"], main["suff"]
+        comp_rand, suff_rand = main["comp_rand"], main["suff_rand"]
+        g_comp, g_suff, def_score = main["g_comp"], main["g_suff"], main["def_score"]
+        g_comp_m, g_suff_m, def_margin = (main["g_comp_m"], main["g_suff_m"],
+                                          main["def_margin"])
+        cl = main["clamp"]
+        clamp_topk_frac = (cl["topk_hits"] / cl["topk_total"]
+                           if cl["topk_total"] else 0.0)
+        clamp_rand_frac = (cl["rand_hits"] / cl["rand_total"]
+                           if cl["rand_total"] else 0.0)
+
+        # --- exclusion variant (construct-validity audit): the chosen
+        # action's reservation node is protected from occlusion entirely.
+        def_excl = def_m_excl = float("nan")
+        excl_evaluated = False
+        if self.config.exclusion_variant and action >= 1:
+            chosen_node = K_n + action  # node index of the chosen reservation
+            reduced = non_self_valid[non_self_valid != chosen_node]
+            if chosen_node in non_self_valid and len(reduced) >= 1:
+                excl = self._def_bundle(obs, action, pi_full, m_full,
+                                        reduced, scored_row,
+                                        protected=chosen_node)
+                if excl["per_k"]:
+                    def_excl = excl["def_score"]
+                    def_m_excl = excl["def_margin"]
+                    excl_evaluated = True
+
+        # --- WAMSN
+        aoi_per_node = self._extract_aoi_per_node(obs, K_n, K_r)
+        node_is_vehicle = np.zeros(N, dtype=bool)
+        node_is_vehicle[0] = True                        # self
+        node_is_vehicle[1:1 + K_n] = True                # taxi slots
+        node_is_vehicle &= node_mask                     # keep only valid
+        wamsn = compute_wamsn(
+            scored_row, aoi_per_node, node_is_vehicle, self.config.aoi_max_s
+        )
+
+        # --- staleness context (P2: conditional-WAMSN and AoI-distribution
+        # reporting need to know whether stale nodes were even present).
+        stale_mask = (aoi_per_node > 0) & node_is_vehicle
+        n_stale_vehicle = int(stale_mask.sum())
+        max_aoi_s = float(aoi_per_node[node_is_vehicle].max()) if node_is_vehicle.any() else 0.0
+        top3 = non_self_valid[np.argsort(-scored_row[non_self_valid])[:3]] \
+            if len(non_self_valid) else np.array([], dtype=np.int64)
+        stale_in_top3 = bool(stale_mask[top3].any()) if len(top3) else False
+
+        return DecisionFaithfulness(
+            action=action,
+            pi_full=pi_full,
+            def_score=float(def_score),
+            g_comp=float(g_comp),
+            g_suff=float(g_suff),
+            comp=float(comp),
+            suff=float(suff),
+            comp_rand=float(comp_rand),
+            suff_rand=float(suff_rand),
+            wamsn=float(wamsn),
+            attention_row=attention_row,
+            node_mask=node_mask,
+            m_full=float(m_full),
+            def_margin=float(def_margin),
+            g_comp_m=float(g_comp_m),
+            g_suff_m=float(g_suff_m),
+            clamp_topk_frac=float(clamp_topk_frac),
+            clamp_rand_frac=float(clamp_rand_frac),
+            def_excl=float(def_excl),
+            def_m_excl=float(def_m_excl),
+            excl_evaluated=excl_evaluated,
+            n_stale_vehicle=n_stale_vehicle,
+            max_aoi_s=max_aoi_s,
+            stale_in_top3=stale_in_top3,
+            per_k=per_k,
+        )
+
+    # -------------------------------------------------- internals
+
+    def _check_batch_one(self, obs: dict[str, torch.Tensor]) -> None:
+        first = next(iter(obs.values()))
+        if first.shape[0] != 1:
+            raise ValueError(
+                f"FaithfulnessEvaluator requires per-decision obs (B=1); got B={first.shape[0]}. "
+                "Slice the batched obs to one agent before calling."
+            )
+
+    def _forward_stats(
+        self, obs: dict[str, torch.Tensor], action: int
+    ) -> tuple[float, float, bool]:
+        """One forward pass → (π(a*), decision margin, margin-clamped?).
+        Both metrics share the same counterfactual forward."""
+        with torch.no_grad():
+            out = self.policy.forward(obs)
+            logits = out["logits"]
+            probs = torch.softmax(logits, dim=-1)
+        pi = float(probs[0, action].item())
+        margin, clamped = decision_margin_ex(
+            logits[0], action, self.config.margin_cap)
+        return pi, margin, clamped
+
+    def _comp(
+        self,
+        obs: dict[str, torch.Tensor],
+        node_idx: np.ndarray,
+        action: int,
+        pi_full: float,
+        m_full: float,
+    ) -> tuple[float, float, bool]:
+        """(π and margin) drops when the explanation's nodes are removed."""
+        obs_ablated = self._mask_out(obs, node_idx)
+        pi, m, clamped = self._forward_stats(obs_ablated, action)
+        return pi_full - pi, m_full - m, clamped
+
+    def _suff(
+        self,
+        obs: dict[str, torch.Tensor],
+        node_idx: np.ndarray,
+        action: int,
+        pi_full: float,
+        m_full: float,
+        protected: int | None = None,
+    ) -> tuple[float, float, bool]:
+        """(π and margin) drops when ONLY the explanation's nodes are kept.
+        A `protected` node (the chosen action's reservation, in the
+        exclusion variant) is always kept visible alongside them."""
+        keep = node_idx if protected is None else \
+            np.concatenate([node_idx, np.array([protected])])
+        obs_kept = self._keep_only(obs, keep)
+        pi, m, clamped = self._forward_stats(obs_kept, action)
+        return pi_full - pi, m_full - m, clamped
+
+    def _def_bundle(
+        self,
+        obs: dict[str, torch.Tensor],
+        action: int,
+        pi_full: float,
+        m_full: float,
+        candidates: np.ndarray,
+        scored_row: np.ndarray,
+        protected: int | None = None,
+    ) -> dict:
+        """Full Comp/Suff/random-baseline computation over one candidate
+        set. Returns per_k, aggregate gains for both metrics, and clamp
+        tallies split by top-k vs random occlusion sets."""
         per_k: dict[int, dict[str, float]] = {}
+        clamp = {"topk_hits": 0, "topk_total": 0, "rand_hits": 0, "rand_total": 0}
         for k in self.config.top_k_values:
-            if k > len(non_self_valid):
+            if k > len(candidates):
                 continue
+            order = np.argsort(-scored_row[candidates])
+            top_k_idx = candidates[order[:k]]
 
-            # Top-k by the scored explanation among the valid non-self nodes
-            attn_at_valid = scored_row[non_self_valid]
-            order = np.argsort(-attn_at_valid)  # descending
-            top_k_idx = non_self_valid[order[:k]]
+            comp_k, comp_m_k, c1 = self._comp(obs, top_k_idx, action, pi_full, m_full)
+            suff_k, suff_m_k, c2 = self._suff(obs, top_k_idx, action, pi_full,
+                                              m_full, protected=protected)
+            clamp["topk_hits"] += int(c1) + int(c2)
+            clamp["topk_total"] += 2
 
-            comp_k, comp_m_k = self._comp(obs, top_k_idx, action, pi_full, m_full)
-            suff_k, suff_m_k = self._suff(obs, top_k_idx, action, pi_full, m_full)
+            # Random-baseline pools for type-matched sampling (see config).
+            K_n = self.policy.config.k_neighbors
+            taxi_pool = candidates[candidates <= K_n]
+            res_pool = candidates[candidates > K_n]
+            n_res_topk = int((top_k_idx > K_n).sum())
+            n_taxi_topk = k - n_res_topk
+            type_matched = (
+                self.config.random_baseline == "type_matched"
+                and len(taxi_pool) >= n_taxi_topk and len(res_pool) >= n_res_topk
+            )
 
             comp_rand_k = suff_rand_k = 0.0
             comp_m_rand_k = suff_m_rand_k = 0.0
             for _ in range(self.config.n_random_baselines):
-                rand_idx = self._rng.choice(non_self_valid, size=k, replace=False)
-                c, cm = self._comp(obs, rand_idx, action, pi_full, m_full)
-                s, sm = self._suff(obs, rand_idx, action, pi_full, m_full)
+                if type_matched:
+                    parts = []
+                    if n_taxi_topk:
+                        parts.append(self._rng.choice(taxi_pool, size=n_taxi_topk,
+                                                      replace=False))
+                    if n_res_topk:
+                        parts.append(self._rng.choice(res_pool, size=n_res_topk,
+                                                      replace=False))
+                    rand_idx = np.concatenate(parts)
+                else:
+                    rand_idx = self._rng.choice(candidates, size=k, replace=False)
+                c, cm, r1 = self._comp(obs, rand_idx, action, pi_full, m_full)
+                s, sm, r2 = self._suff(obs, rand_idx, action, pi_full, m_full,
+                                       protected=protected)
+                clamp["rand_hits"] += int(r1) + int(r2)
+                clamp["rand_total"] += 2
                 comp_rand_k += c
                 suff_rand_k += s
                 comp_m_rand_k += cm
@@ -359,100 +566,19 @@ class FaithfulnessEvaluator:
                 "g_suff_m": suff_m_rand_k - suff_m_k,
             }
 
+        agg = {"per_k": per_k, "clamp": clamp}
         if per_k:
-            comp = float(np.mean([p["comp"] for p in per_k.values()]))
-            suff = float(np.mean([p["suff"] for p in per_k.values()]))
-            comp_rand = float(np.mean([p["comp_rand"] for p in per_k.values()]))
-            suff_rand = float(np.mean([p["suff_rand"] for p in per_k.values()]))
-            g_comp = float(np.mean([p["g_comp"] for p in per_k.values()]))
-            g_suff = float(np.mean([p["g_suff"] for p in per_k.values()]))
-            def_score = 0.5 * (g_comp + g_suff)
-            g_comp_m = float(np.mean([p["g_comp_m"] for p in per_k.values()]))
-            g_suff_m = float(np.mean([p["g_suff_m"] for p in per_k.values()]))
-            def_margin = 0.5 * (g_comp_m + g_suff_m)
+            for key in ("comp", "suff", "comp_rand", "suff_rand",
+                        "g_comp", "g_suff", "g_comp_m", "g_suff_m"):
+                agg[key] = float(np.mean([p[key] for p in per_k.values()]))
+            agg["def_score"] = 0.5 * (agg["g_comp"] + agg["g_suff"])
+            agg["def_margin"] = 0.5 * (agg["g_comp_m"] + agg["g_suff_m"])
         else:
-            comp = suff = comp_rand = suff_rand = 0.0
-            g_comp = g_suff = def_score = 0.0
-            g_comp_m = g_suff_m = def_margin = 0.0
-
-        # --- WAMSN
-        aoi_per_node = self._extract_aoi_per_node(obs, K_n, K_r)
-        node_is_vehicle = np.zeros(N, dtype=bool)
-        node_is_vehicle[0] = True                        # self
-        node_is_vehicle[1:1 + K_n] = True                # taxi slots
-        node_is_vehicle &= node_mask                     # keep only valid
-        wamsn = compute_wamsn(
-            scored_row, aoi_per_node, node_is_vehicle, self.config.aoi_max_s
-        )
-
-        return DecisionFaithfulness(
-            action=action,
-            pi_full=pi_full,
-            def_score=float(def_score),
-            g_comp=float(g_comp),
-            g_suff=float(g_suff),
-            comp=float(comp),
-            suff=float(suff),
-            comp_rand=float(comp_rand),
-            suff_rand=float(suff_rand),
-            wamsn=float(wamsn),
-            attention_row=attention_row,
-            node_mask=node_mask,
-            m_full=float(m_full),
-            def_margin=float(def_margin),
-            g_comp_m=float(g_comp_m),
-            g_suff_m=float(g_suff_m),
-            per_k=per_k,
-        )
-
-    # -------------------------------------------------- internals
-
-    def _check_batch_one(self, obs: dict[str, torch.Tensor]) -> None:
-        first = next(iter(obs.values()))
-        if first.shape[0] != 1:
-            raise ValueError(
-                f"FaithfulnessEvaluator requires per-decision obs (B=1); got B={first.shape[0]}. "
-                "Slice the batched obs to one agent before calling."
-            )
-
-    def _forward_stats(
-        self, obs: dict[str, torch.Tensor], action: int
-    ) -> tuple[float, float]:
-        """One forward pass → (π(a*), decision margin). Both metrics share
-        the same counterfactual forward, so the margin variant is free."""
-        with torch.no_grad():
-            out = self.policy.forward(obs)
-            logits = out["logits"]
-            probs = torch.softmax(logits, dim=-1)
-        pi = float(probs[0, action].item())
-        margin = decision_margin(logits[0], action, self.config.margin_cap)
-        return pi, margin
-
-    def _comp(
-        self,
-        obs: dict[str, torch.Tensor],
-        node_idx: np.ndarray,
-        action: int,
-        pi_full: float,
-        m_full: float,
-    ) -> tuple[float, float]:
-        """(π and margin) drops when the explanation's nodes are removed."""
-        obs_ablated = self._mask_out(obs, node_idx)
-        pi, m = self._forward_stats(obs_ablated, action)
-        return pi_full - pi, m_full - m
-
-    def _suff(
-        self,
-        obs: dict[str, torch.Tensor],
-        node_idx: np.ndarray,
-        action: int,
-        pi_full: float,
-        m_full: float,
-    ) -> tuple[float, float]:
-        """(π and margin) drops when ONLY the explanation's nodes are kept."""
-        obs_kept = self._keep_only(obs, node_idx)
-        pi, m = self._forward_stats(obs_kept, action)
-        return pi_full - pi, m_full - m
+            for key in ("comp", "suff", "comp_rand", "suff_rand", "g_comp",
+                        "g_suff", "g_comp_m", "g_suff_m", "def_score",
+                        "def_margin"):
+                agg[key] = 0.0
+        return agg
 
     def _mask_out(
         self,

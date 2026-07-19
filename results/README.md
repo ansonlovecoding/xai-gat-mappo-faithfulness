@@ -29,6 +29,18 @@ Only the citable artefacts are committed (SUMMARY.md, configs, train logs,
 eval JSONs, and each summary's cited checkpoint); periodic
 `ckpt_epoch_*.pt` snapshots stay out of git — see `.gitignore`.
 
+## Environment provenance (per keeper)
+
+Numbers from different keepers are NOT cross-comparable — each row states
+the SUMO version, machine, and observation layout that produced it:
+
+| Keeper | SUMO | Machine | Obs layout | Loadable today? |
+|---|---|---|---|---|
+| `mappo_central_park_reshaped_v1/` | 1.27 | Apple Silicon | self 3-d / taxi 4-d | ✗ (obs layout predates AoI/velocity features) |
+| `ab_centralised_critic_v1_seed42/` | 1.27 | Apple Silicon | self 5-d / taxi 4-d | ✗ (same reason) |
+| `b1b2b3_sumo120_seed42_v1/` | 1.20 | Intel mac | current | ✓ — but degradation = legacy NOISE mechanism, AOI_MAX_S=300 (WAMSN scale ×5 vs later) |
+| `story_freeze_v1/` | 1.20 | Intel mac | current | ✓ — freeze mechanism, AOI_MAX_S=60 (definitive for the dissertation) |
+
 > **Compatibility warning (July 2026):** both keepers were trained on
 > older observation layouts (`reshaped_v1`: self 3-dim / taxi 4-dim;
 > `ab_…_seed42`: self 5-dim / taxi 4-dim) and **cannot be loaded against
