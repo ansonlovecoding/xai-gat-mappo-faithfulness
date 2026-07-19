@@ -72,7 +72,9 @@
 正文用 margin-DEF，概率版（提案原定义）同表报告。
 
 代码：`src/dispatch_marl/faithfulness.py`（`evaluate_decision`、
-`decision_margin`）。每个决策约 26 次前向传播。
+`decision_margin`）。每个决策约 37 次前向传播（1 次基线 + 3 个 k ×
+[Comp 1 + Suff 1 + 5 个随机子集 × 2]；训练时采样把随机基线减到 3 个，
+约 25 次）。margin 版从同一批前向的 logits 里直接读出，零额外开销。
 
 ### 2.4 WAMSN（过期节点上的注意力质量）
 
