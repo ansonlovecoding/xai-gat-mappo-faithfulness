@@ -57,3 +57,4 @@ results/**
 docs/.~search_Proposal_Faithfulness_Decoupling.docx
 docs/Research_Proposal_Faithfulness_Decoupling.backup.docx
 .claude/!results/**/*.png
+.claude/skills/*-workspace/
