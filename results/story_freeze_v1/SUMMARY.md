@@ -69,20 +69,35 @@ and did NOT reproduce under the proposal-faithful freeze mechanism.
 Cite the freeze-era numbers; treat the noise-era reversal as a
 mechanism-sensitivity finding, not a result.
 
-## Act 3b — architecture-side mitigation WORKS (decoupled head)
+## Act 3b — architecture-side mitigation: small but real on clean data (decoupled head)
 
 Occlusion-distilled decoupled explainer (val Spearman +0.60) vs coupled
-attention, paired per decision on fresh episodes, freeze mechanism:
+attention, paired per decision on fresh episodes, freeze mechanism.
+Under the standard (uniform-baseline) protocol:
 
 | condition | coupled | decoupled | Δ | p |
 |---|---:|---:|---:|---:|
-| clean | −0.495 | −0.389 | **+0.107** | 0.0001 |
-| tunnel (max-AoI 60) | −0.506 | −0.393 | **+0.113** | 0.0001 |
+| clean | −0.495 | −0.389 | +0.107 | 0.0001 |
+| tunnel (max-AoI 60) | −0.506 | −0.393 | +0.113 | 0.0001 |
 
-Robust across mechanisms (noise-era: +0.126/+0.133). Still below the
-random baseline — the honest conclusion is "replace, don't trust, the
-built-in channel; even a cheap distilled replacement is measurably
-better, but faithful dispatch explanation remains open".
+**Revised after the P2 artifact audit** (type-matched revalidation,
+`audit/compare_typematched_*.json`) — under the composition-matched
+baseline the picture narrows:
+
+| condition | coupled | decoupled | Δ | p |
+|---|---:|---:|---:|---:|
+| clean | −0.013 | **+0.010** | **+0.023** | **0.0001** |
+| tunnel (max-AoI 60) | −0.006 | −0.000 | +0.005 | 0.21 |
+
+The earlier +0.11 advantage was ~80 % artifact. What survives: on clean
+telemetry the decoupled head is still *significantly* more faithful
+(paired p=1e-4) and is the **only channel scoring above the fair random
+baseline** — but the effect is modest (+0.023), and under tunnel
+degradation the advantage is not statistically detectable (p=0.21).
+Corrected Act-3b claim: distillation buys a real but modest clean-data
+faithfulness improvement; **no tested mitigation restores meaningful
+faithfulness under degradation** — which sharpens, rather than softens,
+the closing statement that faithful dispatch explanation remains open.
 
 ## Provenance
 
