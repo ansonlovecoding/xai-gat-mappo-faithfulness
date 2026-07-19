@@ -1,0 +1,48 @@
+{
+  "n_records": 17764,
+  "n_scored": 17444,
+  "n_excl_evaluated": 136,
+  "clamp_topk_mean": 0.022242146296720933,
+  "clamp_rand_mean": 0.14842533249254758,
+  "def_m_mean": 0.5859544117647059,
+  "def_m_excl_mean": -0.02440808823529412,
+  "def_mean": 0.0002838235294117647,
+  "def_excl_mean": -2.7205882352941177e-05,
+  "def_m_excl_ci95": [
+    -0.025478014705882353,
+    -0.02328373161764706
+  ],
+  "mechanical_share_of_def_m": 0.9583447316971557,
+  "verdict": "ARTIFACT-DOMINATED: the below-random DEF is carried by the action-deletion mechanism",
+  "stale_exposure_rate": 0.08432785408691736,
+  "wamsn_conditional_mean": 0.14009866488651534,
+  "stale_in_top3_rate_conditional": 0.08544726301735647,
+  "top3_churn_mean": 0.016156271110110334,
+  "top3_churn_any_rate": 0.014467462283269533,
+  "aoi_by_level": {
+    "5": {
+      "n": 345,
+      "p50": 60.0,
+      "p90": 60.0,
+      "max": 60.0
+    },
+    "15": {
+      "n": 416,
+      "p50": 60.0,
+      "p90": 60.0,
+      "max": 60.0
+    },
+    "30": {
+      "n": 349,
+      "p50": 60.0,
+      "p90": 60.0,
+      "max": 60.0
+    },
+    "60": {
+      "n": 388,
+      "p50": 60.0,
+      "p90": 60.0,
+      "max": 60.0
+    }
+  }
+}
