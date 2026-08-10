@@ -1,0 +1,55 @@
+{
+  "checkpoint": "runs/mappo/B1_mlp/central_park_1783964871/ckpt_best.pt",
+  "epoch": 39,
+  "area": "central_park",
+  "degradation": "off",
+  "stochastic": true,
+  "seed": 42,
+  "episodes": 5,
+  "per_episode": [
+    {
+      "total_pickups": 3,
+      "total_reward": -12.69,
+      "final_mean_pending_wait_s": 882.7,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "wall_s": 10.6
+    },
+    {
+      "total_pickups": 6,
+      "total_reward": 19.413,
+      "final_mean_pending_wait_s": 874.3,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "wall_s": 11.0
+    },
+    {
+      "total_pickups": 9,
+      "total_reward": 51.21,
+      "final_mean_pending_wait_s": 875.6,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "wall_s": 9.2
+    },
+    {
+      "total_pickups": 6,
+      "total_reward": 19.639,
+      "final_mean_pending_wait_s": 880.6,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "wall_s": 9.3
+    },
+    {
+      "total_pickups": 9,
+      "total_reward": 51.543,
+      "final_mean_pending_wait_s": 865.1,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "wall_s": 10.8
+    }
+  ],
+  "mean_pickups": 6.6,
+  "std_pickups": 2.244994432064365,
+  "mean_reward": 25.823,
+  "std_reward": 23.952449954023493
+}

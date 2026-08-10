@@ -1,0 +1,6 @@
+{
+  "best_epoch": 17,
+  "best_rolling_mean_pickups": 10.2,
+  "window": 10,
+  "note": "Rolling mean of training-episode pickups over the last 10 epochs. Updated whenever it improves."
+}

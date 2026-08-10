@@ -1,0 +1,74 @@
+{
+  "checkpoint": "runs/mappo/H5b_freeze/central_park_1784138109/ckpt_best.pt",
+  "epoch": 17,
+  "policy_type": "gat",
+  "area": "central_park",
+  "aoi_unaware": false,
+  "corruption": "freeze",
+  "episodes_per_cell_seed": 3,
+  "stochastic": true,
+  "demand_split": "test",
+  "demand_files": [
+    "central_park_taxis_v017.rou.xml",
+    "central_park_taxis_v018.rou.xml",
+    "central_park_taxis_v019.rou.xml"
+  ],
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49
+  ],
+  "cells": [
+    {
+      "axis": "clean",
+      "level": 0.0,
+      "mode": "off",
+      "dropout_rate": 0.0,
+      "outage_s": 0.0
+    },
+    {
+      "axis": "max_aoi",
+      "level": 5.0,
+      "mode": "tunnel_triggered",
+      "dropout_rate": 0.0,
+      "outage_s": 5.0
+    },
+    {
+      "axis": "max_aoi",
+      "level": 15.0,
+      "mode": "tunnel_triggered",
+      "dropout_rate": 0.0,
+      "outage_s": 15.0
+    },
+    {
+      "axis": "max_aoi",
+      "level": 30.0,
+      "mode": "tunnel_triggered",
+      "dropout_rate": 0.0,
+      "outage_s": 30.0
+    },
+    {
+      "axis": "max_aoi",
+      "level": 60.0,
+      "mode": "tunnel_triggered",
+      "dropout_rate": 0.0,
+      "outage_s": 60.0
+    }
+  ],
+  "faithfulness_config": {
+    "top_k_values": [
+      1,
+      2,
+      3
+    ],
+    "n_random_baselines": 5,
+    "faithfulness_every": 8
+  },
+  "git_rev": "ec4f521",
+  "created_unix": 1784142037
+}

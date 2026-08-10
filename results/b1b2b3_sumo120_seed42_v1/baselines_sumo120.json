@@ -1,0 +1,29 @@
+[
+  {
+    "area": "central_park",
+    "policy": "random",
+    "total_pickups": 0,
+    "total_reward": 9.455,
+    "final_mean_pending_wait_s": 845.0,
+    "rl_steps": 120,
+    "wall_time_s": 3.5
+  },
+  {
+    "area": "central_park",
+    "policy": "nearest",
+    "total_pickups": 1,
+    "total_reward": 22.211,
+    "final_mean_pending_wait_s": 821.3,
+    "rl_steps": 120,
+    "wall_time_s": 3.5
+  },
+  {
+    "area": "central_park",
+    "policy": "sumo_greedy",
+    "total_pickups": 32,
+    "total_reward": null,
+    "final_mean_pending_wait_s": 290.8,
+    "rl_steps": null,
+    "wall_time_s": 1.6
+  }
+]

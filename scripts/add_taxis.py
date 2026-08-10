@@ -97,8 +97,20 @@ def _build_taxi_route_xml(
     n_rides: int,
     seed: int,
     end_time: int,
+    rider_seed: int | None = None,
 ) -> ET.ElementTree:
+    """Build the taxi + rider route file.
+
+    `seed` drives taxi placement. When `rider_seed` is None the riders
+    continue consuming the SAME random stream as the taxis — this exactly
+    reproduces the original committed `<area>_taxis.rou.xml` files, so the
+    default path stays bit-identical. Demand VARIANTS pass an explicit
+    rider_seed: taxi placement is unchanged (same `seed`, same draws) and
+    only the rider demand comes from an independent stream — episodes then
+    differ in exactly one factor.
+    """
     rng = random.Random(seed)
+    rider_rng = rng if rider_seed is None else random.Random(rider_seed)
     routes = ET.Element("routes")
 
     vtype = ET.SubElement(
@@ -146,8 +158,8 @@ def _build_taxi_route_xml(
     rider_elements = []
     demand_window_end = max(1, end_time // 2)
     for i in range(n_rides):
-        depart = rng.randint(0, demand_window_end)
-        origin, dest = rng.sample(all_edge_ids, 2)
+        depart = rider_rng.randint(0, demand_window_end)
+        origin, dest = rider_rng.sample(all_edge_ids, 2)
         person = ET.Element(
             "person",
             id=f"rider_{i}",
@@ -229,6 +241,58 @@ def add_taxis(area: str, n_taxis: int, n_rides: int, seed: int, end_time: int) -
     }
 
 
+def add_demand_variants(
+    area: str, n_taxis: int, n_rides: int, seed: int, end_time: int,
+    n_variants: int, base_rider_seed: int,
+) -> dict:
+    """Write N rider-demand variants + a chronological-split manifest.
+
+    Each variant is `<area>_taxis_v<i>.rou.xml`: identical fleet (taxi
+    placement uses `seed`, same as the base file), fresh rider demand from
+    rider_seed = base_rider_seed + i. The manifest orders variants by
+    index and splits them chronologically 70/15/15 (proposal §7.6) —
+    "chronological" here means variant order, the stand-in for calendar
+    days of demand.
+
+    The base `<area>_taxis.rou.xml` and the `.sumocfg` are NOT touched:
+    variants are opt-in via the env's route-file override.
+    """
+    scenario_dir = SCENARIO_ROOT / area
+    net_file = scenario_dir / f"{area}.net.xml"
+    edges = _list_drivable_edges(net_file)
+
+    variants = []
+    for i in range(n_variants):
+        rider_seed = base_rider_seed + i
+        fname = f"{area}_taxis_v{i:03d}.rou.xml"
+        tree = _build_taxi_route_xml(
+            edges, n_taxis, n_rides, seed, end_time, rider_seed=rider_seed
+        )
+        tree.write(scenario_dir / fname, encoding="utf-8", xml_declaration=True)
+        variants.append({"index": i, "file": fname, "rider_seed": rider_seed})
+
+    n_train = int(n_variants * 0.7)
+    n_val = int(n_variants * 0.15)
+    manifest = {
+        "version": 1,
+        "n_variants": n_variants,
+        "taxi_seed": seed,
+        "base_rider_seed": base_rider_seed,
+        "n_taxis": n_taxis,
+        "n_rides": n_rides,
+        "end_time": end_time,
+        "variants": variants,
+        "split": {
+            "train": [v["file"] for v in variants[:n_train]],
+            "val": [v["file"] for v in variants[n_train:n_train + n_val]],
+            "test": [v["file"] for v in variants[n_train + n_val:]],
+        },
+    }
+    manifest_path = scenario_dir / "demand_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2))
+    return manifest
+
+
 def _discover_areas() -> list[str]:
     if not SCENARIO_ROOT.exists():
         return []
@@ -250,6 +314,16 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=int(os.environ.get("SEED", 42)))
     parser.add_argument("--end-time", type=int, default=1200,
                         help="simulation end time in seconds (default 1200)")
+    parser.add_argument("--variants", type=int, default=0,
+                        help="ALSO write N rider-demand variant files "
+                             "(<area>_taxis_vNNN.rou.xml) + demand_manifest.json "
+                             "with a chronological 70/15/15 split. Fleet placement "
+                             "is identical across variants; only rider demand "
+                             "changes. 0 (default) skips.")
+    parser.add_argument("--base-rider-seed", type=int, default=1000,
+                        help="rider seed of variant 0; variant i uses base+i. "
+                             "Kept far from the env-seed range (42-49) to avoid "
+                             "any confusion between demand identity and env RNG.")
     args = parser.parse_args()
 
     targets = areas_available if args.all else [args.area]
@@ -263,6 +337,14 @@ def main() -> int:
         print(f"  drivable edges: {result['n_drivable_edges']}")
         print(f"  wrote {result['taxi_route_file']}")
         print(f"  updated {result['cfg_file']} (dispatch-algorithm=traci)")
+        if args.variants > 0:
+            manifest = add_demand_variants(
+                area, args.taxis, args.rides, args.seed, args.end_time,
+                args.variants, args.base_rider_seed,
+            )
+            s = manifest["split"]
+            print(f"  wrote {args.variants} demand variants + demand_manifest.json "
+                  f"(train {len(s['train'])} / val {len(s['val'])} / test {len(s['test'])})")
         summary.append(result)
 
     print("\nSummary:")

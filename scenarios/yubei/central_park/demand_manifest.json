@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "n_variants": 20,
+  "taxi_seed": 42,
+  "base_rider_seed": 1000,
+  "n_taxis": 20,
+  "n_rides": 50,
+  "end_time": 1200,
+  "variants": [
+    {
+      "index": 0,
+      "file": "central_park_taxis_v000.rou.xml",
+      "rider_seed": 1000
+    },
+    {
+      "index": 1,
+      "file": "central_park_taxis_v001.rou.xml",
+      "rider_seed": 1001
+    },
+    {
+      "index": 2,
+      "file": "central_park_taxis_v002.rou.xml",
+      "rider_seed": 1002
+    },
+    {
+      "index": 3,
+      "file": "central_park_taxis_v003.rou.xml",
+      "rider_seed": 1003
+    },
+    {
+      "index": 4,
+      "file": "central_park_taxis_v004.rou.xml",
+      "rider_seed": 1004
+    },
+    {
+      "index": 5,
+      "file": "central_park_taxis_v005.rou.xml",
+      "rider_seed": 1005
+    },
+    {
+      "index": 6,
+      "file": "central_park_taxis_v006.rou.xml",
+      "rider_seed": 1006
+    },
+    {
+      "index": 7,
+      "file": "central_park_taxis_v007.rou.xml",
+      "rider_seed": 1007
+    },
+    {
+      "index": 8,
+      "file": "central_park_taxis_v008.rou.xml",
+      "rider_seed": 1008
+    },
+    {
+      "index": 9,
+      "file": "central_park_taxis_v009.rou.xml",
+      "rider_seed": 1009
+    },
+    {
+      "index": 10,
+      "file": "central_park_taxis_v010.rou.xml",
+      "rider_seed": 1010
+    },
+    {
+      "index": 11,
+      "file": "central_park_taxis_v011.rou.xml",
+      "rider_seed": 1011
+    },
+    {
+      "index": 12,
+      "file": "central_park_taxis_v012.rou.xml",
+      "rider_seed": 1012
+    },
+    {
+      "index": 13,
+      "file": "central_park_taxis_v013.rou.xml",
+      "rider_seed": 1013
+    },
+    {
+      "index": 14,
+      "file": "central_park_taxis_v014.rou.xml",
+      "rider_seed": 1014
+    },
+    {
+      "index": 15,
+      "file": "central_park_taxis_v015.rou.xml",
+      "rider_seed": 1015
+    },
+    {
+      "index": 16,
+      "file": "central_park_taxis_v016.rou.xml",
+      "rider_seed": 1016
+    },
+    {
+      "index": 17,
+      "file": "central_park_taxis_v017.rou.xml",
+      "rider_seed": 1017
+    },
+    {
+      "index": 18,
+      "file": "central_park_taxis_v018.rou.xml",
+      "rider_seed": 1018
+    },
+    {
+      "index": 19,
+      "file": "central_park_taxis_v019.rou.xml",
+      "rider_seed": 1019
+    }
+  ],
+  "split": {
+    "train": [
+      "central_park_taxis_v000.rou.xml",
+      "central_park_taxis_v001.rou.xml",
+      "central_park_taxis_v002.rou.xml",
+      "central_park_taxis_v003.rou.xml",
+      "central_park_taxis_v004.rou.xml",
+      "central_park_taxis_v005.rou.xml",
+      "central_park_taxis_v006.rou.xml",
+      "central_park_taxis_v007.rou.xml",
+      "central_park_taxis_v008.rou.xml",
+      "central_park_taxis_v009.rou.xml",
+      "central_park_taxis_v010.rou.xml",
+      "central_park_taxis_v011.rou.xml",
+      "central_park_taxis_v012.rou.xml",
+      "central_park_taxis_v013.rou.xml"
+    ],
+    "val": [
+      "central_park_taxis_v014.rou.xml",
+      "central_park_taxis_v015.rou.xml",
+      "central_park_taxis_v016.rou.xml"
+    ],
+    "test": [
+      "central_park_taxis_v017.rou.xml",
+      "central_park_taxis_v018.rou.xml",
+      "central_park_taxis_v019.rou.xml"
+    ]
+  }
+}
