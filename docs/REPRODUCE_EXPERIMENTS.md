@@ -32,6 +32,11 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 
+The environment intentionally pins NumPy to the 1.26 line. The PyTorch wheel
+used by this project was compiled against NumPy 1.x; installing NumPy 2.x can
+make Torch import with a warning and later fail with `RuntimeError: Numpy is
+not available` when faithfulness code converts tensors to NumPy arrays.
+
 If your shell does not expose `python`, use `.venv/bin/python` explicitly in
 all commands below.
 
@@ -349,4 +354,3 @@ Keep them if a reader needs to audit the exact per-decision records.
 - For the final dissertation claims, prefer type-matched DEF baselines over
   uniform baselines because the audit shows uniform baselines are confounded
   in candidate-action architectures.
-

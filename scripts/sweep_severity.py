@@ -90,6 +90,17 @@ def main() -> int:
     parser.add_argument("--faithfulness-every", type=int, default=5)
     parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5)
+    parser.add_argument("--random-baseline", default="uniform",
+                        choices=["uniform", "type_matched"],
+                        help="random-baseline sampling scheme. 'uniform' is the "
+                             "standard ERASER-style protocol and is artifact-prone "
+                             "in this architecture: uniform draws hit reservation "
+                             "nodes (deleting candidate actions, clamping the "
+                             "margin) far more often than the attention top-k. "
+                             "'type_matched' draws subsets with the SAME "
+                             "taxi/reservation composition as the top-k set and "
+                             "is the reportable metric (see "
+                             "results/story_freeze_v1/audit/type_matched_control.json)")
     parser.add_argument("--exclusion-variant", action=argparse.BooleanOptionalAction,
                         default=True,
                         help="ALSO compute the construct-validity DEF variant "
@@ -152,6 +163,8 @@ def main() -> int:
             "top_k_values": list(args.faithfulness_top_k),
             "n_random_baselines": args.faithfulness_random_baselines,
             "faithfulness_every": args.faithfulness_every,
+            "random_baseline": args.random_baseline,
+            "exclusion_variant": args.exclusion_variant,
         },
         "git_rev": _git_rev(),
         "created_unix": int(time.time()),
@@ -182,6 +195,7 @@ def main() -> int:
                 n_random_baselines=args.faithfulness_random_baselines,
                 seed=seed,
                 exclusion_variant=args.exclusion_variant,
+                random_baseline=args.random_baseline,
             ))
             result = _run_condition(
                 policy, device, area, seed, args.episodes,

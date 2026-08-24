@@ -1,0 +1,327 @@
+{
+  "sweep_dir": "runs/sweeps/B2_aoi_ladder_v2",
+  "n_records": 17764,
+  "n_scored": 17444,
+  "n_boot": 10000,
+  "n_perm": 10000,
+  "uniform_ladder": {
+    "0": {
+      "def_m": -0.5325437396121884,
+      "ci95": [
+        -0.5418553726719424,
+        -0.5226411655052989
+      ],
+      "n": 3610,
+      "clamp_topk_mean": 0.039473240997229916,
+      "clamp_rand_mean": 0.16327786703601108
+    },
+    "5": {
+      "def_m": -0.537958371040724,
+      "ci95": [
+        -0.5498590534814071,
+        -0.5254158922264266
+      ],
+      "n": 3536,
+      "clamp_topk_mean": 0.03987511312217195,
+      "clamp_rand_mean": 0.16410220588235294
+    },
+    "15": {
+      "def_m": -0.540912305955405,
+      "ci95": [
+        -0.5554852708954875,
+        -0.52574351516579
+      ],
+      "n": 3543,
+      "clamp_topk_mean": 0.040219700818515385,
+      "clamp_rand_mean": 0.16362785774767147
+    },
+    "30": {
+      "def_m": -0.5373362596511295,
+      "ci95": [
+        -0.5499604643103646,
+        -0.5241622034907457
+      ],
+      "n": 3497,
+      "clamp_topk_mean": 0.04046279668287103,
+      "clamp_rand_mean": 0.16425484701172435
+    },
+    "60": {
+      "def_m": -0.5371158747903857,
+      "ci95": [
+        -0.5493499791574699,
+        -0.5250155278577578
+      ],
+      "n": 3578,
+      "clamp_topk_mean": 0.03926730016769145,
+      "clamp_rand_mean": 0.1635830911123533
+    }
+  },
+  "clamp_free_subset": {
+    "n": 90,
+    "frac_of_all": 0.005066426480522405,
+    "def_m": 0.0002433333333333339,
+    "ci95": [
+      -0.002710443349753694,
+      0.0033139861751152076
+    ],
+    "caveat": "small and selected (clamp-free decisions have fewer competing reservations); corroborates the type-matched result, does not replace it"
+  },
+  "clamp_adjusted_ladder": {
+    "model": "def_m ~ level_dummies + (clamp_rand - clamp_topk), read off at differential = 0",
+    "clamp_differential_coef": -0.3429287886003726,
+    "clamp_differential_coef_ci95": [
+      -0.5282191092583859,
+      -0.15188779538697086
+    ],
+    "n_decisions": 17764,
+    "n_episode_clusters": 120,
+    "by_level": {
+      "0": {
+        "def_m_adjusted": -0.49008756918158747,
+        "ci95": [
+          -0.5176373424953328,
+          -0.46354321225870104
+        ]
+      },
+      "5": {
+        "def_m_adjusted": -0.49535732460912957,
+        "ci95": [
+          -0.5232227442873048,
+          -0.46637635777421144
+        ]
+      },
+      "15": {
+        "def_m_adjusted": -0.4985920961962845,
+        "ci95": [
+          -0.5290271788980802,
+          -0.4644999294651833
+        ]
+      },
+      "30": {
+        "def_m_adjusted": -0.4948844017934995,
+        "ci95": [
+          -0.5241526539363184,
+          -0.4646104669383524
+        ]
+      },
+      "60": {
+        "def_m_adjusted": -0.4944844111978345,
+        "ci95": [
+          -0.5256487395020879,
+          -0.4671127975121372
+        ]
+      }
+    }
+  },
+  "exposure": {
+    "by_level": {
+      "0": {
+        "n_decisions": 3610,
+        "stale_visible_rate": 0.0,
+        "wamsn_pooled": {
+          "mean": 0.0,
+          "ci_lo": 0.0,
+          "ci_hi": 0.0
+        },
+        "n_exposed": 0
+      },
+      "5": {
+        "n_decisions": 3536,
+        "stale_visible_rate": 0.09756787330316742,
+        "wamsn_pooled": {
+          "mean": 0.013511566742081448,
+          "ci_lo": 0.009827338764855023,
+          "ci_hi": 0.017232895312628203
+        },
+        "n_exposed": 345,
+        "wamsn_conditional": {
+          "mean": 0.138483768115942,
+          "ci_lo": 0.130043268169058,
+          "ci_hi": 0.14552608602468847
+        },
+        "def_m_conditional_uniform": {
+          "mean": -0.5853513043478261,
+          "ci_lo": -0.6528788177267373,
+          "ci_hi": -0.5213565199335548
+        },
+        "stale_in_top3_rate_conditional": 0.0927536231884058,
+        "max_aoi_s": {
+          "p50": 60.0,
+          "p90": 60.0,
+          "max": 60.0
+        }
+      },
+      "15": {
+        "n_decisions": 3543,
+        "stale_visible_rate": 0.11741462037821056,
+        "wamsn_pooled": {
+          "mean": 0.017322269263336156,
+          "ci_lo": 0.0150088621504151,
+          "ci_hi": 0.01954409594294196
+        },
+        "n_exposed": 416,
+        "wamsn_conditional": {
+          "mean": 0.14753076923076922,
+          "ci_lo": 0.1402045246524832,
+          "ci_hi": 0.15533426158217414
+        },
+        "def_m_conditional_uniform": {
+          "mean": -0.5907608173076924,
+          "ci_lo": -0.6331767425811491,
+          "ci_hi": -0.5473089309395337
+        },
+        "stale_in_top3_rate_conditional": 0.07692307692307693,
+        "max_aoi_s": {
+          "p50": 60.0,
+          "p90": 60.0,
+          "max": 60.0
+        }
+      },
+      "30": {
+        "n_decisions": 3497,
+        "stale_visible_rate": 0.09979982842436375,
+        "wamsn_pooled": {
+          "mean": 0.013933485845010009,
+          "ci_lo": 0.011099365507617247,
+          "ci_hi": 0.016774883438291383
+        },
+        "n_exposed": 349,
+        "wamsn_conditional": {
+          "mean": 0.13961432664756449,
+          "ci_lo": 0.13358840132636657,
+          "ci_hi": 0.1445448099531616
+        },
+        "def_m_conditional_uniform": {
+          "mean": -0.6158340974212035,
+          "ci_lo": -0.6747905575867437,
+          "ci_hi": -0.5721315680182334
+        },
+        "stale_in_top3_rate_conditional": 0.09169054441260745,
+        "max_aoi_s": {
+          "p50": 60.0,
+          "p90": 60.0,
+          "max": 60.0
+        }
+      },
+      "60": {
+        "n_decisions": 3578,
+        "stale_visible_rate": 0.10844046953605366,
+        "wamsn_pooled": {
+          "mean": 0.01453121855785355,
+          "ci_lo": 0.012508062896405919,
+          "ci_hi": 0.016504026867003068
+        },
+        "n_exposed": 388,
+        "wamsn_conditional": {
+          "mean": 0.13400180412371135,
+          "ci_lo": 0.12864172474597088,
+          "ci_hi": 0.13931216580098413
+        },
+        "def_m_conditional_uniform": {
+          "mean": -0.6027932989690722,
+          "ci_lo": -0.6455275749625188,
+          "ci_hi": -0.5605437136627908
+        },
+        "stale_in_top3_rate_conditional": 0.08247422680412371,
+        "max_aoi_s": {
+          "p50": 60.0,
+          "p90": 60.0,
+          "max": 60.0
+        }
+      }
+    }
+  },
+  "tests": {
+    "H1_uniform_def_m_vs_level_all": {
+      "n": 17764,
+      "n_episode_blocks": 120,
+      "rho": -0.0014355819794975644,
+      "p_perm": 0.8657134286571343,
+      "p_perm_resolution": 9.999000099990002e-05
+    },
+    "H1_uniform_def_m_vs_level_exposed_only": {
+      "n": 1498,
+      "n_episode_blocks": 96,
+      "rho": 0.003318137703706232,
+      "p_perm": 0.8909109089091091,
+      "p_perm_resolution": 9.999000099990002e-05
+    },
+    "H3_wamsn_vs_level_all": {
+      "n": 17764,
+      "n_episode_blocks": 120,
+      "rho": 0.08073663568907571,
+      "p_perm": 9.999000099990002e-05,
+      "p_perm_resolution": 9.999000099990002e-05
+    },
+    "H3_wamsn_vs_level_degraded_only": {
+      "n": 14154,
+      "n_episode_blocks": 96,
+      "rho": 0.002286874393793994,
+      "p_perm": 0.8798120187981202,
+      "p_perm_resolution": 9.999000099990002e-05
+    },
+    "H4_within_episode_prob_def_degraded": {
+      "n_episodes": 96,
+      "mean_rho": -0.14899920686006796,
+      "median_rho": -0.14191801929947437,
+      "frac_negative": 0.9270833333333334,
+      "p_sign_test_two_sided": 3.2591527899376733e-19
+    },
+    "H4_within_episode_margin_def_degraded": {
+      "n_episodes": 96,
+      "mean_rho": -0.04493324556201728,
+      "median_rho": -0.049460403802185665,
+      "frac_negative": 0.6458333333333334,
+      "p_sign_test_two_sided": 0.005572997762164588
+    },
+    "H4_within_episode_margin_def_clamp_free": {
+      "n_episodes": 0,
+      "note": "insufficient usable episodes"
+    }
+  },
+  "severity_manipulation_check": {
+    "aoi_censoring_cap_s": 60.0,
+    "note": "max_aoi_s is reconstructed from the observation feature aoi_norm = clip(AoI / AOI_MAX_S, 0, 1), so it is RIGHT-CENSORED at AOI_MAX_S. WAMSN's staleness weight clip(AoI/AOI_MAX_S,0,1) is censored identically: once a node passes 60 s its weight is pinned at 1.0 and further staleness is invisible to the metric.",
+    "frac_exposed_at_or_above_cap": 0.8104138851802403,
+    "by_level": {
+      "5": {
+        "n_exposed": 345,
+        "nominal_level_s": 5.0,
+        "realised_p50_s": 60.0,
+        "realised_p90_s": 60.0,
+        "realised_max_s": 60.0,
+        "frac_at_cap": 0.782608695652174
+      },
+      "15": {
+        "n_exposed": 416,
+        "nominal_level_s": 15.0,
+        "realised_p50_s": 60.0,
+        "realised_p90_s": 60.0,
+        "realised_max_s": 60.0,
+        "frac_at_cap": 0.8485576923076923
+      },
+      "30": {
+        "n_exposed": 349,
+        "nominal_level_s": 30.0,
+        "realised_p50_s": 60.0,
+        "realised_p90_s": 60.0,
+        "realised_max_s": 60.0,
+        "frac_at_cap": 0.8108882521489972
+      },
+      "60": {
+        "n_exposed": 388,
+        "nominal_level_s": 60.0,
+        "realised_p50_s": 60.0,
+        "realised_p90_s": 60.0,
+        "realised_max_s": 60.0,
+        "frac_at_cap": 0.7938144329896907
+      }
+    },
+    "realised_p50_identical_across_levels": true,
+    "verdict": "SEVERITY NOT MANIPULATED IN THE MEASURED QUANTITY: realised AoI has the same median (60 s) and same p90 at every nominal level, and is censored at the 60 s cap in 81.0% of exposed decisions. Tunnel transit time, not the nominal outage duration, sets the staleness a decision actually sees, and the observation encoding cannot represent anything past the cap. The {5,15,30,60} s ladder therefore collapses to a single degraded condition. Flat DEF and WAMSN across levels is the expected consequence of an unmanipulated factor and is NOT evidence about severity; the defensible contrast is binary clean vs degraded."
+  },
+  "definitive_rerun_required": {
+    "command": "python scripts/sweep_severity.py runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt --seeds 42 43 44 45 46 47 48 49 --episodes 3 --faithfulness-every 8 --random-baseline type_matched",
+    "why": "type-matched DEF needs fresh counterfactual policy forwards with composition-matched random sets; it cannot be recovered from recorded per-decision scalars"
+  }
+}
