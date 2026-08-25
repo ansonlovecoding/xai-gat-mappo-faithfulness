@@ -9,7 +9,7 @@ valid reading at the observation boundary. The policy therefore receives stale
 data without changing the simulated vehicle state.
 
 The definitive rerun is described by
-`configs/experiments/dissertation_v2.toml`. Treat that file as the experiment
+`configs/experiments/dissertation_v3.toml`. Treat that file as the experiment
 contract. Changes to seeds, demand splits, model definitions, degradation, or
 faithfulness settings create a different experiment.
 
@@ -47,11 +47,12 @@ src/dispatch_marl/
   experiment_validation.py    pre-analysis scientific gates
 
 configs/experiments/
-  dissertation_v2.toml        fixed model matrix and rerun protocol
+  dissertation_v3.toml        fixed model matrix and rerun protocol
 
 scripts/
   train.py                    single immutable training run
   sweep_severity.py           single checkpoint severity sweep
+  select_checkpoint.py        validation-only checkpoint selection
   preflight_experiment.py     result and manipulation validation
   analyze_hypotheses.py       cluster-aware statistical analysis
   summarize_dissertation_experiment.py  accepted cross-seed thesis tables
@@ -67,8 +68,11 @@ results/                      frozen, citable experiment bundles
 1. Run only from a clean, committed Git revision.
 2. Match the SUMO binary, `traci`, and `sumolib` versions exactly.
 3. Keep NumPy on the 1.26 line for the pinned PyTorch 2.2.2 wheel.
-4. Use `ckpt_final.pt` for the v2 study. Its epoch is fixed before training;
-   `ckpt_best.pt` remains a diagnostic based on training pickups.
+4. Select `ckpt_selected.pt` on validation demand only. The declared rule uses
+   mean pickups, mean reward as a tie-breaker, then the earlier epoch. The test
+   split is reserved for final evaluation and does not influence selection.
+   Validation uses the final stochastic policy mode with a fixed RNG seed.
+   Selection must also pass the declared minimum pickup and improvement gates.
 5. Do not reuse an output directory for a changed configuration. The manifest
    hash rejects this, while compatible incomplete sweeps may resume by cell.
 6. Keep every raw cell JSON. Statistical results without their raw records are
@@ -96,6 +100,7 @@ Run one model as a pilot:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py --stage train --model B2_gat
+.venv/bin/python scripts/run_dissertation_experiments.py --stage select --model B2_gat
 .venv/bin/python scripts/run_dissertation_experiments.py --stage sweep --model B2_gat
 .venv/bin/python scripts/run_dissertation_experiments.py --stage preflight --model B2_gat
 .venv/bin/python scripts/run_dissertation_experiments.py --stage analyze --model B2_gat
@@ -111,12 +116,15 @@ same manifest hash. Run all configured stages after the pilot has passed:
 ## Artifact structure
 
 ```text
-runs/dissertation_v2/
+runs/dissertation_v3/
   training/<model>/seed_<training-seed>/
     manifest.json
     args.json
     train_log.jsonl
     ckpt_final.pt
+    ckpt_selected.pt
+    checkpoint_selection.json
+    validation/*.json
   evaluations/<model>/seed_<training-seed>/
     eval_seed_<evaluation-seed>.json
   sweeps/<model>/seed_<training-seed>/

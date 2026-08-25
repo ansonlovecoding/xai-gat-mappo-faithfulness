@@ -43,6 +43,8 @@ def _training_is_compatible(manifest_path: Path, model: dict, seed: int,
         and arguments.get("area") == area
         and arguments.get("epochs") == train_cfg["epochs"]
         and arguments.get("demand_split") == train_cfg["demand_split"]
+        and arguments.get("save_every") == train_cfg["save_every"]
+        and arguments.get("best_window") == train_cfg["best_window"]
         and bool(arguments.get("deterministic_torch"))
             == bool(train_cfg.get("deterministic_torch"))
         and arguments.get("degradation") == model["degradation"]
@@ -71,8 +73,8 @@ def _evaluation_is_compatible(path: Path, checkpoint: Path, evaluation_seed: int
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path,
-                        default=PROJECT_ROOT / "configs/experiments/dissertation_v2.toml")
-    parser.add_argument("--stage", choices=["train", "evaluate", "sweep", "preflight",
+                        default=PROJECT_ROOT / "configs/experiments/dissertation_v3.toml")
+    parser.add_argument("--stage", choices=["train", "select", "evaluate", "sweep", "preflight",
                                             "analyze", "summarize", "all"],
                         default="all")
     parser.add_argument("--model", action="append", default=[],
@@ -90,7 +92,7 @@ def main() -> int:
     train_cfg = config["training"]
     eval_cfg = config["evaluation"]
     models = _selected_models(config, args.model)
-    stages = (["train", "evaluate", "sweep", "preflight", "analyze", "summarize"]
+    stages = (["train", "select", "evaluate", "sweep", "preflight", "analyze", "summarize"]
               if args.stage == "all" else [args.stage])
 
     current_revision = git_state(PROJECT_ROOT)["revision"]
@@ -105,15 +107,18 @@ def main() -> int:
         for model in models:
             for seed in train_cfg["seeds"]:
                 run_dir = output_root / "training" / model["id"] / f"seed_{seed}"
-                checkpoint = run_dir / "ckpt_final.pt"
+                final_checkpoint = run_dir / "ckpt_final.pt"
+                selection_cfg = config.get("selection")
+                checkpoint = (run_dir / "ckpt_selected.pt"
+                              if selection_cfg else final_checkpoint)
 
                 if stage == "train":
-                    if checkpoint.exists() and args.resume:
+                    if final_checkpoint.exists() and args.resume:
                         if _training_is_compatible(
                             run_dir / "manifest.json", model, seed, train_cfg,
                             config["area"], current_revision
                         ):
-                            print(f"SKIP complete training: {checkpoint}")
+                            print(f"SKIP complete training: {final_checkpoint}")
                             continue
                         raise SystemExit(f"existing training run is incompatible: {run_dir}")
                     if run_dir.exists() and any(run_dir.iterdir()) and args.resume:
@@ -136,6 +141,26 @@ def main() -> int:
                         command.append("--aoi-unaware")
                     if "outage_duration" in model:
                         command += ["--outage-duration", str(model["outage_duration"])]
+                    _run(command, dry_run=args.dry_run)
+                    continue
+
+                if stage == "select":
+                    if not selection_cfg:
+                        continue
+                    if not final_checkpoint.exists() and not args.dry_run:
+                        raise SystemExit(f"missing completed training run: {final_checkpoint}")
+                    command = [
+                        sys.executable, "scripts/select_checkpoint.py", str(run_dir),
+                        "--episodes", str(selection_cfg["episodes"]),
+                        "--seed", str(selection_cfg["seed"]),
+                        "--demand-split", selection_cfg["demand_split"],
+                        "--minimum-mean-pickups",
+                        str(selection_cfg["minimum_mean_pickups"]),
+                        "--minimum-improvement-over-initial",
+                        str(selection_cfg["minimum_improvement_over_initial"]),
+                    ]
+                    if args.resume:
+                        command.append("--resume")
                     _run(command, dry_run=args.dry_run)
                     continue
 

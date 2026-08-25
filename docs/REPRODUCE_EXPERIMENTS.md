@@ -15,7 +15,7 @@ There are two levels of reproduction:
 The frozen dissertation result set is `results/story_freeze_v1/`.
 
 > **New definitive rerun:** the stricter protocol is defined in
-> `configs/experiments/dissertation_v2.toml` and explained in
+> `configs/experiments/dissertation_v3.toml` and explained in
 > `docs/EXPERIMENT_CODEBASE.md`. Sections 2-9 below retain the archived v1
 > evidence and legacy reproduction details.
 
@@ -73,15 +73,20 @@ an error if the script finishes successfully.
 
 ## 2. Frozen artefacts
 
-For a new v2 run, inspect the complete command plan first:
+For a new v3 run, inspect the complete command plan first:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py --dry-run
 ```
 
-The orchestrator trains three declared seeds per model, uses the predeclared
-final epoch rather than selecting on test results, runs held-out sweeps,
-validates every cell, and only then starts statistical analysis.
+The orchestrator trains three declared seeds per model, selects a usable
+checkpoint on validation demand only, runs held-out test sweeps, validates
+every cell, and only then starts statistical analysis. The validation rule is
+fixed before the final run: maximise mean pickups, then mean reward, then
+prefer the earlier epoch. Selection uses the same stochastic policy mode as
+final evaluation with a fixed seed. Test demand is never used for checkpoint
+selection. A checkpoint must also exceed the declared minimum pickup count and
+improve over the epoch-0 policy before it can enter the test sweep.
 
 The main result set is:
 

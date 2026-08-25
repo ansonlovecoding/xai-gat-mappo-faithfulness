@@ -123,7 +123,7 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path,
-                        nargs="?", default=PROJECT_ROOT / "runs/dissertation_v2")
+                        nargs="?", default=PROJECT_ROOT / "runs/dissertation_v3")
     args = parser.parse_args()
     rows = summarize(args.root)
     performance_rows = summarize_performance(args.root)

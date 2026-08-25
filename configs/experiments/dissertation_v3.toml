@@ -1,0 +1,61 @@
+schema_version = 1
+name = "faithfulness_decoupling_dissertation_v3"
+output_root = "runs/dissertation_v3"
+area = "central_park"
+
+[training]
+epochs = 150
+seeds = [42, 43, 44]
+demand_split = "train"
+save_every = 10
+best_window = 10
+deterministic_torch = true
+checkpoint_selection = "validation_pickups"
+
+[selection]
+demand_split = "val"
+episodes = 3
+seed = 2026
+minimum_mean_pickups = 2.0
+minimum_improvement_over_initial = 1.0
+
+[evaluation]
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+episodes_per_cell_seed = 3
+demand_split = "test"
+aoi_levels = [5.0, 15.0, 30.0, 60.0]
+corruption = "freeze"
+faithfulness_every = 8
+random_baselines = 5
+random_baseline = "type_matched"
+exclusion_variant = true
+stochastic = true
+
+[[models]]
+id = "B1_mlp"
+policy = "mlp"
+degradation = "off"
+aoi_unaware = false
+faithfulness_sweep = false
+
+[[models]]
+id = "B2_gat"
+policy = "gat"
+degradation = "off"
+aoi_unaware = false
+faithfulness_sweep = true
+
+[[models]]
+id = "B3_gat_noaoi"
+policy = "gat"
+degradation = "off"
+aoi_unaware = true
+faithfulness_sweep = false
+
+[[models]]
+id = "H5_gat_degraded"
+policy = "gat"
+degradation = "tunnel_triggered"
+outage_duration = 30.0
+aoi_unaware = false
+faithfulness_sweep = true
