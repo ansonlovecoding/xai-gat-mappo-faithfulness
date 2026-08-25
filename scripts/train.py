@@ -143,9 +143,8 @@ def main() -> int:
                         choices=["off", "tunnel_triggered", "random_dropout"])
     parser.add_argument("--dropout-rate", type=float, default=0.2)
     parser.add_argument("--outage-duration", type=float, default=0.0,
-                        help="max-AoI severity (s): once triggered, the signal "
-                             "stays lost until AoI reaches this (proposal §7.2 "
-                             "ladder: 5/15/30/60)")
+                        help="observation-layer outage duration after a trigger "
+                             "(seconds)")
     parser.add_argument("--aoi-unaware", action="store_true",
                         help="B3 ablation: zero the AoI feature on self + "
                              "neighbour nodes so the policy can't condition "

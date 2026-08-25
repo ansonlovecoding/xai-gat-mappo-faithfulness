@@ -73,7 +73,7 @@ def _evaluation_is_compatible(path: Path, checkpoint: Path, evaluation_seed: int
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path,
-                        default=PROJECT_ROOT / "configs/experiments/dissertation_v3.toml")
+                        default=PROJECT_ROOT / "configs/experiments/dissertation_v4.toml")
     parser.add_argument("--stage", choices=["train", "select", "evaluate", "sweep", "preflight",
                                             "analyze", "summarize", "all"],
                         default="all")
@@ -205,7 +205,10 @@ def main() -> int:
                         sys.executable, "scripts/sweep_severity.py", str(checkpoint),
                         "--episodes", str(eval_cfg["episodes_per_cell_seed"]),
                         "--seeds", *(str(value) for value in eval_cfg["seeds"]),
-                        "--aoi-levels", *(str(value) for value in eval_cfg["aoi_levels"]),
+                        "--outage-durations",
+                        *(str(value) for value in eval_cfg.get(
+                            "outage_durations_s", eval_cfg.get("aoi_levels", [])
+                        )),
                         "--demand-split", eval_cfg["demand_split"],
                         "--corruption", eval_cfg["corruption"],
                         "--faithfulness-every", str(eval_cfg["faithfulness_every"]),

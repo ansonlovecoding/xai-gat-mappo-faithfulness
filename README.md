@@ -17,7 +17,7 @@ trading off control performance.
 > severity sweep, and the decoupled explanation head.
 >
 > **Definitive rerun protocol:** new experiments use
-> `configs/experiments/dissertation_v3.toml` through
+> `configs/experiments/dissertation_v4.toml` through
 > `scripts/run_dissertation_experiments.py`. The protocol adds complete
 > seeding, immutable manifests, input hashes, raw-cell preservation,
 > type-matched DEF, binary stale-attention shift, and preflight gates. See

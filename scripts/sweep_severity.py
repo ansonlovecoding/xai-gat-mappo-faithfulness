@@ -1,10 +1,9 @@
 """Severity sweep: the dataset the dissertation's story is tested on.
 
-Primary (and default only) axis — **max-AoI ladder** (proposal §7.2):
-tunnel-triggered signal loss with freeze corruption, severity = the
-"maximum AoI" level {5, 15, 30, 60} s implemented as the outage duration
-(the signal stays lost until AoI reaches the level; long tunnel transits
-put a geography floor under it, so the empirical AoI is recorded too).
+Primary (and default only) axis — **outage-duration ladder**:
+tunnel-entry-triggered signal loss with freeze corruption and fixed
+observation-layer windows of {10, 20, 30, 60} s. The empirical AoI is
+reported as a description of stale exposure, not as a causal dose.
 The clean condition (level 0) is the shared reference point.
 
 Appendix axis (opt-in, `--with-dropout-axis`): matched-structure
@@ -22,7 +21,7 @@ Downstream: `scripts/analyze_hypotheses.py <sweep-dir>`.
 Usage:
   python scripts/sweep_severity.py <ckpt>
   python scripts/sweep_severity.py <ckpt> --episodes 3 --seeds 42 43 44
-  python scripts/sweep_severity.py <ckpt> --aoi-levels 15 60 --with-dropout-axis
+  python scripts/sweep_severity.py <ckpt> --outage-durations 20 60 --with-dropout-axis
 """
 from __future__ import annotations
 
@@ -64,9 +63,10 @@ def main() -> int:
                         help="episodes per (cell × seed); rotates through the "
                              "demand-split variants, so 3 covers all 3 test files")
     parser.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44])
-    parser.add_argument("--aoi-levels", type=float, nargs="+",
-                        default=[5.0, 15.0, 30.0, 60.0],
-                        help="max-AoI severity ladder in seconds (proposal §7.2); "
+    parser.add_argument("--outage-durations", "--aoi-levels",
+                        dest="outage_durations", type=float, nargs="+",
+                        default=[10.0, 20.0, 30.0, 60.0],
+                        help="observation-layer outage durations in seconds; "
                              "0 = clean is always run")
     parser.add_argument("--with-dropout-axis", action="store_true",
                         help="ALSO run the matched random_dropout axis at the same "
@@ -130,13 +130,13 @@ def main() -> int:
         {"axis": "clean", "level": 0.0, "mode": "off",
          "dropout_rate": 0.0, "outage_s": 0.0},
     ]
-    for s in args.aoi_levels:
-        cells.append({"axis": "max_aoi", "level": float(s),
+    for s in args.outage_durations:
+        cells.append({"axis": "outage_duration", "level": float(s),
                       "mode": "tunnel_triggered",
                       "dropout_rate": 0.0, "outage_s": float(s)})
     if args.with_dropout_axis:
-        for s in args.aoi_levels:
-            cells.append({"axis": "dropout_max_aoi", "level": float(s),
+        for s in args.outage_durations:
+            cells.append({"axis": "dropout_outage_duration", "level": float(s),
                           "mode": "random_dropout",
                           "dropout_rate": args.dropout_rate, "outage_s": float(s)})
 

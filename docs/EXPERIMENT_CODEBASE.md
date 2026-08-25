@@ -6,10 +6,12 @@ This repository tests whether graph attention remains a trustworthy explanation
 when fleet telemetry becomes stale. SUMO remains the ground-truth simulator.
 Tunnel entry triggers signal loss, while `DegradationLayer` freezes the last
 valid reading at the observation boundary. The policy therefore receives stale
-data without changing the simulated vehicle state.
+data without changing the simulated vehicle state. The declared conditions use
+fixed 10, 20, 30 and 60 second outage windows. AoI is measured from the stale
+observations; it is not treated as the experimental cause.
 
 The definitive rerun is described by
-`configs/experiments/dissertation_v3.toml`. Treat that file as the experiment
+`configs/experiments/dissertation_v4.toml`. Treat that file as the experiment
 contract. Changes to seeds, demand splits, model definitions, degradation, or
 faithfulness settings create a different experiment.
 
@@ -47,7 +49,7 @@ src/dispatch_marl/
   experiment_validation.py    pre-analysis scientific gates
 
 configs/experiments/
-  dissertation_v3.toml        fixed model matrix and rerun protocol
+  dissertation_v4.toml        fixed model matrix and rerun protocol
 
 scripts/
   train.py                    single immutable training run
@@ -116,7 +118,7 @@ same manifest hash. Run all configured stages after the pilot has passed:
 ## Artifact structure
 
 ```text
-runs/dissertation_v3/
+runs/dissertation_v4/
   training/<model>/seed_<training-seed>/
     manifest.json
     args.json

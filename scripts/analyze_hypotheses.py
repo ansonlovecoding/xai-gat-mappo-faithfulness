@@ -521,7 +521,7 @@ def main() -> int:
                                   "git_rev": manifest.get("git_rev")}}
     has_margin = bool(np.isfinite(frame["def_m"]).any())
     # Axes are discovered from the sweep itself (old sweeps: dropout_rate /
-    # tunnel_noise; ladder sweeps: max_aoi / dropout_max_aoi).
+    # tunnel_noise; ladder sweeps: outage_duration / dropout_outage_duration).
     axes = sorted({c["cell"]["axis"] for c in cells} - {"clean"})
     for axis in axes:
         results[f"H1_{axis}"] = hypothesis_h1_h3(
@@ -557,7 +557,8 @@ def main() -> int:
     print(" ", _verdict(results["H4_pooled"], "H4 (WAMSN–DEF negative, pooled)"))
 
     # ---- cluster-robust section (the statistics a reviewer should trust)
-    primary_axis = "max_aoi" if "max_aoi" in axes else axes[0]
+    primary_axis = ("outage_duration" if "outage_duration" in axes
+                    else "max_aoi" if "max_aoi" in axes else axes[0])
     robust: dict = {"primary_axis": primary_axis}
     print()
     print("cluster-robust statistics (episode-block permutation, primary):")

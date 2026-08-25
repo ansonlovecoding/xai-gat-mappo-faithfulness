@@ -126,6 +126,10 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
         for level in levels
     }
     max_values = [empirical_max[str(level)] for level in levels]
+    if len(levels) > 1 and len({round(value, 6) for value in max_values}) == 1:
+        report.errors.append(
+            "configured outage levels produced no empirical AoI differentiation"
+        )
     if any(right < left for left, right in zip(max_values, max_values[1:])):
         report.warnings.append(
             "empirical maximum AoI is not monotonic; report the observed distribution "

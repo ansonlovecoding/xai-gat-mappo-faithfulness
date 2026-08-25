@@ -9,19 +9,19 @@ on the true state) is kept for backward comparison only.
 
 Trigger modes:
 
-- `tunnel_triggered` (primary): the trigger fires while the taxi's current
-  edge is in the tunnel set. Deterministic w.r.t. network geometry.
+- `tunnel_triggered` (primary): tunnel entry emits one trigger event.
+  Deterministic w.r.t. network geometry.
 - `random_dropout`: independent Bernoulli trigger per taxi per step —
   the matched-rate ablation with no spatial structure.
 - `off`: no-op.
 
-Severity (proposal §7.2 ladder — "maximum AoI"): `outage_duration_s`. Once
-triggered, the signal stays lost until the taxi's AoI reaches this many
-seconds, even after it leaves the trigger zone. The ladder used in the
-experiments is {5, 15, 30, 60} s. Geography puts a floor under the maximum
-AoI actually reached (a tunnel transit longer than the level keeps the
-signal down for the whole transit), so the empirical AoI distribution is
-reported alongside each level.
+Severity is the observation-layer outage window, `outage_duration_s`. Once
+tunnel entry triggers an outage, telemetry remains frozen for that declared
+window even if the taxi leaves the tunnel. Remaining inside the tunnel does
+not continuously retrigger the outage. The experiment uses {10, 20, 30, 60}
+seconds to match the environment's 10-second observation interval. Observed
+AoI is reported as a description of the resulting stale data, not as a causal
+dose.
 
 Applied to *observations only* — the policy sees stale readings, but the
 underlying SUMO simulator remains ground truth. That's what lets us measure
@@ -45,9 +45,8 @@ class DegradationConfig:
     #   "noise":  legacy Gaussian jitter on the true state (pre-freeze
     #             results in results/b1b2b3_sumo120_seed42_v1 used this).
     corruption: Literal["freeze", "noise"] = "freeze"
-    # Severity knob: once triggered, the signal stays lost until AoI
-    # reaches this many seconds ("maximum AoI" in the proposal's ladder).
-    # 0 = outage lasts only as long as the trigger itself.
+    # Severity knob: duration of the observation-layer outage after a trigger.
+    # 0 = only the trigger observation is degraded.
     outage_duration_s: float = 0.0
     # Std dev of Gaussian noise added to (x, y) in "noise" mode.
     position_noise_m: float = 20.0
@@ -84,9 +83,10 @@ class DegradationLayer:
         self._last_valid_time: dict[str, float] = {}
         # Per-taxi (x, y, v) snapshot at the last trusted reading.
         self._snapshot: dict[str, tuple[float, float, float]] = {}
-        # Per-taxi sim-time until which the signal stays lost (outage
-        # extension implementing the max-AoI severity ladder).
+        # Per-taxi sim-time until which the observation-layer outage lasts.
         self._outage_until: dict[str, float] = {}
+        # Previous tunnel-membership state, used to detect entry events.
+        self._tunnel_active: dict[str, bool] = {}
         # Per (taxi, sim_time) cache of the full observed reading.
         self._obs_cache: dict[tuple[str, float], tuple] = {}
 
@@ -95,6 +95,7 @@ class DegradationLayer:
         self._last_valid_time.clear()
         self._snapshot.clear()
         self._outage_until.clear()
+        self._tunnel_active.clear()
         self._obs_cache.clear()
 
     # ------------------------------------------------------------- observe
@@ -122,19 +123,27 @@ class DegradationLayer:
         if cached is not None:
             return cached
 
-        trigger = self._compute_trigger(current_edge)
+        trigger_active = self._compute_trigger(current_edge)
         last_valid = self._last_valid_time.get(taxi_id)
+
+        if self.config.mode == "tunnel_triggered":
+            was_active = self._tunnel_active.get(taxi_id, False)
+            trigger = trigger_active and not was_active
+            # A first reading receives grace. Keeping the previous state false
+            # lets a taxi spawned inside a tunnel trigger on its next reading.
+            self._tunnel_active[taxi_id] = trigger_active if last_valid is not None else False
+        else:
+            trigger = trigger_active
 
         if last_valid is None:
             # Grace: never seen trusted; adopt the current reading.
             degraded = False
         else:
             if trigger:
-                # Extend the outage so the signal stays lost until AoI
-                # reaches outage_duration_s (the level's "maximum AoI").
+                # A trigger starts or extends a fixed observation-layer outage.
                 self._outage_until[taxi_id] = max(
                     self._outage_until.get(taxi_id, 0.0),
-                    last_valid + self.config.outage_duration_s,
+                    sim_time + self.config.outage_duration_s,
                 )
             degraded = trigger or sim_time < self._outage_until.get(taxi_id, 0.0)
 

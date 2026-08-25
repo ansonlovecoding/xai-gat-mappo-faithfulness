@@ -15,7 +15,7 @@ There are two levels of reproduction:
 The frozen dissertation result set is `results/story_freeze_v1/`.
 
 > **New definitive rerun:** the stricter protocol is defined in
-> `configs/experiments/dissertation_v3.toml` and explained in
+> `configs/experiments/dissertation_v4.toml` and explained in
 > `docs/EXPERIMENT_CODEBASE.md`. Sections 2-9 below retain the archived v1
 > evidence and legacy reproduction details.
 
@@ -73,7 +73,7 @@ an error if the script finishes successfully.
 
 ## 2. Frozen artefacts
 
-For a new v3 run, inspect the complete command plan first:
+For a new v4 run, inspect the complete command plan first:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py --dry-run
@@ -87,6 +87,11 @@ prefer the earlier epoch. Selection uses the same stochastic policy mode as
 final evaluation with a fixed seed. Test demand is never used for checkpoint
 selection. A checkpoint must also exceed the declared minimum pickup count and
 improve over the epoch-0 policy before it can enter the test sweep.
+
+The primary degradation axis is observation-layer outage duration at 10, 20,
+30 and 60 seconds. Tunnel entry triggers the outage, but the freeze is applied
+outside SUMO when observations are built. AoI describes the stale observations
+produced by each condition and is not interpreted as a causal dose.
 
 The main result set is:
 

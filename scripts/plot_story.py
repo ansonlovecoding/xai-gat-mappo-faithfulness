@@ -5,7 +5,7 @@ Act 1 — Is the built-in explanation faithful at all?
     the zero line (= a size-matched random explanation).
 
 Act 2 — Does it degrade before performance as telemetry ages?
-    Three stacked panels sharing the max-AoI severity axis (no dual-axis
+    Three stacked panels sharing the outage-duration axis (no dual-axis
     charts): margin-DEF, pickups, WAMSN. Degradation-naive policy (B2).
 
 Act 3 — Can it be fixed?
@@ -70,7 +70,7 @@ def load_sweep(sweep_dir: Path) -> dict[float, dict]:
         if not (isinstance(cell, dict) and "cell" in cell and "faith_records" in cell):
             continue
         meta = cell.get("cell", {})
-        if meta.get("axis") not in ("clean", "max_aoi"):
+        if meta.get("axis") not in ("clean", "max_aoi", "outage_duration"):
             continue  # appendix axes stay out of the story figures
         lvl = float(meta.get("level", 0.0))
         agg = levels.setdefault(lvl, {"def_m": [], "wamsn": [], "pickups": [],
