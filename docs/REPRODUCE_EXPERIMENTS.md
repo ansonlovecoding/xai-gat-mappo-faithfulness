@@ -14,6 +14,11 @@ There are two levels of reproduction:
 
 The frozen dissertation result set is `results/story_freeze_v1/`.
 
+> **New definitive rerun:** the stricter protocol is defined in
+> `configs/experiments/dissertation_v2.toml` and explained in
+> `docs/EXPERIMENT_CODEBASE.md`. Sections 2-9 below retain the archived v1
+> evidence and legacy reproduction details.
+
 ## 1. Environment
 
 Use Python 3.11 and SUMO/libsumo. The project was evaluated with:
@@ -30,6 +35,15 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
+pip install -e . --no-deps
+```
+
+On the Intel macOS machine used for the freeze study, use the aligned SUMO
+1.20 profile instead of `requirements.txt`:
+
+```bash
+pip install -r requirements-macos-intel.txt
+pip install -e . --no-deps
 ```
 
 The environment intentionally pins NumPy to the 1.26 line. The PyTorch wheel
@@ -40,9 +54,11 @@ not available` when faithfulness code converts tensors to NumPy arrays.
 If your shell does not expose `python`, use `.venv/bin/python` explicitly in
 all commands below.
 
-Run the lightweight end-to-end faithfulness test:
+Check the environment, then run the automated and end-to-end tests:
 
 ```bash
+.venv/bin/python scripts/check_environment.py
+.venv/bin/python -m pytest -q
 .venv/bin/python scripts/test_faithfulness.py
 ```
 
@@ -56,6 +72,16 @@ SUMO may print transient TraCI connection retries during startup; this is not
 an error if the script finishes successfully.
 
 ## 2. Frozen artefacts
+
+For a new v2 run, inspect the complete command plan first:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py --dry-run
+```
+
+The orchestrator trains three declared seeds per model, uses the predeclared
+final epoch rather than selecting on test results, runs held-out sweeps,
+validates every cell, and only then starts statistical analysis.
 
 The main result set is:
 
@@ -121,6 +147,7 @@ If the checkpoint exists locally, rerun the sweep:
   --corruption freeze \
   --faithfulness-every 8 \
   --faithfulness-random-baselines 5 \
+  --random-baseline type_matched \
   --out runs/sweeps/reproduce_B2_freeze
 ```
 
@@ -172,6 +199,7 @@ If the checkpoint exists locally:
   --corruption freeze \
   --faithfulness-every 8 \
   --faithfulness-random-baselines 5 \
+  --random-baseline type_matched \
   --out runs/sweeps/reproduce_H5b_freeze
 ```
 
@@ -327,12 +355,14 @@ A severity sweep directory should contain:
 
 ```text
 manifest.json
-clean_0_seed42.json
-max_aoi_5_seed42.json
-max_aoi_15_seed42.json
-max_aoi_30_seed42.json
-max_aoi_60_seed42.json
-...
+cells/
+  clean_0_seed42.json
+  max_aoi_5_seed42.json
+  max_aoi_15_seed42.json
+  max_aoi_30_seed42.json
+  max_aoi_60_seed42.json
+  ...
+preflight.json
 analysis.json
 ```
 

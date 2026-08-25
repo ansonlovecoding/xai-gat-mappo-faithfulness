@@ -7,6 +7,8 @@ from .faithfulness import (
     FaithfulnessEvaluator,
     aggregate_node_attention,
     compute_attention_drift,
+    compute_stale_attention_mass,
+    compute_stale_attention_share,
     compute_wamsn,
 )
 from .policies import (
@@ -15,6 +17,7 @@ from .policies import (
     Policy,
     RandomPolicy,
 )
+from .reproducibility import derive_seed, seed_everything
 from .scenario import Scenario, load_scenario
 from .training import (
     EpisodeStats,
@@ -44,5 +47,9 @@ __all__ = [
     "FaithfulnessEvaluator",
     "aggregate_node_attention",
     "compute_attention_drift",
+    "compute_stale_attention_mass",
+    "compute_stale_attention_share",
     "compute_wamsn",
+    "derive_seed",
+    "seed_everything",
 ]

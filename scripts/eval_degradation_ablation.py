@@ -59,6 +59,7 @@ from dispatch_marl import (  # noqa: E402
     DispatchEnvConfig,
     FaithfulnessConfig,
     FaithfulnessEvaluator,
+    derive_seed,
 )
 
 
@@ -121,6 +122,10 @@ def _run_condition(
             episode_index=ep,
             compute_drift=True,
             reset_options=reset_options,
+            # Common random numbers across conditions. The semantic key omits
+            # degradation_mode so clean and degraded cells start from the same
+            # policy-sampling stream for each seed and episode.
+            action_seed=derive_seed(seed, "evaluation", ep),
         )
         per_episode.append(summary)
         all_faith.extend(faith_records)

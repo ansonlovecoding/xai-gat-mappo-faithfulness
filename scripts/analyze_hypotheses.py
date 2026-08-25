@@ -113,10 +113,12 @@ def bootstrap_ci(
 def load_sweep(sweep_dir: Path) -> tuple[dict, list[dict]]:
     manifest = json.loads((sweep_dir / "manifest.json").read_text())
     cells = []
-    for p in sorted(sweep_dir.glob("*.json")):
-        if p.name in ("manifest.json", "analysis.json"):
-            continue
-        cells.append(json.loads(p.read_text()))
+    cell_dir = sweep_dir / "cells"
+    candidates = cell_dir.glob("*.json") if cell_dir.is_dir() else sweep_dir.glob("*.json")
+    for p in sorted(candidates):
+        payload = json.loads(p.read_text())
+        if isinstance(payload, dict) and "cell" in payload and "faith_records" in payload:
+            cells.append(payload)
     if not cells:
         raise SystemExit(f"no cell JSONs found in {sweep_dir}")
     return manifest, cells
@@ -126,6 +128,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
     axis, level, seed, episode = [], [], [], []
     def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
+    stale_count, stale_share, stale_shift = [], [], []
     for c in cells:
         meta = c["cell"]
         for r in c.get("faith_records", []):
@@ -138,6 +141,9 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             wamsn.append(r["wamsn"])
             drift.append(r.get("drift", np.nan))
             valid_res.append(r["valid_reservations"])
+            stale_count.append(r.get("n_stale_veh", 0))
+            stale_share.append(r.get("stale_attention_share", np.nan))
+            stale_shift.append(r.get("stale_attention_shift", np.nan))
     return {
         "axis": np.array(axis),
         "level": np.array(level, dtype=np.float64),
@@ -148,6 +154,50 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "wamsn": np.array(wamsn, dtype=np.float64),
         "drift": np.array(drift, dtype=np.float64),
         "valid_res": np.array(valid_res, dtype=np.int64),
+        "stale_count": np.array(stale_count, dtype=np.int64),
+        "stale_share": np.array(stale_share, dtype=np.float64),
+        "stale_shift": np.array(stale_shift, dtype=np.float64),
+    }
+
+
+def stale_attention_shift_test(
+    frame: dict, axis: str, n_permutations: int, n_boot: int,
+    rng: np.random.Generator,
+) -> dict:
+    """Episode-cluster test that stale-node attention exceeds its clean twin.
+
+    The endpoint uses a binary stale mask and therefore does not treat the AoI
+    value as a causal dose. Only decisions where at least one stale vehicle is
+    visible are included.
+    """
+    mask = ((frame["axis"] == axis) & (frame["stale_count"] > 0)
+            & np.isfinite(frame["stale_shift"]))
+    exposed = (frame["axis"] == axis) & (frame["stale_count"] > 0)
+    if exposed.sum() == 0:
+        return {"n_decisions": 0, "note": "no stale-node exposure"}
+    if mask.sum() == 0:
+        return {"n_decisions": int(exposed.sum()),
+                "note": "stale-attention shift unavailable in this legacy sweep"}
+
+    keys = np.array([
+        f"{seed}|{level:g}|{episode}" for seed, level, episode in zip(
+            frame["seed"][mask], frame["level"][mask], frame["episode"][mask]
+        )
+    ])
+    values = frame["stale_shift"][mask]
+    blocks = np.unique(keys)
+    block_means = np.array([values[keys == block].mean() for block in blocks])
+    lo, hi = bootstrap_ci(block_means, n_boot, rng)
+    return {
+        "mean_shift": float(block_means.mean()),
+        "ci95": [lo, hi],
+        "p_one_sided": signflip_p(block_means, n_permutations, rng),
+        "n_decisions": int(mask.sum()),
+        "n_episode_blocks": int(len(block_means)),
+        "interpretation": (
+            "positive values mean the degraded observation assigned more "
+            "attention mass to stale nodes than its exact clean twin"
+        ),
     }
 
 
@@ -511,6 +561,21 @@ def main() -> int:
     robust: dict = {"primary_axis": primary_axis}
     print()
     print("cluster-robust statistics (episode-block permutation, primary):")
+    attention_shift = stale_attention_shift_test(
+        frame, primary_axis, args.n_permutations, args.n_bootstrap, rng
+    )
+    robust["primary_stale_attention_shift"] = attention_shift
+    if "note" in attention_shift:
+        print(f"  stale-attention shift: n/a ({attention_shift['note']})")
+    else:
+        print(
+            "  stale-attention shift (binary stale mask, degraded - clean twin): "
+            f"mean={attention_shift['mean_shift']:+.4f}  "
+            f"CI95=[{attention_shift['ci95'][0]:+.4f}, "
+            f"{attention_shift['ci95'][1]:+.4f}]  "
+            f"p={attention_shift['p_one_sided']:.4f}  "
+            f"(episode blocks={attention_shift['n_episode_blocks']})"
+        )
     for label, metric, alt in (("H1_robust", "def", "less"),
                                ("H1m_robust", "def_m", "less"),
                                ("H3_robust", "wamsn", "greater")):

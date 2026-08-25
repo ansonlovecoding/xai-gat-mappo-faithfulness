@@ -82,14 +82,14 @@ class FaithfulnessConfig:
     # chosen reservation removes the action itself and slams the margin to
     # −cap). Roughly doubles the counterfactual forwards per decision.
     exclusion_variant: bool = False
-    # Random-baseline sampling scheme. "uniform" (default, the standard
-    # protocol) draws size-k subsets uniformly from all valid non-self
+    # Random-baseline sampling scheme. "uniform" (legacy) draws size-k
+    # subsets uniformly from all valid non-self
     # nodes. "type_matched" draws subsets with the SAME taxi/reservation
     # composition as the attention top-k set — the P2 control for the
     # no-op artifact, where uniform draws hit reservation nodes (and
     # thereby delete competing actions, clamping the margin) far more
     # often than the attention top-k does.
-    random_baseline: str = "uniform"
+    random_baseline: str = "type_matched"
 
 
 @dataclass
@@ -108,6 +108,8 @@ class DecisionFaithfulness:
     wamsn: float                      # WAMSN ∈ [0, 1]
     attention_row: np.ndarray         # (N,) — for later drift computation
     node_mask: np.ndarray             # (N,) bool — which nodes were valid
+    vehicle_mask: np.ndarray          # valid self and neighbour-taxi nodes
+    stale_vehicle_mask: np.ndarray    # binary stale status; no AoI weighting
     # Logit-margin variants of the DEF terms. Probability-based DEF loses
     # signal when the policy saturates (entropy → 0 makes π(a*) ≈ 1
     # insensitive to occlusion); the margin logit[a*] − max_other keeps
@@ -127,6 +129,8 @@ class DecisionFaithfulness:
     n_stale_vehicle: int = 0          # stale vehicle nodes visible this decision
     max_aoi_s: float = 0.0            # max AoI (s) over visible vehicle nodes
     stale_in_top3: bool = False       # a stale node made the explanation's top-3
+    stale_attention_mass: float = 0.0   # total graph attention on stale vehicles
+    stale_attention_share: float = 0.0  # share of vehicle attention on stale nodes
     per_k: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
@@ -238,6 +242,36 @@ def compute_wamsn(
     staleness = np.clip(aoi_v / max(aoi_max, 1e-9), 0.0, 1.0)
     numer = float((attn_v * staleness).sum())
     return float(numer / denom)
+
+
+def compute_stale_attention_share(
+    attention_row: np.ndarray,
+    stale_vehicle_mask: np.ndarray,
+    vehicle_mask: np.ndarray,
+) -> float:
+    """Share of vehicle-node attention assigned to stale vehicle nodes.
+
+    This binary exposure metric deliberately ignores AoI magnitude. It is the
+    direct measure for the claim that degradation shifts attention toward
+    stale nodes; WAMSN remains a secondary, severity-weighted description.
+    """
+    attn = np.asarray(attention_row, dtype=np.float64)
+    stale = np.asarray(stale_vehicle_mask, dtype=bool)
+    vehicle = np.asarray(vehicle_mask, dtype=bool)
+    denominator = float(attn[vehicle].sum())
+    if denominator <= 0.0:
+        return 0.0
+    return float(attn[stale & vehicle].sum() / denominator)
+
+
+def compute_stale_attention_mass(
+    attention_row: np.ndarray,
+    stale_vehicle_mask: np.ndarray,
+) -> float:
+    """Absolute attention mass assigned to binary-stale vehicle nodes."""
+    attn = np.asarray(attention_row, dtype=np.float64)
+    stale = np.asarray(stale_vehicle_mask, dtype=bool)
+    return float(attn[stale].sum())
 
 
 def decision_margin_ex(
@@ -402,6 +436,10 @@ class FaithfulnessEvaluator:
         top3 = non_self_valid[np.argsort(-scored_row[non_self_valid])[:3]] \
             if len(non_self_valid) else np.array([], dtype=np.int64)
         stale_in_top3 = bool(stale_mask[top3].any()) if len(top3) else False
+        stale_attention_share = compute_stale_attention_share(
+            scored_row, stale_mask, node_is_vehicle
+        )
+        stale_attention_mass = compute_stale_attention_mass(scored_row, stale_mask)
 
         return DecisionFaithfulness(
             action=action,
@@ -416,6 +454,8 @@ class FaithfulnessEvaluator:
             wamsn=float(wamsn),
             attention_row=attention_row,
             node_mask=node_mask,
+            vehicle_mask=node_is_vehicle,
+            stale_vehicle_mask=stale_mask,
             m_full=float(m_full),
             def_margin=float(def_margin),
             g_comp_m=float(g_comp_m),
@@ -428,6 +468,8 @@ class FaithfulnessEvaluator:
             n_stale_vehicle=n_stale_vehicle,
             max_aoi_s=max_aoi_s,
             stale_in_top3=stale_in_top3,
+            stale_attention_mass=stale_attention_mass,
+            stale_attention_share=stale_attention_share,
             per_k=per_k,
         )
 

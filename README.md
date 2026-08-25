@@ -16,6 +16,14 @@ trading off control performance.
 > Next: B1/B3 baselines, the paired clean/degraded drift harness, the
 > severity sweep, and the decoupled explanation head.
 >
+> **Definitive rerun protocol:** new experiments use
+> `configs/experiments/dissertation_v2.toml` through
+> `scripts/run_dissertation_experiments.py`. The protocol adds complete
+> seeding, immutable manifests, input hashes, raw-cell preservation,
+> type-matched DEF, binary stale-attention shift, and preflight gates. See
+> [`docs/EXPERIMENT_CODEBASE.md`](docs/EXPERIMENT_CODEBASE.md). The checklist
+> below is a historical development record, not the current run command.
+>
 > **See [`src/dispatch_marl/README.md`](src/dispatch_marl/README.md) for
 > the MARL package's design rationale — layer by layer, including the
 > reward-shaping lesson and the coupled-vs-decoupled explanation framing

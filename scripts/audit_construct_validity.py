@@ -37,10 +37,13 @@ def main() -> int:
     args = parser.parse_args()
 
     cells = []
-    for p in sorted(args.sweep_dir.glob("*.json")):
-        if p.name in ("manifest.json", "analysis.json", "audit.json"):
-            continue
-        cells.append(json.loads(p.read_text()))
+    cell_dir = args.sweep_dir / "cells"
+    candidates = (cell_dir.glob("*.json") if cell_dir.is_dir()
+                  else args.sweep_dir.glob("*.json"))
+    for p in sorted(candidates):
+        payload = json.loads(p.read_text())
+        if isinstance(payload, dict) and "cell" in payload and "faith_records" in payload:
+            cells.append(payload)
 
     recs = []
     for c in cells:

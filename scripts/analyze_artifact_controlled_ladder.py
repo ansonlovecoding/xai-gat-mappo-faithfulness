@@ -48,19 +48,18 @@ import numpy as np
 
 N_BOOT = 10000
 N_PERM = 10000
-SKIP = {"manifest.json", "analysis.json", "audit.json"}
-
-
 # --------------------------------------------------------------- loading
 
 
 def load_records(sweep_dir: Path) -> list[dict]:
     """Flatten every cell's per-decision records, tagging level/seed/cluster."""
     recs: list[dict] = []
-    for p in sorted(sweep_dir.glob("*.json")):
-        if p.name in SKIP or p.name.startswith("typematched"):
-            continue
+    cell_dir = sweep_dir / "cells"
+    candidates = cell_dir.glob("*.json") if cell_dir.is_dir() else sweep_dir.glob("*.json")
+    for p in sorted(candidates):
         cell = json.loads(p.read_text())
+        if not (isinstance(cell, dict) and "cell" in cell and "faith_records" in cell):
+            continue
         c = cell["cell"]
         for r in cell.get("faith_records", []):
             r["_level"] = float(c["level"])

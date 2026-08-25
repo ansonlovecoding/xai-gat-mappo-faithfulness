@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import platform
 import sys
 import time
 from pathlib import Path
@@ -45,43 +44,24 @@ from dispatch_marl import (  # noqa: E402
     FaithfulnessConfig,
     FaithfulnessEvaluator,
     compute_attention_drift,
+    compute_stale_attention_mass,
+    compute_stale_attention_share,
+    derive_seed,
+    seed_everything,
 )
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
-    DispatchMLPPolicy,
-    MLPPolicyConfig,
-    PolicyConfig,
     obs_dict_to_tensors,
 )
-
-
-def _choose_device() -> str:
-    # MPS on Intel macs (AMD GPUs) is broken in torch 2.2 (multi-dim
-    # reduction kernels assert) and removed in 2.3+ — Apple Silicon only.
-    if torch.backends.mps.is_available() and platform.machine() == "arm64":
-        return "mps"
-    if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
-
-
-def _load_policy(ckpt_path: Path, device: str):
-    """Load a checkpoint, instantiating the class recorded in policy_type.
-
-    Checkpoints saved before the B1 baseline landed have no "policy_type"
-    key — they are all GAT.
-    """
-    ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
-    policy_type = ckpt.get("policy_type", "gat")
-    if policy_type == "mlp":
-        pol_cfg = MLPPolicyConfig(**{**ckpt["policy_config"], "device": device})
-        policy = DispatchMLPPolicy(pol_cfg)
-    else:
-        pol_cfg = PolicyConfig(**{**ckpt["policy_config"], "device": device})
-        policy = DispatchGATPolicy(pol_cfg)
-    policy.load_state_dict(ckpt["model"])
-    policy.eval()
-    return policy, ckpt
+from dispatch_marl.provenance import (  # noqa: E402
+    atomic_write_json,
+    runtime_provenance,
+    sha256_file,
+)
+from dispatch_marl.runtime import (  # noqa: E402
+    choose_device as _choose_device,
+    load_policy as _load_policy,
+)
 
 
 def _run_episode(
@@ -94,6 +74,7 @@ def _run_episode(
     episode_index: int = 0,
     reset_options: dict | None = None,
     compute_drift: bool = False,
+    action_seed: int | None = None,
 ) -> tuple[dict, list[dict]]:
     """Run one eval episode; return (episode summary, per-decision faithfulness records).
 
@@ -106,6 +87,8 @@ def _run_episode(
     JS divergence between the attention row on the degraded obs and on its
     clean twin. Trivially ~0 when degradation is off — a useful sanity check.
     """
+    if action_seed is not None:
+        seed_everything(action_seed)
     obs_dict, _ = env.reset(options=reset_options)
     total_reward = 0.0
     total_pickups = 0
@@ -152,6 +135,8 @@ def _run_episode(
                         )
                         drift = None
                         top3_churn = None
+                        stale_attention_clean = None
+                        stale_attention_mass_clean = None
                         if compute_drift and a in clean_obs_by_agent:
                             clean_single = {
                                 k: torch.as_tensor(
@@ -168,6 +153,14 @@ def _run_episode(
                             deg_top3 = set(np.argsort(-result.attention_row[1:])[:3])
                             cln_top3 = set(np.argsort(-clean_row[1:])[:3])
                             top3_churn = 3 - len(deg_top3 & cln_top3)
+                            stale_attention_clean = compute_stale_attention_share(
+                                clean_row,
+                                result.stale_vehicle_mask,
+                                result.vehicle_mask,
+                            )
+                            stale_attention_mass_clean = compute_stale_attention_mass(
+                                clean_row, result.stale_vehicle_mask
+                            )
                         faith_records.append({
                             **({"drift": round(drift, 4)} if drift is not None else {}),
                             "episode": episode_index,
@@ -190,6 +183,21 @@ def _run_episode(
                             "n_stale_veh": result.n_stale_vehicle,
                             "max_aoi_s": round(result.max_aoi_s, 1),
                             "stale_in_top3": result.stale_in_top3,
+                            "stale_attention_share": round(
+                                result.stale_attention_share, 4
+                            ),
+                            "stale_attention_mass": round(
+                                result.stale_attention_mass, 4
+                            ),
+                            **({
+                                "stale_attention_share_clean_twin": round(
+                                    stale_attention_clean, 4
+                                ),
+                                "stale_attention_shift": round(
+                                    result.stale_attention_mass
+                                    - stale_attention_mass_clean, 4
+                                ),
+                            } if stale_attention_clean is not None else {}),
                             **({"def_excl": round(result.def_excl, 4),
                                 "def_m_excl": round(result.def_m_excl, 4)}
                                if result.excl_evaluated else {}),
@@ -282,6 +290,30 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         cond = np.array([r["wamsn"] for r, sp in zip(records, stale_present) if sp])
         if cond.size > 0:
             out["wamsn_conditional_mean"] = float(cond.mean())
+            stale_share = np.array([
+                r["stale_attention_share"] for r, sp in zip(records, stale_present)
+                if sp and "stale_attention_share" in r
+            ])
+            stale_shift = np.array([
+                r["stale_attention_shift"] for r, sp in zip(records, stale_present)
+                if sp and "stale_attention_shift" in r
+            ])
+            if stale_share.size:
+                out["stale_attention_share_conditional_mean"] = float(
+                    stale_share.mean()
+                )
+            stale_mass = np.array([
+                r["stale_attention_mass"] for r, sp in zip(records, stale_present)
+                if sp and "stale_attention_mass" in r
+            ])
+            if stale_mass.size:
+                out["stale_attention_mass_conditional_mean"] = float(
+                    stale_mass.mean()
+                )
+            if stale_shift.size:
+                out["stale_attention_shift_conditional_mean"] = float(
+                    stale_shift.mean()
+                )
         out["stale_in_top3_rate"] = float(np.mean(
             [bool(r.get("stale_in_top3")) for r in records]))
     # Attention drift — like WAMSN, meaningful for every decision.
@@ -308,6 +340,10 @@ def main() -> int:
     parser.add_argument("--dropout-rate", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default=None)
+    parser.add_argument("--output", type=Path, default=None,
+                        help="summary JSON path; default is beside the checkpoint")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="replace an existing output (disabled by default)")
     parser.add_argument("--faithfulness", action="store_true",
                         help="compute DEF/WAMSN per decision; ~36 extra forwards per decision")
     parser.add_argument("--faithfulness-every", type=int, default=1,
@@ -316,6 +352,12 @@ def main() -> int:
                         help="top-k values used for Comp/Suff (averaged)")
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5,
                         help="random subsets sampled per k for the DEF baseline")
+    parser.add_argument("--random-baseline", default="type_matched",
+                        choices=["uniform", "type_matched"],
+                        help="DEF control; type_matched is the reportable default")
+    parser.add_argument("--exclusion-variant", action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help="compute chosen-action-protected construct audit")
     parser.add_argument("--demand-split", default=None,
                         choices=["train", "val", "test"],
                         help="rotate rider-demand variants from this chronological "
@@ -330,12 +372,17 @@ def main() -> int:
                              "--degradation is on)")
     args = parser.parse_args()
 
+    seed_everything(args.seed)
+
     if args.drift and not args.faithfulness:
         parser.error("--drift requires --faithfulness (drift is recorded "
                      "into the per-decision faithfulness records)")
 
     if not args.checkpoint.exists():
         parser.error(f"checkpoint not found: {args.checkpoint}")
+    requested_output = args.output or args.checkpoint.with_suffix(".eval.json")
+    if requested_output.exists() and not args.overwrite:
+        parser.error(f"output already exists: {requested_output}; use --overwrite explicitly")
 
     device = args.device or _choose_device()
     policy, ckpt = _load_policy(args.checkpoint, device)
@@ -363,6 +410,8 @@ def main() -> int:
             top_k_values=tuple(args.faithfulness_top_k),
             n_random_baselines=args.faithfulness_random_baselines,
             seed=args.seed,
+            random_baseline=args.random_baseline,
+            exclusion_variant=args.exclusion_variant,
         )
         faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
 
@@ -406,6 +455,7 @@ def main() -> int:
             episode_index=ep,
             compute_drift=args.drift,
             reset_options=reset_options,
+            action_seed=derive_seed(args.seed, "evaluation", ep),
         )
         if reset_options:
             r["demand_variant"] = reset_options["taxi_route_file"]
@@ -474,14 +524,17 @@ def main() -> int:
 
     # Emit per-decision faithfulness records as JSONL alongside the summary.
     if args.faithfulness and all_faith_records:
-        jsonl_path = args.checkpoint.with_suffix(".faithfulness.jsonl")
+        jsonl_path = ((args.output.with_suffix(".faithfulness.jsonl"))
+                      if args.output else args.checkpoint.with_suffix(".faithfulness.jsonl"))
+        jsonl_path.parent.mkdir(parents=True, exist_ok=True)
         with jsonl_path.open("w") as f:
             for rec in all_faith_records:
                 f.write(json.dumps(rec) + "\n")
         print(f"faithfulness records: {jsonl_path} ({len(all_faith_records)} decisions)")
 
     # Emit machine-readable summary for downstream comparison.
-    summary_path = args.checkpoint.with_suffix(".eval.json")
+    summary_path = args.output or args.checkpoint.with_suffix(".eval.json")
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary: dict = {
         "checkpoint": str(args.checkpoint),
         "epoch": ckpt.get("epoch"),
@@ -490,11 +543,15 @@ def main() -> int:
         "stochastic": args.stochastic,
         "seed": args.seed,
         "episodes": len(results),
+        "demand_split": args.demand_split,
+        "demand_files": demand_files,
         "per_episode": results,
         "mean_pickups": float(pickups.mean()),
         "std_pickups": float(pickups.std()),
         "mean_reward": float(rewards.mean()),
         "std_reward": float(rewards.std()),
+        "checkpoint_sha256": sha256_file(args.checkpoint),
+        "provenance": runtime_provenance(PROJECT_ROOT),
     }
     if args.faithfulness:
         summary["faithfulness_summary"] = faith_run_summary
@@ -502,8 +559,10 @@ def main() -> int:
             "top_k_values": list(args.faithfulness_top_k),
             "n_random_baselines": args.faithfulness_random_baselines,
             "faithfulness_every": args.faithfulness_every,
+            "random_baseline": args.random_baseline,
+            "exclusion_variant": args.exclusion_variant,
         }
-    summary_path.write_text(json.dumps(summary, indent=2))
+    atomic_write_json(summary_path, summary)
     print(f"summary: {summary_path}")
     return 0
 

@@ -63,10 +63,12 @@ plt.rcParams.update({
 def load_sweep(sweep_dir: Path) -> dict[float, dict]:
     """Aggregate a ladder sweep: level → {def_m list, wamsn list, pickups list}."""
     levels: dict[float, dict] = {}
-    for p in sorted(sweep_dir.glob("*.json")):
-        if p.name in ("manifest.json", "analysis.json"):
-            continue
+    cell_dir = sweep_dir / "cells"
+    candidates = cell_dir.glob("*.json") if cell_dir.is_dir() else sweep_dir.glob("*.json")
+    for p in sorted(candidates):
         cell = json.loads(p.read_text())
+        if not (isinstance(cell, dict) and "cell" in cell and "faith_records" in cell):
+            continue
         meta = cell.get("cell", {})
         if meta.get("axis") not in ("clean", "max_aoi"):
             continue  # appendix axes stay out of the story figures

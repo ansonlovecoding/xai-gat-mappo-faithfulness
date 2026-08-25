@@ -205,6 +205,7 @@ def ppo_update(
     buffer: list[AgentStep],
     config: PPOConfig,
     device: str = "cpu",
+    rng: np.random.Generator | None = None,
 ) -> UpdateLog:
     """One round of PPO updates over the buffer. Returns mean-loss stats."""
     if not buffer:
@@ -221,12 +222,13 @@ def ppo_update(
     if config.normalize_advantages and len(advantages) > 1:
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
+    rng = rng or np.random.default_rng()
     n = len(buffer)
     idxs = np.arange(n)
     log = UpdateLog()
 
     for _ in range(config.ppo_epochs):
-        np.random.shuffle(idxs)
+        rng.shuffle(idxs)
         for start in range(0, n, config.minibatch_size):
             mb_idx = idxs[start:start + config.minibatch_size]
             mb = torch.as_tensor(mb_idx, dtype=torch.long, device=device)

@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -40,21 +39,20 @@ load_dotenv(PROJECT_ROOT / ".env")
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from eval_policy import _choose_device, _load_policy  # noqa: E402
 from eval_degradation_ablation import _run_condition  # noqa: E402
 
 from dispatch_marl import FaithfulnessConfig, FaithfulnessEvaluator  # noqa: E402
+from dispatch_marl.provenance import (  # noqa: E402
+    atomic_write_json,
+    config_hash,
+    create_or_validate_manifest,
+    file_inventory,
+    runtime_provenance,
+    sha256_file,
+)
 from dispatch_marl.scenario import demand_split_files  # noqa: E402
-
-
-def _git_rev() -> str:
-    try:
-        return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, cwd=PROJECT_ROOT,
-        ).stdout.strip() or "unknown"
-    except OSError:
-        return "unknown"
+from dispatch_marl.runtime import choose_device as _choose_device  # noqa: E402
+from dispatch_marl.runtime import load_policy as _load_policy  # noqa: E402
 
 
 def main() -> int:
@@ -90,7 +88,7 @@ def main() -> int:
     parser.add_argument("--faithfulness-every", type=int, default=5)
     parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5)
-    parser.add_argument("--random-baseline", default="uniform",
+    parser.add_argument("--random-baseline", default="type_matched",
                         choices=["uniform", "type_matched"],
                         help="random-baseline sampling scheme. 'uniform' is the "
                              "standard ERASER-style protocol and is artifact-prone "
@@ -126,10 +124,6 @@ def main() -> int:
     if args.demand_split != "none":
         demand_files = demand_split_files(area, args.demand_split)
 
-    out_dir = args.out or (PROJECT_ROOT / "runs" / "sweeps"
-                           / f"{args.checkpoint.stem}_{int(time.time())}")
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     # Cell list. Severity axis + level are recorded per cell so the analysis
     # script never has to reverse-engineer them from the config.
     cells: list[dict] = [
@@ -146,8 +140,27 @@ def main() -> int:
                           "mode": "random_dropout",
                           "dropout_rate": args.dropout_rate, "outage_s": float(s)})
 
-    manifest = {
-        "checkpoint": str(args.checkpoint),
+    checkpoint_sha256 = sha256_file(args.checkpoint)
+    try:
+        checkpoint_ref = str(args.checkpoint.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        checkpoint_ref = str(args.checkpoint.resolve())
+    scenario_dir = PROJECT_ROOT / "scenarios" / "yubei" / area
+    inputs = [
+        args.checkpoint,
+        scenario_dir / f"{area}.sumocfg",
+        scenario_dir / f"{area}.net.xml",
+        scenario_dir / f"{area}.rou.xml",
+        scenario_dir / "tunnels.json",
+        scenario_dir / "demand_manifest.json",
+        *(scenario_dir / name for name in demand_files),
+    ]
+    input_inventory = file_inventory(inputs, PROJECT_ROOT)
+    runtime = runtime_provenance(PROJECT_ROOT)
+    specification = {
+        "kind": "severity_sweep",
+        "checkpoint": checkpoint_ref,
+        "checkpoint_sha256": checkpoint_sha256,
         "epoch": ckpt.get("epoch"),
         "policy_type": ckpt.get("policy_type", "gat"),
         "area": area,
@@ -166,10 +179,21 @@ def main() -> int:
             "random_baseline": args.random_baseline,
             "exclusion_variant": args.exclusion_variant,
         },
-        "git_rev": _git_rev(),
-        "created_unix": int(time.time()),
+        "code_revision": runtime["git"]["revision"],
+        "tracked_diff_sha256": runtime["git"]["tracked_diff_sha256"],
+        "input_inventory": input_inventory,
     }
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    experiment_id = config_hash(specification)
+    out_dir = args.out or (PROJECT_ROOT / "runs" / "sweeps" / experiment_id)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cell_dir = out_dir / "cells"
+    cell_dir.mkdir(exist_ok=True)
+
+    manifest = create_or_validate_manifest(
+        out_dir / "manifest.json",
+        specification,
+        {**runtime, "inputs": input_inventory},
+    )
 
     n_total = len(cells) * len(args.seeds)
     print(f"sweep: {len(cells)} cells × {len(args.seeds)} seeds = {n_total} runs "
@@ -183,7 +207,7 @@ def main() -> int:
         for seed in args.seeds:
             i += 1
             cell_name = f"{cell['axis']}_{cell['level']:g}_seed{seed}"
-            cell_path = out_dir / f"{cell_name}.json"
+            cell_path = cell_dir / f"{cell_name}.json"
             if cell_path.exists():
                 print(f"[{i:>3}/{n_total}] {cell_name}: exists, skipping")
                 continue
@@ -211,7 +235,7 @@ def main() -> int:
                 demand_files=demand_files or None,
             )
             result["cell"] = {**cell, "seed": seed}
-            cell_path.write_text(json.dumps(result, indent=2))
+            atomic_write_json(cell_path, result)
             f = result["faithfulness"]
             print(f"[{i:>3}/{n_total}] {cell_name}: "
                   f"pickups={result['mean_pickups']:.1f}  "

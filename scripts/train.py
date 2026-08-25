@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import platform
 import sys
 import time
 from pathlib import Path
@@ -35,11 +34,10 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
-# Put PROJECT_ROOT on the path so `src.dispatch_marl` resolves. (This matches
-# the imports below; sys.path must include the *parent* of `src/`.)
-sys.path.insert(0, str(PROJECT_ROOT))
+# Allows direct execution before the package has been installed editable.
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from src.dispatch_marl import (  # noqa: E402
+from dispatch_marl import (  # noqa: E402
     DegradationConfig,
     DispatchEnv,
     DispatchEnvConfig,
@@ -49,24 +47,23 @@ from src.dispatch_marl import (  # noqa: E402
     collect_rollout,
     compute_gae,
     ppo_update,
+    seed_everything,
 )
-from src.dispatch_marl.models import (  # noqa: E402
+from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
     DispatchMLPPolicy,
     MLPPolicyConfig,
     PolicyConfig,
 )
-from src.dispatch_marl.training import AgentStep  # noqa: E402
-
-
-def choose_device() -> str:
-    # MPS on Intel macs (AMD GPUs) is broken in torch 2.2 (multi-dim
-    # reduction kernels assert) and removed in 2.3+ — Apple Silicon only.
-    if torch.backends.mps.is_available() and platform.machine() == "arm64":
-        return "mps"
-    if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
+from dispatch_marl.provenance import (  # noqa: E402
+    atomic_write_json,
+    create_or_validate_manifest,
+    file_inventory,
+    runtime_provenance,
+)
+from dispatch_marl.scenario import demand_split_files  # noqa: E402
+from dispatch_marl.runtime import choose_device  # noqa: E402
+from dispatch_marl.training import AgentStep  # noqa: E402
 
 
 def _sample_faithfulness(
@@ -159,6 +156,8 @@ def main() -> int:
     parser.add_argument("--wait-lambda", type=float, default=0.001)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--deterministic-torch", action="store_true",
+                        help="request deterministic PyTorch kernels where available")
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
@@ -207,6 +206,9 @@ def main() -> int:
                         help="top-k values used for DEF's comp/suff terms")
     parser.add_argument("--faith-random-baselines", type=int, default=3,
                         help="random subsets per k; kept lower than eval-time (5) for speed")
+    parser.add_argument("--faith-random-baseline", default="type_matched",
+                        choices=["uniform", "type_matched"],
+                        help="type_matched is the reportable construct-validity control")
     parser.add_argument("--demand-split", default=None,
                         choices=["train", "val", "test"],
                         help="rotate rider-demand variants from this chronological "
@@ -214,6 +216,8 @@ def main() -> int:
                              "epochs. Default: the single committed demand file, "
                              "as before. Use 'train' for protocol-compliant runs.")
     parser.add_argument("--log-dir", type=Path, default=PROJECT_ROOT / "runs" / "mappo")
+    parser.add_argument("--run-dir", type=Path, default=None,
+                        help="exact immutable output directory; default uses log-dir/area_timestamp")
     parser.add_argument("--device", default=None,
                         help="cpu, cuda, or mps; default: auto")
     args = parser.parse_args()
@@ -222,12 +226,18 @@ def main() -> int:
         parser.error("--faith-every-epochs requires --policy gat: the MLP "
                      "baseline has no attention channel to score")
 
+    seed_settings = seed_everything(
+        args.seed, deterministic_torch=args.deterministic_torch
+    )
+    update_rng = np.random.default_rng(args.seed)
     device = args.device or choose_device()
 
-    run_dir = args.log_dir / f"{args.area}_{int(time.time())}"
+    run_dir = args.run_dir or args.log_dir / f"{args.area}_{int(time.time())}"
+    if run_dir.exists() and any(run_dir.iterdir()):
+        parser.error(f"run directory is not empty: {run_dir}; training runs are immutable")
     run_dir.mkdir(parents=True, exist_ok=True)
     log_file = run_dir / "train_log.jsonl"
-    (run_dir / "args.json").write_text(json.dumps(vars(args), indent=2, default=str))
+    atomic_write_json(run_dir / "args.json", vars(args))
 
     print(f"run dir: {run_dir}")
     print(f"device:  {device}")
@@ -249,10 +259,38 @@ def main() -> int:
     # Demand-variant rotation (E-section protocol).
     demand_files: list[str] = []
     if args.demand_split:
-        from src.dispatch_marl.scenario import demand_split_files
         demand_files = demand_split_files(args.area, args.demand_split)
         print(f"demand:  {len(demand_files)} '{args.demand_split}' variants, "
               f"rotated round-robin per epoch")
+
+    scenario_dir = PROJECT_ROOT / "scenarios" / "yubei" / args.area
+    provenance_inputs = [
+        scenario_dir / f"{args.area}.sumocfg",
+        scenario_dir / f"{args.area}.net.xml",
+        scenario_dir / f"{args.area}.rou.xml",
+        scenario_dir / "tunnels.json",
+        scenario_dir / "demand_manifest.json",
+        *(scenario_dir / name for name in demand_files),
+    ]
+    input_inventory = file_inventory(provenance_inputs, PROJECT_ROOT)
+    runtime = runtime_provenance(PROJECT_ROOT)
+    specification = {
+        "kind": "training",
+        "arguments": {k: str(v) if isinstance(v, Path) else v
+                      for k, v in vars(args).items()},
+        "seed_settings": seed_settings,
+        "code_revision": runtime["git"]["revision"],
+        "tracked_diff_sha256": runtime["git"]["tracked_diff_sha256"],
+        "input_inventory": input_inventory,
+    }
+    create_or_validate_manifest(
+        run_dir / "manifest.json",
+        specification,
+        {
+            **runtime,
+            "inputs": input_inventory,
+        },
+    )
 
     # ---- policy
     if args.policy == "mlp":
@@ -297,6 +335,7 @@ def main() -> int:
             top_k_values=tuple(args.faith_top_k),
             n_random_baselines=args.faith_random_baselines,
             seed=args.seed,
+            random_baseline=args.faith_random_baseline,
         )
         faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
         faith_rng = np.random.default_rng(args.seed)
@@ -368,7 +407,9 @@ def main() -> int:
         compute_gae(buffer, gamma=args.gamma, gae_lambda=args.gae_lambda)
 
         # 3. PPO update
-        losses = ppo_update(policy, optimizer, buffer, ppo_cfg, device=device)
+        losses = ppo_update(
+            policy, optimizer, buffer, ppo_cfg, device=device, rng=update_rng
+        )
         loss_d = losses.as_dict()
 
         elapsed = time.time() - t0
@@ -438,7 +479,20 @@ def main() -> int:
             }, ckpt)
 
     env.close()
+    final_ckpt_path = run_dir / "ckpt_final.pt"
+    torch.save({
+        "epoch": args.epochs - 1,
+        "policy_type": args.policy,
+        "model": policy.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "policy_config": pol_cfg.__dict__,
+        "env_config": {**env_cfg.__dict__,
+                       "degradation": env_cfg.degradation.__dict__},
+        "ppo_config": ppo_cfg.__dict__,
+        "seed_settings": seed_settings,
+    }, final_ckpt_path)
     print(f"\ndone. logs: {log_file}")
+    print(f"final:  {final_ckpt_path}")
     if best_epoch >= 0:
         print(f"best:   epoch {best_epoch}, rolling mean pickups = {best_rolling_mean:.2f}")
         print(f"        checkpoint: {best_ckpt_path}")

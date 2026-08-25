@@ -77,7 +77,7 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--random-baselines", type=int, default=5)
     parser.add_argument("--n-permutations", type=int, default=10000)
-    parser.add_argument("--random-baseline", default="uniform",
+    parser.add_argument("--random-baseline", default="type_matched",
                         choices=["uniform", "type_matched"],
                         help="type_matched = the P2 artifact control: random "
                              "subsets share each channel's top-k node-type "
