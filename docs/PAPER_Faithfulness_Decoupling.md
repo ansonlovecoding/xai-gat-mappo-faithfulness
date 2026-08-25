@@ -1,4 +1,6 @@
-# Occlusion Baselines Break When Explanation Units Are Action Candidates: A Construct-Validity Audit in Graph-Attention Fleet Dispatch
+::: {.paper-front}
+
+# When Explanations Outlive Their Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under Telemetry Degradation
 
 Hongwei Lin  
 De Montfort University, Dubai  
@@ -6,168 +8,152 @@ P2982757@my365.dmu.ac.uk
 
 ## Abstract
 
-Perturbation-based faithfulness tests ask whether removing the inputs an
-explanation selects changes the model's output, and compare that against
-removing random inputs instead. This paper shows that the comparison is
-invalid for an entire class of models: those in which the input entities an
-explanation ranks are also the candidate actions the policy chooses between.
-Occluding such an entity does not merely withhold evidence, it deletes an
-option from the decision problem, and a random baseline that hits those
-entities at a different rate than the explanation does is measuring
-architecture rather than explanation quality.
+Graph-attention policies expose weights that are easy to display as
+explanations, but those explanations may remain plausible after the telemetry
+beneath them becomes stale. This dissertation studies that risk in multi-agent
+fleet dispatch. In a SUMO benchmark, tunnel entry triggers signal loss:
+vehicles continue to move, while the policy receives their last valid state
+and their Age of Information (AoI) increases. Decision-level explanation
+faithfulness (DEF) measures explanation quality, and weighted attention mass on
+stale nodes (WAMSN) measures attention to outdated vehicle information.
 
-The audit is carried out on a graph-attention multi-agent dispatcher
-(GAT-MAPPO) in a SUMO taxi-dispatch benchmark, where reservation nodes are
-simultaneously graph nodes and dispatch actions. Under the standard
-uniform-random occlusion protocol, the attention channel scores -0.541
-margin-DEF on clean telemetry, an apparently decisive "worse than random"
-verdict. Uniform draws clamp the decision margin four times as often as the
-attention top-k does. With a composition-matched random baseline the score is
--0.009 [-0.016, -0.001], and an independent clamp-free subset gives +0.000
-[-0.003, +0.003]: the channel is uninformative, not adversarial, and 98 % of
-the original deficit was protocol. The uniform metric is not merely biased but
-unstable, swinging from -1.352 to +1.775 across seven checkpoints spanning a
-twelvefold range in task performance, two architectures and three training
-seeds — while every trained checkpoint sits within 0.015 of zero under the
-fair baseline. Worse, the two checkpoints the uncorrected protocol rates most
-favourably are the two best-performing ones, so a practitioner would have
-concluded that stronger dispatchers have more faithful attention. A
-perturbation test that manufactures both "far worse than random" and "far
-better than random" from equally uninformative channels cannot be used to rank
-explanations.
+On clean telemetry, a standard random occlusion baseline gives margin-DEF of
+-0.541. This comparison is unfair because removing a passenger-request node
+also removes its dispatch action. Matching the random baseline to the same
+mixture of vehicle and request nodes changes the score to -0.009 [-0.016,
+-0.001]. Built-in attention is therefore approximately uninformative, not
+actively worse than random.
 
-The dispatch setting also supplies a substantive result. Tunnel entry
-triggers simulated signal loss, so the policy sees a taxi's last valid
-position while its Age of Information grows, and attention mass migrates onto
-stale vehicle nodes (0 to 0.014 pooled, 13-15 % of vehicle-node attention
-conditional on exposure) while pickups and aggregate faithfulness stay flat.
-Within episodes, decisions with more stale-node attention are less faithful
-(margin-DEF rho = -0.045; probability-DEF rho = -0.149). Neither
-degradation-aware training nor an occlusion-distilled decoupled head restores
-faithfulness under degradation, and both apparent mitigation effects were
-substantially larger before the baseline was corrected. A manipulation check
-reports that the intended severity ladder did not vary realised staleness,
-because AoI is censored at the observation encoding's normalisation constant
-and tunnel transit time dominates the nominal outage; the degradation evidence
-is therefore a binary clean-versus-degraded contrast rather than a
-dose-response curve, and the preregistered dose-response hypothesis is
-reported as untestable rather than unsupported.
+Under degradation, pooled WAMSN rises from 0 to 0.014. When a stale vehicle
+node is visible, it receives 13.4-14.8 % of vehicle-node attention. Pickups and
+aggregate faithfulness remain broadly flat, while decisions with more
+stale-node attention are less faithful within episodes (margin-DEF rho =
+-0.045; probability-DEF rho = -0.149). This is the observed faithfulness
+decoupling: explanation content shifts toward stale information without a
+warning from performance or aggregate faithfulness. Because the intended
+severity ladder did not produce distinct realised staleness levels, the
+evidence supports a clean-versus-degraded comparison rather than an AoI
+dose-response claim.
+
+Degradation-aware training has no detectable effect. A separate explanation
+head improves clean margin-DEF by +0.023, but not detectably under degradation.
+The study shows how attention explanations can outlive their data and why the
+faithfulness test must itself be validated.
 
 **Index Terms** — explainable reinforcement learning, faithfulness
 evaluation, construct validity, graph attention, multi-agent reinforcement
 learning, fleet dispatch, Age of Information, SUMO.
 
+:::
+
 ## I. Introduction
 
-Faithfulness metrics exist because an explanation that looks plausible is not
-necessarily an explanation. The dominant family of tests is perturbation
-based: take the inputs the explanation ranks highest, remove them, and see
-whether the model's output moves. Comprehensiveness and sufficiency in the
-ERASER protocol [16] are the canonical instances. Because the raw effect size
-depends on how many inputs were removed and how sensitive the model is, the
-measurement is always made relative to a control — the same operation applied
-to randomly chosen inputs. The explanation is credited with whatever margin
-it achieves over random.
+Fleet dispatch systems depend on timely vehicle locations, speeds and
+availability. In practice, those updates can be delayed by tunnels, signal
+loss and dense urban infrastructure. A dispatcher may continue to produce a
+decision from the last available state, but an explanation of that decision
+can then refer to information that is no longer current. Stable task
+performance alone does not show that the explanation remains trustworthy.
 
-That control carries an assumption which is rarely stated: occlusion is
-assumed to withhold *evidence*, so that the explanation-selected set and the
-random set differ only in which evidence they withhold. This paper documents a
-class of models where the assumption fails outright, and where the failure is
-severe enough to invert the verdict.
+This dissertation studies that problem in a graph-attention multi-agent
+reinforcement learning (MARL) dispatcher. Fleet dispatch is relational: a taxi
+chooses among passenger requests while considering nearby vehicles and
+competing demand. Graph attention networks [7] provide a compact way to model
+those relationships and expose per-node attention weights. Because the weights
+are easy to visualise, they are tempting to present as explanations. Previous
+work has shown, however, that attention is not automatically faithful to a
+model's decision [12]-[15].
 
-The class is models in which the entities an explanation ranks are also the
-candidate actions the policy selects among. Pointer networks, matching and
-assignment policies, retrieval-augmented rankers, and action-graph policies
-all have this shape. In such a model, occluding a candidate does not merely
-hide information about an option — it removes the option. If the chosen action
-is deleted, the model's score for that action is not "reduced by the loss of
-evidence"; it is undefined, and whatever floor the implementation substitutes
-is an artifact of the harness. A random baseline that touches candidate
-entities at a different rate than the explanation does will therefore be
-compared against a different decision problem, and the resulting "margin over
-random" measures architecture, not explanation quality.
+The central concern is **faithfulness decoupling**. In this study the term has
+a specific meaning: the content of the explanation shifts toward stale data,
+while task performance and aggregate faithfulness provide no corresponding
+warning. This is narrower than claiming that increasing AoI directly causes a
+monotonic loss of faithfulness. The experiments do not support that stronger
+dose-response claim.
 
-The setting used to demonstrate this is fleet dispatch. Fleet dispatch is a
-relational decision problem: a taxi should not choose a request by looking
-only at itself, but also at nearby taxis and competing requests. Graph
-attention networks [7] fit this structure and additionally expose per-entity
-weights that are trivial to render as an explanation. In the dispatcher
-studied here, each of the five candidate reservations is one node of the
-observation graph and one entry of the action space at the same time, so the
-pathology is present by construction rather than by contrivance.
+Three research questions organise the study:
 
-The audit finds that the standard protocol reports the attention channel at
--0.541 margin-DEF on clean telemetry — a confident "much worse than random"
-result — and that 98 % of that number is composition. Under a random baseline
-matched to the node types attention actually selects, the score is -0.009.
-The corrected reading is not that attention is adversarial but that it is
-uninformative. More damaging for the metric than the bias is its instability:
-across seven checkpoints spanning a twelvefold range of task performance, the
-uniform score ranges from -1.35 to +1.78 while the matched score stays at
-approximately zero throughout.
+1. **RQ1:** Is the GAT attention channel a faithful explanation of dispatch
+   decisions under clean telemetry?
+2. **RQ2:** How does stale telemetry affect explanation content and its
+   relationship with task performance?
+3. **RQ3:** Can degradation-aware training or a separate explanation head
+   reduce the problem?
 
-Because the benchmark was built to study a second question, the paper also
-reports it. Fleet telemetry goes stale: a vehicle loses signal in a tunnel,
-keeps moving, and the dispatcher retains only its last known position while
-its Age of Information (AoI) [21] grows. The concern is that an attention map
-can stay tidy and confident while the graph beneath it ages — the explanation
-quietly changes what it is about, with no warning in task performance. That
-is what happens here. Attention mass migrates onto stale vehicle nodes while
-pickups and aggregate faithfulness remain flat, and decisions with more
-stale-node attention are measurably less faithful within episodes.
+Answering RQ1 requires validating the faithfulness test itself. Perturbation
+tests normally remove the inputs selected by an explanation and compare the
+effect with removing random inputs [16]. In this dispatcher, however, a
+passenger-request node is also a dispatch action. Removing a nearby-taxi node
+only hides context; removing a request node also deletes an available action.
+A random baseline that removes more requests than the attention explanation
+therefore creates an unfair comparison. The study audits this effect and uses
+a type-matched baseline that removes the same mixture of vehicle and request
+nodes on both sides.
 
-Two things are reported as negative results rather than smoothed over. The
-severity ladder the study was designed around did not manipulate realised
-staleness, because tunnel transit time dominates the nominal outage duration
-and the observation encoding censors AoI at its normalisation constant; the
-degradation evidence is therefore a binary contrast, and the preregistered
-dose-response hypothesis is untestable on this data rather than unsupported.
-And the learned dispatcher is far weaker than a greedy matcher, which is why
-the capability-spectrum control matters: the metric pathology is shown to be
-invariant across the full range of policy quality, including an untrained
-checkpoint.
+The experiment is conducted in SUMO [22] on a tunnel-rich road network in
+Chongqing. Tunnel entry triggers simulated signal loss, but SUMO continues to
+move the vehicle using the true state. Only the observation supplied to the
+policy is degraded: its last valid position and speed are retained while Age
+of Information (AoI) [21] grows. This separation keeps the physical traffic
+world intact and isolates the effect of stale information on the policy and
+its explanation.
+
+The corrected clean-telemetry result is that built-in attention is
+approximately uninformative: type-matched margin-DEF is -0.009. Under degraded
+telemetry, attention moves onto stale vehicle nodes while pickups and aggregate
+faithfulness remain broadly flat. Decisions with more stale-node attention are
+also less faithful within episodes. Degradation-aware training does not change
+this result, and a decoupled explanation head provides only a small improvement
+on clean telemetry.
+
+The intended `{5, 15, 30, 60}` s AoI ladder did not create distinct realised
+staleness levels because tunnel transit time dominated the lower settings and
+the observation encoded AoI with a 60 s cap. The degradation evidence is
+therefore reported as a clean-versus-degraded comparison. The learned policy
+also performs well below SUMO's greedy matcher, so the degradation findings are
+scoped to the experimental policy rather than a production-ready dispatcher.
 
 The contributions are:
 
-1. A construct-validity failure mode for perturbation-based faithfulness
-   tests: when explanation units double as action candidates, occlusion
-   changes the decision problem and uniform random baselines become invalid.
-   Quantified at 98 % of the measured effect, with a composition-matched
-   correction and an independent clamp-free control.
-2. Evidence that the uncorrected metric is unstable rather than merely
-   biased, manufacturing verdicts of both signs from channels that are all
-   uninformative under the corrected protocol.
-3. A SUMO fleet-dispatch benchmark with tunnel-triggered AoI degradation, in
-   which the ground-truth traffic world and the degraded observation given to
-   the policy are cleanly separated.
-4. Evidence that stale telemetry changes explanation *content* — attention
-   migrates onto stale nodes, and stale-node attention predicts lower
-   faithfulness — while task performance and aggregate faithfulness give no
-   warning.
-5. A manipulation check and capability-spectrum control that scope these
-   claims honestly, including a preregistered hypothesis reported as
-   untestable.
+1. A controlled SUMO study showing that stale telemetry shifts graph attention
+   toward stale vehicle nodes without a corresponding change in pickups or
+   aggregate faithfulness.
+2. Evidence that greater stale-node attention is associated with lower
+   decision-level faithfulness within episodes.
+3. A construct-validity audit showing why standard random occlusion is unfair
+   when explanation units are also candidate actions, together with a
+   type-matched correction.
+4. An evaluation of training-side and explanation-side mitigations, neither of
+   which restores meaningful faithfulness under degraded telemetry.
+5. A reproducible experimental design that separates SUMO ground truth from
+   the degraded observation and reports the failed severity manipulation
+   explicitly.
 
 ## II. Related Work
 
 ### A. Reinforcement Learning for Fleet Dispatch
 
-Reinforcement learning has been widely studied for ride-hailing and fleet
-management [1], [2]. Multi-agent methods are natural because many vehicles act
-in the same city at the same time, and the standard toolkit spans centralised
-critics with decentralised actors [3], value factorisation [4], and on-policy
-actor-critic methods [5]. This work uses MAPPO [5] as a practical backbone
-with a shared policy across agents. The aim is not to introduce a new dispatch
-algorithm: the learned dispatcher is a controlled setting in which the
-explanation channel can be audited per decision, and Section IV-A is explicit
-that its task performance is well below a greedy matcher.
+Reinforcement learning is widely used in ride-hailing and fleet management
+[1], [2]. Multi-agent methods fit this problem because many vehicles act in
+the same city at the same time [3]-[5]. This study uses MAPPO [5] with one
+shared policy for all taxis. It does not propose a new dispatch algorithm. The
+dispatcher provides a controlled setting in which each explanation can be
+tested. As Section IV-A shows, it performs well below a greedy matcher.
 
-Graph neural networks [6] are the usual way to encode the relational
-structure, and graph attention [7] adds per-entity weights. Attention has also
-been used as an architectural device in multi-agent critics [8], following its
-role in sequence models [9]. The relevant property here is not performance but
-that the weights are *exposed*, and therefore likely to be displayed to an
-operator.
+Graph neural networks encode relationships between vehicles and requests [6].
+Graph attention adds a weight for each related entity [7] and has also been
+used in multi-agent critics [8]. In this study, the important point is that
+these weights are visible and could be shown to an operator as an explanation.
+
+Recent dispatch research shows how strongly the field is moving toward
+graph-based MARL at city scale. BMG-Q combines graph attention with bipartite
+vehicle-order matching [26], CoopRide learns cooperation between city grids
+[27], and DualG-MARL jointly models vehicle-state and passenger-task graphs
+[28]. These studies evaluate dispatch quality, scalability and coordination.
+The present work asks a complementary question: whether the attention exposed
+by such models can be trusted as an explanation when vehicle telemetry is
+stale. It is therefore positioned as an explanation-reliability study, not as
+a performance comparison with these larger dispatch systems.
 
 ### B. Attention as Explanation
 
@@ -203,23 +189,20 @@ changes [19]; Lipton's broader critique of interpretability as an
 underspecified goal [20] applies directly to the practice of reporting a
 single faithfulness scalar without validating the metric.
 
-What has received less attention is the *composition* of the random control.
-Existing critiques largely concern how occlusion is implemented — masking
-versus resampling, in-distribution versus out-of-distribution. The failure
-documented in Section IV is different: even with a fixed occlusion operator,
-the random control and the explanation can withhold structurally different
-things, because in candidate-action architectures some entities carry the
-action and others do not. Explainability surveys in reinforcement learning
-[10] and causal-lens approaches [11] do not treat this case, and LIME-style
-local surrogates [18] would face it too, since perturbing a candidate
-perturbs the action set.
+Less attention has been paid to *what kinds of nodes* the random control
+removes. Most earlier critiques compare masking with resampling or ask whether
+the perturbed input remains realistic. The problem here is different. Some
+graph nodes are also actions, while others only provide context. A random
+control can therefore change the action set more often than the explanation
+does. Existing explainable-RL surveys [10], causal approaches [11], and local
+surrogate methods such as LIME [18] do not directly address this case.
 
 ### D. Age of Information
 
 Age of Information measures how old a received state update is [21]. It is a
 natural description of stale telemetry and is used here in two ways: as the
 severity variable for simulated signal loss, and as the node-level freshness
-weight inside WAMSN. Section IV-D reports a consequence of the second use that
+weight inside WAMSN. Section IV-C reports a consequence of the second use that
 is easy to overlook — because AoI enters the observation normalised and
 clipped, the metric cannot distinguish degrees of staleness beyond the
 normalisation constant.
@@ -229,11 +212,13 @@ normalisation constant.
 The experiment has three moving parts: the simulator, the graph-attention
 policy, and the degradation layer.
 
+::: {.figure-block}
 ![Telemetry degradation data flow](telemetry_degradation_data_flow.png)
 
 **Fig. 1. Telemetry degradation data flow.** SUMO remains the ground-truth
 world. Tunnel edges only trigger signal loss; the degradation itself is
 implemented when observations are built for the policy.
+:::
 
 ### A. SUMO Dispatch Environment
 
@@ -258,11 +243,13 @@ extra models for their own sake. Each one answers a specific control question:
 what happens without learning, without graph attention, without AoI features,
 or with degradation-aware training?
 
+::: {.figure-block}
 ![Model conditions and training process](model_design_training_process.png)
 
 **Fig. 2. Model conditions and training process.** B2 is the main audited
 attention model. B0, B1, B3, and H5' are included to separate task
 performance, graph attention, AoI input, and degradation-aware training.
+:::
 
 **Table I. Model Conditions**
 
@@ -285,18 +272,22 @@ For each acting taxi, the environment builds one self-centred graph. The graph
 contains the taxi itself, up to five nearby taxis, and up to five candidate
 reservations. One graph therefore corresponds to one taxi decision.
 
+::: {.figure-block}
 ![Observation graph for one taxi decision](../results/story_freeze_v1/figs/paper/fig2_observation_graph.png)
 
 **Fig. 3. Observation graph for one dispatch decision.** The policy sees the
 acting taxi, nearby taxi context, and candidate reservations in a single small
 graph.
+:::
 
+::: {.figure-block}
 ![Simplified graph attention design](simplified_graph_attention_design.png)
 
 **Fig. 4. Simplified graph-attention design.** The policy first embeds the
 self, taxi, and reservation nodes into a shared space. Valid nodes then attend
 to each other. The final embeddings produce dispatch actions, while the
 attention map is kept for faithfulness testing.
+:::
 
 The node types are:
 
@@ -354,14 +345,14 @@ clean, 5 s, 15 s, 30 s, 60 s
 
 Each degraded level holds the outage until the taxi's AoI reaches that level.
 Two facts about this design turn out to matter, and both are established
-empirically in Section IV-D rather than assumed here. First, a taxi still
+empirically in Section IV-C rather than assumed here. First, a taxi still
 inside a tunnel when its outage expires immediately re-triggers, so tunnel
 transit time places a floor under realised AoI that is independent of the
 nominal level. Second, AoI reaches the policy only through the normalised
 observation feature `clip(AoI / AOI_MAX_S, 0, 1)` with `AOI_MAX_S = 60 s`, and
 WAMSN reuses that same clipped quantity as its staleness weight. Staleness
 beyond 60 s is therefore not representable, either to the policy or to the
-metric. The manipulation check in Section IV-D shows these two facts combine to
+metric. The manipulation check in Section IV-C shows these two facts combine to
 flatten the ladder into a single degraded condition.
 
 ### E. Training
@@ -373,9 +364,12 @@ policy with PPO.
 
 The team reward is:
 
-```text
-R = 10 * pickups + 0.5 * successful dispatches - 0.001 * mean pending wait
-```
+$$
+\begin{aligned}
+R ={}& 10(\text{pickups}) + 0.5(\text{successful dispatches}) \\
+     &- 0.001(\text{mean pending wait}).
+\end{aligned}
+$$
 
 Generalised Advantage Estimation uses gamma = 0.99 and lambda = 0.95. PPO
 uses a clip ratio of 0.2, four PPO epochs, minibatches of 256, and entropy
@@ -383,52 +377,62 @@ regularisation. The best checkpoint is selected by rolling mean training
 pickups, because the policies often suffer entropy collapse and the final
 epoch is not always the best one.
 
-### F. Faithfulness Metrics
+### F. Explanation Metrics and Validity Check
 
 For a decision with selected action `a*`, DEF asks whether the top-k nodes
 chosen by the explanation actually matter to the decision.
 
+One distinction is essential before the equations. Removing a nearby-taxi
+node hides contextual information, but the set of dispatch actions remains the
+same. Removing a passenger-request node also removes that request from the
+available actions. A fair random baseline must therefore remove the same mix
+of vehicle and request nodes as the explanation; matching only the number of
+removed nodes is not enough.
+
+::: {.figure-block}
 ![DEF occlusion protocol](../results/story_freeze_v1/figs/paper/fig4_def_protocol.png)
 
 **Fig. 5. DEF occlusion protocol.** The same decision is evaluated before and
 after removing or keeping the explanation-selected nodes, then compared with a
 matched random baseline.
+:::
 
 Comprehensiveness removes the explanation nodes:
 
-```text
-Comp = f(a* | G) - f(a* | G without R_k)
-```
+$$
+\mathrm{Comp} = f(a^* \mid G) - f(a^* \mid G \setminus R_k).
+$$
 
 Sufficiency keeps only the explanation nodes:
 
-```text
-Suff = f(a* | G) - f(a* | R_k)
-```
+$$
+\mathrm{Suff} = f(a^* \mid G) - f(a^* \mid R_k).
+$$
 
 Both are compared with random subsets of the same size:
 
-```text
-DEF = 0.5 * ((Comp - Comp_rand) + (Suff_rand - Suff))
-```
+$$
+\mathrm{DEF} = \frac{1}{2}
+\left[(\mathrm{Comp}-\mathrm{Comp}_{rand})
++(\mathrm{Suff}_{rand}-\mathrm{Suff})\right].
+$$
 
 Two DEF variants are computed from the same counterfactual forwards.
 Probability-DEF uses `f = pi(a*)`. Margin-DEF uses the logit gap between the
 chosen action and its closest competitor:
 
-```text
-margin = logit(a*) - max logit(other action)
-```
+$$
+\mathrm{margin} = \mathrm{logit}(a^*)
+- \max_{a \ne a^*}\mathrm{logit}(a).
+$$
 
-**Margin-DEF is the primary metric** throughout, because the trained policies
-are softmax-saturated — `pi(a*)` sits near 1 and barely responds to occlusion,
-compressing probability-DEF into a range where it carries little signal.
-Probability-DEF is reported alongside it wherever the two diverge, and Section
-IV-D shows that for one hypothesis they diverge by a factor of three. Margins
-are clamped to +/-10 logits, because occluding the chosen action's own node
-sends its logit to negative infinity; that clamp is not a numerical detail but
-the exact point at which the artifact of Section IV-B enters, and the clamp
-rate is reported as a diagnostic.
+**Margin-DEF is the primary metric.** The trained policies often assign a
+probability close to 1 to the chosen action, so probability-DEF changes very
+little after occlusion. Margin-DEF retains more signal. Probability-DEF is
+still reported when it gives a different result; Section IV-C shows one such
+case. Margins are limited to +/-10 logits because removing the chosen action's
+node sends its logit to negative infinity. The clamp rate is reported because
+frequent clamping indicates that occlusion is deleting actions.
 
 **Random-baseline composition.** Two sampling schemes are used for the control
 subsets. *Uniform* draws size-k subsets uniformly from all valid non-self
@@ -439,9 +443,11 @@ actions that the explanation does. The comparison between the two is the audit.
 
 WAMSN measures how much vehicle-node attention is placed on stale telemetry:
 
-```text
-WAMSN = sum_i alpha_i * clip(AoI_i / AoI_max, 0, 1) / sum_i alpha_i
-```
+$$
+\mathrm{WAMSN} =
+\frac{\sum_i \alpha_i\,\mathrm{clip}(\mathrm{AoI}_i/\mathrm{AoI}_{max},0,1)}
+{\sum_i \alpha_i}.
+$$
 
 Reservations carry no AoI, so WAMSN runs over the self and peer-taxi nodes
 only. The clip is the censoring discussed in Section III-D: at
@@ -492,7 +498,7 @@ epochs 17-22.
 
 This is stated first because it bounds every claim that follows. Nothing here
 is evidence for a deployable dispatcher. It matters less for the
-methodological result than it might appear, however, and Section IV-C
+methodological result than it might appear, however, and Section IV-B
 establishes why: the metric pathology is demonstrated across seven checkpoints
 spanning 1.0 to 11.8 pickups per episode, including an untrained one, so it is
 not a property of weak policies.
@@ -506,54 +512,47 @@ not a property of weak policies.
 | Learned-policy range | B1/B2/B3/H5' | 6-8 |
 | Capability spectrum (Table V) | Seven audited checkpoints | 1.0-11.8 |
 
-### B. The Occlusion Baseline Measures Architecture, Not Explanation
+### B. RQ1: Clean-Telemetry Faithfulness and Metric Validation
 
-Under the standard uniform random baseline, B2's clean-telemetry margin-DEF is
--0.541 [-0.556, -0.527]. Read at face value this is a decisive negative
-result: the attention channel appears to be substantially *worse* than
-choosing nodes at random, which would imply it actively points away from what
-matters.
+#### 1. Why Uniform Occlusion Is Unfair
 
-The diagnostic that undermines this reading is the clamp rate — the fraction of
-counterfactual forwards in which the decision margin hits its cap because the
-occlusion deleted the chosen action. Uniform draws clamp at 14.8 %; attention
-top-k sets clamp at 2.2 % (per-level rates in the instrumented sweep are 16.4 %
-and 4.0 %). Uniform sampling reaches reservation nodes far more often than
-attention does, and every such draw scores the baseline on a decision problem
-from which an option has been removed. The two arms of the comparison are not
-evaluating the same model.
+With the standard uniform random baseline, B2's clean margin-DEF is -0.541
+[-0.556, -0.527]. Taken alone, this suggests that attention is much worse than
+random node selection.
 
-Correcting the composition removes almost all of the effect. With a random
-baseline matched to the taxi/reservation mixture of the attention top-k set,
-clean margin-DEF is **-0.009 [-0.016, -0.001]** over 1,199 paired decisions,
-against -0.554 for the uniform baseline on the same decisions: **98.3 % of the
-apparent deficit is protocol artifact.**
+The clamp rate shows why this reading is wrong. It measures how often occlusion
+deletes the chosen action and forces the decision margin to its limit. Random
+sets clamp in 14.8 % of decisions, compared with 2.2 % for attention top-k
+sets. The random control removes request actions much more often than the
+attention explanation. The two sides are therefore not comparable.
+
+Matching the random set to the same mix of taxi and request nodes removes
+almost all of the effect. Across 1,199 paired decisions, margin-DEF changes
+from -0.554 to **-0.009 [-0.016, -0.001]**. The unfair baseline accounts for
+**98.3 % of the original deficit.**
 
 Two independent controls agree with the corrected value:
 
-- **Clamp-free subset.** Restricting to decisions where neither the attention
-  top-k nor any random draw clamped removes the action-deletion mechanism by
-  construction, with no modelling assumption. Margin-DEF is **+0.000
-  [-0.003, +0.003]** (n = 90). The subset is small and selected — clamp-free
-  decisions have fewer competing reservations — so it corroborates rather than
-  replaces the type-matched estimate.
-- **Chosen-action exclusion variant.** Protecting the chosen reservation's node
-  from occlusion on both sides turns an apparent +0.586 into -0.024
-  [-0.025, -0.023] on the decisions where it is evaluable (n = 136 of 17,444;
-  the variant only applies when the chosen action is a reservation). The small
-  n is why this is a supporting rather than a headline control.
+- **Clamp-free subset.** When neither side deletes the chosen action,
+  margin-DEF is **+0.000 [-0.003, +0.003]** (n = 90). This subset is small and
+  contains easier decisions, so it supports but does not replace the
+  type-matched result.
+- **Chosen-action exclusion variant.** Protecting the chosen request node on
+  both sides changes an apparent +0.586 to -0.024 [-0.025, -0.023]. This test
+  applies to only 136 of 17,444 decisions, so it is supporting evidence.
 
-The corrected claim is therefore not that attention is anti-faithful but that
-it is **uninformative**: statistically indistinguishable from, and marginally
-below, a composition-matched random explanation. An occlusion-based test that
-returned "much worse than random" for an uninformative channel was measuring
-the coupling between nodes and actions.
+The corrected conclusion is simple: attention is **approximately
+uninformative**. It performs close to a random explanation that selects the
+same kinds of nodes. The original score mainly measured the link between
+request nodes and dispatch actions.
 
+::: {.figure-block}
 ![Clean-telemetry faithfulness audit](../results/story_freeze_v1/figs/story_act1_clean_def.png)
 
 **Fig. 6. Clean-data faithfulness audit.** The apparent worse-than-random
 result collapses to near zero when the random baseline is matched to the node
 types selected by attention.
+:::
 
 **Table IV. Construct-Validity Audit**
 
@@ -568,12 +567,11 @@ types selected by attention.
 | Clamp rate, random baseline | 14.8 % (16.4 % per level) | 17,444 | Random occlusion deletes actions often |
 | Clamp rate, attention top-k | 2.2 % (4.0 % per level) | 17,444 | Attention rarely selects the chosen action's node |
 
-### C. The Uncorrected Metric Is Unstable, Not Merely Biased
+#### 2. Stability Across Policy Capability
 
-A biased metric that erred consistently could still rank explanations. This one
-cannot. Seven checkpoints were scored under both baselines on clean test
-demand, spanning 1.0 to 11.8 pickups per episode, policy entropy 1.56 down to
-0.03, two architectures, and three independent H5' training seeds.
+Seven checkpoints were tested to check whether the result depends on one weak
+policy. They cover 1.0 to 11.8 pickups per episode, two architectures, and
+three H5' training seeds.
 
 **Table V. Capability Spectrum Under Both Baselines** (clean test demand)
 
@@ -587,6 +585,15 @@ demand, spanning 1.0 to 11.8 pickups per episode, policy entropy 1.56 down to
 | H5' seed 43 best | 91 | 3.00 | 0.035 | 654 | -0.488 | -0.007 [-0.009, -0.006] |
 | H5' seed 44 best | 22 | 11.75 | 0.103 | 552 | **+1.775** | +0.007 [+0.006, +0.007] |
 
+::: {.wide-figure}
+![Capability spectrum under uniform and type-matched baselines](figures/fig7_capability_spectrum.png){width=100%}
+
+**Fig. 7. Capability spectrum under both occlusion baselines.** The uniform
+score changes from strongly negative to strongly positive as checkpoint
+performance changes. After node types are matched, every trained checkpoint
+stays close to zero.
+:::
+
 Under the uniform baseline the score ranges from -1.352 to +1.775 — from "far
 worse than random" to "far better than random". Under the type-matched
 baseline the six trained checkpoints span -0.007 to +0.015, all within 0.015
@@ -594,24 +601,19 @@ of zero despite a fourfold spread in task performance. The untrained
 checkpoint reads +0.158, but on only 56 scored decisions with a confidence
 interval spanning zero, so it is uninformative rather than anomalous.
 
-The uncorrected metric therefore manufactures verdicts of both signs from
-channels that are indistinguishable from a fair random baseline, and the sign
-it produces tracks the reservation composition of the decisions rather than
-any property of the explanation. Note in particular that B3 and H5' seed 44 —
-the two checkpoints scoring strongly *positive* under the uniform protocol —
-are also the two with the highest pickup counts. A practitioner using the
-standard protocol would have concluded that better dispatchers have more
-faithful attention, and that conclusion is an artifact.
+The uniform baseline gives opposite conclusions for channels that all score
+near zero after correction. B3 and H5' seed 44 even appear strongly positive
+under the uniform protocol and also have the highest pickup counts. This could
+lead a reader to conclude that better dispatchers have more faithful
+attention. The type-matched result shows that this conclusion is false.
 
-This is the strongest single result in the paper, for three reasons. It shows
-the pathology is not an artifact of one weak checkpoint, which answers the
-external-validity objection raised by Section IV-A. It spans two
-architectures and three training seeds, so it is not a seed effect. And it
-establishes that no threshold or sign convention can rescue the uncorrected
-metric: a measurement that returns +1.78 and -1.35 for the same underlying
-quality is not a measurement.
+This capability check strengthens the correction used to answer RQ1. It shows
+that the artifact is not limited to one weak checkpoint, architecture or
+training seed. It also shows why the uniform score cannot be repaired by a
+different threshold or sign convention: it gives sharply different verdicts
+for channels that all sit near zero under the fair comparison.
 
-### D. Under Degradation, Attention Content Moves Toward Stale Nodes
+### C. RQ2: Stale Telemetry Changes Explanation Content
 
 Before reporting the degradation hypotheses, the manipulation must be checked,
 because the check changes what can be concluded.
@@ -630,6 +632,15 @@ realised AoI. The two effects combine:
 | 15 s | 60.0 s | 60.0 s | 84.9 % | 416 |
 | 30 s | 60.0 s | 60.0 s | 81.1 % | 349 |
 | 60 s | 60.0 s | 60.0 s | 79.4 % | 388 |
+
+::: {.wide-figure}
+![Manipulation check for the nominal AoI ladder](figures/fig8_aoi_manipulation_check.png){width=100%}
+
+**Fig. 8. Manipulation check for the nominal AoI ladder.** The median and
+90th percentile remain at the 60 s encoding cap for every degraded setting.
+Most exposed decisions are censored, so the four settings cannot be read as a
+dose-response experiment.
+:::
 
 Median and 90th percentile are identical at every level, and 81 % of exposed
 decisions sit at the cap. The `{5, 15, 30, 60}` s ladder collapses to a single
@@ -692,34 +703,31 @@ severity factor was not manipulated, this rate framing should be read as a
 clean-versus-degraded difference and not as a dose-response. H3 and H4 carry
 the degradation argument.
 
+::: {.figure-block}
 ![Stale-attention drift under degradation](../results/story_freeze_v1/figs/story_act2_decoupling.png)
 
-**Fig. 7. Silent stale-attention drift.** Margin-DEF and pickups stay flat
+**Fig. 9. Silent stale-attention drift.** Margin-DEF and pickups stay flat
 across the nominal severity ladder, while WAMSN rises the moment staleness is
 introduced. Per Table VI the ladder is a single degraded condition, so the flat
 profiles should be read as clean versus degraded rather than as a
 dose-response.
+:::
 
-**Table VII. B2 Severity Sweep**
+**Table VII. Degradation Exposure and Performance**
 
-Margin-DEF is reported under the **uniform** baseline, which Section IV-B shows
-is artifact-dominated. The type-matched control has been run on the clean and
-tunnel-60 s conditions only; extending it across the ladder requires re-running
-the sweep with fresh counterfactual forwards, and the values below cannot be
-corrected post hoc. They are included for the WAMSN and pickup columns and for
-continuity with the preregistered analysis, not as faithfulness levels.
+Pickups and WAMSN are cell means over eight seeds from `B2_aoi_ladder`;
+stale-node visibility and conditional WAMSN come from the instrumented
+`B2_aoi_ladder_v2`. The conditions are labelled *nominal* because Table VI
+shows that the four degraded settings did not produce distinct realised AoI
+levels. Artifact-prone uniform DEF values are omitted from this main table.
 
-Margin-DEF, pickups and WAMSN are cell means over 8 seeds from
-`B2_aoi_ladder`; stale-node visibility and conditional WAMSN come from the
-instrumented `B2_aoi_ladder_v2`.
-
-| Max AoI (s) | Margin-DEF (uniform, artifact-prone) | Pickups | WAMSN | Stale-node visibility | WAMSN given exposure |
-|---:|---:|---:|---:|---:|---:|
-| 0 | -0.542 | 6.67 | 0.000 | 0.0 % | — |
-| 5 | -0.546 | 7.42 | 0.015 | 9.8 % | 0.139 |
-| 15 | -0.544 | 6.79 | 0.012 | 11.7 % | 0.148 |
-| 30 | -0.541 | 6.54 | 0.013 | 10.0 % | 0.140 |
-| 60 | -0.542 | 7.42 | 0.013 | 10.8 % | 0.134 |
+| Nominal condition | Pickups | WAMSN | Stale-node visibility | WAMSN given exposure |
+|---:|---:|---:|---:|---:|
+| Clean | 6.67 | 0.000 | 0.0 % | — |
+| 5 s | 7.42 | 0.015 | 9.8 % | 0.139 |
+| 15 s | 6.79 | 0.012 | 11.7 % | 0.148 |
+| 30 s | 6.54 | 0.013 | 10.0 % | 0.140 |
+| 60 s | 7.42 | 0.013 | 10.8 % | 0.134 |
 
 **Table VIII. Hypothesis Outcomes**
 
@@ -731,11 +739,10 @@ instrumented `B2_aoi_ladder_v2`.
 | H4: WAMSN relates negatively to DEF | Supported | margin-DEF rho = -0.045 (64.6 % of episodes); prob-DEF rho = -0.149 (92.7 %) |
 | H5: degradation-aware training helps | No effect | H5' ~ B2 ~ 0 under the fair baseline, three seeds |
 
-### E. Mitigation Does Not Restore Faithfulness
+### D. RQ3: Mitigation Does Not Restore Faithfulness
 
-Two mitigations were tested, one on the training side and one on the
-architecture side. Both illustrate how much the corrected baseline changes
-conclusions.
+Two mitigations were tested: training with degraded telemetry and using a
+separate explanation head.
 
 **Degradation-aware training (H5').** B2's exact configuration retrained with
 tunnel-freeze degradation active reaches 7.80 +/- 1.33 pickups on clean test
@@ -744,28 +751,28 @@ baseline it appeared *worse* than B2 at every level (-0.77 versus -0.54), which
 was originally reported as evidence that degraded training harms
 interpretability. Under the type-matched baseline that finding disappears: H5'
 sits at approximately zero across three training seeds (+0.02, -0.01, +0.01 in
-Table V), indistinguishable from B2. The earlier conclusion was
-artifact-on-artifact, and it is a second independent demonstration of the
-instability documented in Section IV-C. H5 is rejected in its weakest and most
-defensible form: **degradation-aware training has no detectable effect on
-explanation faithfulness in either direction.**
+Table V), which is similar to B2. The earlier negative result came from the
+unfair baseline. The supported conclusion is that **degradation-aware training
+has no detectable effect on explanation faithfulness.**
 
 **Decoupled explanation head.** An occlusion-distilled explainer trained
 directly to predict occlusion effects (validation Spearman +0.60) was compared
 against coupled attention, paired per decision. Under the uniform baseline it
 appeared to gain +0.107 on clean telemetry and +0.113 under tunnel degradation.
-Under the type-matched baseline roughly 80 % of that advantage was artifact.
-What survives is real but modest: on clean telemetry the decoupled head scores
+Under the type-matched baseline, roughly 80 % of that advantage disappears.
+The remaining clean-data gain is small: the decoupled head scores
 +0.010 against coupled attention's -0.013, a paired gain of +0.023 (n = 983,
 p <= 1e-4), and it is the **only channel tested that scores above the fair
 random baseline**. Under tunnel degradation at max-AoI 60 s the gain falls to
 +0.005 and is not detectable (n = 878, p = 0.21).
 
+::: {.figure-block}
 ![Coupled versus decoupled explanation channel](../results/story_freeze_v1/figs/story_act3b_coupled_vs_decoupled.png)
 
-**Fig. 8. Coupled vs decoupled explanation.** Training an explanation head
+**Fig. 10. Coupled vs decoupled explanation.** Training an explanation head
 directly helps on clean telemetry, but the improvement is small and does not
 survive degradation.
+:::
 
 **Table IX. Mitigation Results (type-matched baseline)**
 
@@ -775,116 +782,95 @@ survive degradation.
 | Decoupled head, clean | -0.013 | **+0.010** | **+0.023** | 983 | <= 1e-4 |
 | Decoupled head, tunnel 60 s | -0.006 | -0.000 | +0.005 | 878 | 0.21 |
 
-For reference, the same comparisons under the uniform baseline gave +0.107
-(clean) and +0.113 (tunnel), both at p <= 1e-4 — a mitigation effect five times
-larger and apparently robust to degradation, entirely from the artifact.
+The uniform baseline gave gains of +0.107 on clean data and +0.113 in the
+tunnel condition. These values are about five times larger than the corrected
+effect and should not be used to judge the mitigation.
 
 ## V. Discussion
 
-### A. When Is a Perturbation Test Valid?
+The three research questions lead to one coherent interpretation. Built-in
+attention is not a faithful clean-data explanation, stale telemetry changes
+the content of that explanation without changing the aggregate warning
+signals, and neither tested mitigation restores meaningful faithfulness under
+degradation. The measurement audit is important because it establishes which
+parts of that interpretation survive a fair comparison.
 
-The condition this paper identifies can be stated compactly. A perturbation
-test compares `f` evaluated on a graph with the explanation's nodes removed
-against `f` evaluated on the same graph with random nodes removed. That
-comparison is only interpretable if both operations leave the *decision
-problem* intact and alter only the evidence available within it. When an
-entity's presence determines whether an action exists, removing it changes the
-problem, and the two arms are no longer comparable.
+### A. Metric Validation for RQ1
+
+A perturbation test is valid only when both sides change evidence in the same
+way. If removing a node also removes an action, the policy is solving a
+different decision problem. Explanation-selected and random nodes can then be
+compared only when they remove the same kinds of entities.
 
 Three practical consequences follow.
 
-First, **the random baseline must be matched on whatever structural property
-distinguishes evidence removal from problem modification** — here, node type.
-Matching on subset size alone, which is the standard practice, is insufficient.
+First, **the random baseline must match the relevant structure**. Here, it must
+match node type. Matching only the number of removed nodes is not enough.
 
-Second, **implementations should report the rate at which perturbation produces
-an undefined score.** The clamp rate was the diagnostic that made the artifact
-visible: 14.8 % versus 2.2 % is a large asymmetry that no summary faithfulness
-statistic would have revealed. Any harness that substitutes a floor value for
-an undefined model output should instrument how often it does so.
+Second, **the evaluation should report how often occlusion makes a score
+undefined.** The 14.8 % versus 2.2 % clamp rates revealed the problem. A single
+average faithfulness score did not.
 
-Third, **a faithfulness score should not be trusted without a stability check
-across models of differing quality.** The capability spectrum in Section IV-C
-took seven checkpoints to expose a metric that produced -1.35 and +1.78 for
-equally uninformative channels. A single number on a single checkpoint would
-have looked like a finding either way.
+Third, **the metric should be checked across several policies.** Across seven
+checkpoints, the uniform score ranged from -1.35 to +1.78 even though the
+corrected scores were near zero. Testing only one checkpoint would have hidden
+this instability.
 
-The affected class is not exotic. Pointer networks select over input elements;
-retrieval-augmented rankers score the passages they are conditioned on;
-matching, assignment, and scheduling policies choose among the entities in
-their observation; graph-based action spaces are common in operations research
-applications of reinforcement learning. Dedicated graph explainers [23], [24],
-[25] are evaluated with the same protocol and inherit the same exposure.
+The problem can affect any model that chooses among entities in its input.
+Examples include pointer networks, retrieval rankers, and matching or
+scheduling policies. Graph explainers [23]-[25] face the same risk when they
+are evaluated by removing nodes that also define available actions.
 
-### B. What the Degradation Study Shows
+### B. Interpreting Faithfulness Decoupling
 
-The degradation result is narrower than originally framed, and more specific.
-It is not that staleness makes explanations measurably worse — the aggregate
-faithfulness score does not move. It is that the explanation's *content*
-relocates onto stale data while every available warning signal stays flat.
-Pickups do not change, aggregate margin-DEF does not change, and the attention
-map remains a well-formed distribution over plausible entities. Meanwhile,
-conditional on a stale vehicle node being visible, roughly one seventh of
-vehicle-node attention lands on it, and decisions where that share is higher
-are measurably less faithful.
+The degradation result is specific. Aggregate faithfulness does not clearly
+fall. Instead, the explanation shifts toward stale data while pickups and
+aggregate margin-DEF remain broadly flat. When a stale vehicle node is
+visible, it receives about one seventh of vehicle-node attention. Decisions
+with a larger stale-attention share are also less faithful.
 
-This is the operationally dangerous configuration, and it is worth being
-precise about why. An operator monitoring task performance sees nothing. An
-operator monitoring a faithfulness metric sees nothing. Only an instrument that
-asks *what the explanation is about* — rather than how good it is — registers
-the change. WAMSN is such an instrument, and the argument for pairing a
-content metric with a quality metric does not depend on this paper's
-particular architecture.
+This matters because an operator watching task performance or aggregate
+faithfulness would see no warning. WAMSN detects the change because it measures
+*what the explanation uses*, not only how well the explanation scores. A
+practical monitoring system should therefore report both explanation quality
+and explanation content.
 
-The construct also needs restating more carefully than in the original framing.
-"Faithfulness decoupling" suggests faithfulness diverging from task
-performance; what was measured is the explanation's content diverging from the
-validity of the data underneath it, with neither performance nor faithfulness
-registering the divergence. The latter is the claim the data supports.
+In this paper, "faithfulness decoupling" means that explanation content moves
+toward stale data while performance and aggregate faithfulness remain stable.
+It does not mean that higher AoI was shown to cause a steady fall in
+faithfulness.
 
-### C. Reporting Negative Structure Honestly
+### C. Learning from Negative Results
 
-Two findings in this paper are failures of the study design rather than
-findings about the world, and both were surfaced by post hoc checks rather than
-by the preregistered analysis.
+Two post-hoc checks found limits in the original experiment design.
 
-The severity ladder did not manipulate severity, because a normalisation
-constant chosen for the observation encoding silently became the ceiling of the
-measurement scale, and because geography dominated the nominal treatment. The
-lesson generalises: when a metric reuses a clipped model input as its own
-weighting, the metric inherits the clipping, and any manipulation that pushes
-past the clip becomes invisible. A manipulation check on the *realised* value
-of the treatment variable — not the nominal one — would have caught this before
-the sweep was run.
+First, the severity ladder did not create different realised AoI levels. The
+60 s input cap also became the measurement cap, while tunnel travel time
+dominated the lower settings. Future work should check realised severity
+before running the full sweep.
 
-The H4 effect size was quoted from probability-DEF in a paper whose stated
-primary metric was margin-DEF, overstating it threefold. The two variants are
-computed from the same forwards at no extra cost, which makes reporting both
-the obvious default; and where they disagree, the disagreement is itself
-information about how the occlusion operator interacts with policy saturation.
+Second, H4 is about three times larger with probability-DEF than with the
+primary margin-DEF metric. Both are now reported and clearly labelled. Their
+difference shows that policy saturation affects the measured effect size.
 
 ## VI. Limitations
 
-**The severity ladder is not a severity ladder.** Table VI establishes that
-realised AoI is identical at every nominal level. Preregistered H1 is untestable
-here, and H2's rate framing should be read as a binary contrast. Recovering a
-genuine dose-response requires raising `AOI_MAX_S` above the geographic AoI
-floor and reporting realised rather than nominal severity, which needs a new
-sweep.
+**Severity was not manipulated as intended.** Table VI shows no separation in
+realised AoI between the four nominal degraded levels. H1 is therefore
+untestable, and H2 can only be read as a clean-versus-degraded contrast. A
+genuine dose-response study would need a higher AoI encoding cap and a new
+sweep based on realised rather than nominal severity.
 
-**The severity-ladder faithfulness column is uncorrected.** The type-matched
-control has been run on the clean and tunnel-60 s conditions; the intermediate
-cells have not. Type-matched DEF requires fresh counterfactual forwards with
-composition-matched random sets and cannot be recovered from recorded
-per-decision scalars. Two offline substitutes were attempted: the clamp-free
-subset agrees with the type-matched value but covers only 0.5 % of decisions,
-and a clamp-differential covariate adjustment closes only 0.04 of the 0.53 gap,
-confirming the artifact is not linear in the clamp differential. Table VII's
-margin-DEF column therefore remains the artifact-prone metric and is labelled
-as such.
+**Corrected DEF is unavailable for the intermediate degraded conditions.** The
+type-matched control has been run on clean and tunnel-60 s conditions, but not
+on the intermediate cells. It requires new counterfactual forward passes and
+cannot be reconstructed from the saved uniform-DEF scalars. For this reason,
+Table VII omits DEF and the degradation argument rests primarily on WAMSN,
+exposure, and the within-episode H4 association. H2 should be treated as
+secondary evidence.
 
 **The learned policy is far below the greedy baseline.** Claims are scoped to
-the learned-policy regime achieved. The capability spectrum in Section IV-C
+the learned-policy regime achieved. The capability spectrum in Section IV-B
 mitigates this specifically for the metric result, which holds across 1.0 to
 11.8 pickups and an untrained checkpoint, but not for the degradation result,
 which rests on B2.
@@ -914,7 +900,7 @@ perturbation inherits the audit's concern.
 | Limitation | Impact |
 |---|---|
 | Severity not manipulated (AoI censoring + geography) | H1 untestable; degradation claims are binary clean-vs-degraded |
-| Ladder faithfulness column uncorrected | Table VII margin-DEF is artifact-prone; needs a type-matched re-run |
+| Intermediate type-matched DEF unavailable | Main table omits DEF; a corrected full sweep remains future work |
 | Learned policy below greedy baseline | Degradation claims scoped to low-capability dispatch; metric claims are capability-invariant |
 | Entropy collapse in training | Best-checkpoint selection is a workaround; reward scaling likely at fault |
 | One main B2 training seed | Stronger training replication is future work |
@@ -924,39 +910,39 @@ perturbation inherits the audit's concern.
 
 ## VII. Conclusion
 
-The primary result of this paper is about measurement. When the input entities
-an explanation ranks are also the actions a policy chooses between, occlusion
-does not withhold evidence — it deletes options, and a random baseline that
-does so at a different rate is not a control. In the dispatcher studied here
-that mechanism accounted for 98 % of an apparently decisive "worse than random"
-faithfulness verdict, and it rendered the uncorrected metric unstable rather
-than merely biased: across seven checkpoints spanning a twelvefold range of
-task performance it produced scores from -1.35 to +1.78 for channels that are
-all uninformative under a composition-matched baseline. It also manufactured
-two mitigation findings that did not survive correction — that
-degradation-aware training harms interpretability, and that a decoupled
-explanation head gives a large and degradation-robust improvement. The remedy
-is inexpensive: match the random baseline on the structural property that
-distinguishes evidence from action, and report the rate at which perturbation
-leaves the model's output undefined.
+This study asked whether graph-attention explanations remain trustworthy when
+fleet telemetry becomes stale. The main finding is that degradation changes
+what the explanation attends to without producing a clear warning elsewhere.
+Attention shifts onto stale vehicle nodes, receiving about one seventh of
+vehicle-node attention when such a node is visible, while pickups and aggregate
+faithfulness remain broadly flat. Within episodes, decisions with more
+stale-node attention are less faithful. This is the form of faithfulness
+decoupling supported by the experiment: explanation content moves toward
+outdated information even though the usual summary signals appear stable.
 
-The corrected substantive picture is that the coupled attention channel carries
-no measurable decision-relevant information on clean telemetry, and that
-staleness changes what the explanation is about rather than how good it scores.
-Attention migrates onto stale vehicle nodes — about one seventh of vehicle-node
-attention wherever a stale node is visible — while pickups and aggregate
-faithfulness stay flat, and decisions with more stale-node attention are less
-faithful within episodes. Degradation-aware training has no effect in either
-direction, and an occlusion-distilled decoupled head is the only channel to
-score above the fair random baseline, by +0.023 on clean telemetry and not
-detectably under degradation. Faithful explanation for fleet dispatch under
-stale telemetry remains open.
+Interpreting that result required an audit of the faithfulness measurement.
+The standard random occlusion baseline often removed passenger requests and
+therefore removed available actions, whereas the attention explanation more
+often selected vehicle context. That unfair comparison produced a clean
+margin-DEF score of -0.541. Matching the random baseline to the same mixture of
+vehicle and request nodes changed the score to -0.009, showing that built-in
+attention is approximately uninformative rather than actively worse than
+random. The correction remains stable across the tested capability range and
+prevents the measurement artifact from being mistaken for a telemetry effect.
 
-The practical conclusion has two parts. Attention maps should not be treated as
-explanations merely because the architecture exposes them. And faithfulness
-metrics should not be treated as verdicts merely because they produce a number:
-in this study the metric needed auditing more urgently than the explanation
-did.
+Neither tested mitigation solves the problem. Degradation-aware training has
+no detectable effect on explanation faithfulness. The decoupled explanation
+head improves clean-telemetry margin-DEF by +0.023, but the improvement is not
+detectable under degradation. These findings are limited to a low-performing
+policy in one simulated district. They also establish only a
+clean-versus-degraded contrast because the nominal AoI ladder did not produce
+distinct realised severity levels.
+
+The practical implication is straightforward. Attention weights should not be
+presented as trustworthy explanations merely because the architecture exposes
+them. In fleet systems where telemetry can become stale, explanation quality
+and explanation content should be monitored separately, and the evaluation
+protocol itself should be checked before its score is treated as evidence.
 
 ## References
 
@@ -1045,3 +1031,16 @@ one update?" in *Proc. IEEE INFOCOM*, 2012, pp. 2731-2735.
 [25] H. Yuan, H. Yu, S. Gui, and S. Ji, "Explainability in graph neural
 networks: A taxonomic survey," *IEEE Transactions on Pattern Analysis and
 Machine Intelligence*, vol. 45, no. 5, pp. 5782-5799, 2023.
+
+[26] Y. Hu, S. Feng, and S. Li, "BMG-Q: Localized bipartite match graph
+attention Q-learning for ride-pooling order dispatch," arXiv:2501.13448,
+2025.
+
+[27] J. Wang et al., "CoopRide: Cooperate all grids in city-scale ride-hailing
+dispatching with multi-agent reinforcement learning," in *Proc. 31st ACM
+SIGKDD Conference on Knowledge Discovery and Data Mining*, 2025, pp.
+1457-1468.
+
+[28] J. Sha et al., "A multi-agent reinforcement learning scheduling algorithm
+integrating state graph and task graph structural modeling for ride-sharing
+dispatching," *Scientific Reports*, vol. 16, art. no. 5461, 2026.

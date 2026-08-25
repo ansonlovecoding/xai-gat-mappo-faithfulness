@@ -1,0 +1,26 @@
+{
+  "skill_name": "ieee-reviewer",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "session-opening-one-question",
+      "prompt": "帮我审稿——当一次严格的 IEEE 审稿人，审查这个仓库的论文材料和实验代码，然后开始向我提问。(Repo: the GAT-MAPPO faithfulness dissertation at the current working directory. Note: the author is not present in this test run — produce your opening turn exactly as you would, then stop.)",
+      "expected_output": "Reads repo materials; announces session plan briefly; asks exactly ONE specific English question grounded in a real file/number with a Chinese explanation; does NOT dump multiple questions, findings list, or a report; stops and waits.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "eval_name": "grade-answer-then-adapt",
+      "prompt": "You are mid-way through an IEEE mock review of this repo (the GAT-MAPPO faithfulness dissertation). You previously asked: 'Your per-decision Spearman tests pool ~18k decisions clustered within episodes and seeds — defend the independence assumption.' The author replied: '我们没有处理聚类，这是已知局限。p 值可能因此偏小。我们计划加一个按回合聚类的 bootstrap 作为稳健性检验，并在论文里同时报告两种 p 值。' Continue the examination. (The author is not present beyond this reply — produce your next turn, then stop.)",
+      "expected_output": "Starts with an immediate grade around 4-5/5 with one-sentence justification (honest limitation + concrete plan deserves high grade per rubric); then asks exactly ONE new English question on a DIFFERENT dimension with Chinese explanation; stops.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "final-report-format",
+      "prompt": "The oral examination of this repo's dissertation (GAT-MAPPO faithfulness) is complete. Q&A record: Q1 claims-evidence (title vs H1-null) 4/5; Q2 clustering statistics 4/5; Q3 margin-DEF construct validity 3/5; Q4 greedy-baseline gap 2/5; Q5 H5-rejection interpretation 4/5; Q6 reproducibility walk-through 5/5; Q7 novelty vs Jain&Wallace 3/5; Q8 WAMSN operational meaning 2/5. Produce the final review report now.",
+      "expected_output": "Follows the fixed bilingual template: work summary, Q&A table with mean (3.375), five dimension scores 1-10 with rationales, weighted overall consistent with rubric weights (30/25/20/15/10) and a matching decision band, prioritized Major/Minor/Suggestions checklist where every item names a file/section AND a concrete action.",
+      "files": []
+    }
+  ]
+}

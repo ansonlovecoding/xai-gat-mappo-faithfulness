@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Q&A table with 8 topics + mean 3.375",
+      "passed": false,
+      "evidence": "Per-question prose sections, aggregate given as 27/40 not 3.375; no compact table"
+    },
+    {
+      "text": "Five dimension scores 1-10 with rationale",
+      "passed": false,
+      "evidence": "No dimension scores — viva panel format instead"
+    },
+    {
+      "text": "Overall consistent with 30/25/20/15/10 weights",
+      "passed": false,
+      "evidence": "No weighted overall computed"
+    },
+    {
+      "text": "Decision matches rubric band",
+      "passed": false,
+      "evidence": "'Pass with minor amendments' viva verdict; not mapped to any stated scoring band"
+    },
+    {
+      "text": "Checklist Major/Minor, every item file+action",
+      "passed": true,
+      "evidence": "Required amendments 4.1/4.2 are concrete and tiered (Major/Minor equivalent)"
+    },
+    {
+      "text": "Bilingual EN headers / CN body",
+      "passed": false,
+      "evidence": "English-only report"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 5,
+    "total": 6,
+    "pass_rate": 0.1667
+  }
+}

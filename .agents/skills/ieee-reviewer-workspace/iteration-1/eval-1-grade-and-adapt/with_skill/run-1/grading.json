@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Begins with explicit /5 grade",
+      "passed": true,
+      "evidence": "Message opens '**Q4 answer: 4/5**'"
+    },
+    {
+      "text": "Grade is 4-5 with one-sentence justification",
+      "passed": true,
+      "evidence": "4/5; justification cites honesty + concrete plan, notes what a 5 needed (effective n ~120 episodes, which conclusions at risk)"
+    },
+    {
+      "text": "Exactly ONE next question on a DIFFERENT dimension",
+      "passed": true,
+      "evidence": "Q5 on metric construct validity (masking=action-deletion asymmetry) — switched from statistics"
+    },
+    {
+      "text": "New question EN + CN and cites artefact",
+      "passed": true,
+      "evidence": "Cites faithfulness.py decision_margin lines 218-224 and config comment; 中文解释 present"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

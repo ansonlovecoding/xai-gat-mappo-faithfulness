@@ -1,0 +1,266 @@
+@page {
+  size: Letter;
+  margin: 0.65in 0.62in 0.68in;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 9.5pt;
+  color: #111;
+}
+
+body {
+  margin: 0;
+  column-count: 2;
+  column-gap: 0.25in;
+  line-height: 1.16;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.paper-front {
+  column-span: all;
+  display: block;
+  margin-bottom: 0.08in;
+}
+
+.paper-front h1 {
+  margin: 0 0 0.09in;
+  font-size: 18pt;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.paper-front > p:first-of-type {
+  margin: 0 0 0.12in;
+  font-size: 10.5pt;
+  line-height: 1.18;
+  text-align: center;
+}
+
+.paper-front h2 {
+  margin: 0.02in 0 0;
+  font-size: 9pt;
+  font-weight: 700;
+  font-style: italic;
+  text-align: center;
+  text-transform: none;
+}
+
+.paper-front p {
+  margin: 0.035in 0;
+  font-size: 8.8pt;
+  line-height: 1.14;
+}
+
+.paper-front p:last-child {
+  margin-top: 0.05in;
+  font-size: 8.5pt;
+}
+
+h2 {
+  margin: 0.11in 0 0.045in;
+  break-after: avoid;
+  font-size: 10pt;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+h3 {
+  margin: 0.085in 0 0.035in;
+  break-after: avoid;
+  font-size: 9.6pt;
+  line-height: 1.08;
+  font-weight: 400;
+  font-style: italic;
+  text-align: left;
+}
+
+h4 {
+  margin: 0.065in 0 0.025in;
+  break-after: avoid;
+  font-size: 9.4pt;
+  line-height: 1.08;
+  font-weight: 700;
+  text-align: left;
+}
+
+p {
+  margin: 0 0 0.055in;
+  orphans: 2;
+  widows: 2;
+}
+
+ol,
+ul {
+  margin: 0.035in 0 0.06in 0.18in;
+  padding-left: 0.12in;
+}
+
+li {
+  margin: 0 0 0.025in;
+}
+
+strong {
+  font-weight: 700;
+}
+
+code {
+  font-family: "Courier New", monospace;
+  font-size: 7.8pt;
+}
+
+pre {
+  margin: 0.04in 0 0.07in;
+  padding: 0.045in 0.06in;
+  overflow: hidden;
+  border: 0.4pt solid #aaa;
+  background: #fafafa;
+  font-size: 7.5pt;
+  line-height: 1.1;
+  white-space: pre-wrap;
+}
+
+math {
+  font-size: 9.5pt;
+}
+
+math[display="block"] {
+  max-width: 100%;
+  font-size: 8.6pt;
+  overflow: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  max-height: 3.15in;
+  margin: 0.06in auto 0.025in;
+  break-inside: avoid;
+}
+
+p:has(> img) {
+  margin: 0;
+  break-inside: avoid;
+  text-align: center;
+}
+
+p:has(> img) + p {
+  margin: 0.02in 0 0.075in;
+  font-size: 8pt;
+  line-height: 1.1;
+  text-align: center;
+}
+
+figure {
+  margin: 0;
+}
+
+figure > figcaption {
+  display: none;
+}
+
+.figure-block {
+  display: block;
+  margin: 0.055in 0 0.075in;
+  break-inside: avoid;
+}
+
+.figure-block p:last-child {
+  margin: 0.02in 0 0;
+  font-size: 8pt;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.wide-figure {
+  column-span: all;
+  display: block;
+  margin: 0.07in 0 0.09in;
+  break-inside: avoid;
+}
+
+.wide-figure img {
+  width: 100%;
+  max-height: 3.25in;
+  object-fit: contain;
+}
+
+.wide-figure p:last-child {
+  margin: 0.025in auto 0;
+  max-width: 7.05in;
+  font-size: 8pt;
+  line-height: 1.1;
+  text-align: center;
+}
+
+table {
+  column-span: all;
+  width: 100%;
+  margin: 0.045in 0 0.09in;
+  border-collapse: collapse;
+  break-inside: avoid;
+  font-size: 7.1pt;
+  line-height: 1.08;
+  text-align: left;
+}
+
+thead {
+  border-top: 1pt solid #111;
+  border-bottom: 0.7pt solid #111;
+}
+
+tbody {
+  border-bottom: 1pt solid #111;
+}
+
+th,
+td {
+  padding: 0.025in 0.035in;
+  border: 0;
+  vertical-align: top;
+}
+
+th {
+  font-weight: 700;
+  text-align: left;
+}
+
+tr {
+  break-inside: avoid;
+}
+
+p:has(+ table) {
+  column-span: all;
+  margin: 0.06in 0 0.015in;
+  font-size: 8pt;
+  text-align: center;
+  break-after: avoid;
+}
+
+blockquote {
+  margin: 0.05in 0.08in;
+  padding-left: 0.08in;
+  border-left: 1.5pt solid #777;
+  font-size: 8.7pt;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#references ~ p,
+#references + p {
+  font-size: 7.4pt;
+  line-height: 1.08;
+  text-align: left;
+}

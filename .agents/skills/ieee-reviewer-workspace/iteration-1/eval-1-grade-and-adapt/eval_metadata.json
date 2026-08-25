@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "eval_name": "grade-answer-then-adapt",
+  "prompt": "Mid-session: author gave an honest clustering-limitation answer with a concrete robustness plan. Continue.",
+  "assertions": [
+    {"text": "Message begins with an explicit numeric grade in /5 format for the author's answer"},
+    {"text": "Grade is 4 or 5 (honest limitation + concrete plan scores high per rubric), with a one-sentence justification"},
+    {"text": "Asks exactly ONE next question, on a DIFFERENT dimension than statistics/clustering"},
+    {"text": "The new question is in English with a Chinese explanation and cites a specific repo artefact or number"}
+  ]
+}

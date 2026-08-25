@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "final-report-format",
+  "prompt": "Examination complete with 8 graded answers (mean 3.375). Produce the final report.",
+  "assertions": [
+    {"text": "Contains a Q&A table with all 8 topics and grades, and reports the mean (3.375 or 3.4)"},
+    {"text": "Contains all five dimension scores (Novelty, Technical soundness, Experimental rigor, Clarity, Reproducibility) each on a 1-10 scale with a rationale"},
+    {"text": "Overall score is consistent with the stated weights (30/25/20/15/10) applied to the dimension scores, within rounding"},
+    {"text": "Decision matches the rubric band for the computed overall (e.g. 6.0-7.4 → Minor revision)"},
+    {"text": "Revision checklist is split into Major/Minor tiers and EVERY item names a concrete file or section plus an action verb"},
+    {"text": "Report is bilingual: English headers/questions with Chinese body prose"}
+  ]
+}

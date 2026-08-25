@@ -1,0 +1,12 @@
+{
+  "eval_id": 0,
+  "eval_name": "session-opening-one-question",
+  "prompt": "帮我审稿——当一次严格的 IEEE 审稿人，审查这个仓库的论文材料和实验代码，然后开始向我提问。",
+  "assertions": [
+    {"text": "Asks exactly ONE question (a single interrogative block), not a list of questions"},
+    {"text": "The question is in English AND is followed by a Chinese explanation of what it probes"},
+    {"text": "The question is grounded in a specific artefact: quotes a real file name, number, or sentence from the repo"},
+    {"text": "Announces the session plan (number of questions and/or grading scale) before the first question"},
+    {"text": "Does NOT reveal a findings list, revision checklist, or final report in the opening turn"}
+  ]
+}
