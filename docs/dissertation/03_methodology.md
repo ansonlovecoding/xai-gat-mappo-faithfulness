@@ -1,225 +1,216 @@
 # 3. Methodology
 
-The study is a controlled simulation experiment: a known cause
-(telemetry staleness, parameterised by maximum AoI) is injected at the
-observation boundary of a trained dispatcher, and its effect on
-explanation faithfulness is measured per decision with paired
-clean/degraded counterfactuals. This chapter describes the benchmark
-(§3.1–3.2), the degradation framework (§3.3), the faithfulness metrics
-and their audit instruments (§3.4–3.5), the experimental design (§3.6),
-and the statistical methodology (§3.7). Departures from the proposal
-are cross-referenced to Appendix A throughout.
+## 3.1 Study design
 
-## 3.1 Simulation environment
+The study uses a controlled simulation because the research question requires
+the same decision to be observed in two ways: once with current telemetry and
+once with degraded telemetry. A real operational log cannot provide this exact
+clean twin. SUMO provides the physical ground truth, while a separate
+observation layer controls what the policy receives.
 
-**Scenario.** Vehicle movement is simulated in SUMO [22] on a real
-OpenStreetMap extract of the Central Park area of Chongqing's Yubei
-district, chosen because its road network contains real tunnels —
-physically grounded dead zones for GPS/V2X telemetry. Tunnel edges are
-extracted from the OSM `tunnel=yes` attribute and filtered to the
-navigable subset (both incoming and outgoing connections); the network,
-demand files, and tunnel manifest are committed and seed-pinned.
+The final protocol is defined in
+`configs/experiments/dissertation_v4.toml`. The full run contains three stages:
+training, validation-based checkpoint selection, and held-out evaluation.
+Faithfulness sweeps are run only after the selected checkpoints are frozen.
 
-**Fleet and demand.** 20 taxis with SUMO's taxi device
-(`dispatch-algorithm=traci`, so the learned policy performs all
-matching) serve 50 ride requests per 1 200 s episode. Rider demand is
-generated from fixed seeds; twenty demand variants with identical fleet
-initialisation and independently seeded rider realisations are split
-chronologically 70/15/15 into train/validation/test sets. All headline
-evaluations run on the three held-out test variants (Fig. 1).
+## 3.2 SUMO environment and data
 
-**Observation graph** (Fig. 2). Each idle taxi observes a self-centric
-heterogeneous graph: itself (position, episode time, speed, AoI), its
-K_n = 5 nearest peers (relative position, availability, distance, AoI),
-and the K_r = 5 nearest pending reservations (relative pickup/drop-off
-vectors, waiting time). Coordinates are relative and normalised, so
-learned patterns are geometric rather than absolute.
+The road network is an OpenStreetMap extract of the Central Park area in
+Yubei, Chongqing. Roads marked as tunnels supply physically meaningful
+signal-loss triggers. SUMO simulates 20 taxis and 50 passenger requests during
+each 1,200-second episode. Taxi dispatch is controlled through TraCI, while
+SUMO continues to update the true position and speed of every vehicle.
 
-**Action space.** Discrete(K_r + 1): no-op, or accept the k-th nearest
-reservation. Every reservation node therefore corresponds one-to-one to
-an action — a property central to both the explanation analysis and the
-artifact of §3.5.
+Demand variants are separated into training, validation, and test splits. The
+policy is fitted on training demand. Candidate checkpoints are compared on
+validation demand. The final reported runs use held-out test demand. This
+separation prevents test results from influencing model selection.
 
-**Reward.** A team reward broadcast to all acting agents:
-R = 10·pickups + 0.5·successful dispatches − 0.001·mean pending wait.
-The shaping magnitudes were established after an initial formulation
-collapsed to a no-action policy (Appendix A).
+## 3.3 Observation graph and action space
 
-## 3.2 Dispatcher
+Each idle taxi receives a self-centred graph containing:
 
-The policy is a hand-rolled GAT-MAPPO: per-type linear projections into
-a shared embedding, two GAT layers with four heads (masked softmax over
-valid nodes), an actor head over Discrete(K_r + 1), and a critic head.
-Training uses MAPPO [5] with parameter sharing, GAE (γ = 0.99,
-λ = 0.95), clipped PPO (ε = 0.2), and a centralised critic (CTDE),
-which an A/B comparison showed to improve pickups by ~18 % and delay
-entropy collapse. The attention implementation is deliberately
-hand-rolled rather than a library layer so that attention weights are
-first-class outputs of the forward pass, consumable by the faithfulness
-pipeline without instrumentation tricks.
+| Node type | Main features | Role |
+|---|---|---|
+| Self taxi | position, time, speed, AoI | acting vehicle |
+| Peer taxi | relative position, availability, distance, AoI | nearby fleet context |
+| Passenger request | pickup/drop-off vectors, waiting time | candidate request and action |
 
-The decentralised per-agent formulation is chosen for statistical
-reasons: each acting vehicle contributes one attention distribution per
-decision (~1 500–2 400 per episode), giving the faithfulness analysis
-per-decision resolution instead of ~120 aggregate dispatcher outputs.
+The graph contains up to five nearby taxis and five nearby requests. Features
+are normalised and request/taxi masks prevent padded nodes from receiving
+attention.
 
-**Best-checkpoint selection.** All trained policies exhibit entropy
-collapse (Chapter 4); checkpoints are therefore selected by a rolling
-mean of training pickups, and — because argmax evaluation of a
-collapsed policy degenerates to all-no-op — *all* evaluation is
-stochastic (sampled actions), matching training-time behaviour.
+The discrete action space contains no-op plus one action for each visible
+passenger request. This one-to-one relationship is important: deleting a
+passenger-request node also removes the associated action, whereas deleting a
+peer-taxi node only hides information about that taxi. Section 3.7 explains
+how the faithfulness audit controls this asymmetry.
 
-## 3.3 Telemetry-degradation framework
+## 3.4 Policy models and training
 
-Degradation is applied **at the observation boundary only** (Fig. 1):
-the simulator always holds ground truth, so any behavioural or
-explanatory change is attributable exactly to what the policy observed,
-and every degraded observation has an exact clean twin generated in the
-same step — the basis of all paired analyses.
+The main policy uses per-node-type feature projections followed by two graph
+attention layers with four heads. The actor scores no-op and the visible
+requests. The critic estimates value for MAPPO training with centralised
+training and decentralised execution. The GAT implementation returns its
+attention tensors directly so they can be audited without changing the trained
+network.
 
-**Freeze semantics** (Fig. 3). When a vehicle's signal drops (its
-current edge is in the tunnel set), it stops transmitting: *every*
-observer — the vehicle itself and all peers — sees its last valid
-position and speed, frozen, while the reading's AoI grows. Neighbour
-ordering, relative vectors, and the observer's own frame all use the
-frozen states, exactly as a dispatch platform working from a last-known
-table would.
+Four policy conditions are included:
 
-**Severity = maximum AoI.** Each severity level s ∈ {5, 15, 30, 60} s
-keeps the signal lost until the vehicle's AoI reaches s (physically,
-receiver re-acquisition delay), so the level bounds the maximum AoI
-directly; geography can exceed low levels during long transits, and the
-empirical AoI distribution is reported per level. The clean condition
-(s = 0) is the shared reference. A matched random-dropout axis (same
-outage ladder, spatially uncorrelated triggers) is retained as an
-appendix robustness check.
+| ID | Policy | Training observations | Purpose |
+|---|---|---|---|
+| B1 | MLP-MAPPO | clean | performance context without graph attention |
+| B2 | GAT-MAPPO | clean | primary attention model under audit |
+| B3 | GAT-MAPPO without AoI input | clean | structural AoI-input control |
+| H5 | GAT-MAPPO | tunnel-triggered degradation | degradation-aware training condition |
 
-## 3.4 Faithfulness metrics
+Each condition is trained for 150 epochs with seeds 42, 43, and 44. B2 and B3
+produce identical clean-test behaviour because AoI is always zero during clean
+training and clean evaluation; B3 is useful only when observations can become
+stale. It should not be described as evidence that AoI has no effect.
 
-**DEF (Dispatch Explanation Faithfulness).** For a decision with chosen
-action a\*, let R_k be the explanation's top-k nodes. Comprehensiveness
-is the confidence drop when R_k is occluded; sufficiency the drop when
-only R_k is kept:
+Candidate checkpoints are saved every ten epochs. Selection uses three
+stochastic validation episodes with seed 2026 and mean pickups as the primary
+criterion; mean reward and earlier epoch break ties. The test split is not
+read during selection. The selected epochs are:
 
-    Comp = f(a*|G) − f(a*|G \ R_k)        Suff = f(a*|G) − f(a*|R_k)
+| Model | seed 42 | seed 43 | seed 44 |
+|---|---:|---:|---:|
+| B1 | 50 | 30 | 40 |
+| B2 | 10 | 70 | 10 |
+| B3 | 10 | 70 | 10 |
+| H5 | 10 | 90 | 10 |
 
-Each is normalised against size-matched random occlusions,
-g_comp = Comp − Comp_rand, g_suff = Suff_rand − Suff, and
-DEF = ½(g_comp + g_suff), averaged over k ∈ {1, 2, 3} with five random
-subsets per k. DEF > 0 iff the explanation identifies information more
-faithfully than a random one.
+## 3.5 Telemetry degradation
 
-**Margin readout.** The proposal specifies f = π(a\*), the action
-probability. Trained policies here are severely entropy-collapsed
-(π(a\*) ≈ 0.94–1.0), and the softmax saturates: occlusions move
-probabilities by ~10⁻³ regardless of relevance. The dissertation
-therefore reports, alongside the probability form, a **margin-DEF**
-using f = m(a\*) = logit(a\*) − max other logit (clamped to ±10),
-computed from the *same* counterfactual forward passes (≈37 per scored
-decision). The two readouts share the counterfactual semantics of [16]
-and differ only in where the output is read; their per-decision rank
-agreement is ρ ≈ 0.58–0.61. Margin-DEF is the primary lens for the
-saturation reason; every probability-DEF figure is reported with it
-(Appendix A).
+The trigger and the degradation location are separate parts of the design.
 
-**WAMSN (Weighted Attention Mass on Stale Nodes).** With attention
-weight α_i and staleness AoI_i/AoI_max on vehicle node i:
+1. **Trigger:** when a taxi enters a tunnel edge, the event starts one outage.
+2. **Observation-layer outage:** for the declared duration, the policy sees the
+   taxi's last valid position and speed. SUMO continues to simulate the true
+   state.
+3. **Recovery:** after the fixed window expires, a current reading is accepted.
+   A taxi must leave and enter a tunnel again before another tunnel-entry event
+   can trigger.
 
-    WAMSN = Σ α_i·(AoI_i/AoI_max) / Σ α_i   ∈ [0, 1]
+The fixed outage durations are 10, 20, 30, and 60 seconds. They are easy to
+monitor and compare, and they create increasing empirical degradation rates.
+They are not treated as direct causal doses of explanation faithfulness.
 
-graded, not thresholded. Because pooled WAMSN conflates exposure ("how
-often is anything stale") with allocation ("how much attention goes to
-stale nodes when present"), results also report exposure-conditional
-WAMSN and two operator-facing translations: the rate at which stale
-nodes enter the explanation's top-3, and top-3 membership churn against
-the clean twin.
+AoI is calculated as the current simulation time minus the time of the last
+valid update. It is included in the GAT observation unless the B3 control is
+used. WAMSN uses normalised AoI as a staleness weight. For this reason, an
+increase in WAMSN with outage duration partly verifies that the manipulation
+created longer stale exposure; it is not by itself proof that AoI changed DEF.
 
-**Attention drift.** Jensen–Shannon divergence between the attention
-rows of a decision's degraded observation and its clean twin (base-2,
-∈ [0, 1]); reported descriptively.
+![Telemetry degradation data flow](../telemetry_degradation_data_flow.png)
 
-## 3.5 Construct-validity instrumentation
+**Figure 3.1.** Tunnel entry supplies the trigger, but frozen telemetry is
+created at the observation boundary. SUMO ground truth remains unchanged.
 
-Because every reservation node doubles as an action candidate,
-occluding one deletes an action: if a\* itself is deleted the margin
-clamps to −cap, an event unrelated to information content (Fig. 4).
-Three instruments quantify and control this:
+## 3.6 Explanation measures
 
-1. **Clamp audit.** Every counterfactual forward records whether its
-   margin hit ±cap, tallied separately for explanation-top-k and
-   random-baseline occlusion sets.
-2. **Exclusion variant.** DEF recomputed with the chosen action's node
-   *protected* — never occluded in Comp, always retained in Suff, and
-   excluded from both candidate pools.
-3. **Composition-matched (type-matched) baseline.** Random occlusion
-   sets drawn with the same taxi/reservation composition as the
-   explanation's top-k, so action-deletion events strike both sides of
-   the comparison equally.
+### 3.6.1 Decision-level explanation faithfulness
 
-These instruments were added *after* the artifact was discovered during
-an internal mock review; the discovery order is preserved in Chapter 4
-and the protocol change is registered in Appendix A. Headline claims
-cite the type-matched numbers; uniform-baseline numbers are retained to
-document the artifact.
+DEF asks whether the nodes ranked highly by an explanation affect the chosen
+action more than a size- and type-matched random set. For top-k nodes
+`R_k`, comprehensiveness measures the output change when those nodes are
+removed; sufficiency measures the output retained when only those nodes remain.
+The two gains are compared with five matched random subsets for each
+`k in {1,2,3}` and then averaged.
 
-## 3.6 Experimental design
+Positive DEF means the explanation is more informative than its random
+control; zero means no measured advantage. Both probability DEF and an
+action-protected logit-margin variant are recorded. The final interpretation
+uses the type-matched baseline described below.
 
-**Conditions.** B0: SUMO's built-in greedy matcher (non-learned upper
-reference). B1: MAPPO + MLP, no graph (performance context; no
-attention channel). B2: GAT-MAPPO (the audited system). B3: B2 without
-the AoI input feature. H5′: B2's exact configuration trained *with*
-tunnel-freeze degradation (outage 30 s), three seeds (42/43/44).
-B0–B3 are trained on clean telemetry per protocol; note that under
-clean training the AoI feature is identically zero, so the B2/B3
-contrast is informative only as a performance control (Appendix A).
+### 3.6.2 Stale-node attention
 
-**Decoupled explanation head.** A two-layer scorer over the policy's
-*detached* post-GAT node embeddings — architecturally incapable of
-influencing the action — trained by occlusion distillation: targets are
-per-node margin drops from single-node occlusions, softmax-normalised,
-KL loss. Distillation rollouts use a seed disjoint from all evaluation
-seeds; held-out rank agreement with occlusion importance is
-Spearman +0.60. At evaluation the head is scored by the identical DEF
-machinery via an importance-row override, in exactly-paired comparison
-with attention (same decisions, same random subsets).
+WAMSN measures attention attached to stale vehicle information:
 
-**Sweep.** Each faithfulness sweep covers {clean + 4 severity levels} ×
-8 environment seeds × 3 test-demand episodes, scoring one decision in
-eight (~18 000 scored decisions per sweep), with per-decision records,
-manifests (seeds, git revision), and empirical degradation exposure
-(~2 % of decisions at this geography) all archived.
+```text
+WAMSN = sum(attention_i * normalised_AoI_i) / sum(attention_i)
+```
 
-## 3.7 Statistical methodology
+Only self and peer-taxi nodes contribute because request nodes do not carry
+vehicle telemetry. The analysis reports WAMSN when at least one stale vehicle
+node is visible, together with stale-node attention share, stale-node mass,
+and whether a stale node enters the top three.
 
-Decisions cluster within episodes and seeds, and severity is assigned
-per (level × seed) cell, so per-decision tests that assume independence
-are anticonservative. The confirmatory analysis therefore uses:
+The paired stale-attention shift compares the degraded observation with its
+exact clean twin at the same simulation step. Positive values mean the
+degraded observation assigns more attention mass to nodes marked stale;
+negative values mean it assigns less.
 
-- **Episode-block restricted permutation** for monotone-trend tests
-  (H1, H3): severity labels are permuted across whole episode blocks
-  within each seed, respecting the crossed design (120 blocks per
-  sweep); reported with episode-cluster bootstrap CIs on Spearman ρ.
-- **Within-episode stratification** for the WAMSN–DEF association
-  (H4): ρ computed inside each episode and aggregated by sign-flip
-  test, removing the between-level ecological confound.
-- **Paired sign-flip tests at cell level** for the decoupling rate
-  comparison (H2): per (level × seed) cell, faithfulness- and
-  performance-degradation rates relative to the same seed's clean cell
-  (n = 32 cells).
-- **Holm correction** across the confirmatory family {H1, H2, H3, H4}
-  per sweep. Margin-DEF variants and the appendix dropout axis are
-  declared exploratory and reported unadjusted, labelled as such.
-- **Bootstrap CIs** (2 000 resamples) for all descriptive means.
+## 3.7 Construct-validity audit
 
-All statistics are permutation/bootstrap-based (no distributional
-assumptions), implemented in numpy only, with fixed statistical seeds.
+The audit supports the primary research problem by checking whether DEF is a
+valid comparison in this action-candidate graph.
 
-## 3.8 Reproducibility
+A uniform random occlusion can select passenger requests more often than the
+attention top-k. Removing such a request changes both the observation and the
+available action set. A nearby-taxi occlusion changes only information. The
+result can therefore reflect different node-type composition rather than
+explanation quality.
 
-Every result regenerates from the repository: pinned dependency
-versions, committed networks and demand variants, seed-pinned training
-scripts, per-sweep JSON manifests recording configuration and git
-revision, committed best checkpoints, and a deviations register
-(Appendix A). The development environment (SUMO 1.20 on x86-64 macOS)
-and the Colab environment (SUMO 1.27) are documented per artefact; all
-committed faithfulness numbers originate from the former.
+The corrected protocol uses three controls:
+
+- **type matching:** random subsets contain the same mixture of taxi and
+  request nodes as the explanation subset;
+- **chosen-action protection:** the request associated with the selected
+  action is not deleted in the action-protected variant;
+- **clamp logging:** counterfactual action-margin clamps are counted so that
+  action deletion can be detected.
+
+The earlier uniform-baseline results are retained only as an audit trail. They
+are not used for the final v4 hypothesis verdicts.
+
+## 3.8 Evaluation matrix
+
+B1, B2, B3, and H5 are evaluated under clean telemetry with eight evaluation
+seeds (42-49) and three episodes per seed. This gives 24 held-out episodes per
+training seed for performance context.
+
+B2 and H5 also receive the full faithfulness sweep:
+
+```text
+3 training seeds x 5 conditions x 8 evaluation seeds x 3 episodes
+```
+
+The five conditions are clean plus four outage durations. Faithfulness is
+sampled every eight decisions, with raw per-decision records retained. Each
+sweep must pass preflight checks for expected cells, provenance, type-matched
+controls, chosen-action exclusion, and empirical degradation differentiation.
+All six v4 sweeps pass.
+
+## 3.9 Hypotheses and statistics
+
+The confirmatory hypotheses are:
+
+- **H1:** DEF decreases as outage duration increases.
+- **H2:** faithfulness declines faster than dispatch performance.
+- **H3:** WAMSN increases as outage duration increases.
+- **H4:** decisions with greater WAMSN have lower DEF within an episode.
+- **H5:** degradation-aware training changes or mitigates these relationships.
+
+H1 and H3 use episode-block permutation trend tests and cluster bootstrap
+confidence intervals. H2 uses paired cell-level sign flips relative to each
+evaluation seed's clean condition. H4 calculates Spearman correlation within
+each episode before a sign-flip test. Holm correction is applied to H1-H4
+within each trained policy.
+
+Thousands of decisions improve measurement precision but do not replace
+independent model replication. The final synthesis therefore treats each
+training seed as one trained-policy replicate. With only three seeds per model,
+the dissertation reports the range and number of supporting seeds and does not
+claim a cross-seed population p-value.
+
+## 3.10 Reproducibility
+
+The experiment runner records the configuration, commands, seeds, checkpoint
+hashes, source revision, and preflight reports under the local
+`runs/dissertation_v4/` directory. Compact thesis-ready outputs are committed
+under `results/dissertation_v4/`: `summary.csv`,
+`performance_context.csv`, and `training_seed_synthesis.csv`. The last file
+makes training-seed consistency explicit. Reproduction commands and expected
+outputs are documented in `docs/REPRODUCE_EXPERIMENTS.md`.

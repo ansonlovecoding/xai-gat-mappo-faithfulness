@@ -1,104 +1,112 @@
 # 5. Discussion
 
-## 5.1 What the findings mean
+## 5.1 Answer to the central problem
 
-**For the title question.** Explanations do outlive their data — but
-not in the way the proposal anticipated. The expected pattern was a
-faithful channel losing fidelity as telemetry aged. What the audited
-data show is starker: the channel never had measurable fidelity
-(Act 1), its content nevertheless shifts visibly onto stale telemetry
-as soon as staleness exists (Act 2, H3/H4), and no signal available to
-an operator — faithfulness score, task KPIs, or the explanation's own
-appearance of confidence — distinguishes the drifted state from the
-fresh one. An operator dashboard built on this channel would present
-equally plausible-looking attention maps before and during degradation,
-with the stale-node share of the story quietly growing. That is
-accountability theatre in exactly the conditions transparency
-obligations are meant to cover.
+The title asks when explanations outlive their data. The experiment gives a
+careful answer. During a tunnel-triggered outage, the policy continues to
+receive a complete graph, but some taxi nodes describe an earlier state.
+Longer outages consistently increase the amount of displayed attention linked
+to stale information. The explanation can therefore remain available after
+the freshness of its inputs has expired.
 
-**For the mechanism chain** (Fig. 10). The proposal's causal chain
-survives at its front — degradation → AoI ↑ → attention mass on stale
-nodes ↑ (robust) — and breaks at DEF ↓, for a reason that is itself the
-finding: a floor effect. The chain's healthy links make the hazard
-concrete; its broken link relocates the problem from "faithfulness
-degrades" to "faithfulness was never there".
+However, the experiment does not establish a universal faithfulness decline.
+DEF remains near its matched-random baseline, H1 and H2 are unsupported, and
+the direction of paired attention reallocation changes with training seed.
+The trust problem is thus not a simple causal chain from larger AoI to lower
+faithfulness. It is that an attention map provides no stable, model-independent
+guarantee about how stale data are represented or how faithful the displayed
+weights are.
 
-**For mitigation.** The negative results are informative. Experiencing
-degradation during training gives the policy no incentive to make its
-attention informative — attention serves computation, not
-communication, and gradient pressure on task reward does not change
-that (H5). Distillation from occlusion targets — direct optimisation
-for faithfulness — helps, but modestly and only on fresh data (Act 3b).
-The honest engineering conclusion: replace, don't trust, the built-in
-channel; and do not expect cheap fixes to survive degradation.
+## 5.2 Why H3 is useful but limited
 
-## 5.2 The silent-drift hazard, operationally
+H3 is the most reproducible finding. WAMSN rises with outage duration for every
+trained B2 and H5 policy. This makes WAMSN useful as an operational exposure
+indicator: it can show when an explanation contains more stale-data weight.
 
-WAMSN's raw magnitudes are small (pooled ≈0.013) because geographic
-exposure is small (~2 % of decisions; ~8 % have any stale node
-visible). The operator-facing translations matter more: conditional on
-exposure, stale nodes carry 14 % of attention mass and enter the top-3
-explanation in 8.5 % of decisions. On a metropolitan fleet taking
-thousands of dispatch decisions per hour, "one in twelve explanations
-near a tunnel silently features stale telemetry among its headline
-factors" is a concrete, monitorable risk statement — and WAMSN-style
-conditional monitoring is implementable on any platform that logs
-attention and AoI, independent of this study's specific policy.
+WAMSN should not be described as proof that AoI harms faithfulness. The metric
+itself weights attention by normalised AoI, so part of its increase follows
+from the manipulation. The paired stale-attention shift asks a stronger
+question about attention reallocation, and that result is seed-dependent. DEF
+asks whether the ranked nodes are decision-relevant, and it does not decline
+with duration. Keeping these measures separate prevents an exposure result
+from becoming an unsupported causal claim.
 
-## 5.3 The occlusion artifact as a general warning
+## 5.3 Meaning of training-seed variation
 
-The methodological finding generalises beyond this benchmark. Any
-explainable-RL system in which explanation units index action
-candidates — pointer networks over candidate sets, attention over
-requests in assignment problems, action-graph policies — shares the
-structural property that occlusion perturbs the *decision problem*,
-not merely the input. The capability-spectrum result (Fig. 9) shows the
-consequence is not a small bias but sign-flipping uninterpretability:
-the same protocol certified one checkpoint "far worse than random"
-(−1.35) and another "far better" (+1.78) when both are ≈0 under a fair
-baseline. Two controls suffice in practice — composition-matched random
-baselines and protection of the chosen action's unit — and both are
-cheap. Perturbation-based faithfulness evaluation in RL should treat
-them as mandatory, the way [16]'s protocol treats size-matching.
+Seeds 42 and 43 shift attention toward stale nodes, while seed 44 shifts it
+away, under both clean and degradation-aware training. This is not noise at the
+decision level: each within-seed estimate is precise. The disagreement occurs
+between learned policies.
 
-This also reframes part of the "attention is not explanation" debate
-for RL: some prior negative (or positive) verdicts obtained with
-uncontrolled occlusion in candidate-action settings may partly reflect
-this artifact rather than the property under test.
+This distinction matters for trustworthy AI. An explanation method intended
+for deployment should not change its qualitative response because the same
+architecture was trained with a different random initialisation. A dashboard
+validated on one checkpoint may therefore give false confidence about another
+checkpoint produced by the same pipeline. Explanation validation needs to be
+repeated for each trained model and monitored after retraining.
 
-## 5.4 Limitations
+## 5.4 Role of the construct-validity audit
 
-- **Policy competence.** The learned dispatchers reach 6–8 pickups
-  against a greedy matcher's 32, and entropy-collapse during training.
-  The capability-spectrum analysis shows the uninformativeness finding
-  is stable across the range *available* (1→11.8 pickups), but no
-  checkpoint approaches competent dispatch; whether a genuinely strong
-  GAT dispatcher develops informative attention is open.
-- **Scale and scope.** One district, one city, 20 taxis, 50 riders,
-  1 200 s episodes; tunnel exposure ~2 % of decisions. The severity
-  ladder tops at 60 s while geography occasionally produces AoI up to
-  ~310 s (an idling vehicle on a tunnel edge); observed AoI features
-  saturate at the 60 s normalisation cap.
-- **Statistical residuals.** H2 clears Holm at p = 0.039 — real but not
-  overwhelming; a same-configuration smaller sweep earlier in the study
-  was non-significant, and the result stabilised only at 8 seeds.
-  Per-decision drift and churn are descriptive only.
-- **Single-run aspects.** B2 is one training seed (H5′ has three); the
-  distilled head is one distillation run. Checkpoint selection interacts
-  with entropy collapse (two of three H5′ bests select before epoch 25).
-- **Metric scope.** Faithfulness is operationalised solely through
-  occlusion-based counterfactuals; margin-DEF's clamp parameter and the
-  60 s AoI normalisation are audited but particular choices.
+The audit does not replace the primary experiment. It ensures that the
+faithfulness measure is meaningful enough to support it. In this graph,
+request nodes are both information and actions. Removing one changes the
+decision problem; removing a taxi only hides context. A uniform random
+baseline can therefore compare unlike interventions.
 
-## 5.5 Future work
+Type matching and chosen-action protection make the comparison fairer. Once
+those controls are used, DEF is near zero rather than strongly positive or
+negative. This finding narrows the interpretation: attention is not shown to
+be anti-faithful, but neither is it shown to outperform a fair random ranking.
 
-(1) A dispatcher trained to competence (curricula, entropy schedules,
-or offline RL) to test whether informative attention emerges with
-capability. (2) Faithfulness-aware training that optimises the
-explanation channel directly during RL, rather than post-hoc
-distillation. (3) Extending the artifact analysis to other
-candidate-action XRL systems and to gradient-based attribution, which
-may inherit an analogous confound through the action mask. (4) An
-operator-facing staleness monitor built on conditional WAMSN, evaluated
-in a human-factors study. (5) Multi-city transfer and richer degradation
-(urban canyons, backhaul delay) under the same AoI framework.
+## 5.5 Degradation-aware training
+
+Training under 30-second tunnel-triggered outages does not solve the problem.
+H5 retains the same seed-dependent paired shift as B2. It produces a negative
+WAMSN-DEF association for two seeds, but not the third, and one H5 policy has
+substantially lower test pickups. Task-reward optimisation gives no explicit
+reason for the attention weights to become stable human explanations.
+
+The result does not prove that all robustness training is ineffective. It
+shows that this specific intervention is insufficient. A stronger approach
+would optimise explanation consistency or faithfulness directly and validate
+it across independent training runs.
+
+## 5.6 Practical implications
+
+An operator interface should not label graph-attention weights as reasons
+without additional evidence. At minimum, a deployment should:
+
+- display data freshness separately from attention strength;
+- monitor stale-node exposure with a metric such as conditional WAMSN;
+- run type-aware faithfulness tests for every released checkpoint;
+- repeat the audit after retraining, because training seeds can change the
+  direction of attention reallocation;
+- avoid interpreting stable pickups as evidence that explanations remain
+  trustworthy.
+
+## 5.7 Limitations
+
+The study uses one district, 20 taxis, 50 requests, and sparse tunnel exposure.
+Only three independent training seeds are available for each policy. This is
+enough to reveal heterogeneity but not to estimate a population distribution
+of trained-model effects. H5 seed 44 is weak, so architecture and competence
+effects cannot be cleanly separated.
+
+The observation corruption freezes position and speed for fixed windows. Real
+telemetry may also include delayed packets, partial sensor failure, map
+matching errors, and asynchronous recovery. WAMSN depends on the chosen AoI
+normalisation, while DEF depends on counterfactual occlusion. Other
+faithfulness measures may behave differently.
+
+Finally, the study audits attention as an explanation; it does not claim that
+attention is useless inside the policy. A feature can support computation
+without being a faithful human-readable reason.
+
+## 5.8 Future work
+
+Future experiments should use more training seeds, multiple cities, and higher
+tunnel exposure. They should compare fixed outages with delayed and intermittent
+telemetry, and test whether the seed-dependent result remains after policy
+performance is improved. Explanation-specific training objectives, independent
+post-hoc explainers, and human-facing freshness warnings should be evaluated on
+held-out models as well as held-out episodes.

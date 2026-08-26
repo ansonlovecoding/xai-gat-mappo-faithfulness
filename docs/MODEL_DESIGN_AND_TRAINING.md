@@ -8,9 +8,10 @@ methodology chapter.
 ![Model conditions and training process](model_design_training_process.png)
 
 **Figure. Model conditions and shared MAPPO training process.** B0 is the
-non-learning dispatch reference; B1/B2/B3 are trained on clean telemetry; H5′
+non-learning dispatch reference; B1/B2/B3 are trained on clean telemetry; H5
 is trained with tunnel-freeze degradation. After training, checkpoints are
-evaluated on held-out demand under clean and max-AoI degradation conditions.
+selected on validation demand and evaluated on held-out test demand under
+clean telemetry and fixed observation-layer outage durations.
 
 ## 1. Why multiple models are needed
 
@@ -293,7 +294,7 @@ Train on clean or degraded telemetry
 Freeze checkpoint
 Evaluate on held-out test demand
 Evaluate under clean telemetry
-Evaluate under max-AoI degradation levels {5, 15, 30, 60}
+Evaluate under outage durations {10, 20, 30, 60} seconds
 Compute pickups, reward, wait time
 For GAT models, compute DEF, margin-DEF, WAMSN, and attention drift
 ```
@@ -301,12 +302,8 @@ For GAT models, compute DEF, margin-DEF, WAMSN, and attention drift
 The main sweep command is:
 
 ```bash
-python scripts/sweep_severity.py <checkpoint> \
-  --episodes 3 \
-  --seeds 42 43 44 45 46 47 48 49 \
-  --aoi-levels 5 15 30 60 \
-  --demand-split test \
-  --corruption freeze
+python scripts/run_dissertation_experiments.py \
+  --stage sweep --model B2_gat --resume
 ```
 
 This produces one clean condition plus four tunnel-degradation levels. B1 is

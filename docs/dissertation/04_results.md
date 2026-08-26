@@ -1,151 +1,143 @@
 # 4. Results
 
-Results are reported in the order they were established, because the
-order matters: an audit in the middle of the study overturned the
-reading of its first finding, and the corrected protocol then governed
-everything after. All numbers derive from the archived result set
-(`results/story_freeze_v1/`, including `audit/`); statistics are the
-cluster-robust ones of §3.7 unless stated.
+All primary numbers in this chapter come from the completed v4 experiment,
+whose citable outputs are in `results/dissertation_v4/`. Every B2 and H5 sweep
+passed the protocol preflight. Results are shown first for each training seed and then summarised
+across independently trained policies. A per-decision p-value is not used to
+claim that an effect generalises across training seeds.
 
-## 4.1 Performance context
+## 4.1 Checkpoint selection and performance context
 
-Under stochastic evaluation on held-out test demand, SUMO's built-in
-greedy matcher completes 32 pickups per episode; the learned policies
-complete 6–8 (B2: 6.7 ± 1.9). The learned policies additionally exhibit
-entropy collapse during training (entropy < 0.05 within 25–130 epochs),
-which motivates rolling-mean checkpoint selection and stochastic
-evaluation (§3.2). The study's claims are accordingly scoped to this
-low-performance regime; §4.5 shows the faithfulness findings are
-nevertheless invariant across the capability range available, and
-Chapter 5 discusses the external-validity implications of the
-greedy gap.
+Validation selected different epochs for different training runs. B2 and B3
+selected epochs 10, 70, and 10; H5 selected 10, 90, and 10. This variation
+confirms that a fixed final epoch would not represent the same learning stage
+across seeds.
 
-## 4.2 Act 1 — the built-in explanation is uninformative (RQ1a)
+Table 4.1 reports clean-test pickups. Performance is included to describe the
+policies being explained, not as the research outcome.
 
-**Initial reading.** Under the proposal's protocol (uniform random
-baselines), the clean-telemetry margin-DEF of the B2 policy is
-**−0.541** (95 % CI [−0.556, −0.527]; n = 3 565 scored decisions) —
-apparently *worse than random* (Fig. 5, left).
+| Model | Mean across training seeds | Range across training seeds |
+|---|---:|---:|
+| B1 MLP | 13.25 | 11.50-14.67 |
+| B2 GAT | 13.29 | 11.46-14.67 |
+| B3 GAT without AoI | 13.29 | 11.46-14.67 |
+| H5 degradation-trained GAT | 9.56 | 4.54-12.88 |
 
-**The audit.** A construct-validity audit interrogated this reading
-with the three instruments of §3.5:
+B2 and B3 are identical under clean evaluation because their AoI inputs are
+zero. H5 is less stable: seed 44 averages 4.54 pickups, compared with 12.88 and
+11.25 for seeds 42 and 43. This weak replicate is retained because excluding
+it would hide training instability.
 
-- *Clamp audit*: 14.6 % of random-baseline counterfactual forwards hit
-  the margin clamp, versus 1.8 % for attention-top-k occlusions — the
-  action-deletion mechanism strikes the two sides of the comparison at
-  an 8:1 ratio.
-- *Exclusion variant* (dispatch decisions, n = 136): the standard
-  protocol scores +0.586 — apparently *better* than random — collapsing
-  to −0.024 when the chosen action's node is protected. The artifact
-  manufactures both signs.
-- *Type-matched control* (n = 1 199 paired decisions): clean margin-DEF
-  moves from −0.554 (uniform) to **−0.009** (95 % CI [−0.016, −0.001])
-  when random baselines share attention's node-type composition
-  (Fig. 5, right). **98 % of the deficit is artifact.**
+![Clean-test performance by training seed](../figures/v4_clean_performance_by_training_seed.png)
 
-**Corrected finding.** The attention channel carries no measurable
-decision-relevant information on clean telemetry: statistically
-indistinguishable from (marginally below) a fair random explanation.
-The proposal's reinterpretation clause for near-zero clean DEF applies
-in full, and the artifact characterisation is promoted to a
-contribution in its own right (§5.3).
+**Figure 4.1.** Each point is one independently trained policy evaluated over
+24 held-out episodes; horizontal lines show the mean across training seeds.
 
-## 4.3 Act 2 — silent drift under staleness (H1–H4)
+## 4.2 Supporting construct-validity result
 
-B2 evaluated across the max-AoI ladder (Fig. 6; ≈18 000 scored
-decisions; empirical exposure ≈2 % of decisions, dominated by in-tunnel
-transit with the outage extension supplying the level dependence):
+The earlier audit showed that a uniform random occlusion is not a fair control
+for this graph. Removing a passenger-request node can remove the chosen action,
+while removing a taxi node only withholds information. The sign and size of DEF
+can therefore be driven by node-type composition.
 
-- **H3 — supported.** WAMSN rises from 0 to ≈0.013 as soon as staleness
-  exists (ρ = +0.092; episode-block permutation p = 10⁻⁴; cluster CI
-  [+0.052, +0.128]). Conditional on exposure (≥1 stale vehicle node
-  visible, 8.4 % of decisions), WAMSN averages 0.140, and a stale node
-  enters the explanation's top-3 in 8.5 % of exposed decisions.
-- **H4 — supported, strengthened.** Within episodes — the stratification
-  that removes the between-level confound — the WAMSN–DEF correlation
-  is negative in 89 % of episodes (mean within-episode ρ = −0.140,
-  p = 10⁻⁴): the more a decision's attention rests on stale nodes, the
-  less faithful it is, inside the same episode.
-- **H1 — not supported (floor effect).** Margin-DEF is flat at its
-  clean-data level at every severity (episode-block p = 0.65; cluster
-  CI for ρ [−0.016, +0.025]). Given Act 1, the predicted decline has no
-  room to occur: a channel at the fair-random floor cannot lose
-  faithfulness it does not have.
-- **H2 — supported in the rate framing.** Cell-level
-  faithfulness-degradation rates exceed performance-degradation rates
-  (n = 32; Holm-corrected p = 0.039) — performance itself is
-  statistically flat (6.5–7.4 pickups across severities).
-- Attention drift is present but small (JS ≈ 0.000–0.001), consistent
-  with a saturated encoder; top-3 explanation membership changes versus
-  the clean twin in 1.4 % of decisions.
+The v4 rerun addresses this problem from the start. All headline DEF values use
+type-matched random subsets, and the action-protected margin variant is stored
+alongside probability DEF. Under these controls, clean DEF is close to zero for
+all B2 and H5 training seeds. The result should be read as "no measured
+advantage over the matched random explanation", not "attention is worse than
+random".
 
-Under Holm correction over the confirmatory family, the verdict set is
-H1 ✗, H2 ✓ (0.039), H3 ✓ (4×10⁻⁴), H4 ✓ (4×10⁻⁴).
+## 4.3 Manipulation check: stale exposure increases
 
-**Reading.** This is the operational hazard in its purest form: the
-explanation's *content* measurably shifts onto stale telemetry, while
-neither the faithfulness score (already at floor) nor the KPIs
-(pickups flat) provide any warning. The explanation outlives its data
-not by becoming worse, but by having no fidelity to lose while its
-appearance changes silently.
+The observation-layer outages produce increasing empirical degradation. At 60
+seconds, the mean degraded-decision rate is about 0.9-1.2% for B2 and
+0.7-1.3% for H5, compared with zero in the clean condition. Exposure is sparse
+because it depends on taxis entering the mapped tunnels.
 
-## 4.4 Act 3 — mitigation attempts (H5 and the decoupled head)
+When at least one stale vehicle node is visible, mean WAMSN rises from about
+0.023-0.031 at 10 seconds to 0.071-0.090 at 60 seconds. H3 is supported in all
+six trained GAT policies. The within-policy trend correlations range from
+rho = 0.082 to 0.105 for B2 and 0.078 to 0.121 for H5; every Holm-adjusted
+p-value is 0.0004.
 
-**Act 3a — training-side mitigation: no effect** (Fig. 7). H5′
-policies (B2's configuration trained under tunnel-freeze degradation,
-outage 30 s, seeds 42/43/44) show severity profiles indistinguishable
-from B2's: margin-DEF flat, WAMSN and pickups equivalent. Under the
-type-matched baseline all three seeds sit at margin-DEF ≈ 0
-(−0.01 … +0.02), exactly where B2 sits. An earlier apparent result —
-that degradation-aware training made faithfulness *worse* (−0.77 vs
-−0.54) — did not survive the audit: both figures were uniform-baseline
-readings, artifact-on-artifact. H5, phrased in the proposal to allow
-either outcome, resolves as **no mitigation effect in either
-direction**. Caveats: two of three best checkpoints select at epochs
-17–22 (early training; one at epoch 91), reflecting the collapse
-dynamics of §4.1.
+![WAMSN by outage duration](../figures/v4_wamsn_by_outage_duration.png)
 
-**Act 3b — architecture-side mitigation: modest, clean-data only**
-(Fig. 8). The occlusion-distilled decoupled head, compared to the
-coupled attention channel on identical decisions with identical
-type-matched baselines:
+**Figure 4.2.** Conditional WAMSN rises with observation-layer outage duration
+for every training seed. Because WAMSN includes normalised AoI, this is evidence
+that stale exposure increased as designed. It is not evidence that AoI reduced
+faithfulness.
 
-| condition | coupled | decoupled | Δ | paired p |
+## 4.4 Paired attention reallocation is seed-dependent
+
+The paired stale-attention shift compares the degraded observation with its
+clean twin. The result is not consistent across trained policies.
+
+| Model | Seed 42 | Seed 43 | Seed 44 | Positive seeds |
 |---|---:|---:|---:|---:|
-| clean (n = 983) | −0.013 | **+0.010** | **+0.023** | **10⁻⁴** |
-| tunnel, max-AoI 60 s (n = 878) | −0.006 | −0.000 | +0.005 | 0.21 |
+| B2 GAT | +0.002706 | +0.000618 | -0.001278 | 2/3 |
+| H5 degraded training | +0.002374 | +0.000783 | -0.001231 | 2/3 |
 
-The decoupled head is the only channel in the study to score above the
-fair random baseline, and its clean-data advantage is highly
-significant but modest; under degradation the advantage is not
-detectable. An earlier "+0.11 in both conditions" reading was ~80 %
-artifact.
+Within each seed, the confidence intervals are narrow because the same
+decisions are paired. However, precision within one trained policy does not
+resolve disagreement between independently trained policies. The primary
+claim cannot therefore be "degradation always shifts attention toward stale
+nodes". A defensible statement is that the direction and size of attention
+reallocation depend on the learned policy.
 
-## 4.5 The artifact across the capability spectrum
+![Paired stale-attention shift](../figures/v4_paired_stale_attention_shift.png)
 
-Seven checkpoints spanning pickups 1→11.8 and entropy 1.56→0.03 —
-untrained, mid-training, and best B2; the AoI-unaware B3; all three
-H5′ seeds — scored under both baselines on clean test demand (Fig. 9):
+**Figure 4.3.** Positive values mean more attention mass on stale nodes in the
+degraded twin; seed 44 reverses the direction for both training regimes.
 
-- Under the **uniform** baseline the metric swings from −1.35 to +1.78,
-  manufacturing "far worse than random" and "far better than random"
-  verdicts from equally uninformative channels, depending only on where
-  each policy's attention sits relative to reservation nodes.
-- Under the **type-matched** baseline every checkpoint lies within
-  −0.01 … +0.02 of zero.
+## 4.5 Faithfulness and decoupling hypotheses
 
-The uninformativeness finding is therefore invariant to capability
-level, architecture variant, and training regime — and the uniform
-baseline's instability is the single strongest demonstration that
-uncontrolled occlusion protocols are uninterpretable in
-candidate-action architectures.
+H1 is not supported for any B2 or H5 seed. The robust DEF-duration
+correlations remain close to zero, with all Holm-adjusted p-values above 0.67.
+The experiment therefore provides no evidence that a longer outage directly
+reduces DEF.
 
-## 4.6 Summary of hypothesis outcomes
+H2 is also unsupported in all six trained policies. Faithfulness does not
+decline faster than pickups under the v4 protocol. Rate calculations are
+especially unstable when clean DEF is close to zero, so the negative result is
+more reliable than a narrative built from large percentage changes around a
+near-zero denominator.
 
-| Hypothesis | Verdict | Key statistic |
-|---|---|---|
-| H1 severity ↑ → DEF ↓ | not supported (floor) | ρ ≈ 0, CI [−0.016, +0.025] |
-| H2 faithfulness declines faster than performance | supported (rate framing) | Holm p = 0.039, n = 32 cells |
-| H3 severity ↑ → WAMSN ↑ | supported | ρ = +0.092, p = 10⁻⁴ (robust) |
-| H4 WAMSN negatively associated with DEF | supported (within-episode) | 89 % episodes negative, p = 10⁻⁴ |
-| H5 degradation-aware training changes the relationship | rejected as mitigation | Δ ≈ 0 across 3 seeds (type-matched) |
+H4 is model- and seed-dependent. None of the three B2 policies support the
+predicted negative within-episode WAMSN-DEF relationship; their mean
+within-episode correlations are positive (0.036-0.069). H5 seeds 42 and 43 do
+support a negative relationship (rho = -0.072 and -0.061, adjusted
+p = 0.0004), but H5 seed 44 does not (rho = -0.001, adjusted p = 0.185).
+This mixed result is exploratory evidence of a possible training-regime
+interaction, not a general finding.
+
+![Hypothesis consistency across training seeds](../figures/v4_hypothesis_consistency.png)
+
+**Figure 4.4.** Number of training seeds, out of three, supporting each
+confirmatory hypothesis after within-policy Holm correction.
+
+## 4.6 Degradation-aware training
+
+H5 does not provide a consistent mitigation. Its stale-attention shifts follow
+the same two-positive, one-negative pattern as B2. H1 and H2 remain unsupported.
+H4 becomes negative for two seeds, but this does not reproduce in seed 44. The
+large clean-performance drop for H5 seed 44 also shows that degradation-aware
+training can be unstable under the present settings.
+
+The correct conclusion is not that H5 improves or worsens faithfulness. The
+experiment shows that training under one 30-second degradation condition does
+not make explanation behaviour consistent across training seeds.
+
+## 4.7 Hypothesis summary
+
+| Hypothesis | B2 seeds supporting | H5 seeds supporting | Final verdict |
+|---|---:|---:|---|
+| H1: outage duration increases, DEF decreases | 0/3 | 0/3 | not supported |
+| H2: faithfulness declines faster than performance | 0/3 | 0/3 | not supported |
+| H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | consistently supported |
+| H4: higher WAMSN is associated with lower DEF | 0/3 | 2/3 | mixed, training-dependent |
+| H5: degradation-aware training mitigates the effect | n/a | 0/3 consistent mitigation | not supported |
+
+The completed experiment therefore supports a concentrated result: longer
+observation outages reliably increase stale-data attention exposure, but the
+paired attention shift and its relationship with faithfulness do not
+generalise across independently trained policies.

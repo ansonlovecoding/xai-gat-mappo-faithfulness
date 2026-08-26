@@ -22,6 +22,27 @@ body {
   hyphens: auto;
 }
 
+.title-block {
+  column-span: all;
+  display: block;
+  margin: 0 0 0.12in;
+  text-align: center;
+}
+
+.title-block h1 {
+  margin: 0 0 0.09in;
+  font-size: 18pt;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.title-block p {
+  margin: 0.025in 0;
+  text-align: center;
+}
+
 .paper-front {
   column-span: all;
   display: block;
@@ -236,6 +257,26 @@ th {
 
 tr {
   break-inside: avoid;
+}
+
+.hypothesis-table th:nth-child(1),
+.hypothesis-table td:nth-child(1) {
+  width: 48%;
+}
+
+.hypothesis-table th:nth-child(2),
+.hypothesis-table td:nth-child(2),
+.hypothesis-table th:nth-child(3),
+.hypothesis-table td:nth-child(3) {
+  width: 8%;
+  padding-right: 0.08in;
+  text-align: center;
+}
+
+.hypothesis-table th:nth-child(4),
+.hypothesis-table td:nth-child(4) {
+  width: 36%;
+  padding-left: 0.08in;
 }
 
 p:has(+ table) {

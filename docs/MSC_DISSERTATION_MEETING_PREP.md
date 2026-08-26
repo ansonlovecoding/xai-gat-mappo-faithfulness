@@ -118,7 +118,8 @@ Dataset / environment:
 | Requests | 50 ride requests per episode |
 | Episode length | 1,200 simulated seconds |
 | Demand splits | Seeded train, validation and held-out test demand variants |
-| Main frozen result set | `results/story_freeze_v1/` |
+| Main completed result set | `results/dissertation_v4/` (compact citable outputs) |
+| Supporting validity audit | `results/story_freeze_v1/audit/` |
 
 ### Suitability
 
@@ -134,17 +135,18 @@ The data shows four important patterns:
 
 | Finding | Interpretation |
 |---|---|
-| SUMO greedy completes about 32 pickups per episode, while learned policies complete about 6-8 | The learned dispatchers are not production-grade; the claims are about explanation behaviour, not superior dispatch performance |
-| Tunnel/stale exposure is sparse | Only a minority of decisions include stale vehicle nodes, so pooled stale-attention values are small |
-| Conditional stale attention is meaningful | When stale nodes are visible, they receive about 14% of vehicle-node attention |
-| The nominal AoI severity ladder behaves mostly as clean vs degraded | A later audit found that measured AoI is capped at 60 seconds, so 5/15/30/60 should be discussed cautiously as one degraded condition rather than a clean dose-response curve |
+| Clean B1/B2/B3 policies average about 13 pickups, while H5 averages 9.56 and is seed-sensitive | Performance describes the policies under audit; it is not the primary research outcome |
+| Tunnel/stale exposure is sparse | Only a minority of decisions include stale vehicle nodes, so conditional measures are more informative than pooled values |
+| Conditional WAMSN rises with fixed outage duration in all six GAT runs | The 10/20/30/60-second observation outages increase stale-data exposure as intended |
+| Paired stale-attention shift changes sign across training seeds | Seeds 42/43 shift toward stale nodes, while seed 44 shifts away, under both B2 and H5 |
+| DEF does not decrease with outage duration | H1 and H2 are unsupported in all six runs; AoI should not be claimed to cause lower faithfulness |
 
 The most defensible EDA summary is:
 
-> The benchmark successfully creates stale telemetry, but the measured
-> severity ladder is not a strong dose-response variable. The main evidence is
-> therefore a clean-vs-degraded comparison plus a mechanism check showing that
-> attention moves onto stale nodes.
+> The benchmark successfully creates increasing stale-data exposure. WAMSN
+> rises consistently, but attention reallocation and its relationship with DEF
+> vary across independently trained policies. The result is about explanation
+> trust and model dependence, not a universal AoI-to-faithfulness effect.
 
 ## 8. Proposed / Developed Model
 
@@ -180,7 +182,7 @@ Additional model conditions:
 | B2 GAT-MAPPO | Main audited attention model |
 | B3 GAT-MAPPO without AoI | Control for explicit AoI input |
 | H5' degradation-aware GAT | Tests whether training with degradation helps |
-| Decoupled explanation head | Tests whether a separate explanation channel is more faithful than built-in attention |
+| Decoupled explanation head | Legacy exploratory mitigation; not part of the final v4 confirmatory matrix |
 
 ## 9. Gap-Model Alignment
 
@@ -218,14 +220,16 @@ Additional model conditions:
 | Faithfulness evaluator | Implemented and smoke-tested |
 | WAMSN metric | Implemented |
 | Construct-validity audit | Implemented |
-| Decoupled explanation head | Implemented and evaluated |
-| Frozen result set | Available in `results/story_freeze_v1/` |
+| Decoupled explanation head | Implemented; retained as legacy exploratory work |
+| Completed v4 result set | Available in `results/dissertation_v4/` |
+| Training-seed synthesis | Completed for B2 and H5 |
 | Reproduction guide | Available in `docs/REPRODUCE_EXPERIMENTS.md` |
 | Dissertation chapter drafts | Available in `docs/dissertation/` |
 
-Current development status: the implementation and main experiments are
-largely complete. The remaining work is mainly dissertation writing,
-consistency checking, and careful wording of the latest audit findings.
+Current development status: the implementation, three-seed training matrix,
+held-out evaluations, faithfulness sweeps, preflight checks, analyses, and
+summary tables are complete. The remaining work is final document formatting,
+citation checking, and visual inspection of the generated thesis/PDF.
 
 ## 12. Performance Parameters / Metrics
 
@@ -270,13 +274,13 @@ state-of-the-art dispatch algorithm. The contribution is methodological:
 
 | Chapter / Section | Status | Notes |
 |---|---|---|
-| Abstract | Drafted | Needs final consistency pass after result wording is frozen |
-| Chapter 1: Introduction | Drafted | Strong problem framing and research questions already written |
+| Abstract | Updated | Aligned with completed v4 results |
+| Chapter 1: Introduction | Updated | Central problem and bounded claims aligned |
 | Chapter 2: Literature Review | Drafted | Should add or mention 2025/2026 benchmark studies for comparison |
-| Chapter 3: Methodology | Drafted | Detailed and reproducible; latest audit caveat should be kept consistent |
-| Chapter 4: Results | Drafted | Needs careful alignment with `ANALYSIS_FINDINGS_P5.md` |
-| Chapter 5: Discussion | Drafted | Main interpretation is clear |
-| Chapter 6: Conclusion | Drafted | Needs final polishing after Chapter 4 is locked |
+| Chapter 3: Methodology | Updated | Uses validation selection and fixed outage-duration protocol |
+| Chapter 4: Results | Updated | Uses `runs/dissertation_v4/` and cross-seed synthesis |
+| Chapter 5: Discussion | Updated | Separates WAMSN exposure from faithfulness claims |
+| Chapter 6: Conclusion | Updated | Uses bounded cross-seed conclusion |
 | Appendix / Deviations Register | Drafted | Important for explaining changes from proposal |
 | Reproduction guide | Drafted | Includes environment and command instructions |
 | Paper-style summary | Drafted | `docs/PAPER_Faithfulness_Decoupling.md` |
@@ -290,24 +294,25 @@ If asked to summarise the dissertation in one minute:
 > taxi-dispatch benchmark using a tunnel-rich Chongqing road network, where
 > tunnel entry triggers freeze-style telemetry degradation. The main model is a
 > GAT-MAPPO dispatcher. I evaluate attention explanations using DEF and WAMSN.
-> The key finding is that the built-in attention channel is not faithful even
-> on clean telemetry once the occlusion baseline is corrected. Under degraded
-> telemetry, attention shifts onto stale vehicle nodes while pickups and
-> aggregate faithfulness remain mostly flat. Degradation-aware training does
-> not fix this, and a decoupled explanation head helps only modestly on clean
-> data. The main contribution is therefore not a better dispatcher, but an
-> audited framework showing why attention explanations in fleet dispatch should
-> not be trusted without faithfulness testing.
+> The completed experiment shows that longer observation outages consistently
+> increase WAMSN, so more of the displayed attention is linked to stale data.
+> However, the paired attention shift is positive for two training seeds and
+> negative for one under both clean and degradation-aware training. H1 and H2
+> are unsupported in all six policies, so I do not claim that AoI causes lower
+> faithfulness. The contribution is a reproducible, action-aware audit showing
+> that attention explanations require freshness checks and validation for each
+> trained checkpoint.
 
 ## 16. Points to Be Honest About
 
 - The learned dispatch policies are weaker than SUMO greedy, so the claim is
   not state-of-the-art dispatch performance.
-- The nominal AoI severity ladder should be described cautiously because the
-  measured AoI feature is capped; the strongest claim is clean vs degraded.
+- WAMSN increases with outage duration, but this is an exposure result and not
+  proof that AoI causes lower DEF.
+- The paired attention shift changes sign across training seeds, so a universal
+  "attention shifts toward stale nodes" claim would be too strong.
 - The uniform DEF baseline produced misleading results because reservation
   nodes are also actions. This became a methodological finding, not a mistake
   to hide.
 - The dissertation's strength is the controlled experiment, audit trail, and
   explanation-faithfulness analysis.
-

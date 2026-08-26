@@ -1,5 +1,11 @@
 # Figure captions (dissertation-ready, English)
 
+> **Legacy figure set.** These captions describe the archived
+> `results/story_freeze_v1/` figures and are retained for audit history. The
+> final v4 dissertation uses Figs. 4.1-4.4 and the captions embedded in
+> `docs/dissertation/04_results.md`. Do not use the H2/H4 verdicts below as the
+> final experiment result.
+
 Numbering follows the suggested placement: Figs. 1–4 methods, Figs. 5–8
 results (the three acts), Figs. 9–10 discussion. Every caption is
 self-contained (readable without the body text), states the data

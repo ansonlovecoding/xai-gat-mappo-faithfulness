@@ -1,396 +1,296 @@
-# Reproducing the experiments
+# Reproducing the dissertation experiments
 
-This document explains how to reproduce the dissertation experiments for
-*When Explanations Outlive Their Data*. It is written for a reader who has
-cloned the repository and wants to verify the result pipeline, not modify the
-code.
+This guide reproduces the final experiment for *When Explanations Outlive Their
+Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under
+Telemetry Degradation*.
 
-There are two levels of reproduction:
+The definitive protocol is:
 
-1. **Verify the frozen artefacts**: inspect committed summaries, figures,
-   checkpoints and audit JSON files.
-2. **Rerun the experiments**: train or reuse checkpoints, rerun the severity
-   sweeps, and regenerate the hypothesis analyses.
+```text
+configs/experiments/dissertation_v4.toml
+```
 
-The frozen dissertation result set is `results/story_freeze_v1/`.
+The completed local outputs are under:
 
-> **New definitive rerun:** the stricter protocol is defined in
-> `configs/experiments/dissertation_v4.toml` and explained in
-> `docs/EXPERIMENT_CODEBASE.md`. Sections 2-9 below retain the archived v1
-> evidence and legacy reproduction details.
+```text
+runs/dissertation_v4/
+```
 
-## 1. Environment
+Compact citable summaries, analyses, manifests, and selection records are
+committed under `results/dissertation_v4/`.
 
-Use Python 3.11 and SUMO/libsumo. The project was evaluated with:
+The older `results/story_freeze_v1/` directory is retained only for the
+supporting construct-validity audit and historical comparison. It is not the
+source of the final H1-H5 verdicts.
 
-- local Intel macOS: `eclipse-sumo==1.20.0`, `libsumo==1.20.0`,
-  `traci==1.20.0`, `sumolib==1.20.0`
-- Colab/Linux: SUMO 1.27 line, as described in `docs/COLAB.md`
+## 1. What the experiment does
 
-Create and activate a virtual environment:
+The runner performs five linked tasks:
+
+1. trains B1, B2, B3, and H5 with seeds 42, 43, and 44;
+2. selects checkpoints on validation demand, not test demand;
+3. evaluates every selected policy on held-out clean test demand;
+4. runs faithfulness sweeps for B2 and H5 under clean telemetry and 10, 20,
+   30, and 60-second observation-layer outages;
+5. validates, analyses, and summarises the outputs.
+
+Tunnel entry triggers each outage. SUMO continues to simulate the true vehicle
+state, while the policy observation freezes the last valid position and speed.
+AoI describes the resulting stale observation; it is not treated as a causal
+dose of faithfulness.
+
+## 2. Environment
+
+Use Python 3.11 and a working SUMO/libsumo installation.
 
 ```bash
 cd "<repo-root>"
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-pip install -e . --no-deps
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+python -m pip install -e . --no-deps
 ```
 
-On the Intel macOS machine used for the freeze study, use the aligned SUMO
-1.20 profile instead of `requirements.txt`:
+On the Intel macOS environment used for the original local runs, use the
+aligned dependency profile:
 
 ```bash
-pip install -r requirements-macos-intel.txt
-pip install -e . --no-deps
+python -m pip install -r requirements-macos-intel.txt
+python -m pip install -e . --no-deps
 ```
 
-The environment intentionally pins NumPy to the 1.26 line. The PyTorch wheel
-used by this project was compiled against NumPy 1.x; installing NumPy 2.x can
-make Torch import with a warning and later fail with `RuntimeError: Numpy is
-not available` when faithfulness code converts tensors to NumPy arrays.
+NumPy is pinned to the 1.26 line because the installed PyTorch wheel was built
+against NumPy 1.x. NumPy 2.x can cause:
 
-If your shell does not expose `python`, use `.venv/bin/python` explicitly in
-all commands below.
+```text
+RuntimeError: Numpy is not available
+```
 
-Check the environment, then run the automated and end-to-end tests:
+Check the environment and tests:
 
 ```bash
 .venv/bin/python scripts/check_environment.py
 .venv/bin/python -m pytest -q
+.venv/bin/python scripts/test_policy.py
 .venv/bin/python scripts/test_faithfulness.py
 ```
 
-A healthy run ends with:
+`scripts/test_faithfulness.py` starts SUMO for its end-to-end section. TraCI
+may print several connection retries while SUMO starts. The retries are not a
+failure if the script ends with `evaluator OK`.
 
-```text
-OK -- faithfulness pipeline works end-to-end.
-```
+## 3. Inspect the fixed protocol
 
-SUMO may print transient TraCI connection retries during startup; this is not
-an error if the script finishes successfully.
-
-## 2. Frozen artefacts
-
-For a new v4 run, inspect the complete command plan first:
+Print every command without running it:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py --dry-run
 ```
 
-The orchestrator trains three declared seeds per model, selects a usable
-checkpoint on validation demand only, runs held-out test sweeps, validates
-every cell, and only then starts statistical analysis. The validation rule is
-fixed before the final run: maximise mean pickups, then mean reward, then
-prefer the earlier epoch. Selection uses the same stochastic policy mode as
-final evaluation with a fixed seed. Test demand is never used for checkpoint
-selection. A checkpoint must also exceed the declared minimum pickup count and
-improve over the epoch-0 policy before it can enter the test sweep.
+Important fixed settings are:
 
-The primary degradation axis is observation-layer outage duration at 10, 20,
-30 and 60 seconds. Tunnel entry triggers the outage, but the freeze is applied
-outside SUMO when observations are built. AoI describes the stale observations
-produced by each condition and is not interpreted as a causal dose.
+| Item | Value |
+|---|---|
+| Training epochs | 150 |
+| Training seeds | 42, 43, 44 |
+| Checkpoint selection | stochastic validation pickups |
+| Validation seed and episodes | 2026, three episodes |
+| Evaluation seeds | 42-49 |
+| Test episodes per seed/condition | three |
+| Outage durations | 10, 20, 30, 60 seconds |
+| Corruption | freeze last valid position and speed |
+| Faithfulness sampling | every eight decisions |
+| Random control | five type-matched subsets |
 
-The main result set is:
+## 4. Run the complete experiment
 
-```text
-results/story_freeze_v1/
+From a new output directory, run:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py --stage all
 ```
 
-Important files:
+This is a long experiment. Training and the 240-episode faithfulness matrix for
+each audited model can take many hours on CPU.
+
+If a completed stage already exists, use `--resume`:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py --stage all --resume
+```
+
+Resume skips complete immutable stages. It rejects partial training runs rather
+than silently treating them as complete.
+
+## 5. Run one stage or model
+
+The available stages are:
 
 ```text
-results/story_freeze_v1/SUMMARY.md
-results/story_freeze_v1/B2_sweep/analysis.json
-results/story_freeze_v1/B2_sweep/manifest.json
-results/story_freeze_v1/H5b_sweep/analysis.json
-results/story_freeze_v1/H5b_sweep/manifest.json
+train -> select -> evaluate -> sweep -> preflight -> analyze -> summarize
+```
+
+Examples:
+
+```bash
+# Train and select all models
+.venv/bin/python scripts/run_dissertation_experiments.py --stage train
+.venv/bin/python scripts/run_dissertation_experiments.py --stage select
+
+# Evaluate one model
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --stage evaluate --model B2_gat --resume
+
+# Run and validate one faithfulness matrix
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --stage sweep --model B2_gat --resume
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --stage preflight --model B2_gat
+
+# Analyse H5 and rebuild all summary tables
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --stage analyze --model H5_gat_degraded
+.venv/bin/python scripts/run_dissertation_experiments.py --stage summarize
+```
+
+Valid model identifiers are:
+
+```text
+B1_mlp
+B2_gat
+B3_gat_noaoi
+H5_gat_degraded
+```
+
+Only B2 and H5 have faithfulness sweeps. B1 and B3 supply performance and
+structural context.
+
+## 6. Expected directory structure
+
+```text
+runs/dissertation_v4/
+  training/
+    <model>/seed_<training-seed>/
+      ckpt_selected.pt
+      checkpoint_selection.json
+      validation/
+  evaluations/
+    <model>/seed_<training-seed>/
+      eval_seed_<evaluation-seed>.json
+  sweeps/
+    B2_gat/seed_<training-seed>/
+    H5_gat_degraded/seed_<training-seed>/
+      manifest.json
+      cells/
+      preflight.json
+      analysis.json
+  summary.json
+  summary.csv
+  performance_context.json
+  performance_context.csv
+  training_seed_synthesis.json
+  training_seed_synthesis.csv
+```
+
+Do not delete `cells/` if another reader needs to audit or recompute the
+per-decision statistics.
+
+## 7. Verify preflight before reading results
+
+Every sweep used in the thesis must contain `preflight.json` with:
+
+```json
+{"ok": true}
+```
+
+Run the checks again with:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py --stage preflight
+```
+
+Preflight checks the expected condition/seed matrix, source provenance,
+checkpoint identity, type-matched random controls, chosen-action exclusion,
+and empirical differentiation of the outage conditions.
+
+## 8. Rebuild tables and figures
+
+After all analyses exist:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py --stage summarize
+.venv/bin/python scripts/plot_dissertation_v4.py
+```
+
+The primary thesis tables are:
+
+- `summary.csv`: condition-level measurements for each training seed;
+- `performance_context.csv`: clean-test pickups and reward;
+- `training_seed_synthesis.csv`: effect ranges and hypothesis consistency
+  across independently trained policies.
+
+The plotting script writes PNG and PDF versions to `docs/figures/`.
+
+## 9. Expected qualitative result
+
+A correct rerun should be interpreted from the generated files, not forced to
+match one seed exactly across hardware. In the completed local v4 run:
+
+- H3 is supported for all three B2 and all three H5 training seeds;
+- H1 and H2 are unsupported for all six policies;
+- H4 is unsupported for B2 and supported for two of three H5 seeds;
+- the paired stale-attention shift is positive for seeds 42 and 43 and negative
+  for seed 44 under both training regimes;
+- H5 seed 44 is a weak policy replicate and is retained in the synthesis.
+
+The conclusion is therefore not that AoI causes lower faithfulness. Longer
+outages consistently increase stale-data exposure, while attention
+reallocation and its relationship with DEF depend on the trained policy.
+
+## 10. Supporting legacy audit
+
+The older archive remains useful for understanding why the final protocol uses
+type-matched random occlusions:
+
+```text
 results/story_freeze_v1/audit/type_matched_control.json
 results/story_freeze_v1/audit/capability_spectrum_clean.json
 results/story_freeze_v1/audit/compare_typematched_clean.json
 results/story_freeze_v1/audit/compare_typematched_tunnel.json
-results/story_freeze_v1/figs/
 ```
 
-Read `results/story_freeze_v1/SUMMARY.md` first. It records the corrected
-three-act story:
+These files document the construct-validity problem: deleting a request node
+can also delete an action, while deleting a taxi node only removes information.
+They should not be substituted for the v4 H1-H5 analysis.
 
-- Act 1: coupled attention is uninformative under the type-matched DEF
-  baseline.
-- Act 2: attention shifts onto stale telemetry under freeze degradation.
-- Act 3: degradation-aware training does not restore faithfulness; the
-  decoupled head gives only a small clean-data improvement.
+## 11. Troubleshooting
 
-Important reproducibility note: the archived `B2_sweep/` and `H5b_sweep/`
-folders contain `analysis.json` and `manifest.json`, but not the raw per-cell
-JSON files expected by `scripts/analyze_hypotheses.py`. Therefore, the frozen
-analysis can be inspected directly, but full re-analysis from raw cell records
-requires rerunning the sweep as described below.
-
-## 3. Reproduce the main B2 severity sweep
-
-The B2 freeze-era manifest records:
-
-```text
-checkpoint: runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt
-epoch: 91
-area: central_park
-seeds: 42 43 44 45 46 47 48 49
-episodes per cell seed: 3
-demand split: test
-AoI ladder: 5 15 30 60
-corruption: freeze
-faithfulness every: 8
-```
-
-If the checkpoint exists locally, rerun the sweep:
+### PyTorch says NumPy is unavailable
 
 ```bash
-.venv/bin/python scripts/sweep_severity.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  --episodes 3 \
-  --seeds 42 43 44 45 46 47 48 49 \
-  --aoi-levels 5 15 30 60 \
-  --demand-split test \
-  --corruption freeze \
-  --faithfulness-every 8 \
-  --faithfulness-random-baselines 5 \
-  --random-baseline type_matched \
-  --out runs/sweeps/reproduce_B2_freeze
+.venv/bin/python -m pip install --force-reinstall "numpy<2"
 ```
 
-Then analyze:
+Then confirm:
 
 ```bash
-.venv/bin/python scripts/analyze_hypotheses.py \
-  runs/sweeps/reproduce_B2_freeze \
-  --n-permutations 10000
+.venv/bin/python -c "import numpy, torch; print(numpy.__version__, torch.__version__)"
 ```
 
-The analysis script writes `analysis.json` in the sweep directory. Compare it
-against:
+### TraCI initially refuses the connection
 
-```text
-results/story_freeze_v1/B2_sweep/analysis.json
-```
+Wait for the command to finish. Short retry messages during SUMO startup are
+expected. Investigate only if the process exits non-zero or never reaches an
+`OK`/completed message.
 
-Expect small differences if SUMO, PyTorch, platform, or random-number
-implementation differs. The qualitative pattern should match: H1 flat/floor,
-H3 positive WAMSN, H4 negative WAMSN-DEF association, and H2 weaker than the
-mechanism evidence.
+### Preflight fails
 
-## 4. Reproduce the H5 degradation-aware training sweep
+Read the `errors` array in `preflight.json`. Do not analyse or quote that sweep
+until the missing cells or protocol mismatch is corrected and preflight passes.
 
-The freeze-era H5 manifest records:
+### Results differ slightly across machines
 
-```text
-checkpoint: runs/mappo/H5b_freeze/central_park_1784138109/ckpt_best.pt
-epoch: 17
-area: central_park
-seeds: 42 43 44 45 46 47 48 49
-episodes per cell seed: 3
-demand split: test
-AoI ladder: 5 15 30 60
-corruption: freeze
-faithfulness every: 8
-```
-
-If the checkpoint exists locally:
-
-```bash
-.venv/bin/python scripts/sweep_severity.py \
-  runs/mappo/H5b_freeze/central_park_1784138109/ckpt_best.pt \
-  --episodes 3 \
-  --seeds 42 43 44 45 46 47 48 49 \
-  --aoi-levels 5 15 30 60 \
-  --demand-split test \
-  --corruption freeze \
-  --faithfulness-every 8 \
-  --faithfulness-random-baselines 5 \
-  --random-baseline type_matched \
-  --out runs/sweeps/reproduce_H5b_freeze
-```
-
-Then analyze:
-
-```bash
-.venv/bin/python scripts/analyze_hypotheses.py \
-  runs/sweeps/reproduce_H5b_freeze \
-  --n-permutations 10000
-```
-
-Compare with:
-
-```text
-results/story_freeze_v1/H5b_sweep/analysis.json
-```
-
-## 5. Train checkpoints from scratch
-
-Training is stochastic and may not reproduce bit-identical checkpoints across
-machines. Use this section when the original `runs/mappo/.../ckpt_best.pt`
-files are unavailable.
-
-Train the main B2 GAT-MAPPO policy on clean telemetry:
-
-```bash
-.venv/bin/python scripts/train.py \
-  --area central_park \
-  --policy gat \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train \
-  --pickup-reward 10.0 \
-  --dispatch-reward 0.5 \
-  --wait-lambda 0.001 \
-  --centralised-critic \
-  --save-every 50 \
-  --best-window 10
-```
-
-Train the H5 degradation-aware policy:
-
-```bash
-.venv/bin/python scripts/train.py \
-  --area central_park \
-  --policy gat \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train \
-  --degradation tunnel_triggered \
-  --outage-duration 30 \
-  --pickup-reward 10.0 \
-  --dispatch-reward 0.5 \
-  --wait-lambda 0.001 \
-  --centralised-critic \
-  --save-every 50 \
-  --best-window 10
-```
-
-Each run writes to:
-
-```text
-runs/mappo/<area>_<timestamp>/
-```
-
-Use that run's `ckpt_best.pt` in the sweep commands above.
-
-For faster GPU training in Colab, follow `docs/COLAB.md`.
-
-## 6. Reproduce the decoupled explanation head comparison
-
-First distil an explanation head from a frozen GAT checkpoint:
-
-```bash
-.venv/bin/python scripts/distill_explainer.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  --episodes 3 \
-  --max-decisions 1500 \
-  --seed 7 \
-  --epochs 30
-```
-
-This writes `explainer_head.pt` next to the checkpoint unless `--out` is
-provided.
-
-Evaluate coupled attention against the decoupled head on clean telemetry with
-the corrected type-matched baseline:
-
-```bash
-.venv/bin/python scripts/eval_explainer.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  runs/mappo/B2_gat/central_park_1783964871/explainer_head.pt \
-  --episodes 2 \
-  --seeds 42 43 \
-  --degradation off \
-  --every 5 \
-  --random-baseline type_matched \
-  --out runs/mappo/B2_gat/central_park_1783964871/compare_typematched_clean.json
-```
-
-Evaluate under tunnel-triggered freeze degradation:
-
-```bash
-.venv/bin/python scripts/eval_explainer.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  runs/mappo/B2_gat/central_park_1783964871/explainer_head.pt \
-  --episodes 2 \
-  --seeds 42 43 \
-  --degradation tunnel_triggered \
-  --every 5 \
-  --random-baseline type_matched \
-  --out runs/mappo/B2_gat/central_park_1783964871/compare_typematched_tunnel.json
-```
-
-Compare with:
-
-```text
-results/story_freeze_v1/audit/compare_typematched_clean.json
-results/story_freeze_v1/audit/compare_typematched_tunnel.json
-```
-
-## 7. Reproduce a single checkpoint evaluation
-
-To evaluate policy performance only:
-
-```bash
-.venv/bin/python scripts/eval_policy.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  --episodes 3 \
-  --stochastic \
-  --demand-split test
-```
-
-To evaluate performance plus DEF/WAMSN and attention drift under severe
-freeze degradation:
-
-```bash
-.venv/bin/python scripts/eval_policy.py \
-  runs/mappo/B2_gat/central_park_1783964871/ckpt_best.pt \
-  --episodes 3 \
-  --stochastic \
-  --demand-split test \
-  --degradation tunnel_triggered \
-  --faithfulness \
-  --faithfulness-every 8 \
-  --faithfulness-random-baselines 5 \
-  --drift
-```
-
-## 8. Expected output files
-
-A severity sweep directory should contain:
-
-```text
-manifest.json
-cells/
-  clean_0_seed42.json
-  max_aoi_5_seed42.json
-  max_aoi_15_seed42.json
-  max_aoi_30_seed42.json
-  max_aoi_60_seed42.json
-  ...
-preflight.json
-analysis.json
-```
-
-The raw cell files are the inputs needed by `scripts/analyze_hypotheses.py`.
-Keep them if a reader needs to audit the exact per-decision records.
-
-## 9. Known caveats
-
-- The learned policies are far below SUMO greedy dispatch performance. This
-  is a scope condition, not a hidden claim: the dissertation studies
-  explanation faithfulness in the learned policy regime actually achieved.
-- The primary corruption mechanism is freeze semantics at the observation
-  boundary. Legacy noise-based results in `results/b1b2b3_sumo120_seed42_v1/`
-  are not the dissertation's final evidence.
-- Stochastic evaluation is intentional. Deterministic argmax evaluation can
-  collapse to all-no-op on entropy-collapsed checkpoints.
-- Platform changes can move exact pickups and p-values. Compare qualitative
-  conclusions and confidence intervals, not bit-identical JSON.
-- For the final dissertation claims, prefer type-matched DEF baselines over
-  uniform baselines because the audit shows uniform baselines are confounded
-  in candidate-action architectures.
+SUMO, PyTorch, operating system, and floating-point differences can change
+individual trajectories. Compare the full training-seed pattern and retain all
+declared seeds rather than selecting the run that best matches the thesis.

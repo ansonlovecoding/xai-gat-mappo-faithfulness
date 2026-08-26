@@ -1,40 +1,44 @@
 # Abstract
 
-Graph-attention multi-agent reinforcement learning (GAT-MARL) is
-increasingly used for fleet dispatch, and its attention weights are
-routinely surfaced on operator dashboards as built-in explanations of
-dispatch decisions. In real operations the telemetry feeding such
-systems degrades — vehicles entering tunnels lose GPS and V2X signal —
-so the data behind an explanation can be stale precisely when operators
-most need to trust it. This dissertation asks whether attention-based
-explanations remain faithful as telemetry ages, formalising the risk as
-*faithfulness decoupling*: explanations that outlive their data.
+Graph-attention multi-agent reinforcement learning (GAT-MARL) can expose
+attention weights as explanations of fleet-dispatch decisions. Those
+explanations may remain visually plausible even when the vehicle telemetry
+behind them is stale. This dissertation studies that trust problem under the
+title *When Explanations Outlive Their Data: Faithfulness Decoupling in
+Graph-Attention MARL Fleet Dispatch under Telemetry Degradation*.
 
-A reproducible benchmark is built: a SUMO simulation of a tunnel-rich
-district of Chongqing with a 20-taxi fleet, a GAT-MAPPO dispatcher, a
-freeze-semantics degradation layer parameterised by maximum Age of
-Information (AoI), and a per-decision faithfulness protocol (DEF,
-occlusion-based; WAMSN, attention mass on stale nodes) with exact
-paired clean/degraded observations.
+The experiment uses a SUMO simulation of a 20-taxi fleet in a tunnel-rich area
+of Chongqing. A tunnel entry triggers signal loss, while degradation itself is
+applied at the policy's observation boundary. The simulator continues to hold
+the true vehicle state, but the policy receives a frozen last-known position
+and speed for a fixed 10, 20, 30, or 60 seconds. This design provides matched
+clean and degraded observations without changing vehicle movement in SUMO.
 
-Three findings emerge. First, the built-in attention channel carries no
-measurable decision-relevant information even on clean telemetry: an
-apparent "worse than random" faithfulness score (margin-DEF −0.55) is
-shown, via a construct-validity audit, to be 98 % a protocol artifact —
-in candidate-action architectures, occluding a reservation node deletes
-the corresponding action, and uniform random baselines are
-systematically inflated. Under a composition-matched baseline the
-channel scores ≈0 across every capability level, architecture variant,
-and training seed tested. Second, under staleness the explanation's
-content silently shifts onto stale nodes (WAMSN 0→0.013, p = 10⁻⁴,
-cluster-robust) while neither faithfulness nor task performance
-responds — the operational hazard in its purest form. Third, neither
-mitigation tested restores faithfulness: degradation-aware training has
-no effect in either direction, while an occlusion-distilled decoupled
-explanation head yields a modest, significant improvement on clean data
-only (+0.023, p = 10⁻⁴).
+Four policy conditions are trained with seeds 42, 43, and 44. The main audit
+compares a clean-trained GAT policy (B2) with a GAT policy trained under
+degradation (H5). Explanation quality is measured by decision-level
+explanation faithfulness (DEF), using type-matched random occlusions, and by
+weighted attention mass on stale nodes (WAMSN). Each trained policy is tested
+with eight evaluation seeds and three episodes per condition. Checkpoints are
+selected on validation demand before the held-out test runs.
 
-Beyond the empirical verdicts, the work contributes the artifact
-characterisation itself — a warning applicable to any explainable-RL
-system whose explanation units double as action candidates — together
-with an open, seed-pinned benchmark and audit trail.
+The rerun gives a narrower result than the original hypothesis. H3 is the only
+confirmatory result supported for every trained GAT policy: WAMSN increases
+with outage duration (within-seed Spearman rho 0.078-0.121; Holm-adjusted
+p = 0.0004 in all six runs). However, the exact paired shift of attention onto
+stale nodes is positive for two training seeds and negative for one in both B2
+and H5. H1 and H2 are unsupported in all six runs, so the experiment does not
+show that longer outages reduce DEF or that faithfulness declines faster than
+dispatch performance. The WAMSN-DEF association is also training-seed
+dependent. Degradation-aware training does not remove this variability and one
+H5 seed learns a substantially weaker dispatcher.
+
+A supporting construct-validity audit explains why the conclusion must be
+cautious: deleting a passenger-request node also deletes its action, whereas
+deleting a nearby-taxi node only hides information. Type-matched controls are
+therefore necessary to avoid attributing action-space changes to explanation
+faithfulness. Overall, outage duration reliably changes stale-data exposure,
+but its effect on explanation allocation and faithfulness is not stable across
+independently trained policies. Attention maps should not be treated as
+trustworthy explanations without model-specific faithfulness and freshness
+checks.

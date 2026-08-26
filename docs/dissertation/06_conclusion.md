@@ -1,43 +1,32 @@
 # 6. Conclusion
 
-This dissertation set out to measure whether the attention weights that
-fleet-dispatch platforms present as explanations remain faithful when
-the telemetry behind them ages. It built the first benchmark coupling a
-GAT-MARL dispatcher to physically grounded, AoI-parameterised telemetry
-degradation, with per-decision paired clean/degraded evaluation, and
-resolved all five preregistered hypotheses under cluster-robust
-statistics.
+This dissertation examined whether graph-attention explanations remain
+trustworthy when fleet telemetry becomes stale. Tunnel entry triggered signal
+loss, but the degradation was applied at the observation boundary: SUMO kept
+the true state while the policy received frozen last-known vehicle data. This
+separation made it possible to compare clean and degraded versions of the same
+decision.
 
-The answers reshape the question. The built-in attention channel of the
-studied dispatcher is not a degraded explanation — it is not an
-explanation at all: under a construct-valid protocol it is
-statistically indistinguishable from a composition-matched random
-attribution on clean data, a verdict invariant across every capability
-level, architecture variant, and training regime tested. What
-degradation adds is not a loss of fidelity but a silent change of
-content: attention mass shifts measurably onto stale telemetry
-(robustly supported), the least faithful decisions are precisely those
-attending most to stale nodes, and neither task performance nor any
-property of the explanation itself signals that anything has changed.
-"Explanations outlive their data" proved true in a form more troubling
-than hypothesised: the explanation's authority never rested on fidelity
-in the first place, and staleness erodes even the correspondence its
-appearance suggests.
+The strongest result is also the narrowest. Longer outages increase WAMSN for
+all six trained GAT policies. Attention-based explanations therefore carry
+more stale-data exposure when observation outages last longer. This does not
+mean that AoI causes lower faithfulness. H1 and H2 are unsupported in every
+training run, and DEF remains close to the type-matched random baseline.
 
-Neither tested remedy restores faithfulness. Training under degradation
-leaves the channel unchanged; distilling a decoupled head from
-occlusion targets produces the study's only above-random channel, with
-a modest advantage that vanishes under degradation. Faithful dispatch
-explanation remains an open problem — now with a measured baseline, a
-mechanism, and two negative results marking the paths that do not work.
+The exact attention response is not stable across learned policies. Seeds 42
+and 43 shift attention toward stale nodes, while seed 44 shifts it away, for
+both clean-trained and degradation-trained GATs. The WAMSN-DEF relationship is
+also mixed. Degradation-aware training does not remove this variation and does
+not provide a consistent mitigation.
 
-The study's most transferable contribution emerged unplanned: the
-demonstration that occlusion-based faithfulness protocols are
-uninterpretable in candidate-action architectures — capable of
-certifying the same uninformative channel as far worse or far better
-than random — together with two inexpensive controls that repair them.
-The audit trail by which this artifact was found, verified, and
-propagated through every prior conclusion is preserved in the released
-benchmark, and is offered as a template for how explainability claims
-in reinforcement learning ought to be stress-tested before they are
-believed.
+The construct-validity audit supports this conclusion by showing that request
+and taxi occlusions are not equivalent. Deleting a request can delete an
+action; deleting a taxi only removes information. Type-matched controls are
+therefore required before DEF can be interpreted.
+
+The central lesson is about trust rather than performance. A complete and
+plausible attention map can outlive the freshness of its data, yet its response
+to that degradation may depend on the particular trained checkpoint. Stable
+dispatch output is not enough to validate the explanation. Graph-attention
+weights should be treated as model internals unless each released policy passes
+explicit, freshness-aware, action-aware, and cross-seed faithfulness checks.

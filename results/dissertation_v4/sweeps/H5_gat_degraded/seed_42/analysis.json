@@ -1,0 +1,519 @@
+{
+  "manifest": {
+    "checkpoint": "runs/dissertation_v4/training/H5_gat_degraded/seed_42/ckpt_selected.pt",
+    "git_rev": null
+  },
+  "H1_outage_duration": {
+    "n": 6822,
+    "rho": -0.0008933048188597332,
+    "p_one_sided": 0.46955304469553044,
+    "per_level_mean": {
+      "0": 2.0763022743947175e-05,
+      "10": 2.0763022743947175e-05,
+      "20": 2.073529411764706e-05,
+      "30": 2.108345534407028e-05,
+      "60": 2.051094890510949e-05
+    }
+  },
+  "H2_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": 0.0030982140934591677,
+    "p_one_sided": 0.3350664933506649,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": 0.0071
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0204,
+        "faith_rate": -0.1232
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": 0.0071
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0345
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": 0.0204,
+        "faith_rate": 0.0508
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0192
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": 0.0588,
+        "faith_rate": -0.0243
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0385
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0323
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": -0.0197
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0303
+      }
+    ]
+  },
+  "H3_outage_duration": {
+    "n": 7142,
+    "rho": 0.12064817807067146,
+    "p_one_sided": 9.999000099990002e-05,
+    "per_level_mean": {
+      "0": 0.0,
+      "10": 0.0005473020322354589,
+      "20": 0.0007616573033707865,
+      "30": 0.0021865034965034965,
+      "60": 0.005335146443514645
+    }
+  },
+  "H1m_outage_duration": {
+    "n": 6822,
+    "rho": -0.0022067138997704126,
+    "p_one_sided": 0.43255674432556745,
+    "per_level_mean": {
+      "0": 0.00037740278796771824,
+      "10": 0.00037762289068231846,
+      "20": 0.0003807352941176471,
+      "30": 0.0003804538799414349,
+      "60": 0.0003758394160583941
+    }
+  },
+  "H2m_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": -0.0007801319176079201,
+    "p_one_sided": 0.5861413858614138,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0015
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0014
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0032
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0016
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0019
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0015
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0069
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0015
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0032
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": -0.072
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0095
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0204,
+        "faith_rate": -0.028
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0055
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0015
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0032
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0049
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": -0.0608
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.004
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0265
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": 0.0204,
+        "faith_rate": 0.055
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0208
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": 0.0588,
+        "faith_rate": -0.0235
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0065
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0066
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": -0.069,
+        "faith_rate": -0.0571
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0026
+      }
+    ]
+  },
+  "H4_pooled": {
+    "n": 5459,
+    "rho": -0.06598143527475214,
+    "p_one_sided": 9.999000099990002e-05
+  },
+  "robust": {
+    "primary_axis": "outage_duration",
+    "primary_stale_attention_shift": {
+      "mean_shift": 0.0023744618055555554,
+      "ci95": [
+        0.0021508138020833335,
+        0.0026088216145833333
+      ],
+      "p_one_sided": 9.999000099990002e-05,
+      "n_decisions": 196,
+      "n_episode_blocks": 96,
+      "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+    },
+    "H1_robust": {
+      "n": 6822,
+      "n_episode_blocks": 120,
+      "rho": -0.000893304818859733,
+      "p_episode_perm": 0.47315268473152683,
+      "rho_cluster_ci95": [
+        -0.03207439829581934,
+        0.029609894448695242
+      ]
+    },
+    "H1m_robust": {
+      "n": 6822,
+      "n_episode_blocks": 120,
+      "rho": -0.0022067138997704126,
+      "p_episode_perm": 0.4323567643235676,
+      "rho_cluster_ci95": [
+        -0.027999142393878542,
+        0.024939773511310978
+      ]
+    },
+    "H3_robust": {
+      "n": 7142,
+      "n_episode_blocks": 120,
+      "rho": 0.12064817807067146,
+      "p_episode_perm": 9.999000099990002e-05,
+      "rho_cluster_ci95": [
+        0.10291958842655002,
+        0.1372069170454385
+      ]
+    },
+    "H4_within_episode": {
+      "n_episodes": 82,
+      "mean_rho_within_episode": -0.07235984812559558,
+      "frac_negative": 0.9390243902439024,
+      "p_one_sided": 9.999000099990002e-05
+    },
+    "H4m_within_episode": {
+      "n_episodes": 82,
+      "mean_rho_within_episode": -0.09914120753544488,
+      "frac_negative": 0.8902439024390244,
+      "p_one_sided": 9.999000099990002e-05
+    },
+    "confirmatory_family_raw_p": {
+      "H1": 0.47315268473152683,
+      "H2": 0.3350664933506649,
+      "H3": 9.999000099990002e-05,
+      "H4": 9.999000099990002e-05
+    },
+    "confirmatory_family_holm_p": {
+      "H3": 0.00039996000399960006,
+      "H4": 0.00039996000399960006,
+      "H2": 0.6701329867013298,
+      "H1": 0.6701329867013298
+    },
+    "def_agreement": {
+      "n": 6822,
+      "spearman_def_vs_def_m": 0.6848842909628642
+    }
+  }
+}

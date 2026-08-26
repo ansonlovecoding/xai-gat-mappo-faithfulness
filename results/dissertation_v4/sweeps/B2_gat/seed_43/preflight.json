@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "planned_cells": 40,
+    "completed_cells": 40,
+    "degraded_records": 9606,
+    "stale_exposed_records": 207,
+    "mean_stale_attention_shift_when_exposed": 0.00043188405797101487,
+    "empirical_max_aoi_s_by_level": {
+      "10.0": 10.0,
+      "20.0": 20.0,
+      "30.0": 30.0,
+      "60.0": 60.0
+    }
+  }
+}

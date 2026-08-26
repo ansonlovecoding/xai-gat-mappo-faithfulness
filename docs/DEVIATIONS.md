@@ -20,23 +20,19 @@ but the results are *narrated* as three questions:
 3. **Can it be fixed?** (RQ4 = H5 degradation-aware training, plus the
    decoupled explainer head)
 
-## 2. Severity axis: one, not two
+## 2. Severity axis: fixed observation-layer outage duration
 
-The proposal (§7.2) commits to a single degradation axis — max-AoI via
-tunnel signal loss — and the implementation briefly explored a second
-axis (random dropout at varying rates, plus noise-magnitude variation).
-The final experiments restore the proposal's single axis: the max-AoI
-ladder {5, 15, 30, 60} s with freeze corruption. The matched-structure
-random-dropout comparison is retained only as an appendix robustness
-check (`sweep_severity.py --with-dropout-axis`).
+The proposal (§7.2) describes severity through maximum AoI. The archived v1
+implementation did not manipulate that quantity cleanly because tunnel transit
+and a clipped AoI feature collapsed the nominal levels. The definitive v4
+experiment therefore uses a directly controllable observation-layer outage
+window of {10, 20, 30, 60} seconds with freeze corruption.
 
-One refinement over the proposal: the proposal controls maximum AoI via
-"tunnel transit duration", which is fixed by geography once the map is
-chosen. The implementation therefore adds `outage_duration_s`: the
-signal stays lost until AoI reaches the level, even after the vehicle
-exits the tunnel — physically read as receiver re-acquisition delay.
-Long transits can exceed low levels, so the empirical AoI distribution
-is reported per level.
+Tunnel entry emits one trigger event. SUMO keeps the true state, while the
+observation builder freezes the last valid position and speed for the declared
+window. AoI describes the resulting observation and is not interpreted as a
+causal dose of faithfulness. Random dropout is not part of the final
+confirmatory matrix.
 
 ## 3. Margin-DEF as a methodological extension
 
@@ -71,8 +67,9 @@ lens with this justification.
 ## 5. B0 premise inversion
 
 The proposal expects B0 (greedy) to be a floor the learned policy beats.
-Measured: SUMO's greedy matcher completes 32 pickups vs 6–8 for every
-learned policy. The dissertation adopts the proposal's own risk-section
+The definitive v4 clean evaluation gives about 11-15 pickups for B1-B3 and
+4.5-12.9 for H5 across training seeds; the archived greedy reference remains
+higher. The dissertation adopts the proposal's own risk-section
 stance: the contribution is measuring explanation faithfulness and its
 decoupling, not building a state-of-the-art dispatcher; B0 is reported
 as context, and the faithfulness analysis is conditioned on the learned
@@ -85,10 +82,9 @@ omitted.
 Under the proposal's own protocol (§7.7: B0–B3 trained on clean
 telemetry), the AoI observation feature is identically zero during
 training, so B3 (AoI-unaware) differs from B2 only by an unused input.
-The measured clean-eval difference (8.20 vs 5.80 pickups) is seed noise,
-not an ablation effect. The meaningful AoI-awareness comparison is the
-RQ4 one — degradation-aware training (H5) vs degradation-naive (B2) —
-and the dissertation frames it that way.
+The v4 B2 and B3 checkpoints and clean-test outputs are exactly identical for
+corresponding seeds, as expected. B3 is therefore a structural control for
+degraded observations, not evidence about an AoI effect under clean data.
 
 ## 7. Offline dataset → online paired evaluation
 
@@ -138,10 +134,10 @@ uniform-baseline numbers are retained to document the artifact.
 
 ## 10. Additions beyond the proposal
 
-- **Decoupled explanation head** (occlusion-distilled scorer over
-  detached encoder embeddings) — an architectural mitigation on the
-  explanation side, complementing the proposal's training-side
-  mitigation (H5).
+- **Decoupled explanation head** (occlusion-distilled scorer over detached
+  encoder embeddings) — an architectural mitigation on the explanation side.
+  It remains a legacy exploratory experiment and is not part of the final v4
+  confirmatory matrix.
 - **Chronological demand splits** implemented as seeded rider-demand
   variants (identical fleet, varied demand), giving held-out test
   demand for all headline results.

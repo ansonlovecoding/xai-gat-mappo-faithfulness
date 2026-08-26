@@ -1,4 +1,4 @@
-"""Build thesis-ready descriptive tables from preflight-passed v2 sweeps."""
+"""Build thesis-ready tables from preflight-passed dissertation sweeps."""
 from __future__ import annotations
 
 import argparse
@@ -112,6 +112,77 @@ def summarize_performance(root: Path) -> list[dict]:
     return rows
 
 
+def _support_label(supported: int, total: int) -> str:
+    if supported == total:
+        return "consistent"
+    if supported == 0:
+        return "not_supported"
+    return "mixed"
+
+
+def summarize_training_seeds(root: Path) -> tuple[list[dict], list[dict]]:
+    """Summarise inference across independently trained policy seeds.
+
+    Each per-seed analysis already handles repeated decisions and episode
+    clustering. This layer treats the trained policy as the replication unit
+    and reports consistency, not a pooled p-value, because three training
+    seeds are too few for a strong population-level significance claim.
+    """
+    aggregate_rows: list[dict] = []
+    seed_rows: list[dict] = []
+    for model_dir in sorted((root / "sweeps").glob("*")):
+        analyses = []
+        for sweep_dir in sorted(model_dir.glob("seed_*")):
+            analysis_path = sweep_dir / "analysis.json"
+            if not analysis_path.exists():
+                continue
+            analysis = json.loads(analysis_path.read_text())
+            robust = analysis["robust"]
+            holm = robust["confirmatory_family_holm_p"]
+            row = {
+                "model": model_dir.name,
+                "training_seed": int(sweep_dir.name.removeprefix("seed_")),
+                "stale_attention_shift": robust["primary_stale_attention_shift"]["mean_shift"],
+                "H1_rho": robust["H1_robust"]["rho"],
+                "H2_delta": analysis["H2_outage_duration"]["mean_delta_faith_minus_perf"],
+                "H3_rho": robust["H3_robust"]["rho"],
+                "H4_within_episode_rho": robust["H4_within_episode"]["mean_rho_within_episode"],
+                **{f"{name}_holm_p": holm[name] for name in ("H1", "H2", "H3", "H4")},
+                **{f"{name}_supported": holm[name] <= 0.05
+                   for name in ("H1", "H2", "H3", "H4")},
+            }
+            analyses.append(row)
+            seed_rows.append(row)
+        if not analyses:
+            continue
+
+        def values(key: str) -> list[float]:
+            return [float(row[key]) for row in analyses]
+
+        aggregate = {
+            "model": model_dir.name,
+            "training_seeds": len(analyses),
+        }
+        for key in ("stale_attention_shift", "H1_rho", "H2_delta", "H3_rho",
+                    "H4_within_episode_rho"):
+            observed = values(key)
+            aggregate[f"{key}_mean"] = _mean(observed)
+            aggregate[f"{key}_min"] = min(observed)
+            aggregate[f"{key}_max"] = max(observed)
+        aggregate["positive_stale_attention_shift_seeds"] = sum(
+            row["stale_attention_shift"] > 0 for row in analyses
+        )
+        for hypothesis in ("H1", "H2", "H3", "H4"):
+            supported = sum(bool(row[f"{hypothesis}_supported"]) for row in analyses)
+            aggregate[f"{hypothesis}_supported_seeds"] = supported
+            aggregate[f"{hypothesis}_consistency"] = _support_label(supported, len(analyses))
+        aggregate_rows.append(aggregate)
+
+    if not aggregate_rows:
+        raise RuntimeError(f"no completed analyses found under {root / 'sweeps'}")
+    return aggregate_rows, seed_rows
+
+
 def _write_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -127,6 +198,7 @@ def main() -> int:
     args = parser.parse_args()
     rows = summarize(args.root)
     performance_rows = summarize_performance(args.root)
+    training_seed_rows, per_seed_rows = summarize_training_seeds(args.root)
     atomic_write_json(args.root / "summary.json", {"rows": rows})
     csv_path = args.root / "summary.csv"
     _write_csv(csv_path, rows)
@@ -134,10 +206,22 @@ def main() -> int:
                       {"rows": performance_rows})
     performance_csv = args.root / "performance_context.csv"
     _write_csv(performance_csv, performance_rows)
+    atomic_write_json(args.root / "training_seed_synthesis.json", {
+        "interpretation": (
+            "The independently trained policy is the replication unit. "
+            "With three seeds, consistency is reported descriptively and no "
+            "cross-seed population p-value is claimed."
+        ),
+        "rows": training_seed_rows,
+        "per_seed": per_seed_rows,
+    })
+    seed_csv = args.root / "training_seed_synthesis.csv"
+    _write_csv(seed_csv, training_seed_rows)
     print(f"summary rows: {len(rows)}")
     print(f"json: {args.root / 'summary.json'}")
     print(f"csv:  {csv_path}")
     print(f"performance: {performance_csv}")
+    print(f"training seeds: {seed_csv}")
     return 0
 
 
