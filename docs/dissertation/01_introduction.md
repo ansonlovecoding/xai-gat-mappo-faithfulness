@@ -20,23 +20,34 @@ current world.
 Vehicle telemetry can be interrupted by tunnels and other signal-loss areas.
 During an interruption, a dispatch platform may keep the last received
 position and speed. The reading remains available, but its Age of Information
-(AoI) grows [21]. An attention map can therefore continue to look complete
-even though some of the nodes represent old information.
+(AoI) grows [21]. An attention map can therefore continue to look complete even
+though some of the nodes represent old information. The interface reveals where
+the model placed attention, but it does not reveal whether that information is
+fresh or whether removing it would change the decision.
 
-This dissertation asks whether such an explanation can be trusted. The central
-problem is not whether the dispatcher achieves the highest number of pickups.
-Performance is reported only as context. The primary concern is whether the
-explanation continues to identify decision-relevant evidence when telemetry is
-degraded.
+This creates an assurance problem. An operator may read a complete attention
+map as a trustworthy reason even when its evidence is stale, and stable dispatch
+performance cannot show whether the explanation is valid. The dissertation is
+therefore not trying to improve the number of pickups. It is trying to determine
+whether raw graph-attention weights provide dependable evidence about a
+decision under clean and degraded telemetry.
 
-The study uses **faithfulness decoupling** to describe a mismatch between the
-apparent explanation and the evidence supporting the decision. The original
-hypothesis expected explanation faithfulness to decline while performance
-remained stable. The final analysis tests that claim rather than assuming it.
+The study uses **faithfulness decoupling** for the risk that an explanation
+remains available and visually plausible after the freshness of its supporting
+data has expired, without a dependable link between the displayed weights and
+the evidence that changes the decision. The original hypothesis expected
+faithfulness to decline while performance remained stable. The final experiment
+tests this possible pattern, but the broader problem is whether attention offers
+a reliable assurance at all.
 
 ## 1.3 Research questions
 
-The dissertation addresses four questions:
+The central research question is:
+
+**Can raw graph-attention weights be trusted as explanations of fleet-dispatch
+decisions when vehicle telemetry becomes stale?**
+
+Four operational questions provide the evidence needed to answer it:
 
 1. **RQ1:** Is graph attention a faithful explanation under clean telemetry?
 2. **RQ2:** When tunnel-triggered outages occur, does attention move toward
@@ -69,7 +80,9 @@ The measurable objectives are to:
 
 ## 1.5 Main findings
 
-The completed v4 experiment changes the emphasis of the dissertation.
+The completed v4 experiment gives one consistent overall answer: **raw attention
+weights are not validated as dependable explanations by this study**. This is a
+negative assurance result, supported by three connected findings.
 
 First, type-matched DEF remains close to zero for the audited GAT policies.
 This does not prove that attention is harmful; it means the experiment finds
@@ -88,11 +101,15 @@ Third, the paired change in stale-node attention is not consistent across
 training seeds. It is positive for seeds 42 and 43 but negative for seed 44 in
 both B2 and H5. H1 and H2 are unsupported in every trained policy. The
 association between WAMSN and DEF is supported for two H5 seeds, but not the
-third and not any B2 seed. The trustworthy conclusion is therefore about
-exposure and model dependence, not a universal degradation of faithfulness.
+third and not any B2 seed. This disagreement is not an absence of a conclusion:
+it shows that raw attention has no stable, model-independent response to stale
+telemetry.
 
 Finally, degradation-aware training does not remove training-seed variation.
 It also produces one weak policy replicate, which limits any mitigation claim.
+Taken together, the results do not prove that attention is always unfaithful.
+They show that attention cannot be trusted by default; freshness and
+faithfulness must be checked separately for every released policy.
 
 ## 1.6 Contributions
 

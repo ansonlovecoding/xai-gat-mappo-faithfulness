@@ -13,6 +13,13 @@ selected epochs 10, 70, and 10; H5 selected 10, 90, and 10. This variation
 confirms that a fixed final epoch would not represent the same learning stage
 across seeds.
 
+![Validation checkpoint selection by model and training seed](../figures/v4_checkpoint_selection_by_model_and_seed.png)
+
+**Figure 4.1.** Validation pickups vary strongly across checkpoints and
+training seeds. Stars mark the checkpoints selected without reading the held-out
+test split. The curves are selection evidence, not estimates of final test
+performance.
+
 Table 4.1 reports clean-test pickups. Performance is included to describe the
 policies being explained, not as the research outcome.
 
@@ -30,7 +37,7 @@ it would hide training instability.
 
 ![Clean-test performance by training seed](../figures/v4_clean_performance_by_training_seed.png)
 
-**Figure 4.1.** Each point is one independently trained policy evaluated over
+**Figure 4.2.** Each point is one independently trained policy evaluated over
 24 held-out episodes; horizontal lines show the mean across training seeds.
 
 ## 4.2 Supporting construct-validity result
@@ -39,6 +46,15 @@ The earlier audit showed that a uniform random occlusion is not a fair control
 for this graph. Removing a passenger-request node can remove the chosen action,
 while removing a taxi node only withholds information. The sign and size of DEF
 can therefore be driven by node-type composition.
+
+| Random control | Mean margin-DEF | 95% CI | Interpretation |
+|---|---:|---:|---|
+| Uniform random | -0.5540 | [-0.5808, -0.5288] | dominated by node-type and action-deletion imbalance |
+| Type-matched random | -0.0093 | [-0.0159, -0.0013] | approximately no advantage over matched random |
+
+The audit contains 1,199 paired clean decisions from the earlier B2 protocol.
+It diagnoses the measurement problem; it is not part of the v4 hypothesis
+test.
 
 The v4 rerun addresses this problem from the start. All headline DEF values use
 type-matched random subsets, and the action-protected margin variant is stored
@@ -60,22 +76,28 @@ six trained GAT policies. The within-policy trend correlations range from
 rho = 0.082 to 0.105 for B2 and 0.078 to 0.121 for H5; every Holm-adjusted
 p-value is 0.0004.
 
-![WAMSN by outage duration](../figures/v4_wamsn_by_outage_duration.png)
+![WAMSN, type-matched DEF and pickups by outage duration](../figures/v4_decoupling_by_outage_duration.png)
 
-**Figure 4.2.** Conditional WAMSN rises with observation-layer outage duration
-for every training seed. Because WAMSN includes normalised AoI, this is evidence
-that stale exposure increased as designed. It is not evidence that AoI reduced
-faithfulness.
+**Figure 4.3.** Conditional WAMSN rises with observation-layer outage duration
+for every training seed, while type-matched DEF and pickups remain nearly
+flat. The three rows make the decoupling visible, but they do not imply that
+AoI caused a change in faithfulness: WAMSN itself includes normalised AoI.
 
 ## 4.4 Paired attention reallocation is seed-dependent
 
 The paired stale-attention shift compares the degraded observation with its
 clean twin. The result is not consistent across trained policies.
 
-| Model | Seed 42 | Seed 43 | Seed 44 | Positive seeds |
-|---|---:|---:|---:|---:|
-| B2 GAT | +0.002706 | +0.000618 | -0.001278 | 2/3 |
-| H5 degraded training | +0.002374 | +0.000783 | -0.001231 | 2/3 |
+| Model | Training seed | Mean shift | 95% CI |
+|---|---:|---:|---:|
+| B2 GAT | 42 | +0.002706 | [0.002395, 0.003036] |
+| B2 GAT | 43 | +0.000618 | [0.000424, 0.000780] |
+| B2 GAT | 44 | -0.001278 | [-0.001436, -0.001112] |
+| H5 degraded training | 42 | +0.002374 | [0.002151, 0.002609] |
+| H5 degraded training | 43 | +0.000783 | [0.000710, 0.000862] |
+| H5 degraded training | 44 | -0.001231 | [-0.001410, -0.001072] |
+
+Both training regimes therefore have two positive seeds out of three.
 
 Within each seed, the confidence intervals are narrow because the same
 decisions are paired. However, precision within one trained policy does not
@@ -86,7 +108,7 @@ reallocation depend on the learned policy.
 
 ![Paired stale-attention shift](../figures/v4_paired_stale_attention_shift.png)
 
-**Figure 4.3.** Positive values mean more attention mass on stale nodes in the
+**Figure 4.4.** Positive values mean more attention mass on stale nodes in the
 degraded twin; seed 44 reverses the direction for both training regimes.
 
 ## 4.5 Faithfulness and decoupling hypotheses
@@ -110,10 +132,12 @@ p = 0.0004), but H5 seed 44 does not (rho = -0.001, adjusted p = 0.185).
 This mixed result is exploratory evidence of a possible training-regime
 interaction, not a general finding.
 
-![Hypothesis consistency across training seeds](../figures/v4_hypothesis_consistency.png)
+![Within-episode WAMSN-DEF correlation by training seed](../figures/v4_h4_correlation_by_training_seed.png)
 
-**Figure 4.4.** Number of training seeds, out of three, supporting each
-confirmatory hypothesis after within-policy Holm correction.
+**Figure 4.5.** Within-episode Spearman correlations between WAMSN and DEF.
+Filled points passed the within-policy Holm-corrected H4 test; open points did
+not. The direction differs between B2 and H5 and is not consistent across all
+training seeds.
 
 ## 4.6 Degradation-aware training
 

@@ -32,7 +32,7 @@ Each idle taxi receives a self-centred graph containing:
 
 | Node type | Main features | Role |
 |---|---|---|
-| Self taxi | position, time, speed, AoI | acting vehicle |
+| Self taxi | position, time, speed, AoI, position-valid flag | acting vehicle |
 | Peer taxi | relative position, availability, distance, AoI | nearby fleet context |
 | Passenger request | pickup/drop-off vectors, waiting time | candidate request and action |
 
@@ -46,6 +46,12 @@ passenger-request node also removes the associated action, whereas deleting a
 peer-taxi node only hides information about that taxi. Section 3.7 explains
 how the faithfulness audit controls this asymmetry.
 
+![Observation graph and request-to-action mapping](../observation_graph_action_mapping.png)
+
+**Figure 3.1.** Self, peer-taxi and request nodes enter the same masked graph,
+but only request nodes map directly to dispatch actions. This difference is
+central to the construct-validity audit.
+
 ## 3.4 Policy models and training
 
 The main policy uses per-node-type feature projections followed by two graph
@@ -55,6 +61,12 @@ training and decentralised execution. The GAT implementation returns its
 attention tensors directly so they can be audited without changing the trained
 network.
 
+![Simplified graph-attention design](../simplified_graph_attention_design.png)
+
+**Figure 3.2.** The policy uses typed node embeddings and two masked,
+scaled-dot-product graph self-attention layers. The self-node attention row is
+retained for faithfulness testing.
+
 Four policy conditions are included:
 
 | ID | Policy | Training observations | Purpose |
@@ -62,7 +74,7 @@ Four policy conditions are included:
 | B1 | MLP-MAPPO | clean | performance context without graph attention |
 | B2 | GAT-MAPPO | clean | primary attention model under audit |
 | B3 | GAT-MAPPO without AoI input | clean | structural AoI-input control |
-| H5 | GAT-MAPPO | tunnel-triggered degradation | degradation-aware training condition |
+| H5 | GAT-MAPPO | tunnel-triggered 30-second outages | degradation-aware training condition |
 
 Each condition is trained for 150 epochs with seeds 42, 43, and 44. B2 and B3
 produce identical clean-test behaviour because AoI is always zero during clean
@@ -80,6 +92,12 @@ read during selection. The selected epochs are:
 | B2 | 10 | 70 | 10 |
 | B3 | 10 | 70 | 10 |
 | H5 | 10 | 90 | 10 |
+
+![Model conditions and training process](../model_design_training_process.png)
+
+**Figure 3.3.** All learned conditions use the same training, validation and
+held-out evaluation protocol. Only the declared architecture, AoI input or
+training telemetry changes.
 
 ## 3.5 Telemetry degradation
 
@@ -105,8 +123,9 @@ created longer stale exposure; it is not by itself proof that AoI changed DEF.
 
 ![Telemetry degradation data flow](../telemetry_degradation_data_flow.png)
 
-**Figure 3.1.** Tunnel entry supplies the trigger, but frozen telemetry is
-created at the observation boundary. SUMO ground truth remains unchanged.
+**Figure 3.4.** A tunnel-entry transition triggers one fixed observation-layer
+outage. Remaining inside the tunnel does not retrigger it, and SUMO ground
+truth remains unchanged.
 
 ## 3.6 Explanation measures
 
@@ -161,6 +180,12 @@ The corrected protocol uses three controls:
   action is not deleted in the action-protected variant;
 - **clamp logging:** counterfactual action-margin clamps are counted so that
   action deletion can be detected.
+
+![Construct-validity controls for action-linked request nodes](../construct_validity_action_deletion.png)
+
+**Figure 3.5.** Request-node and peer-taxi occlusions are not equivalent
+interventions. The v4 protocol therefore matches node types, protects the
+chosen request-action and records margin clamps.
 
 The earlier uniform-baseline results are retained only as an audit trail. They
 are not used for the final v4 hypothesis verdicts.

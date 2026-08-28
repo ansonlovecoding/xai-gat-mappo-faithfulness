@@ -2,20 +2,31 @@
 
 ## 5.1 Answer to the central problem
 
-The title asks when explanations outlive their data. The experiment gives a
-careful answer. During a tunnel-triggered outage, the policy continues to
-receive a complete graph, but some taxi nodes describe an earlier state.
-Longer outages consistently increase the amount of displayed attention linked
-to stale information. The explanation can therefore remain available after
-the freshness of its inputs has expired.
+The central problem is whether a complete graph-attention map can be trusted
+when some of its vehicle data are stale. The answer from this experiment is:
+**not without separate validation**. The study does not validate raw attention
+weights as dependable explanations under either clean or degraded telemetry.
 
-However, the experiment does not establish a universal faithfulness decline.
-DEF remains near its matched-random baseline, H1 and H2 are unsupported, and
-the direction of paired attention reallocation changes with training seed.
-The trust problem is thus not a simple causal chain from larger AoI to lower
-faithfulness. It is that an attention map provides no stable, model-independent
-guarantee about how stale data are represented or how faithful the displayed
-weights are.
+Three results lead to this answer. First, clean-telemetry DEF is close to the
+type-matched random baseline, so attention has no measured advantage over a
+fair random ranking. Second, longer outages reliably increase stale-data
+exposure, while the direction of attention reallocation differs between
+trained policies. Third, neither a decline in DEF nor a consistent benefit from
+degradation-aware training is observed.
+
+The inconsistent attention shifts are therefore part of the answer, not a
+failure to reach one. If equivalent training runs produce opposite explanation
+responses to the same degradation, the explanation method provides no stable,
+model-independent assurance. The thesis does not claim that larger AoI causes
+lower faithfulness. It concludes that a visible attention map alone cannot
+guarantee either data freshness or decision relevance.
+
+![Evidence path and final cross-seed verdicts](../figures/v4_evidence_path_summary.png)
+
+**Figure 5.1.** The final evidence path separates the reproducible manipulation
+check from the mixed or unsupported explanation effects. It summarises
+cross-seed consistency without presenting outage duration as a direct causal
+dose of faithfulness.
 
 ## 5.2 Why H3 is useful but limited
 

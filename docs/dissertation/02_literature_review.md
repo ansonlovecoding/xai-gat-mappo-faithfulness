@@ -32,6 +32,14 @@ attention-based MARL such as MAAC exploits for inter-agent reasoning
 [8]. It is exactly this weighting that platforms surface as an
 explanation — the object under audit here.
 
+Recent dispatch studies reinforce the relevance of this setting. BMG-Q uses a
+local bipartite match graph for ride-pooling dispatch (Hu, Feng and Li, 2025),
+CoopRide studies cooperative city-scale MARL (Wang et al., 2025), and
+DualG-MARL combines vehicle-state and task graphs for ride-sharing scheduling
+(Sha et al., 2026). These studies focus on dispatch quality and coordination;
+they do not test whether an attention channel remains faithful when its
+vehicle telemetry is stale.
+
 ## 2.2 Is attention an explanation?
 
 The debate opened by "Attention is not Explanation" [12] established
@@ -67,13 +75,13 @@ the author's knowledge no prior faithfulness study controls for it.
 
 ## 2.3 Age of Information
 
-The AoI literature [21] formalises data freshness as time since last
-update and studies its cost for *control* — how stale state degrades
-estimation and decision quality. AoI has not previously been coupled to
-*explanation* quality. This dissertation uses AoI in two roles: as the
-physically grounded severity axis of its degradation framework (tunnel
-signal loss with bounded maximum AoI, §3.3), and as the per-node
-staleness weight inside the WAMSN metric (§3.4).
+The AoI literature [21] formalises data freshness as time since last update and
+studies its cost for *control* — how stale state degrades estimation and
+decision quality. AoI has rarely been coupled to *explanation* quality. This
+dissertation uses AoI as a descriptor of each frozen vehicle reading and as the
+per-node staleness weight inside WAMSN (§3.6). The manipulated variable is the
+fixed observation-layer outage duration, not AoI itself; the study therefore
+does not claim that AoI causes a change in faithfulness.
 
 ## 2.4 Simulation platform
 
@@ -85,14 +93,11 @@ the same applies to the GAT-MAPPO dispatcher itself.
 
 ## 2.5 Positioning
 
-Relative to [12] and its successors, this work contributes (i) the
-temporal axis — faithfulness under data ageing, with AoI as the
-controlled cause; (ii) the closed-loop MARL setting, where explanations
-attach to individual dispatch decisions taken under the degraded
-observations themselves; (iii) a paired clean/degraded evaluation
-design with exact per-decision counterfactuals; and (iv) the
-candidate-action occlusion artifact and its controls. A structured
-search for prior work at the staleness × explanation intersection
-(databases and query strings are listed in Appendix A) returned no
-direct precedent; the nearest neighbours are the robustness studies of
-interpretability [19], which perturb inputs but not their freshness.
+Relative to [12] and its successors, this work contributes (i) a temporal axis
+based on fixed observation outages and measured data freshness; (ii) the
+closed-loop MARL setting, where explanations attach to individual dispatch
+decisions taken under degraded observations; (iii) a paired clean/degraded
+evaluation design with exact per-decision counterfactuals; and (iv) the
+candidate-action occlusion artifact and its controls. The closest robustness
+studies perturb model inputs [19], but do not examine whether explanation
+behaviour remains stable as operational telemetry becomes stale.
