@@ -55,6 +55,24 @@ class RandomPolicy:
         pass
 
 
+class LegalRandomPolicy:
+    """Uniform-random over no-op and the currently valid request actions."""
+
+    def __init__(self, seed: int = 42):
+        self._rng = random.Random(seed)
+
+    def act(self, obs):
+        actions = {}
+        for agent, agent_obs in obs.items():
+            valid = np.nonzero(agent_obs["reservations_mask"])[0]
+            candidates = [0, *(int(index) + 1 for index in valid)]
+            actions[agent] = self._rng.choice(candidates)
+        return actions
+
+    def reset(self):
+        pass
+
+
 class NearestReservationPolicy:
     """Greedy: each idle taxi accepts its nearest visible pending reservation.
 

@@ -47,7 +47,9 @@ from dispatch_marl import (  # noqa: E402
     compute_stale_attention_mass,
     compute_stale_attention_share,
     derive_seed,
+    expected_type_matched_topk_overlap,
     seed_everything,
+    spearman_rank_correlation,
 )
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
@@ -75,6 +77,10 @@ def _run_episode(
     reset_options: dict | None = None,
     compute_drift: bool = False,
     action_seed: int | None = None,
+    faithfulness_positive_control: bool = False,
+    attention_aggregation_sensitivity: bool = False,
+    attention_action_row_sensitivity: bool = False,
+    faithfulness_request_actions_only: bool = False,
 ) -> tuple[dict, list[dict]]:
     """Run one eval episode; return (episode summary, per-decision faithfulness records).
 
@@ -127,16 +133,182 @@ def _run_episode(
                 # Snapshot the clean twins BEFORE env.step() rebuilds them.
                 clean_obs_by_agent = dict(env.last_clean_obs) if compute_drift else {}
                 for i, a in enumerate(agents):
-                    if decision_counter % faithfulness_every == 0:
+                    should_score = decision_counter % faithfulness_every == 0
+                    if faithfulness_request_actions_only:
+                        should_score = should_score and int(actions_np[i]) >= 1
+                    if should_score:
                         single = {k: v[i : i + 1] for k, v in batched.items()}
                         n_valid_res = int(single["reservations_mask"].sum().item())
+                        n_valid_taxi = int(
+                            single["neighbor_taxis_mask"].sum().item()
+                        )
                         result = faithfulness_evaluator.evaluate_decision(
                             single, action=int(actions_np[i])
                         )
+                        control_fields: dict = {}
+                        if faithfulness_positive_control:
+                            loo = faithfulness_evaluator.leave_one_out_importance(
+                                single, action=result.action,
+                                protect_chosen_request=True,
+                            )
+                            oracle = faithfulness_evaluator.evaluate_decision(
+                                single,
+                                action=result.action,
+                                importance_row=loo.importance_row,
+                            )
+                            grad_x_input_row = (
+                                faithfulness_evaluator.gradient_x_input_importance(
+                                    single, action=result.action
+                                )
+                            )
+                            grad_x_input = faithfulness_evaluator.evaluate_decision(
+                                single,
+                                action=result.action,
+                                importance_row=grad_x_input_row,
+                            )
+                            k_neighbors = policy.config.k_neighbors
+                            taxi_candidates = loo.candidates[
+                                loo.candidates <= k_neighbors
+                            ]
+                            taxi_rho = spearman_rank_correlation(
+                                result.attention_row[taxi_candidates],
+                                loo.margin_effect[taxi_candidates],
+                            )
+                            overlap_values = []
+                            agreement_values = []
+                            overlap_by_k = {}
+                            agreement_by_k = {}
+                            for k in faithfulness_evaluator.config.top_k_values:
+                                if k > len(loo.candidates):
+                                    continue
+                                attn_order = np.argsort(
+                                    -result.attention_row[loo.candidates]
+                                )
+                                loo_order = np.argsort(
+                                    -loo.importance_row[loo.candidates]
+                                )
+                                attn_top = loo.candidates[attn_order[:k]]
+                                loo_top = loo.candidates[loo_order[:k]]
+                                expected_overlap = expected_type_matched_topk_overlap(
+                                    attn_top, loo.candidates, k_neighbors
+                                )
+                                agreement = len(set(attn_top) & set(loo_top)) / k
+                                overlap_values.append(expected_overlap)
+                                agreement_values.append(agreement)
+                                overlap_by_k[str(k)] = round(expected_overlap, 4)
+                                agreement_by_k[str(k)] = round(agreement, 4)
+                            attention_def = (
+                                result.def_m_excl if result.excl_evaluated
+                                else result.def_margin
+                            )
+                            attention_g_comp = (
+                                result.g_comp_m_excl if result.excl_evaluated
+                                else result.g_comp_m
+                            )
+                            attention_g_suff = (
+                                result.g_suff_m_excl if result.excl_evaluated
+                                else result.g_suff_m
+                            )
+                            oracle_def = (
+                                oracle.def_m_excl if oracle.excl_evaluated
+                                else oracle.def_margin
+                            )
+                            oracle_g_comp = (
+                                oracle.g_comp_m_excl if oracle.excl_evaluated
+                                else oracle.g_comp_m
+                            )
+                            oracle_g_suff = (
+                                oracle.g_suff_m_excl if oracle.excl_evaluated
+                                else oracle.g_suff_m
+                            )
+                            grad_x_input_def = (
+                                grad_x_input.def_m_excl
+                                if grad_x_input.excl_evaluated
+                                else grad_x_input.def_margin
+                            )
+                            grad_x_input_g_comp = (
+                                grad_x_input.g_comp_m_excl
+                                if grad_x_input.excl_evaluated
+                                else grad_x_input.g_comp_m
+                            )
+                            grad_x_input_g_suff = (
+                                grad_x_input.g_suff_m_excl
+                                if grad_x_input.excl_evaluated
+                                else grad_x_input.g_suff_m
+                            )
+                            control_fields = {
+                                "attention_control_def_m": round(attention_def, 4),
+                                "attention_control_g_comp_m": round(
+                                    attention_g_comp, 4
+                                ),
+                                "attention_control_g_suff_m": round(
+                                    attention_g_suff, 4
+                                ),
+                                "loo_oracle_def_m": round(oracle_def, 4),
+                                "loo_oracle_g_comp_m": round(oracle_g_comp, 4),
+                                "loo_oracle_g_suff_m": round(oracle_g_suff, 4),
+                                "grad_x_input_def_m": round(grad_x_input_def, 4),
+                                "grad_x_input_g_comp_m": round(
+                                    grad_x_input_g_comp, 4
+                                ),
+                                "grad_x_input_g_suff_m": round(
+                                    grad_x_input_g_suff, 4
+                                ),
+                                "loo_control_gap_m": round(
+                                    oracle_def - attention_def, 4
+                                ),
+                                "loo_positive_nodes": int(
+                                    (loo.importance_row[loo.candidates] > 0).sum()
+                                ),
+                                "taxi_attention_loo_spearman": (
+                                    round(taxi_rho, 4)
+                                    if np.isfinite(taxi_rho) else None
+                                ),
+                                "attention_loo_topk_agreement": round(
+                                    float(np.mean(agreement_values)), 4
+                                ) if agreement_values else None,
+                                "expected_random_topk_overlap": round(
+                                    float(np.mean(overlap_values)), 4
+                                ) if overlap_values else None,
+                                "attention_loo_topk_agreement_by_k": agreement_by_k,
+                                "expected_random_topk_overlap_by_k": overlap_by_k,
+                            }
+                        if attention_action_row_sensitivity and result.action >= 1:
+                            action_query_node = (
+                                policy.config.k_neighbors + result.action
+                            )
+                            action_row = faithfulness_evaluator.attention_row(
+                                single, from_node=action_query_node
+                            )
+                            action_row_result = (
+                                faithfulness_evaluator.evaluate_decision(
+                                    single,
+                                    action=result.action,
+                                    importance_row=action_row,
+                                )
+                            )
+                            self_def = (
+                                result.def_m_excl if result.excl_evaluated
+                                else result.def_margin
+                            )
+                            action_def = (
+                                action_row_result.def_m_excl
+                                if action_row_result.excl_evaluated
+                                else action_row_result.def_margin
+                            )
+                            control_fields.update({
+                                "action_query_node": action_query_node,
+                                "self_row_request_def_m": round(self_def, 4),
+                                "action_row_request_def_m": round(action_def, 4),
+                                "action_row_request_gap_m": round(
+                                    action_def - self_def, 4
+                                ),
+                            })
                         drift = None
                         top3_churn = None
                         stale_attention_clean = None
                         stale_attention_mass_clean = None
+                        aggregation_shifts = None
                         if compute_drift and a in clean_obs_by_agent:
                             clean_single = {
                                 k: torch.as_tensor(
@@ -161,6 +333,37 @@ def _run_episode(
                             stale_attention_mass_clean = compute_stale_attention_mass(
                                 clean_row, result.stale_vehicle_mask
                             )
+                            if attention_aggregation_sensitivity:
+                                n_heads = policy.config.n_heads
+                                aggregations = [
+                                    (layer, head)
+                                    for layer in ("first", "last")
+                                    for head in (
+                                        "mean", "max",
+                                        *(f"head_{h}" for h in range(n_heads)),
+                                    )
+                                ]
+                                aggregations.append(("rollout", "mean"))
+                                degraded_rows = faithfulness_evaluator.attention_rows(
+                                    single, aggregations
+                                )
+                                clean_rows = faithfulness_evaluator.attention_rows(
+                                    clean_single, aggregations
+                                )
+                                aggregation_shifts = {
+                                    name: round(
+                                        compute_stale_attention_mass(
+                                            degraded_rows[name],
+                                            result.stale_vehicle_mask,
+                                        )
+                                        - compute_stale_attention_mass(
+                                            clean_rows[name],
+                                            result.stale_vehicle_mask,
+                                        ),
+                                        6,
+                                    )
+                                    for name in degraded_rows
+                                }
                         faith_records.append({
                             **({"drift": round(drift, 4)} if drift is not None else {}),
                             "episode": episode_index,
@@ -177,6 +380,8 @@ def _run_episode(
                             "suff": round(result.suff, 4),
                             "wamsn": round(result.wamsn, 4),
                             "valid_reservations": n_valid_res,
+                            "valid_taxis": n_valid_taxi,
+                            "valid_non_self_nodes": n_valid_taxi + n_valid_res,
                             "n_k_evaluated": len(result.per_k),
                             "clamp_topk": round(result.clamp_topk_frac, 4),
                             "clamp_rand": round(result.clamp_rand_frac, 4),
@@ -203,6 +408,9 @@ def _run_episode(
                                if result.excl_evaluated else {}),
                             **({"top3_churn": top3_churn}
                                if top3_churn is not None else {}),
+                            **control_fields,
+                            **({"aggregation_stale_attention_shift": aggregation_shifts}
+                               if aggregation_shifts is not None else {}),
                         })
                     decision_counter += 1
         else:
@@ -277,6 +485,125 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
     excl = np.array([r["def_m_excl"] for r in non_trivial if "def_m_excl" in r])
     if excl.size > 0:
         out["def_m_excl_mean"] = float(excl.mean())
+
+    controls = [r for r in non_trivial if "loo_oracle_def_m" in r]
+    if controls:
+        attention_control = np.array([
+            r["attention_control_def_m"] for r in controls
+        ])
+        oracle = np.array([r["loo_oracle_def_m"] for r in controls])
+        gap = np.array([r["loo_control_gap_m"] for r in controls])
+        agreement = np.array([
+            r["attention_loo_topk_agreement"] for r in controls
+            if r["attention_loo_topk_agreement"] is not None
+        ])
+        expected_overlap = np.array([
+            r["expected_random_topk_overlap"] for r in controls
+            if r["expected_random_topk_overlap"] is not None
+        ])
+        taxi_rho = np.array([
+            r["taxi_attention_loo_spearman"] for r in controls
+            if r["taxi_attention_loo_spearman"] is not None
+        ])
+        out.update({
+            "n_positive_control_decisions": len(controls),
+            "attention_control_def_m_mean": float(attention_control.mean()),
+            "attention_control_g_comp_m_mean": float(np.mean([
+                r["attention_control_g_comp_m"] for r in controls
+            ])),
+            "attention_control_g_suff_m_mean": float(np.mean([
+                r["attention_control_g_suff_m"] for r in controls
+            ])),
+            "loo_oracle_def_m_mean": float(oracle.mean()),
+            "loo_oracle_g_comp_m_mean": float(np.mean([
+                r["loo_oracle_g_comp_m"] for r in controls
+            ])),
+            "loo_oracle_g_suff_m_mean": float(np.mean([
+                r["loo_oracle_g_suff_m"] for r in controls
+            ])),
+            "grad_x_input_def_m_mean": float(np.mean([
+                r["grad_x_input_def_m"] for r in controls
+            ])),
+            "grad_x_input_g_comp_m_mean": float(np.mean([
+                r["grad_x_input_g_comp_m"] for r in controls
+            ])),
+            "grad_x_input_g_suff_m_mean": float(np.mean([
+                r["grad_x_input_g_suff_m"] for r in controls
+            ])),
+            "loo_control_gap_m_mean": float(gap.mean()),
+            "attention_loo_topk_agreement_mean": (
+                float(agreement.mean()) if agreement.size else None
+            ),
+            "expected_random_topk_overlap_mean": (
+                float(expected_overlap.mean()) if expected_overlap.size else None
+            ),
+            "taxi_attention_loo_spearman_mean": (
+                float(taxi_rho.mean()) if taxi_rho.size else None
+            ),
+            "n_taxi_spearman_defined": int(taxi_rho.size),
+        })
+        for field in ("valid_taxis", "valid_reservations", "valid_non_self_nodes"):
+            values = np.array([r[field] for r in controls], dtype=np.float64)
+            out[f"{field}_distribution"] = {
+                "mean": float(values.mean()),
+                "median": float(np.median(values)),
+                "p05": float(np.percentile(values, 5)),
+                "p95": float(np.percentile(values, 95)),
+            }
+        available_k = sorted({
+            k for r in controls
+            for k in r.get("expected_random_topk_overlap_by_k", {})
+        }, key=int)
+        out["topk_overlap_by_k"] = {
+            k: {
+                "expected_random_overlap": float(np.mean([
+                    r["expected_random_topk_overlap_by_k"][k]
+                    for r in controls
+                    if k in r.get("expected_random_topk_overlap_by_k", {})
+                ])),
+                "attention_loo_agreement": float(np.mean([
+                    r["attention_loo_topk_agreement_by_k"][k]
+                    for r in controls
+                    if k in r.get("attention_loo_topk_agreement_by_k", {})
+                ])),
+            }
+            for k in available_k
+        }
+
+    sensitivity_records = [
+        r for r in records
+        if r.get("n_stale_veh", 0) > 0
+        and "aggregation_stale_attention_shift" in r
+    ]
+    if sensitivity_records:
+        names = sensitivity_records[0]["aggregation_stale_attention_shift"]
+        out["aggregation_sensitivity"] = {
+            name: {
+                "mean_stale_attention_shift": float(np.mean([
+                    r["aggregation_stale_attention_shift"][name]
+                    for r in sensitivity_records
+                ])),
+                "n_stale_exposed_decisions": len(sensitivity_records),
+            }
+            for name in names
+        }
+
+    action_row_records = [
+        r for r in non_trivial if "action_row_request_def_m" in r
+    ]
+    if action_row_records:
+        out.update({
+            "n_action_row_request_decisions": len(action_row_records),
+            "self_row_request_def_m_mean": float(np.mean([
+                r["self_row_request_def_m"] for r in action_row_records
+            ])),
+            "action_row_request_def_m_mean": float(np.mean([
+                r["action_row_request_def_m"] for r in action_row_records
+            ])),
+            "action_row_request_gap_m_mean": float(np.mean([
+                r["action_row_request_gap_m"] for r in action_row_records
+            ])),
+        })
         out["n_excl_evaluated"] = int(excl.size)
     clamps_t = np.array([r["clamp_topk"] for r in non_trivial if "clamp_topk" in r])
     clamps_r = np.array([r["clamp_rand"] for r in non_trivial if "clamp_rand" in r])

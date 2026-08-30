@@ -260,7 +260,7 @@ This mirrors how attention is often used in practice:
 the model attends to these nodes → therefore these nodes explain the decision
 ```
 
-The dissertation tests whether that reasoning is justified. The final v4
+The dissertation tests whether that reasoning is justified. The final
 answer is cautious: the coupled attention channel is close to the corrected
 random faithfulness baseline. Longer outages increase stale-data exposure, but
 the paired direction of attention reallocation changes across training seeds.

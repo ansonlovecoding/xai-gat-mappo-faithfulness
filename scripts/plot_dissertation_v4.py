@@ -7,6 +7,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch
 
 
@@ -15,16 +16,24 @@ RUNS = ROOT / "runs" / "dissertation_v4"
 OUT = ROOT / "docs" / "figures"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
 LABELS = {
-    "B1_mlp": "B1 MLP",
-    "B2_gat": "B2 GAT",
-    "B3_gat_noaoi": "B3 GAT, no AoI",
-    "H5_gat_degraded": "H5 degraded training",
+    "B1_mlp": "MLP",
+    "B2_gat": "GAT",
+    "B3_gat_noaoi": "GAT-NoAoI",
+    "H5_gat_degraded": "GAT-Outage",
 }
 SEED_STYLES = {
-    42: {"marker": "o", "linestyle": "-"},
-    43: {"marker": "s", "linestyle": "--"},
-    44: {"marker": "^", "linestyle": ":"},
+    42: {"marker": "o", "linestyle": "-", "color": "#176B87"},
+    43: {"marker": "s", "linestyle": "--", "color": "#C75000"},
+    44: {"marker": "^", "linestyle": ":", "color": "#3A7D44"},
 }
+
+plt.rcParams.update({
+    "font.size": 10,
+    "axes.titlesize": 11,
+    "axes.labelsize": 10,
+    "xtick.labelsize": 9,
+    "ytick.labelsize": 9,
+})
 
 
 def _csv(path: Path) -> list[dict[str, str]]:
@@ -44,14 +53,24 @@ def performance_figure() -> None:
     models = list(LABELS)
     fig, ax = plt.subplots(figsize=(7.2, 3.8))
     for index, model in enumerate(models):
-        values = [float(row["mean_pickups"]) for row in rows if row["model"] == model]
+        selected = sorted((row for row in rows if row["model"] == model),
+                          key=lambda row: int(row["training_seed"]))
+        values = [float(row["mean_pickups"]) for row in selected]
         offsets = np.linspace(-0.10, 0.10, len(values))
-        ax.scatter(index + offsets, values, s=42, color="#176B87", zorder=3)
+        for offset, row, value in zip(offsets, selected, values):
+            seed = int(row["training_seed"])
+            style = SEED_STYLES[seed]
+            ax.scatter(index + offset, value, s=52, marker=style["marker"],
+                       color=style["color"], edgecolor="white", linewidth=0.7,
+                       zorder=3)
+            ax.annotate(str(seed), (index + offset, value), xytext=(0, 7),
+                        textcoords="offset points", ha="center", fontsize=8)
         ax.hlines(np.mean(values), index - 0.22, index + 0.22,
                   color="#202020", linewidth=2)
     ax.set_xticks(range(len(models)), [LABELS[model] for model in models])
     ax.set_ylabel("Mean pickups per test episode")
-    ax.set_title("Clean-test performance is context, not the study outcome")
+    ax.set_title("Clean-test pickups by trained policy")
+    ax.set_ylim(bottom=0)
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
@@ -72,11 +91,17 @@ def checkpoint_selection_figure() -> None:
             ax.plot([item["epoch"] for item in candidates],
                     [item["mean_pickups"] for item in candidates],
                     marker=style["marker"], linestyle=style["linestyle"],
-                    markersize=3.5, linewidth=1.3, label=f"seed {seed}")
+                    color=style["color"], alpha=0.62,
+                    markersize=3.5, linewidth=1.2, label=f"seed {seed}")
             selected = payload["selected"]
             ax.scatter(selected["epoch"], selected["mean_pickups"],
-                       marker="*", s=125, facecolor="#C75000",
+                       marker="*", s=135, facecolor=style["color"],
                        edgecolor="#202020", linewidth=0.7, zorder=5)
+            ax.annotate(f"{seed}: e{selected['epoch']}",
+                        (selected["epoch"], selected["mean_pickups"]),
+                        xytext=(4, -12 if selected["mean_pickups"] > 12.5 else 7),
+                        textcoords="offset points", fontsize=7.2,
+                        color="#202020")
         ax.set_title(LABELS[model])
         ax.grid(color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
@@ -85,10 +110,75 @@ def checkpoint_selection_figure() -> None:
     axes[1, 0].set_xlabel("Checkpoint epoch")
     axes[1, 1].set_xlabel("Checkpoint epoch")
     axes[0, 1].legend(frameon=False, fontsize=8, ncol=1)
-    fig.suptitle("Validation-only checkpoint selection across training seeds\n"
-                 "Stars mark the frozen checkpoints used for held-out evaluation")
+    fig.suptitle("Validation checkpoint selection")
     fig.tight_layout()
     _save(fig, "v4_checkpoint_selection_by_model_and_seed")
+
+
+def training_diagnostics_figure() -> None:
+    """GAT optimisation diagnostics required by the strategy-capability audit."""
+    fig, axes = plt.subplots(2, 3, figsize=(8.0, 5.3), sharex=True)
+    metrics = (
+        ("reward", "Reward", True),
+        ("pickups", "Training pickups", True),
+        ("validation", "Validation pickups", False),
+        ("entropy", "Policy entropy", True),
+        ("approx_kl", "Approx. KL", True),
+        ("clipfrac", "Clip fraction", True),
+    )
+
+    for seed, style in SEED_STYLES.items():
+        run_dir = RUNS / "training" / "B2_gat" / f"seed_{seed}"
+        records = [json.loads(line) for line in
+                   (run_dir / "train_log.jsonl").read_text().splitlines() if line]
+        epochs = np.array([row["epoch"] for row in records])
+        for ax, (field, _, smooth) in zip(axes.flat, metrics):
+            if field == "validation":
+                selection = json.loads(
+                    (run_dir / "checkpoint_selection.json").read_text()
+                )
+                candidates = sorted(
+                    (item for item in selection["candidates"]
+                     if item["checkpoint"].startswith("ckpt_epoch_")),
+                    key=lambda item: item["epoch"],
+                )
+                ax.plot(
+                    [item["epoch"] for item in candidates],
+                    [item["mean_pickups"] for item in candidates],
+                    marker=style["marker"], linestyle=style["linestyle"],
+                    color=style["color"], linewidth=1.2, markersize=3,
+                    alpha=0.8, label=f"seed {seed}",
+                )
+                selected = selection["selected"]
+                ax.scatter(selected["epoch"], selected["mean_pickups"],
+                           marker="*", s=95, color=style["color"],
+                           edgecolor="#202020", linewidth=0.5, zorder=4)
+                continue
+            values = np.array([row[field] for row in records], dtype=float)
+            if smooth and values.size >= 10:
+                kernel = np.ones(10) / 10
+                values = np.convolve(values, kernel, mode="valid")
+                x = epochs[9:]
+            else:
+                x = epochs
+            ax.plot(x, values, linestyle=style["linestyle"],
+                    color=style["color"], linewidth=1.35,
+                    alpha=0.9, label=f"seed {seed}")
+
+    for ax, (_, title, _) in zip(axes.flat, metrics):
+        ax.set_title(title)
+        ax.grid(color="#D8D8D8", linewidth=0.6)
+        ax.spines[["top", "right"]].set_visible(False)
+    for ax in axes[1]:
+        ax.set_xlabel("Training epoch")
+    axes[0, 2].legend(frameon=False, fontsize=7.5)
+    fig.suptitle(
+        "GAT training and checkpoint-selection diagnostics\n"
+        "Training metrics use a 10-epoch moving mean; stars mark selected checkpoints",
+        fontsize=11,
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    _save(fig, "v4_b2_training_diagnostics")
 
 
 def decoupling_figure() -> None:
@@ -113,7 +203,8 @@ def decoupling_figure() -> None:
                 [float(row["mean_wamsn_when_exposed_secondary"]) for row in seed_rows],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
-                linewidth=1.7, label=f"training seed {seed}",
+                color=SEED_STYLES[seed]["color"],
+                linewidth=1.7, label=f"seed {seed}",
             )
             axes[1, column].plot(
                 [0.0, *[float(row["level_s"]) for row in seed_rows]],
@@ -121,6 +212,7 @@ def decoupling_figure() -> None:
                  *[float(row["mean_type_matched_def"]) for row in seed_rows]],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
+                color=SEED_STYLES[seed]["color"],
                 linewidth=1.7,
             )
             axes[2, column].plot(
@@ -129,6 +221,7 @@ def decoupling_figure() -> None:
                  *[float(row["mean_pickups"]) for row in seed_rows]],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
+                color=SEED_STYLES[seed]["color"],
                 linewidth=1.7,
             )
         axes[0, column].set_title(LABELS[model])
@@ -142,45 +235,55 @@ def decoupling_figure() -> None:
     axes[1, 0].set_ylabel("Type-matched DEF")
     axes[2, 0].set_ylabel("Mean pickups per episode")
     axes[0, 1].legend(frameon=False, fontsize=8)
-    fig.suptitle("Stale exposure rises while measured faithfulness and pickups remain nearly flat")
+    wamsn_limits = [axes[0, column].get_ylim() for column in range(2)]
+    axes[0, 0].set_ylim(min(v[0] for v in wamsn_limits),
+                        max(v[1] for v in wamsn_limits))
+    axes[0, 1].set_ylim(axes[0, 0].get_ylim())
+    pickup_limits = [axes[2, column].get_ylim() for column in range(2)]
+    axes[2, 0].set_ylim(min(0, min(v[0] for v in pickup_limits)),
+                        max(v[1] for v in pickup_limits))
+    axes[2, 1].set_ylim(axes[2, 0].get_ylim())
+    fig.suptitle("Outage-duration sweep by policy and training seed")
     fig.tight_layout()
     _save(fig, "v4_decoupling_by_outage_duration")
 
 
 def evidence_summary_figure() -> None:
-    fig, ax = plt.subplots(figsize=(8.0, 3.3))
+    fig, ax = plt.subplots(figsize=(8.0, 4.2))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
-    items = [
-        ("Outage\nwindow", "fixed observation-\nlayer windows", "#176B87"),
-        ("Stale\nexposure", "H3 support:\n6/6 policies", "#3A7D44"),
-        ("Attention\nshift", "positive in 4/6;\nnegative in 2/6", "#B06C00"),
-        ("Faithfulness\neffect", "H1 and H2\nsupport: 0/6", "#A33A3A"),
-        ("Training\nmitigation", "no consistent\nH5 mitigation", "#555555"),
+    columns = [(0.02, 0.10, "Question"), (0.13, 0.25, "Measure"),
+               (0.39, 0.38, "Cross-seed result"), (0.78, 0.20, "Verdict")]
+    for x, width, title in columns:
+        ax.add_patch(FancyBboxPatch((x, 0.76), width, 0.11,
+                                   boxstyle="round,pad=0.005,rounding_size=0.008",
+                                   facecolor="#E7E9EB", edgecolor="#666666",
+                                   linewidth=0.8))
+        ax.text(x + width / 2, 0.815, title, ha="center", va="center",
+                fontsize=9.2, fontweight="bold")
+    rows = [
+        ("RQ1", "Clean DEF", "Near type-matched random baseline", "Not validated", "#A33A3A"),
+        ("RQ2", "Paired attention shift", "Positive in 4/6; negative in 2/6", "Seed-dependent", "#B06C00"),
+        ("RQ3", "DEF and pickups", "H1 and H2 supported in 0/6 policies", "No decline found", "#555555"),
+        ("RQ4", "Degradation training", "No consistent mitigation", "Not supported", "#A33A3A"),
     ]
-    width, gap, y, height = 0.165, 0.035, 0.25, 0.50
-    for index, (title, body, color) in enumerate(items):
-        x = 0.015 + index * (width + gap)
-        patch = FancyBboxPatch((x, y), width, height,
-                               boxstyle="round,pad=0.012,rounding_size=0.015",
-                               facecolor="#F5F7F8", edgecolor=color,
-                               linewidth=1.5)
-        ax.add_patch(patch)
-        ax.text(x + width / 2, y + 0.36, title, ha="center", va="center",
-                fontsize=9, fontweight="bold", color=color, linespacing=1.05)
-        ax.text(x + width / 2, y + 0.15, body, ha="center", va="center",
-                fontsize=8.0, color="#202020")
-        if index < len(items) - 1:
-            ax.annotate("", xy=(x + width + gap * 0.82, y + height / 2),
-                        xytext=(x + width + gap * 0.18, y + height / 2),
-                        arrowprops={"arrowstyle": "-|>", "color": "#555555",
-                                    "linewidth": 1.2})
-    ax.text(0.5, 0.91, "Evidence path and final cross-seed verdicts",
+    for index, (rq, measure, result, verdict, color) in enumerate(rows):
+        y = 0.61 - index * 0.135
+        values = (rq, measure, result, verdict)
+        for (x, width, _), value in zip(columns, values):
+            ax.add_patch(FancyBboxPatch((x, y), width, 0.105,
+                                       boxstyle="round,pad=0.004,rounding_size=0.006",
+                                       facecolor="#F7F8F9", edgecolor=color,
+                                       linewidth=0.9))
+            ax.text(x + width / 2, y + 0.0525, value, ha="center", va="center",
+                    fontsize=8.0, color="#202020",
+                    fontweight="bold" if x in (0.02, 0.78) else "normal")
+    ax.text(0.5, 0.94, "Cross-seed evidence matrix",
             ha="center", va="center", fontsize=15, fontweight="bold")
-    ax.text(0.5, 0.09,
-            "Exposure is reproducible; attention reallocation and its relationship with faithfulness are policy-dependent.",
-            ha="center", va="center", fontsize=8.8, fontweight="bold")
+    ax.text(0.5, 0.055,
+            "Conclusion: raw attention provides no reproducible faithfulness guarantee across trained policies.",
+            ha="center", va="center", fontsize=9.0, fontweight="bold")
     fig.tight_layout()
     _save(fig, "v4_evidence_path_summary")
 
@@ -201,17 +304,22 @@ def shift_figure() -> None:
             ).read_text())
             low, high = analysis["robust"]["primary_stale_attention_shift"]["ci95"]
             value = row["stale_attention_shift"]
+            style = SEED_STYLES[int(row["training_seed"])]
             ax.errorbar(index + offset, value,
-                        yerr=[[value - low], [high - value]], fmt="o", markersize=7,
-                        capsize=4, color=COLORS[model], zorder=3)
+                        yerr=[[value - low], [high - value]], fmt="none", markersize=7,
+                        marker=style["marker"], capsize=4,
+                        color=style["color"], zorder=3)
             ax.annotate(str(row["training_seed"]),
                         (index + offset, value),
                         xytext=(0, 6), textcoords="offset points",
                         ha="center", fontsize=8)
     ax.axhline(0, color="#202020", linewidth=1)
     ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
-    ax.set_ylabel("Degraded minus clean stale-attention mass")
-    ax.set_title("Paired attention reallocation depends on training seed")
+    for index in range(len(COLORS)):
+        ax.text(index, 0.00325, "2/3 positive",
+                ha="center", va="bottom", fontsize=8.2, color="#444444")
+    ax.set_ylabel("Attention mass on exposed peers:\ndegraded minus clean twin")
+    ax.set_title("Paired stale-attention shift")
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
@@ -228,9 +336,11 @@ def consistency_figure() -> None:
         offsets = np.linspace(-0.10, 0.10, len(selected))
         for offset, row in zip(offsets, selected):
             supported = bool(row["H4_supported"])
+            style = SEED_STYLES[int(row["training_seed"])]
             ax.scatter(index + offset, row["H4_within_episode_rho"], s=70,
-                       facecolor=COLORS[model] if supported else "white",
-                       edgecolor=COLORS[model], linewidth=1.8, zorder=3)
+                       marker=style["marker"],
+                       facecolor=style["color"] if supported else "white",
+                       edgecolor=style["color"], linewidth=1.8, zorder=3)
             ax.annotate(str(row["training_seed"]),
                         (index + offset, row["H4_within_episode_rho"]),
                         xytext=(0, 7), textcoords="offset points",
@@ -238,7 +348,16 @@ def consistency_figure() -> None:
     ax.axhline(0, color="#202020", linewidth=1)
     ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
     ax.set_ylabel("Within-episode Spearman rho (WAMSN vs DEF)")
-    ax.set_title("The WAMSN-faithfulness relationship depends on training regime and seed")
+    ax.set_title("Within-episode WAMSN-DEF correlation by trained policy")
+    legend = [
+        Line2D([0], [0], marker="o", color="none", markerfacecolor="#555555",
+               markeredgecolor="#555555", markersize=7,
+               label="H4 supported after Holm correction"),
+        Line2D([0], [0], marker="o", color="none", markerfacecolor="white",
+               markeredgecolor="#555555", markersize=7,
+               label="H4 not supported"),
+    ]
+    ax.legend(handles=legend, frameon=False, fontsize=7.8, loc="lower left")
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
@@ -248,6 +367,7 @@ def consistency_figure() -> None:
 def main() -> None:
     performance_figure()
     checkpoint_selection_figure()
+    training_diagnostics_figure()
     decoupling_figure()
     shift_figure()
     consistency_figure()

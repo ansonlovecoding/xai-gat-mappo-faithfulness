@@ -83,6 +83,10 @@ def _run_condition(
     outage_duration_s: float = 0.0,
     corruption: str = "freeze",
     demand_files: list[str] | None = None,
+    faithfulness_positive_control: bool = False,
+    attention_aggregation_sensitivity: bool = False,
+    attention_action_row_sensitivity: bool = False,
+    faithfulness_request_actions_only: bool = False,
 ) -> dict:
     """Run `episodes` eval episodes under one degradation condition.
 
@@ -126,6 +130,10 @@ def _run_condition(
             # degradation_mode so clean and degraded cells start from the same
             # policy-sampling stream for each seed and episode.
             action_seed=derive_seed(seed, "evaluation", ep),
+            faithfulness_positive_control=faithfulness_positive_control,
+            attention_aggregation_sensitivity=attention_aggregation_sensitivity,
+            attention_action_row_sensitivity=attention_action_row_sensitivity,
+            faithfulness_request_actions_only=faithfulness_request_actions_only,
         )
         per_episode.append(summary)
         all_faith.extend(faith_records)

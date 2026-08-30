@@ -52,8 +52,8 @@ Four operational questions provide the evidence needed to answer it:
 1. **RQ1:** Is graph attention a faithful explanation under clean telemetry?
 2. **RQ2:** When tunnel-triggered outages occur, does attention move toward
    stale vehicle nodes?
-3. **RQ3:** Does explanation faithfulness change more than dispatch behaviour
-   as outage duration increases?
+3. **RQ3:** As outage duration increases, does the relationship between
+   attention, stale-data exposure, and decision relevance remain dependable?
 4. **RQ4:** Does training the policy under telemetry degradation make the
    explanation response more reliable?
 
@@ -74,36 +74,46 @@ The measurable objectives are to:
   and 60 seconds;
 - measure explanation faithfulness with action-aware, type-matched
   counterfactual controls;
+- check whether the faithfulness evaluator responds to an LOO perturbation
+  ranking and quantify the resolution lost through top-k overlap;
 - measure how much attention is assigned to stale vehicle information;
+- test whether conclusions change across attention layers, heads, rollout, and
+  the query row used as the explanation;
 - treat the trained policy, rather than each individual decision, as the unit
   for judging whether a finding is consistent.
 
 ## 1.5 Main findings
 
-The completed v4 experiment gives one consistent overall answer: **raw attention
+The completed experiment gives one consistent overall answer: **raw attention
 weights are not validated as dependable explanations by this study**. This is a
 negative assurance result, supported by three connected findings.
 
-First, type-matched DEF remains close to zero for the audited GAT policies.
-This does not prove that attention is harmful; it means the experiment finds
-little evidence that the displayed weights identify more decision-relevant
-information than a fair random explanation. The supporting audit shows why a
-uniform random baseline gives misleading results when request nodes are also
-actions.
+First, clean type-matched DEF varies from -0.0084 to +0.0187 across the audited
+checkpoints. An LOO perturbation control is larger and positive in every
+checkpoint, while taxi-only rank agreement with LOO changes sign. The evidence
+therefore does not support one reproducible account of decision relevance. The
+supporting audit also shows why a uniform random baseline is misleading when
+request nodes are actions.
 
 Second, longer outages consistently increase WAMSN. This result appears in all
-three clean-trained B2 policies and all three degradation-trained H5 policies.
+three GAT policies and all three GAT-Outage policies.
 It shows that more of the displayed attention is attached to stale information
 when stale exposure lasts longer. It does **not** show that AoI causes lower
 faithfulness.
 
 Third, the paired change in stale-node attention is not consistent across
 training seeds. It is positive for seeds 42 and 43 but negative for seed 44 in
-both B2 and H5. H1 and H2 are unsupported in every trained policy. The
-association between WAMSN and DEF is supported for two H5 seeds, but not the
-third and not any B2 seed. This disagreement is not an absence of a conclusion:
+both GAT and GAT-Outage. H1 and H2 are unsupported in every trained policy. The
+association between WAMSN and DEF is supported for two GAT-Outage seeds, but not the
+third and not any GAT seed. This disagreement is not an absence of a conclusion:
 it shows that raw attention has no stable, model-independent response to stale
 telemetry.
+
+The result is also sensitive to how attention is turned into one explanation.
+Individual heads can reverse the stale-attention direction within a checkpoint,
+and changing from the self row to the selected request row improves one GAT
+checkpoint but worsens others. These checks make the lack of a default
+explanation guarantee more precise.
 
 Finally, degradation-aware training does not remove training-seed variation.
 It also produces one weak policy replicate, which limits any mitigation claim.
@@ -119,8 +129,10 @@ The dissertation contributes:
   from the observation received by the policy;
 - an explicit distinction between a tunnel trigger and an observation-layer
   outage;
-- a type-matched faithfulness protocol for graphs where request nodes also
-  define available actions;
+- an action-aware faithfulness protocol for graphs where request nodes also
+  define available actions, supported by LOO and overlap diagnostics;
+- a sensitivity audit showing how layer, head, rollout, and query-row choices
+  affect the reported attention explanation;
 - evidence across independently trained policies that stale-data exposure is
   consistent, while attention reallocation and faithfulness effects are not;
 - a reproducible experiment runner, validation-selected checkpoints,
@@ -130,6 +142,6 @@ The dissertation contributes:
 
 Chapter 2 reviews MARL dispatch, graph attention, explanation faithfulness,
 and AoI. Chapter 3 describes the simulator, models, degradation layer,
-metrics, and statistical design. Chapter 4 reports the v4 results. Chapter 5
+metrics, and statistical design. Chapter 4 reports the results. Chapter 5
 discusses what can and cannot be concluded. Chapter 6 closes with the practical
 implications for trustworthy fleet-dispatch explanations.

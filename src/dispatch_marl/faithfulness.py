@@ -24,11 +24,10 @@ top of the coupled attention channel already exposed by `DispatchGATPolicy`:
   candidate reservations. `self` is never ablated — removing it would
   destroy the decision context.
 
-- **Attention aggregation.** Per-node importance is the mean over layers
-  and heads of `attention[l, 0, h, 0, j]` — i.e. the attention weight from
-  self (node 0) to node j. Rationale: this is the row that most directly
-  drives self's final embedding, which in turn drives the actor's action
-  logits.
+- **Attention aggregation.** The declared default is the mean over layers
+  and heads of `attention[l, 0, h, 0, j]` — the attention weight from self
+  (node 0) to node j. Layer/head alternatives and residual attention rollout
+  are exposed for sensitivity analysis without changing the default.
 
 - **Random baseline.** For each `k`, sample `n_random_baselines` random
   size-`k` subsets from the *valid non-self* nodes and average their
@@ -42,7 +41,6 @@ top of the coupled attention channel already exposed by `DispatchGATPolicy`:
 """
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -70,8 +68,10 @@ class FaithfulnessConfig:
     # or leaves it unopposed; the cap keeps DEF_margin finite and bounds a
     # single decision's influence on the mean.
     margin_cap: float = 10.0
-    # How to reduce (L, H) → per-node attention. "mean" or "last" (last layer).
+    # How to reduce layers to per-node attention.
     aggregate_layers: str = "mean"
+    # How to reduce attention heads. "mean", "max", or "head_<index>".
+    aggregate_heads: str = "mean"
     # Deterministic random-baseline sampling.
     seed: int = 42
     # Construct-validity audit (P2): ALSO compute the exclusion-variant DEF,
@@ -125,6 +125,8 @@ class DecisionFaithfulness:
     clamp_rand_frac: float = 0.0      # frac. of random-baseline forwards, same
     def_excl: float = float("nan")    # DEF with chosen-reservation node protected
     def_m_excl: float = float("nan")
+    g_comp_m_excl: float = float("nan")
+    g_suff_m_excl: float = float("nan")
     excl_evaluated: bool = False
     n_stale_vehicle: int = 0          # stale vehicle nodes visible this decision
     max_aoi_s: float = 0.0            # max AoI (s) over visible vehicle nodes
@@ -134,6 +136,23 @@ class DecisionFaithfulness:
     per_k: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
+@dataclass
+class LeaveOneOutImportance:
+    """Per-node decision effects from masking one graph node at a time.
+
+    ``margin_effect`` and ``probability_effect`` are positive when removing a
+    node weakens the selected action. ``importance_row`` is the non-negative
+    margin effect used to rank nodes as a perturbation-based positive control.
+    Invalid nodes, self, and an optionally protected chosen-request node are 0.
+    """
+
+    action: int
+    candidates: np.ndarray
+    importance_row: np.ndarray
+    margin_effect: np.ndarray
+    probability_effect: np.ndarray
+
+
 # ------------------------------------------------------------ pure functions
 
 
@@ -141,6 +160,7 @@ def aggregate_node_attention(
     attention: torch.Tensor,
     from_node: int = 0,
     layer_agg: str = "mean",
+    head_agg: str = "mean",
 ) -> np.ndarray:
     """Reduce a raw GAT attention tensor to a single per-node importance row.
 
@@ -148,7 +168,8 @@ def aggregate_node_attention(
         attention: shape (L, B, H, N, N) as returned by `policy.forward()`.
                    B must equal 1 (single decision).
         from_node: which row to read. Default 0 = self.
-        layer_agg: "mean" over layers (default) or "last" layer only.
+        layer_agg: "mean", "first", "last", or attention "rollout".
+        head_agg: "mean", "max", or one head such as "head_0".
 
     Returns:
         (N,) numpy array. Sums to ~1 (softmax rows averaged).
@@ -159,10 +180,36 @@ def aggregate_node_attention(
     if B != 1:
         raise ValueError(f"aggregate_node_attention expects B=1 (single decision), got {B}")
 
+    matrices = attention[:, 0]  # (L, H, N, N)
+    if head_agg == "mean":
+        matrices = matrices.mean(dim=1)
+    elif head_agg == "max":
+        matrices = matrices.max(dim=1).values
+    elif head_agg.startswith("head_"):
+        try:
+            head_idx = int(head_agg.removeprefix("head_"))
+        except ValueError as exc:
+            raise ValueError(f"unknown head_agg: {head_agg!r}") from exc
+        if not 0 <= head_idx < H:
+            raise ValueError(f"head index {head_idx} outside [0, {H})")
+        matrices = matrices[:, head_idx]
+    else:
+        raise ValueError(f"unknown head_agg: {head_agg!r}")
+
     if layer_agg == "mean":
-        row = attention[:, 0, :, from_node, :].mean(dim=(0, 1))
+        row = matrices[:, from_node, :].mean(dim=0)
+    elif layer_agg == "first":
+        row = matrices[0, from_node, :]
     elif layer_agg == "last":
-        row = attention[-1, 0, :, from_node, :].mean(dim=0)
+        row = matrices[-1, from_node, :]
+    elif layer_agg == "rollout":
+        identity = torch.eye(N, dtype=matrices.dtype, device=matrices.device)
+        joint = identity
+        for layer_matrix in matrices:
+            augmented = layer_matrix + identity
+            augmented = augmented / augmented.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+            joint = augmented @ joint
+        row = joint[from_node]
     else:
         raise ValueError(f"unknown layer_agg: {layer_agg!r}")
 
@@ -274,6 +321,75 @@ def compute_stale_attention_mass(
     return float(attn[stale].sum())
 
 
+def expected_type_matched_topk_overlap(
+    top_k_idx: np.ndarray,
+    candidates: np.ndarray,
+    k_neighbors: int,
+) -> float:
+    """Expected top-k overlap with a type-matched random subset.
+
+    The random subset contains the same numbers of taxi and request nodes as
+    ``top_k_idx``. The result is the expected intersection size divided by k.
+    It is exact, so the overlap diagnostic is not affected by Monte Carlo
+    sampling noise.
+    """
+    top = np.asarray(top_k_idx, dtype=np.int64)
+    pool = np.asarray(candidates, dtype=np.int64)
+    if top.size == 0:
+        return 0.0
+    if np.unique(top).size != top.size or not np.isin(top, pool).all():
+        raise ValueError("top_k_idx must contain unique members of candidates")
+
+    top_taxi = int((top <= k_neighbors).sum())
+    top_request = int(top.size - top_taxi)
+    pool_taxi = int((pool <= k_neighbors).sum())
+    pool_request = int(pool.size - pool_taxi)
+    expected_intersection = 0.0
+    if top_taxi:
+        if pool_taxi < top_taxi:
+            raise ValueError("not enough taxi candidates for type matching")
+        expected_intersection += top_taxi * top_taxi / pool_taxi
+    if top_request:
+        if pool_request < top_request:
+            raise ValueError("not enough request candidates for type matching")
+        expected_intersection += top_request * top_request / pool_request
+    return float(expected_intersection / top.size)
+
+
+def spearman_rank_correlation(x: np.ndarray, y: np.ndarray) -> float:
+    """Spearman correlation with average ranks for ties.
+
+    Returns NaN when fewer than two values are supplied or either ranking is
+    constant. Keeping this helper local avoids making SciPy a runtime
+    dependency for the experiment scripts.
+    """
+    a = np.asarray(x, dtype=np.float64).ravel()
+    b = np.asarray(y, dtype=np.float64).ravel()
+    if a.size != b.size:
+        raise ValueError("x and y must have the same number of values")
+    if a.size < 2:
+        return float("nan")
+
+    def _average_ranks(values: np.ndarray) -> np.ndarray:
+        order = np.argsort(values, kind="mergesort")
+        ranks = np.empty(values.size, dtype=np.float64)
+        sorted_values = values[order]
+        start = 0
+        while start < values.size:
+            end = start + 1
+            while end < values.size and sorted_values[end] == sorted_values[start]:
+                end += 1
+            ranks[order[start:end]] = 0.5 * (start + end - 1) + 1.0
+            start = end
+        return ranks
+
+    rank_a = _average_ranks(a)
+    rank_b = _average_ranks(b)
+    if np.std(rank_a) == 0.0 or np.std(rank_b) == 0.0:
+        return float("nan")
+    return float(np.corrcoef(rank_a, rank_b)[0, 1])
+
+
 def decision_margin_ex(
     logits: torch.Tensor, action: int, cap: float
 ) -> tuple[float, bool]:
@@ -327,7 +443,11 @@ class FaithfulnessEvaluator:
 
     # -------------------------------------------------- public
 
-    def attention_row(self, obs: dict[str, torch.Tensor]) -> np.ndarray:
+    def attention_row(
+        self,
+        obs: dict[str, torch.Tensor],
+        from_node: int = 0,
+    ) -> np.ndarray:
         """Aggregated per-node attention row for a single-decision obs (B=1).
 
         One plain forward — used by the attention-drift pipeline to score a
@@ -338,8 +458,137 @@ class FaithfulnessEvaluator:
         with torch.no_grad():
             out = self.policy.forward(obs)
         return aggregate_node_attention(
-            out["attention"], from_node=0, layer_agg=self.config.aggregate_layers
+            out["attention"], from_node=from_node,
+            layer_agg=self.config.aggregate_layers,
+            head_agg=self.config.aggregate_heads,
         )
+
+    def attention_rows(
+        self,
+        obs: dict[str, torch.Tensor],
+        aggregations: list[tuple[str, str]],
+    ) -> dict[str, np.ndarray]:
+        """Compute several attention aggregations from one policy forward."""
+        self._check_batch_one(obs)
+        self.policy.eval()
+        with torch.no_grad():
+            attention = self.policy.forward(obs)["attention"]
+        return {
+            f"{layer_agg}_{head_agg}": aggregate_node_attention(
+                attention,
+                from_node=0,
+                layer_agg=layer_agg,
+                head_agg=head_agg,
+            )
+            for layer_agg, head_agg in aggregations
+        }
+
+    def leave_one_out_importance(
+        self,
+        obs: dict[str, torch.Tensor],
+        action: int | None = None,
+        protect_chosen_request: bool = True,
+    ) -> LeaveOneOutImportance:
+        """Measure each node's effect on the selected action by masking it.
+
+        This is a positive control for the DEF implementation: a ranking built
+        directly from the same single-node perturbation should outperform a
+        random ranking when the evaluator can detect influential information.
+        It is not an independent explanation method and must not be presented
+        as proof that attention itself is faithful.
+
+        When the selected action is a request, that request node is protected
+        by default. Otherwise masking it also removes the action from the
+        action space, creating a mechanical effect rather than an information
+        relevance effect.
+        """
+        self._check_batch_one(obs)
+        self.policy.eval()
+        with torch.no_grad():
+            out = self.policy.forward(obs)
+            logits = out["logits"]
+            probs = torch.softmax(logits, dim=-1)
+            node_mask = out["node_mask"][0].cpu().numpy().astype(bool)
+
+        if action is None:
+            action = int(probs.argmax(dim=-1).item())
+        pi_full = float(probs[0, action].item())
+        m_full = decision_margin(logits[0], action, self.config.margin_cap)
+
+        k_neighbors = self.policy.config.k_neighbors
+        n_nodes = 1 + k_neighbors + self.policy.config.k_reservations
+        candidates = np.flatnonzero(node_mask).astype(np.int64)
+        candidates = candidates[candidates != 0]
+        if protect_chosen_request and action >= 1:
+            chosen_node = k_neighbors + action
+            candidates = candidates[candidates != chosen_node]
+
+        margin_effect = np.zeros(n_nodes, dtype=np.float64)
+        probability_effect = np.zeros(n_nodes, dtype=np.float64)
+        for node_idx in candidates:
+            pi, margin, _ = self._forward_stats(
+                self._mask_out(obs, np.array([node_idx], dtype=np.int64)), action
+            )
+            probability_effect[node_idx] = pi_full - pi
+            margin_effect[node_idx] = m_full - margin
+
+        return LeaveOneOutImportance(
+            action=action,
+            candidates=candidates,
+            importance_row=np.maximum(margin_effect, 0.0),
+            margin_effect=margin_effect,
+            probability_effect=probability_effect,
+        )
+
+    def gradient_x_input_importance(
+        self,
+        obs: dict[str, torch.Tensor],
+        action: int,
+    ) -> np.ndarray:
+        """Node ranking from the L2 norm of Gradient x Input.
+
+        Gradients are taken from the selected action logit to the raw feature
+        tensors. Masks remain fixed. This provides a conventional post-hoc
+        comparator that does not use the returned attention coefficients.
+        """
+        self._check_batch_one(obs)
+        feature_keys = ("self", "neighbor_taxis", "reservations")
+        grad_obs: dict[str, torch.Tensor] = {}
+        for key, value in obs.items():
+            cloned = value.detach().clone()
+            if key in feature_keys:
+                cloned.requires_grad_(True)
+            grad_obs[key] = cloned
+        grad_inputs = [grad_obs[key] for key in feature_keys]
+
+        self.policy.eval()
+        logits = self.policy.forward(grad_obs)["logits"]
+        gradients = torch.autograd.grad(
+            logits[0, action], grad_inputs, retain_graph=False, create_graph=False
+        )
+        grad_by_key = dict(zip(feature_keys, gradients, strict=True))
+
+        k_neighbors = self.policy.config.k_neighbors
+        k_reservations = self.policy.config.k_reservations
+        importance = np.zeros(1 + k_neighbors + k_reservations, dtype=np.float64)
+        self_score = torch.linalg.vector_norm(
+            grad_by_key["self"] * grad_obs["self"], dim=-1
+        )
+        taxi_score = torch.linalg.vector_norm(
+            grad_by_key["neighbor_taxis"] * grad_obs["neighbor_taxis"], dim=-1
+        )
+        request_score = torch.linalg.vector_norm(
+            grad_by_key["reservations"] * grad_obs["reservations"], dim=-1
+        )
+        importance[0] = float(self_score[0].detach().cpu().item())
+        importance[1:1 + k_neighbors] = taxi_score[0].detach().cpu().numpy()
+        importance[1 + k_neighbors:] = request_score[0].detach().cpu().numpy()
+
+        taxi_mask = obs["neighbor_taxis_mask"][0].detach().cpu().numpy().astype(bool)
+        request_mask = obs["reservations_mask"][0].detach().cpu().numpy().astype(bool)
+        importance[1:1 + k_neighbors][~taxi_mask] = 0.0
+        importance[1 + k_neighbors:][~request_mask] = 0.0
+        return importance
 
     def evaluate_decision(
         self,
@@ -373,7 +622,9 @@ class FaithfulnessEvaluator:
         m_full = decision_margin(logits[0], action, self.config.margin_cap)
 
         attention_row = aggregate_node_attention(
-            attention, from_node=0, layer_agg=self.config.aggregate_layers
+            attention, from_node=0,
+            layer_agg=self.config.aggregate_layers,
+            head_agg=self.config.aggregate_heads,
         )
         scored_row = attention_row if importance_row is None else \
             np.asarray(importance_row, dtype=np.float64)
@@ -405,6 +656,7 @@ class FaithfulnessEvaluator:
         # --- exclusion variant (construct-validity audit): the chosen
         # action's reservation node is protected from occlusion entirely.
         def_excl = def_m_excl = float("nan")
+        g_comp_m_excl = g_suff_m_excl = float("nan")
         excl_evaluated = False
         if self.config.exclusion_variant and action >= 1:
             chosen_node = K_n + action  # node index of the chosen reservation
@@ -416,6 +668,8 @@ class FaithfulnessEvaluator:
                 if excl["per_k"]:
                     def_excl = excl["def_score"]
                     def_m_excl = excl["def_margin"]
+                    g_comp_m_excl = excl["g_comp_m"]
+                    g_suff_m_excl = excl["g_suff_m"]
                     excl_evaluated = True
 
         # --- WAMSN
@@ -464,6 +718,8 @@ class FaithfulnessEvaluator:
             clamp_rand_frac=float(clamp_rand_frac),
             def_excl=float(def_excl),
             def_m_excl=float(def_m_excl),
+            g_comp_m_excl=float(g_comp_m_excl),
+            g_suff_m_excl=float(g_suff_m_excl),
             excl_evaluated=excl_evaluated,
             n_stale_vehicle=n_stale_vehicle,
             max_aoi_s=max_aoi_s,

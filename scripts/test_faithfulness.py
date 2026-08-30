@@ -33,6 +33,8 @@ from dispatch_marl import (  # noqa: E402
     aggregate_node_attention,
     compute_attention_drift,
     compute_wamsn,
+    expected_type_matched_topk_overlap,
+    spearman_rank_correlation,
 )
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
@@ -80,6 +82,31 @@ def test_pure_helpers() -> None:
     row = aggregate_node_attention(uniform, from_node=0, layer_agg="mean")
     assert row.shape == (N,), row.shape
     assert np.allclose(row, np.full(N, 1.0 / N)), row
+    rollout = aggregate_node_attention(
+        uniform, from_node=0, layer_agg="rollout", head_agg="max"
+    )
+    assert abs(rollout.sum() - 1.0) < 1e-9, rollout
+    assert rollout[0] > rollout[1], rollout  # residual identity preserves self mass
+    head = aggregate_node_attention(
+        uniform, from_node=0, layer_agg="first", head_agg="head_2"
+    )
+    assert np.allclose(head, np.full(N, 1.0 / N)), head
+
+    # --- exact type-matched top-k overlap ---
+    # Two selected taxis from four taxi candidates and one selected request
+    # from two request candidates: E[intersection]/3 = (2^2/4 + 1^2/2)/3.
+    overlap = expected_type_matched_topk_overlap(
+        top_k_idx=np.array([1, 2, 5]),
+        candidates=np.array([1, 2, 3, 4, 5, 6]),
+        k_neighbors=4,
+    )
+    assert abs(overlap - 0.5) < 1e-9, overlap
+
+    rho = spearman_rank_correlation(
+        np.array([10.0, 20.0, 20.0, 40.0]),
+        np.array([1.0, 2.0, 2.0, 4.0]),
+    )
+    assert abs(rho - 1.0) < 1e-9, rho
 
     print("  pure helpers   OK")
 
@@ -136,6 +163,10 @@ def test_evaluator_end_to_end() -> None:
     single = _slice_batch(batched, picked_idx)
     evaluator = FaithfulnessEvaluator(policy, FaithfulnessConfig(seed=0))
     result = evaluator.evaluate_decision(single)
+    loo = evaluator.leave_one_out_importance(single, action=result.action)
+    grad_x_input = evaluator.gradient_x_input_importance(
+        single, action=result.action
+    )
 
     # --- range checks ---
     assert 0.0 <= result.pi_full <= 1.0, f"pi_full out of range: {result.pi_full}"
@@ -147,6 +178,15 @@ def test_evaluator_end_to_end() -> None:
     assert result.attention_row.shape == (N,), result.attention_row.shape
     assert result.node_mask.shape == (N,), result.node_mask.shape
     assert result.node_mask[0], "self node must always be valid"
+    assert loo.importance_row.shape == (N,), loo.importance_row.shape
+    assert not np.any(loo.candidates == 0), "self must not be a LOO candidate"
+    if result.action >= 1:
+        chosen_node = env_cfg.k_neighbors + result.action
+        assert chosen_node not in loo.candidates, "chosen request must be protected"
+    assert np.all(loo.importance_row >= 0), loo.importance_row
+    assert grad_x_input.shape == (N,), grad_x_input.shape
+    assert np.all(np.isfinite(grad_x_input)), grad_x_input
+    assert np.all(grad_x_input >= 0), grad_x_input
 
     # --- attention row is a distribution (or all-masked → sum 0) ---
     s = result.attention_row.sum()

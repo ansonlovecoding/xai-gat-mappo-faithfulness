@@ -1,42 +1,50 @@
 # 6. Conclusion
 
-This dissertation addressed one practical problem: a graph-attention map can
-remain visible and look complete after some of the vehicle data behind it have
-become stale. An operator may mistake that map for a trustworthy explanation,
-although attention strength does not show whether the data are fresh or the
-highlighted nodes support the decision.
+This dissertation examined a practical assurance problem: a graph-attention
+map can remain visible and appear complete after some vehicle telemetry has
+become stale. Attention strength alone does not tell an operator whether its
+source is current or whether the highlighted node affected the action.
 
 The central answer is clear: **this experiment does not validate raw
-graph-attention weights as dependable explanations under telemetry
-degradation**. This does not show that every attention map is wrong; it shows
+graph-attention weights as dependable explanations under clean or degraded
+telemetry**. This is not a claim that every attention map is wrong. It means
 that attention cannot be trusted by default.
 
-The four research questions provide the evidence for this answer:
+The research questions lead to that answer:
 
-- **RQ1 - Is graph attention faithful under clean telemetry?** It is not validated as faithful. Corrected DEF remains close to the type-matched random baseline, so the weights show no measured advantage over a fair random ranking.
-- **RQ2 - Does attention move toward stale vehicle nodes?** Not consistently. Longer outages increase stale-data exposure in all six GAT policies, but the paired attention shift is positive for seeds 42 and 43 and negative for seed 44 in both training regimes. Equivalent training runs can therefore produce opposite explanation responses.
-- **RQ3 - Does faithfulness change more than dispatch behaviour?** No. H1 and H2 are unsupported in every trained policy. Type-matched DEF and pickups both remain nearly flat across outage durations, so stable performance cannot be interpreted as evidence of a faithful explanation.
-- **RQ4 - Does degradation-aware training make the explanation more reliable?** No consistent mitigation is observed. It retains the same seed-dependent attention-shift pattern, gives mixed WAMSN-DEF relationships, and includes one substantially weaker policy replicate.
+- **RQ1: Is attention faithful under clean telemetry?** No stable result is
+  found. Raw-attention DEF ranges from -0.0084 to +0.0187 across checkpoints.
+  LOO gives a larger positive result for all six checkpoints, while taxi-only
+  attention-LOO rank correlation ranges from -0.710 to +0.319.
+- **RQ2: Does attention move toward stale vehicle nodes?** Not consistently.
+  The declared aggregation moves toward stale nodes for seeds 42 and 43 and
+  away from them for seed 44 under both training regimes. Individual heads can
+  reverse the direction within one checkpoint.
+- **RQ3: Does the explanation remain dependable as outage duration increases?**
+  No dependable relationship is found. Stale exposure increases, but DEF does
+  not consistently decline. The 60-second ranking-control results remain close
+  to their clean values.
+- **RQ4: Does degradation-aware training improve explanation reliability?** No
+  consistent mitigation is observed. GAT-Outage retains checkpoint, aggregation, and
+  query-row dependence and includes one weak policy replicate.
 
-The mixed attention shifts are not an absence of a conclusion. They show that
-raw attention has no reproducible, model-independent response to stale
-telemetry. The thesis therefore does not claim that stale telemetry always
-moves attention toward stale nodes or always lowers faithfulness. Its consistent
-result is the lack of a dependable explanation guarantee across independently
-trained policies.
+The construct-validity audit is essential to this interpretation. Deleting a
+request can also delete an action, while deleting a peer taxi only hides
+context. Type-matched and action-protected controls remove much of this
+artefact. The positive LOO result shows that DEF has some perturbation
+sensitivity, but the high expected top-k overlap limits its resolution. The
+conclusion is therefore based on several checks rather than one near-zero
+number.
 
-In this thesis, **faithfulness decoupling** is this assurance gap: the
-explanation remains visible after the freshness of its data has expired, but
-the displayed weights do not reliably establish decision relevance. This does
-not require DEF to decline monotonically with outage duration.
+In this thesis, **faithfulness decoupling** is the assurance gap between a
+visible explanation and valid supporting evidence. An attention map can
+outlive the freshness of its inputs without giving a stable indication of
+decision relevance. The gap does not require DEF to decline monotonically with
+outage duration.
 
-The construct-validity audit supports this interpretation. Deleting a request
-can also delete an action, whereas deleting a taxi only hides information.
-Type-matched and action-protected controls are therefore required before DEF
-can be interpreted.
-
-The practical resolution is simple. Stable dispatch output is not evidence
-that an explanation remains trustworthy. Graph-attention weights should be
-treated as model internals, not operator-facing reasons, until each released
-checkpoint passes separate freshness-aware and action-aware faithfulness tests
-and the result reproduces across independent training runs.
+The practical resolution is to separate freshness from explanation. Stable
+dispatch output is not evidence that an explanation remains trustworthy.
+Attention weights should be treated as model internals until each released
+checkpoint passes freshness-aware, action-aware, and aggregation-sensitive
+faithfulness tests, and the result reproduces across independent training
+runs.

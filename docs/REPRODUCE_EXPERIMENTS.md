@@ -27,10 +27,10 @@ source of the final H1-H5 verdicts.
 
 The runner performs five linked tasks:
 
-1. trains B1, B2, B3, and H5 with seeds 42, 43, and 44;
+1. trains B1, B2, B3, and D30 with seeds 42, 43, and 44;
 2. selects checkpoints on validation demand, not test demand;
 3. evaluates every selected policy on held-out clean test demand;
-4. runs faithfulness sweeps for B2 and H5 under clean telemetry and 10, 20,
+4. runs faithfulness sweeps for B2 and D30 under clean telemetry and 10, 20,
    30, and 60-second observation-layer outages;
 5. validates, analyses, and summarises the outputs.
 
@@ -148,7 +148,8 @@ Examples:
 .venv/bin/python scripts/run_dissertation_experiments.py \
   --stage preflight --model B2_gat
 
-# Analyse H5 and rebuild all summary tables
+# Analyse D30 and rebuild all summary tables. H5_gat_degraded is the
+# backward-compatible code identifier for the D30 dissertation condition.
 .venv/bin/python scripts/run_dissertation_experiments.py \
   --stage analyze --model H5_gat_degraded
 .venv/bin/python scripts/run_dissertation_experiments.py --stage summarize
@@ -163,10 +164,60 @@ B3_gat_noaoi
 H5_gat_degraded
 ```
 
-Only B2 and H5 have faithfulness sweeps. B1 and B3 supply performance and
+Only B2 and D30 have faithfulness sweeps. B1 and B3 supply performance and
 structural context.
 
-## 6. Expected directory structure
+## 6. Run the revision audits
+
+Verify that the v4 checkpoints, evaluation files, sweep manifests, source
+revision, and Chapter 3 checkpoint table agree:
+
+```bash
+.venv/bin/python scripts/audit_dissertation_v4.py
+```
+
+The command should report `131` passed checks and no failures for the archived
+v4 run.
+
+Run the legal-random and greedy-nearest lower bounds on the same held-out
+protocol:
+
+```bash
+.venv/bin/python scripts/run_matched_baselines.py
+```
+
+Run the additional faithfulness diagnostics. Start with the two-cell smoke
+test, then run the complete B2 and D30 matrices. Cell files make these commands
+resumable.
+
+```bash
+.venv/bin/python scripts/run_faithfulness_controls.py --smoke
+
+.venv/bin/python scripts/run_faithfulness_controls.py \
+  --models B2_gat \
+  --out runs/dissertation_revision_v1/faithfulness_controls/B2_full
+
+.venv/bin/python scripts/run_faithfulness_controls.py \
+  --models H5_gat_degraded \
+  --out runs/dissertation_revision_v1/faithfulness_controls/D30_full
+
+.venv/bin/python scripts/run_faithfulness_controls.py \
+  --models B2_gat --action-row-only \
+  --out runs/dissertation_revision_v1/faithfulness_controls/B2_action_row
+
+.venv/bin/python scripts/run_faithfulness_controls.py \
+  --models H5_gat_degraded --action-row-only \
+  --out runs/dissertation_revision_v1/faithfulness_controls/D30_action_row
+
+.venv/bin/python scripts/analyze_faithfulness_controls.py
+```
+
+The control run records raw attention, Gradient x Input, the LOO perturbation
+control, valid-node distributions, exact random top-k overlap, taxi-only rank
+correlation, and attention aggregation sensitivity. The analysis uses episode
+blocks rather than treating decisions from the same episode as independent.
+
+## 7. Expected directory structure
 
 ```text
 runs/dissertation_v4/
@@ -196,7 +247,7 @@ runs/dissertation_v4/
 Do not delete `cells/` if another reader needs to audit or recompute the
 per-decision statistics.
 
-## 7. Verify preflight before reading results
+## 8. Verify preflight before reading results
 
 Every sweep used in the thesis must contain `preflight.json` with:
 
@@ -214,7 +265,7 @@ Preflight checks the expected condition/seed matrix, source provenance,
 checkpoint identity, type-matched random controls, chosen-action exclusion,
 and empirical differentiation of the outage conditions.
 
-## 8. Rebuild tables and figures
+## 9. Rebuild tables and figures
 
 After all analyses exist:
 
@@ -232,23 +283,23 @@ The primary thesis tables are:
 
 The plotting script writes PNG and PDF versions to `docs/figures/`.
 
-## 9. Expected qualitative result
+## 10. Expected qualitative result
 
 A correct rerun should be interpreted from the generated files, not forced to
 match one seed exactly across hardware. In the completed local v4 run:
 
-- H3 is supported for all three B2 and all three H5 training seeds;
+- H3 is supported for all three B2 and all three D30 training seeds;
 - H1 and H2 are unsupported for all six policies;
-- H4 is unsupported for B2 and supported for two of three H5 seeds;
+- H4 is unsupported for B2 and supported for two of three D30 seeds;
 - the paired stale-attention shift is positive for seeds 42 and 43 and negative
   for seed 44 under both training regimes;
-- H5 seed 44 is a weak policy replicate and is retained in the synthesis.
+- D30 seed 44 is a weak policy replicate and is retained in the synthesis.
 
 The conclusion is therefore not that AoI causes lower faithfulness. Longer
 outages consistently increase stale-data exposure, while attention
 reallocation and its relationship with DEF depend on the trained policy.
 
-## 10. Supporting legacy audit
+## 11. Supporting legacy audit
 
 The older archive remains useful for understanding why the final protocol uses
 type-matched random occlusions:
@@ -264,7 +315,7 @@ These files document the construct-validity problem: deleting a request node
 can also delete an action, while deleting a taxi node only removes information.
 They should not be substituted for the v4 H1-H5 analysis.
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 ### PyTorch says NumPy is unavailable
 

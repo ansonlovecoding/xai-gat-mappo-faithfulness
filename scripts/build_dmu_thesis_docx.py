@@ -1,4 +1,4 @@
-"""Build the v4 dissertation in the supplied DMU MSc thesis style."""
+"""Build the dissertation in the supplied DMU MSc thesis style."""
 from __future__ import annotations
 
 import argparse
@@ -44,46 +44,72 @@ CITATIONS = {
     20: "Lipton, 2018",
     21: "Kaul, Yates and Gruteser, 2012",
     22: "Lopez et al., 2018",
+    23: "Ying et al., 2019",
+    24: "Luo et al., 2020",
+    25: "Yuan et al., 2023",
+    26: "Abnar and Zuidema, 2020",
+    27: "Adebayo et al., 2018",
+    28: "Hooker et al., 2019",
+    29: "Amara et al., 2022",
+    30: "Milani et al., 2024",
+    31: "Bekkemoen, 2024",
+    32: "Puiutta and Veith, 2020",
+    33: "Hu, Feng and Li, 2025",
+    34: "Greydanus et al., 2018",
+    35: "Mott et al., 2019",
+    36: "Yuan et al., 2021",
+    37: "Wang et al., 2025",
+    38: "Sha et al., 2026",
 }
 
 TABLE_TITLES = {
     (3, 1): "Observation graph node types and roles",
-    (3, 2): "Policy conditions used in the v4 experiment",
+    (3, 2): "Policy conditions used in the experiment",
     (3, 3): "Validation-selected checkpoint epochs",
-    (4, 1): "Clean-test performance context across training seeds",
+    (3, 4): "Shared training and optimisation settings",
+    (4, 1): "Policy capability on held-out demand",
     (4, 2): "Construct-validity audit of random controls",
-    (4, 3): "Paired stale-attention shift estimates and confidence intervals",
-    (4, 4): "Hypothesis outcomes across training seeds",
+    (4, 3): "Clean-telemetry faithfulness controls by training seed",
+    (4, 4): "Valid node-count distribution in scored graphs",
+    (4, 5): "Paired stale-attention shift estimates and confidence intervals",
+    (4, 6): "Hypothesis outcomes across training seeds",
 }
 
 FIGURES = [
-    ("Figure 3.1", "Observation graph and request-to-action mapping"),
-    ("Figure 3.2", "Simplified graph-attention design"),
-    ("Figure 3.3", "Model conditions and training process"),
+    ("Figure 3.1", "Local observation graph and request-to-action mapping"),
+    ("Figure 3.2", "Graph-attention policy and audit channel"),
+    ("Figure 3.3", "Training, selection and held-out evaluation"),
     ("Figure 3.4", "Tunnel-triggered observation-layer telemetry degradation"),
     ("Figure 3.5", "Construct-validity controls for action-linked request nodes"),
-    ("Figure 4.1", "Validation checkpoint selection by model and training seed"),
+    ("Figure 4.1", "GAT training and checkpoint-selection diagnostics"),
     ("Figure 4.2", "Clean-test pickups by training seed"),
-    ("Figure 4.3", "Stale exposure, faithfulness and pickups by outage duration"),
-    ("Figure 4.4", "Paired stale-attention shift by training seed"),
-    ("Figure 4.5", "WAMSN-DEF correlation by training seed"),
-    ("Figure 5.1", "Evidence path and final cross-seed verdicts"),
+    ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
+    ("Figure 4.4", "Top-k overlap and DEF resolution"),
+    ("Figure 4.5", "Outage-duration sweep by policy and training seed"),
+    ("Figure 4.6", "Paired stale-attention shift by training seed"),
+    ("Figure 4.7", "Attention aggregation sensitivity"),
+    ("Figure 4.8", "Attention query-row sensitivity"),
+    ("Figure 4.9", "WAMSN-DEF correlation by training seed"),
+    ("Figure 5.1", "Cross-seed evidence matrix"),
 ]
 
 TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
 
 FIGURE_PAGES = {
-    "Figure 3.1": "7", "Figure 3.2": "7", "Figure 3.3": "8",
-    "Figure 3.4": "9", "Figure 3.5": "10",
-    "Figure 4.1": "12", "Figure 4.2": "13", "Figure 4.3": "14",
-    "Figure 4.4": "15", "Figure 4.5": "16", "Figure 5.1": "17",
+    "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "11",
+    "Figure 3.4": "12", "Figure 3.5": "14",
+    "Figure 4.1": "17", "Figure 4.2": "18", "Figure 4.3": "20",
+    "Figure 4.4": "21", "Figure 4.5": "22",
+    "Figure 4.6": "23", "Figure 4.7": "23", "Figure 4.8": "24",
+    "Figure 4.9": "25", "Figure 5.1": "26",
 }
 
 TABLE_PAGES = {
-    "Table 3.1": "6", "Table 3.2": "7", "Table 3.3": "8",
-    "Table 4.1": "12", "Table 4.2": "13", "Table 4.3": "14",
-    "Table 4.4": "16",
+    "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "10",
+    "Table 3.4": "11", "Table 4.1": "17", "Table 4.2": "18",
+    "Table 4.3": "19", "Table 4.4": "20", "Table 4.5": "22",
+    "Table 4.6": "25",
 }
 
 HEADING_PAGES = {
@@ -93,30 +119,36 @@ HEADING_PAGES = {
     "1.6 Contributions": "3", "1.7 Dissertation structure": "3",
     "Chapter 2: Literature Review": "4",
     "2.1 Reinforcement learning for fleet dispatch": "4",
-    "2.2 Is attention an explanation?": "4", "2.3 Age of Information": "5",
-    "2.4 Simulation platform": "5", "2.5 Positioning": "5",
-    "Chapter 3: Methodology": "6", "3.1 Study design": "6",
-    "3.2 SUMO environment and data": "6",
-    "3.3 Observation graph and action space": "6",
-    "3.4 Policy models and training": "7", "3.5 Telemetry degradation": "8",
-    "3.6 Explanation measures": "9",
-    "3.6.1 Decision-level explanation faithfulness": "9",
-    "3.6.2 Stale-node attention": "9", "3.7 Construct-validity audit": "10",
-    "3.8 Evaluation matrix": "10", "3.9 Hypotheses and statistics": "11",
-    "3.10 Reproducibility": "11", "Chapter 4: Results": "12",
-    "4.1 Checkpoint selection and performance context": "12",
-    "4.2 Supporting construct-validity result": "13",
-    "4.3 Manipulation check: stale exposure increases": "13",
-    "4.4 Paired attention reallocation is seed-dependent": "14",
-    "4.5 Faithfulness and decoupling hypotheses": "15",
-    "4.6 Degradation-aware training": "16", "4.7 Hypothesis summary": "16",
-    "Chapter 5: Discussion": "17", "5.1 Answer to the central problem": "17",
-    "5.2 Why H3 is useful but limited": "17",
-    "5.3 Meaning of training-seed variation": "18",
-    "5.4 Role of the construct-validity audit": "18",
-    "5.5 Degradation-aware training": "18", "5.6 Practical implications": "18",
-    "5.7 Limitations": "19", "5.8 Future work": "19",
-    "Chapter 6: Conclusion": "20",
+    "2.2 Explainability in reinforcement learning": "4",
+    "2.3 Is attention an explanation?": "5",
+    "2.4 Explaining graph neural networks": "6",
+    "2.5 Faithfulness evaluation and its pitfalls": "6",
+    "2.6 Age of Information and telemetry degradation": "7",
+    "2.7 Research gap and positioning": "7",
+    "Chapter 3: Methodology": "8", "3.1 Study design": "8",
+    "3.2 SUMO environment and data": "8",
+    "3.3 Observation graph and action space": "8",
+    "3.4 Policy models and training": "9", "3.5 Telemetry degradation": "11",
+    "3.6 Explanation measures": "12",
+    "3.6.1 Decision-level explanation faithfulness": "12",
+    "3.6.2 Stale-node attention": "13", "3.7 Construct-validity audit": "13",
+    "3.8 Evaluation matrix": "14", "3.9 Hypotheses and statistics": "15",
+    "3.10 Reproducibility": "15", "3.11 Ethics and data governance": "15",
+    "Chapter 4: Results": "17",
+    "4.1 Policy capability and training stability": "17",
+    "4.2 Construct-validity audit": "18",
+    "4.3 Evaluator sensitivity and ranking controls": "19",
+    "4.4 Small-graph resolution": "20",
+    "4.5 Telemetry manipulation and stale exposure": "21",
+    "4.6 Attention reallocation and aggregation sensitivity": "22",
+    "4.7 Faithfulness hypotheses": "24", "4.8 Result summary": "25",
+    "Chapter 5: Discussion": "26", "5.1 Answer to the central problem": "26",
+    "5.2 What the stale-exposure result means": "26",
+    "5.3 Dependence on checkpoint and analysis choice": "27",
+    "5.4 Role of the construct-validity audit": "27",
+    "5.5 Degradation-aware training": "27", "5.6 Practical implications": "28",
+    "5.7 Limitations": "28", "5.8 Future work": "28",
+    "Chapter 6: Conclusion": "30",
 }
 
 
@@ -292,6 +324,9 @@ def add_numbering_definition(doc: Document, *, bullet: bool) -> int:
     level_text = OxmlElement("w:lvlText")
     level_text.set(qn("w:val"), "•" if bullet else "%1.")
     level.append(level_text)
+    suffix = OxmlElement("w:suff")
+    suffix.set(qn("w:val"), "tab")
+    level.append(suffix)
     justification = OxmlElement("w:lvlJc")
     justification.set(qn("w:val"), "left")
     level.append(justification)
@@ -299,19 +334,21 @@ def add_numbering_definition(doc: Document, *, bullet: bool) -> int:
     tabs = OxmlElement("w:tabs")
     tab = OxmlElement("w:tab")
     tab.set(qn("w:val"), "num")
-    tab.set(qn("w:pos"), "460")
+    tab.set(qn("w:pos"), "720")
     tabs.append(tab)
     paragraph_properties.append(tabs)
     indent = OxmlElement("w:ind")
-    indent.set(qn("w:left"), "460")
-    indent.set(qn("w:hanging"), "260")
+    indent.set(qn("w:left"), "720")
+    indent.set(qn("w:hanging"), "360")
     paragraph_properties.append(indent)
     level.append(paragraph_properties)
     if bullet:
         run_properties = OxmlElement("w:rPr")
         fonts = OxmlElement("w:rFonts")
-        fonts.set(qn("w:ascii"), "Symbol")
-        fonts.set(qn("w:hAnsi"), "Symbol")
+        fonts.set(qn("w:ascii"), "Times New Roman")
+        fonts.set(qn("w:hAnsi"), "Times New Roman")
+        fonts.set(qn("w:eastAsia"), "Times New Roman")
+        fonts.set(qn("w:cs"), "Times New Roman")
         run_properties.append(fonts)
         level.append(run_properties)
     abstract.append(level)
@@ -334,24 +371,34 @@ def ensure_list_style(doc: Document, name: str, *, bullet: bool):
         style = styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
     style.font.name = "Times New Roman"
     style.font.size = Pt(12)
+    run_properties = style._element.get_or_add_rPr()
+    language = run_properties.find(qn("w:lang"))
+    if language is None:
+        language = OxmlElement("w:lang")
+        run_properties.append(language)
+    language.set(qn("w:val"), "en-GB")
+    language.set(qn("w:eastAsia"), "en-GB")
+    language.set(qn("w:bidi"), "en-GB")
     style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    style.paragraph_format.left_indent = Inches(0.32)
-    style.paragraph_format.first_line_indent = Inches(-0.22)
+    style.paragraph_format.left_indent = Inches(0.5)
+    style.paragraph_format.first_line_indent = Inches(-0.25)
     style.paragraph_format.line_spacing = 1.15
     style.paragraph_format.space_before = Pt(0)
     style.paragraph_format.space_after = Pt(3)
     style.paragraph_format.widow_control = True
 
     p_pr = style._element.get_or_add_pPr()
-    if p_pr.find(qn("w:numPr")) is None:
-        num_pr = OxmlElement("w:numPr")
-        ilvl = OxmlElement("w:ilvl")
-        ilvl.set(qn("w:val"), "0")
-        num_pr.append(ilvl)
-        num_id = OxmlElement("w:numId")
-        num_id.set(qn("w:val"), str(add_numbering_definition(doc, bullet=bullet)))
-        num_pr.append(num_id)
-        p_pr.append(num_pr)
+    existing_numbering = p_pr.find(qn("w:numPr"))
+    if existing_numbering is not None:
+        p_pr.remove(existing_numbering)
+    num_pr = OxmlElement("w:numPr")
+    ilvl = OxmlElement("w:ilvl")
+    ilvl.set(qn("w:val"), "0")
+    num_pr.append(ilvl)
+    num_id = OxmlElement("w:numId")
+    num_id.set(qn("w:val"), str(add_numbering_definition(doc, bullet=bullet)))
+    num_pr.append(num_id)
+    p_pr.append(num_pr)
     return style
 
 
@@ -373,6 +420,12 @@ def apply_inline(paragraph, text: str) -> None:
 
 
 def convert_citations(text: str) -> str:
+    # Preserve narrative Harvard citations: "Author [n]" becomes
+    # "Author (year)", while a standalone [n] remains "(Author, year)".
+    for number, citation in CITATIONS.items():
+        authors, year = citation.rsplit(", ", 1)
+        text = text.replace(f"{authors} [{number}]", f"{authors} ({year})")
+
     def replace_range(match: re.Match[str]) -> str:
         start, end = int(match.group(1)), int(match.group(2))
         return "(" + "; ".join(CITATIONS[number] for number in range(start, end + 1)) + ")"
@@ -455,7 +508,7 @@ def add_caption_before(doc: Document, anchor, text: str):
 
 
 def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
-    add_caption_before(doc, anchor, title)
+    caption_paragraph = add_caption_before(doc, anchor, title)
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
     total = 9020
@@ -488,7 +541,7 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
     move_before(table._tbl, anchor)
-    return table
+    return caption_paragraph
 
 
 def parse_table(lines: list[str]) -> list[list[str]]:
@@ -568,9 +621,16 @@ def collect_blocks(path: Path) -> list[tuple[str, object]]:
         numbered = re.match(r"^\d+\.\s+(.+)", stripped)
         if bullet or numbered:
             flush()
-            list_text = bullet.group(1) if bullet else numbered.group(1)
-            blocks.append(("bullet" if bullet else "number", convert_citations(list_text)))
+            item_lines = [bullet.group(1) if bullet else numbered.group(1)]
             index += 1
+            while index < len(lines):
+                continuation = lines[index]
+                if not continuation.strip() or not re.match(r"^(?: {2,}|\t)\S", continuation):
+                    break
+                item_lines.append(continuation.strip())
+                index += 1
+            list_text = " ".join(item_lines)
+            blocks.append(("bullet" if bullet else "number", convert_citations(list_text)))
             continue
         paragraph_lines.append(stripped)
         index += 1
@@ -584,7 +644,8 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
     table_count: dict[int, int] = {}
     current_chapter = 0
     for chapter_path in sorted((ROOT / "docs" / "dissertation").glob("0[1-6]_*.md")):
-        for block_type, payload in collect_blocks(chapter_path):
+        blocks = collect_blocks(chapter_path)
+        for block_index, (block_type, payload) in enumerate(blocks):
             if block_type == "heading":
                 level, text = payload
                 if level == 1:
@@ -597,6 +658,7 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                 else:
                     paragraph = add_paragraph_before(doc, anchor, text, f"Heading {min(level, 3)}")
                 headings.append(text)
+                add_bookmark(doc, paragraph, bookmark_name("heading", text))
                 paragraph.paragraph_format.keep_with_next = True
             elif block_type == "paragraph":
                 text = payload
@@ -605,14 +667,29 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                     paragraph = add_paragraph_before(doc, anchor, style="DMU Caption")
                     apply_inline(paragraph, clean)
                     paragraph.paragraph_format.keep_together = True
-                    captions.append(clean.split(".", 1)[0])
+                    figure_match = re.match(r"(Figure \d+\.\d+)\.", clean)
+                    if figure_match is None:
+                        raise ValueError(f"invalid figure caption: {clean}")
+                    figure_number = figure_match.group(1)
+                    add_bookmark(doc, paragraph, bookmark_name("figure", figure_number))
+                    captions.append(figure_number)
                 else:
                     paragraph = add_paragraph_before(doc, anchor, text)
                     paragraph.paragraph_format.widow_control = True
+                    if (
+                        block_index + 1 < len(blocks)
+                        and blocks[block_index + 1][0] in {"bullet", "number"}
+                    ):
+                        paragraph.paragraph_format.keep_with_next = True
             elif block_type in {"bullet", "number"}:
                 style = "DMU Bullet" if block_type == "bullet" else "DMU Number"
                 paragraph = add_paragraph_before(doc, anchor, payload, style)
                 paragraph.paragraph_format.keep_together = True
+                next_is_same_list = (
+                    block_index + 1 < len(blocks)
+                    and blocks[block_index + 1][0] == block_type
+                )
+                paragraph.paragraph_format.space_after = Pt(2 if next_is_same_list else 6)
             elif block_type == "code":
                 paragraph = add_paragraph_before(doc, anchor, payload)
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -630,12 +707,82 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                 number = table_count[current_chapter]
                 title = TABLE_TITLES[(current_chapter, number)]
                 caption = f"Table {current_chapter}.{number}: {title}"
-                add_table_before(doc, anchor, payload, caption)
-                captions.append(f"Table {current_chapter}.{number}")
+                table_number = f"Table {current_chapter}.{number}"
+                caption_paragraph = add_table_before(doc, anchor, payload, caption)
+                add_bookmark(doc, caption_paragraph, bookmark_name("table", table_number))
+                captions.append(table_number)
     return headings, captions
 
 
-def add_front_entry(doc: Document, anchor, label: str, page: str, indent: float = 0.0):
+def bookmark_name(kind: str, label: str) -> str:
+    """Return a deterministic Word-safe bookmark name."""
+    clean = re.sub(r"[^A-Za-z0-9_]", "_", label)
+    clean = re.sub(r"_+", "_", clean).strip("_")
+    return f"nav_{kind}_{clean}"[:40]
+
+
+def add_bookmark(doc: Document, paragraph: Paragraph, name: str) -> None:
+    """Attach a bookmark spanning one paragraph."""
+    bookmark_ids = []
+    for element in doc.element.body.iter(qn("w:bookmarkStart")):
+        value = element.get(qn("w:id"))
+        if value is not None and value.isdigit():
+            bookmark_ids.append(int(value))
+    bookmark_id = str(max(bookmark_ids, default=0) + 1)
+
+    start = OxmlElement("w:bookmarkStart")
+    start.set(qn("w:id"), bookmark_id)
+    start.set(qn("w:name"), name)
+    end = OxmlElement("w:bookmarkEnd")
+    end.set(qn("w:id"), bookmark_id)
+
+    insert_at = 1 if paragraph._p.pPr is not None else 0
+    paragraph._p.insert(insert_at, start)
+    paragraph._p.append(end)
+
+
+def add_internal_hyperlink(paragraph: Paragraph, text: str, target: str) -> None:
+    """Append an internal Word hyperlink without changing thesis typography."""
+    hyperlink = OxmlElement("w:hyperlink")
+    hyperlink.set(qn("w:anchor"), target)
+    hyperlink.set(qn("w:history"), "1")
+    run = OxmlElement("w:r")
+    run_properties = OxmlElement("w:rPr")
+    no_proof = OxmlElement("w:noProof")
+    run_properties.append(no_proof)
+    run.append(run_properties)
+
+    label, page = text.rsplit("\t", 1)
+    label_text = OxmlElement("w:t")
+    label_text.set(qn("xml:space"), "preserve")
+    label_text.text = label
+    run.append(label_text)
+    run.append(OxmlElement("w:tab"))
+    page_text = OxmlElement("w:t")
+    page_text.text = page
+    run.append(page_text)
+    hyperlink.append(run)
+    paragraph._p.append(hyperlink)
+
+
+def set_outline_level(paragraph: Paragraph, level: int = 0) -> None:
+    """Expose a front-matter title in Word/PDF navigation panes."""
+    p_pr = paragraph._p.get_or_add_pPr()
+    outline = p_pr.find(qn("w:outlineLvl"))
+    if outline is None:
+        outline = OxmlElement("w:outlineLvl")
+        p_pr.append(outline)
+    outline.set(qn("w:val"), str(level))
+
+
+def add_front_entry(
+    doc: Document,
+    anchor,
+    label: str,
+    page: str,
+    indent: float = 0.0,
+    target: str | None = None,
+):
     paragraph = doc.add_paragraph()
     paragraph.paragraph_format.left_indent = Inches(indent)
     paragraph.paragraph_format.space_after = Pt(2)
@@ -644,7 +791,11 @@ def add_front_entry(doc: Document, anchor, label: str, page: str, indent: float 
     paragraph.paragraph_format.tab_stops.add_tab_stop(
         Inches(6.1), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS
     )
-    paragraph.add_run(f"{label}\t{page}")
+    entry_text = f"{label}\t{page}"
+    if target:
+        add_internal_hyperlink(paragraph, entry_text, target)
+    else:
+        paragraph.add_run(entry_text)
     move_before(paragraph._p, anchor)
     return paragraph
 
@@ -652,11 +803,23 @@ def add_front_entry(doc: Document, anchor, label: str, page: str, indent: float 
 def replace_front_lists(doc: Document, headings: list[str]) -> None:
     _, list_tables = clear_between(doc, "LIST OF FIGURES", "LIST OF TABLES")
     for number, title in FIGURES:
-        add_front_entry(doc, list_tables, f"{number}  {title}", FIGURE_PAGES[number])
+        add_front_entry(
+            doc,
+            list_tables,
+            f"{number}  {title}",
+            FIGURE_PAGES[number],
+            target=bookmark_name("figure", number),
+        )
 
     _, list_abbr = clear_between(doc, "LIST OF TABLES", "LIST OF ABBREVIATIONS")
     for number, title in TABLES:
-        add_front_entry(doc, list_abbr, f"{number}  {title}", TABLE_PAGES[number])
+        add_front_entry(
+            doc,
+            list_abbr,
+            f"{number}  {title}",
+            TABLE_PAGES[number],
+            target=bookmark_name("table", number),
+        )
 
     _, abstract_anchor = clear_between(doc, "LIST OF ABBREVIATIONS", "ABSTRACT")
     abbreviation_rows = [
@@ -704,14 +867,36 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
         doc.element.body.remove(child)
     for heading in headings:
         if heading.startswith("Chapter "):
-            add_front_entry(doc, chapter_one, heading, HEADING_PAGES[heading])
+            add_front_entry(
+                doc,
+                chapter_one,
+                heading,
+                HEADING_PAGES[heading],
+                target=bookmark_name("heading", heading),
+            )
         else:
-            add_front_entry(doc, chapter_one, heading, HEADING_PAGES[heading], indent=0.25)
+            add_front_entry(
+                doc,
+                chapter_one,
+                heading,
+                HEADING_PAGES[heading],
+                indent=0.25,
+                target=bookmark_name("heading", heading),
+            )
     if section_properties is None:
         raise ValueError("front-matter section break not found")
     section_break = doc.add_paragraph()
     section_break._p.get_or_add_pPr().append(section_properties)
     move_before(section_break._p, chapter_one)
+
+    for title, kind in (
+        ("TABLE OF CONTENTS", "toc"),
+        ("LIST OF FIGURES", "list_of_figures"),
+        ("LIST OF TABLES", "list_of_tables"),
+    ):
+        paragraph = next(p for p in doc.paragraphs if p.text == title)
+        add_bookmark(doc, paragraph, bookmark_name("front", kind))
+        set_outline_level(paragraph)
 
 
 def replace_abstract(doc: Document) -> None:
@@ -768,6 +953,7 @@ def style_references_and_appendices(doc: Document) -> None:
         if paragraph.text == "Appendices":
             references = False
         if references and paragraph.text.strip():
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             paragraph.paragraph_format.left_indent = Inches(0.5)
             paragraph.paragraph_format.first_line_indent = Inches(-0.5)
             paragraph.paragraph_format.line_spacing = 1.0
@@ -786,6 +972,21 @@ def style_references_and_appendices(doc: Document) -> None:
                 "dissertation. Raw cells and checkpoints remain outside the "
                 "document because of their size."
             )
+
+
+def replace_references(doc: Document) -> None:
+    """Replace the template's inherited bibliography with cited sources."""
+    _, appendices = clear_between(doc, "References", "Appendices")
+    source = ROOT / "docs" / "dissertation" / "references.md"
+    for block_type, payload in collect_blocks(source):
+        if block_type != "paragraph":
+            continue
+        paragraph = add_paragraph_before(doc, appendices, payload)
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        paragraph.paragraph_format.left_indent = Inches(0.5)
+        paragraph.paragraph_format.first_line_indent = Inches(-0.5)
+        paragraph.paragraph_format.line_spacing = 1.0
+        paragraph.paragraph_format.space_after = Pt(6)
 
 
 def enable_field_updates(doc: Document) -> None:
@@ -818,6 +1019,7 @@ def build(base: Path, output: Path) -> None:
     anchor = remove_range_inclusive(doc, "Chapter 1: Introduction", "List of Publications")
     headings, _ = insert_chapters(doc, anchor)
     replace_front_lists(doc, headings)
+    replace_references(doc)
     style_references_and_appendices(doc)
     enable_field_updates(doc)
     ensure_image_alt_text(doc)
