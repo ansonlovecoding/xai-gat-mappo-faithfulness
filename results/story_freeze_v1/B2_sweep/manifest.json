@@ -3,7 +3,6 @@
   "epoch": 91,
   "policy_type": "gat",
   "area": "central_park",
-  "aoi_unaware": false,
   "corruption": "freeze",
   "episodes_per_cell_seed": 3,
   "stochastic": true,

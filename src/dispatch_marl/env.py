@@ -57,7 +57,7 @@ VELOCITY_MAX_MS = 30.0
 # Matches the proposal's severity ladder (§7.2): the "Extreme" level is a
 # 60 s maximum AoI, so 60 s staleness normalises to 1.0. (Was 300 before
 # the freeze-mechanism rework; results produced under 300 live in
-# results/b1b2b3_sumo120_seed42_v1 and are not comparable on WAMSN scale.)
+# results/legacy_sumo120_seed42_v1 and are not comparable on WAMSN scale.)
 AOI_MAX_S = 60.0
 
 
@@ -78,18 +78,6 @@ class DispatchEnvConfig:
     wait_penalty_lambda: float = 0.001
     seed: int = 42
     degradation: DegradationConfig = field(default_factory=DegradationConfig)
-    # B3 ablation (proposal §7.5): AoI-unaware observations. When True the
-    # continuous aoi_norm feature is zeroed on the self node (index 4) and
-    # on every neighbour-taxi node (column 4), so the policy cannot condition
-    # on telemetry staleness. Feature *shapes* are unchanged — checkpoints,
-    # the GAT encoder, and the faithfulness code all keep working. The binary
-    # position_valid flag is left intact: B3 removes the *age* signal, not
-    # the instantaneous validity bit. AoI bookkeeping still runs underneath
-    # (WAMSN can still be computed against ground-truth staleness; the obs
-    # simply hides it from the policy) — but note the obs-derived AoI used
-    # by FaithfulnessEvaluator._extract_aoi_per_node reads zeros under this
-    # flag, so WAMSN is not meaningful for B3 runs.
-    aoi_unaware: bool = False
     # Attention-drift measurement (§7.4): when True, every obs build also
     # produces the *clean* counterfactual of the same observation — what the
     # agent would have seen with degradation off (true position/velocity,
@@ -462,7 +450,6 @@ class DispatchEnv(ParallelEnv):
 
         x, y, v, degraded, aoi = observed[agent]
         x_true, y_true, v_true = true_state[agent]
-        aoi_unaware = self.config.aoi_unaware
         emit_clean = self.config.emit_clean_obs
         time_norm = min(1.0, self._sim_time / max(1.0, self._end_time))
 
@@ -472,7 +459,7 @@ class DispatchEnv(ParallelEnv):
                 self._norm_y(sy),
                 time_norm,
                 min(1.0, max(0.0, sv) / VELOCITY_MAX_MS),
-                0.0 if aoi_unaware else min(1.0, saoi / AOI_MAX_S),
+                min(1.0, saoi / AOI_MAX_S),
             ], dtype=np.float32)
 
         self_feat = _self_feat(x, y, v, aoi)
@@ -491,7 +478,7 @@ class DispatchEnv(ParallelEnv):
                 dy / self._net_diag,
                 1.0 if oid in empty_ids else 0.0,
                 float(np.hypot(dx, dy)) / self._net_diag,
-                0.0 if aoi_unaware else min(1.0, oaoi / AOI_MAX_S),
+                min(1.0, oaoi / AOI_MAX_S),
             ]
             taxi_mask[i] = 1
 

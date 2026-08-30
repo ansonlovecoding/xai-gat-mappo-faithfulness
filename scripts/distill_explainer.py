@@ -66,7 +66,7 @@ def _spearman(x: np.ndarray, y: np.ndarray) -> float:
 
 def collect_dataset(
     policy, area: str, seed: int, episodes: int, max_decisions: int,
-    aoi_unaware: bool, margin_cap: float, device: str,
+    margin_cap: float, device: str,
     rng: np.random.Generator,
 ) -> list[dict]:
     """Gather (obs, occlusion-target) pairs from fresh rollouts.
@@ -76,7 +76,7 @@ def collect_dataset(
     """
     from dispatch_marl.faithfulness import FaithfulnessEvaluator, FaithfulnessConfig
 
-    env = DispatchEnv(DispatchEnvConfig(area=area, seed=seed, aoi_unaware=aoi_unaware))
+    env = DispatchEnv(DispatchEnvConfig(area=area, seed=seed))
     evaluator = FaithfulnessEvaluator(policy, FaithfulnessConfig(seed=seed))
     K_n = policy.config.k_neighbors
     K_r = policy.config.k_reservations
@@ -219,7 +219,6 @@ def main() -> int:
     if ckpt.get("policy_type", "gat") == "mlp":
         parser.error("the explainer reads GAT node embeddings — B1 has none")
     area = args.area or ckpt["env_config"]["area"]
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
     rng = np.random.default_rng(args.seed)
 
     print(f"policy: {args.checkpoint.name} (epoch {ckpt.get('epoch')})  area: {area}")
@@ -228,7 +227,7 @@ def main() -> int:
     t0 = time.time()
     samples = collect_dataset(
         policy, area, args.seed, args.episodes, args.max_decisions,
-        aoi_unaware, args.margin_cap, device, rng,
+        args.margin_cap, device, rng,
     )
     print(f"      {len(samples)} decisions in {time.time()-t0:.0f}s")
 

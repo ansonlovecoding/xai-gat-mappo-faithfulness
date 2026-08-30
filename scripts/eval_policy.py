@@ -716,14 +716,10 @@ def main() -> int:
     n_params = sum(p.numel() for p in policy.parameters())
 
     area = args.area or ckpt["env_config"]["area"]
-    # B3 checkpoints must be evaluated with the same AoI-unaware obs they
-    # were trained on; older checkpoints predate the flag, hence .get().
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
     env_cfg = DispatchEnvConfig(
         area=area,
         seed=args.seed,
         degradation=DegradationConfig(mode=args.degradation, dropout_rate=args.dropout_rate),
-        aoi_unaware=aoi_unaware,
         emit_clean_obs=args.drift,
     )
     env = DispatchEnv(env_cfg)
@@ -743,8 +739,7 @@ def main() -> int:
         faith_evaluator = FaithfulnessEvaluator(policy, faith_cfg)
 
     print(f"checkpoint: {args.checkpoint.name}  (epoch {ckpt.get('epoch', '?')}, {n_params:,} params)")
-    print(f"env:        {area}  |  degradation: {args.degradation}  |  device: {device}"
-          + ("  |  AoI-unaware (B3)" if aoi_unaware else ""))
+    print(f"env:        {area}  |  degradation: {args.degradation}  |  device: {device}")
     print(f"policy:     {'stochastic' if args.stochastic else 'argmax (deterministic)'}")
     if args.faithfulness:
         print(f"faith:      k={args.faithfulness_top_k}  "

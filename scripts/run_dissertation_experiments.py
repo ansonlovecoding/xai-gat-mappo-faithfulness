@@ -48,7 +48,6 @@ def _training_is_compatible(manifest_path: Path, model: dict, seed: int,
         and bool(arguments.get("deterministic_torch"))
             == bool(train_cfg.get("deterministic_torch"))
         and arguments.get("degradation") == model["degradation"]
-        and bool(arguments.get("aoi_unaware")) == bool(model.get("aoi_unaware"))
         and float(arguments.get("outage_duration", 0.0))
             == float(model.get("outage_duration", 0.0))
     )
@@ -137,8 +136,6 @@ def main() -> int:
                     ]
                     if train_cfg.get("deterministic_torch"):
                         command.append("--deterministic-torch")
-                    if model.get("aoi_unaware"):
-                        command.append("--aoi-unaware")
                     if "outage_duration" in model:
                         command += ["--outage-duration", str(model["outage_duration"])]
                     _run(command, dry_run=args.dry_run)

@@ -18,7 +18,6 @@ COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
 LABELS = {
     "B1_mlp": "MLP",
     "B2_gat": "GAT",
-    "B3_gat_noaoi": "GAT-NoAoI",
     "H5_gat_degraded": "GAT-Outage",
 }
 SEED_STYLES = {
@@ -79,8 +78,13 @@ def performance_figure() -> None:
 
 def checkpoint_selection_figure() -> None:
     models = list(LABELS)
-    fig, axes = plt.subplots(2, 2, figsize=(8.0, 6.0), sharex=True, sharey=True)
-    for ax, model in zip(axes.flat, models):
+    annotation_offsets = {
+        "B1_mlp": {42: (4, -12), 43: (4, -12), 44: (-43, 7)},
+        "B2_gat": {42: (4, -13), 43: (4, -12), 44: (4, 6)},
+        "H5_gat_degraded": {42: (4, -12), 43: (4, -12), 44: (4, 7)},
+    }
+    fig, axes = plt.subplots(1, 3, figsize=(8.0, 3.5), sharex=True, sharey=True)
+    for ax, model in zip(axes, models):
         for seed in SEED_STYLES:
             path = RUNS / "training" / model / f"seed_{seed}" / "checkpoint_selection.json"
             payload = json.loads(path.read_text(encoding="utf-8"))
@@ -99,17 +103,16 @@ def checkpoint_selection_figure() -> None:
                        edgecolor="#202020", linewidth=0.7, zorder=5)
             ax.annotate(f"{seed}: e{selected['epoch']}",
                         (selected["epoch"], selected["mean_pickups"]),
-                        xytext=(4, -12 if selected["mean_pickups"] > 12.5 else 7),
+                        xytext=annotation_offsets[model][seed],
                         textcoords="offset points", fontsize=7.2,
                         color="#202020")
         ax.set_title(LABELS[model])
         ax.grid(color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
-    axes[0, 0].set_ylabel("Mean validation pickups")
-    axes[1, 0].set_ylabel("Mean validation pickups")
-    axes[1, 0].set_xlabel("Checkpoint epoch")
-    axes[1, 1].set_xlabel("Checkpoint epoch")
-    axes[0, 1].legend(frameon=False, fontsize=8, ncol=1)
+    axes[0].set_ylabel("Mean validation pickups")
+    for ax in axes:
+        ax.set_xlabel("Checkpoint epoch")
+    axes[-1].legend(frameon=False, fontsize=8, ncol=1)
     fig.suptitle("Validation checkpoint selection")
     fig.tight_layout()
     _save(fig, "v4_checkpoint_selection_by_model_and_seed")

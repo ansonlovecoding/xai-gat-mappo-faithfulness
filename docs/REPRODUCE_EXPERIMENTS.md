@@ -27,7 +27,7 @@ source of the final H1-H5 verdicts.
 
 The runner performs five linked tasks:
 
-1. trains B1, B2, B3, and D30 with seeds 42, 43, and 44;
+1. trains B1, B2, and D30 with seeds 42, 43, and 44;
 2. selects checkpoints on validation demand, not test demand;
 3. evaluates every selected policy on held-out clean test demand;
 4. runs faithfulness sweeps for B2 and D30 under clean telemetry and 10, 20,
@@ -160,12 +160,10 @@ Valid model identifiers are:
 ```text
 B1_mlp
 B2_gat
-B3_gat_noaoi
 H5_gat_degraded
 ```
 
-Only B2 and D30 have faithfulness sweeps. B1 and B3 supply performance and
-structural context.
+Only B2 and D30 have faithfulness sweeps. B1 supplies performance context.
 
 ## 6. Run the revision audits
 
@@ -176,7 +174,7 @@ revision, and Chapter 3 checkpoint table agree:
 .venv/bin/python scripts/audit_dissertation_v4.py
 ```
 
-The command should report `131` passed checks and no failures for the archived
+The command should report `100` passed checks and no failures for the archived
 v4 run.
 
 Run the legal-random and greedy-nearest lower bounds on the same held-out

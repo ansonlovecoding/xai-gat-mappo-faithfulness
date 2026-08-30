@@ -2,7 +2,7 @@
 
 The primary experiment outputs are stored in `results/dissertation_v4/`. The
 additional baseline and faithfulness-control outputs are stored in
-`results/dissertation_revision_v1/`. The source audit passed all 131 provenance
+`results/dissertation_revision_v1/`. The source audit passed all 100 provenance
 and protocol checks. Results are reported by training seed because decisions
 and episodes from one checkpoint do not replace independent model replication.
 
@@ -34,7 +34,6 @@ does not concern a random-level policy.
 | Greedy nearest request | 2.00 | 95% demand-variant CI [1.00, 3.00] |
 | MLP | 13.25 | training-seed range 11.50-14.67 |
 | GAT | 13.29 | training-seed range 11.46-14.67 |
-| GAT-NoAoI | 13.29 | training-seed range 11.46-14.67 |
 | GAT-Outage | 9.56 | training-seed range 4.54-12.88 |
 
 The legal-random baseline has 24 independent episode clusters. Greedy nearest

@@ -22,7 +22,7 @@ reported numbers.
 |---|---|---|---:|
 | `mappo_central_park_reshaped_v1/` | central_park | single trained model | 7.67 ± 2.05 (ckpt_epoch_0050.pt) |
 | `ab_centralised_critic_v1_seed42/` | central_park | A/B comparison | B (centralised, ckpt_50) beats A (decentralised) by +18 % mean pickups |
-| `b1b2b3_sumo120_seed42_v1/` | central_park | matched B1/B2/B3 trio + first H1–H4 sweep (SUMO 1.20, Intel mac) | B3 8.20 ± 1.60, B1 6.60 ± 2.24, B2 5.80 ± 1.72 (stochastic eval) |
+| `legacy_sumo120_seed42_v1/` | central_park | matched B1/B2 comparison + first H1–H4 sweep (SUMO 1.20, Intel mac) | B1 6.60 ± 2.24, B2 5.80 ± 1.72 (stochastic eval) |
 | `story_freeze_v1/` | central_park | three-act story under the corrected freeze mechanism + max-AoI ladder (test demand, 8 seeds) | Act1 clean DEF −0.54; H5 mitigation rejected; decoupled head +0.11 (p=1e-4) |
 
 Only the citable artefacts are committed (SUMMARY.md, configs, train logs,
@@ -38,7 +38,7 @@ the SUMO version, machine, and observation layout that produced it:
 |---|---|---|---|---|
 | `mappo_central_park_reshaped_v1/` | 1.27 | Apple Silicon | self 3-d / taxi 4-d | ✗ (obs layout predates AoI/velocity features) |
 | `ab_centralised_critic_v1_seed42/` | 1.27 | Apple Silicon | self 5-d / taxi 4-d | ✗ (same reason) |
-| `b1b2b3_sumo120_seed42_v1/` | 1.20 | Intel mac | current | ✓ — but degradation = legacy NOISE mechanism, AOI_MAX_S=300 (WAMSN scale ×5 vs later) |
+| `legacy_sumo120_seed42_v1/` | 1.20 | Intel mac | current | ✓ — but degradation = legacy NOISE mechanism, AOI_MAX_S=300 (WAMSN scale ×5 vs later) |
 | `story_freeze_v1/` | 1.20 | Intel mac | current | ✓ — freeze mechanism, AOI_MAX_S=60 (definitive for the dissertation) |
 
 > **Compatibility warning (July 2026):** both keepers were trained on

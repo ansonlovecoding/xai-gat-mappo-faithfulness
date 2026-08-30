@@ -135,7 +135,7 @@ The data shows four important patterns:
 
 | Finding | Interpretation |
 |---|---|
-| Clean B1/B2/B3 policies average about 13 pickups, while H5 averages 9.56 and is seed-sensitive | Performance describes the policies under audit; it is not the primary research outcome |
+| Clean B1/B2 policies average about 13 pickups, while H5 averages 9.56 and is seed-sensitive | Performance describes the policies under audit; it is not the primary research outcome |
 | Tunnel/stale exposure is sparse | Only a minority of decisions include stale vehicle nodes, so conditional measures are more informative than pooled values |
 | Conditional WAMSN rises with fixed outage duration in all six GAT runs | The 10/20/30/60-second observation outages increase stale-data exposure as intended |
 | Paired stale-attention shift changes sign across training seeds | Seeds 42/43 shift toward stale nodes, while seed 44 shifts away, under both B2 and H5 |
@@ -180,7 +180,6 @@ Additional model conditions:
 | B0 SUMO greedy | Non-learning reference |
 | B1 MLP-MAPPO | RL baseline without graph attention |
 | B2 GAT-MAPPO | Main audited attention model |
-| B3 GAT-MAPPO without AoI | Control for explicit AoI input |
 | H5' degradation-aware GAT | Tests whether training with degradation helps |
 | Decoupled explanation head | Legacy exploratory mitigation; not part of the final v4 confirmatory matrix |
 
@@ -203,7 +202,6 @@ Additional model conditions:
 | Detect stale-node reliance | WAMSN over vehicle nodes |
 | Compare performance vs explanation behaviour | Pickups compared against DEF/WAMSN |
 | Check whether graph attention matters | B1 vs B2 |
-| Check whether AoI input matters | B2 vs B3 |
 | Check whether degraded training helps | B2 vs H5' |
 | Check whether explanations should be decoupled | Coupled attention vs decoupled head |
 

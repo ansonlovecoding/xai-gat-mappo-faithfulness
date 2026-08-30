@@ -227,10 +227,9 @@ def model_training_design():
     models = [
         ("MLP", "MAPPO\nclean", GREY),
         ("GAT", "GAT-MAPPO\nclean", GREEN),
-        ("GAT-NoAoI", "GAT-MAPPO\nclean, no AoI", BLUE),
         ("GAT-Outage", "GAT-MAPPO\n30-s outage", ORANGE),
     ]
-    model_xs = (0.05, 0.285, 0.52, 0.755)
+    model_xs = (0.11, 0.405, 0.70)
     for x, (model, description, color) in zip(model_xs, models):
         box(ax, x, 0.69, 0.19, 0.105, model, description, color,
             title_size=12.5, body_size=9.4)
@@ -244,7 +243,7 @@ def model_training_design():
             fontsize=11.5, fontweight="bold", color=GREY)
 
     pipeline = [
-        (0.145, "Train all four", "150 epochs\nseeds 42, 43, 44\nsave every 10 epochs", BLUE),
+        (0.145, "Train all three", "150 epochs\nseeds 42, 43, 44\nsave every 10 epochs", BLUE),
         (0.38, "Validate and select",
          "validation demand\npickups first; reward tie-break", GREEN),
         (0.615, "Freeze", "one checkpoint\nper model and seed", GREY),
@@ -261,7 +260,7 @@ def model_training_design():
     ax.text(0.5, 0.285, "HELD-OUT EVALUATION SCOPE", ha="center", va="center",
             fontsize=11.5, fontweight="bold", color=ORANGE)
     box(ax, 0.18, 0.105, 0.28, 0.13, "Clean comparison",
-        "All four models\n8 evaluation seeds x 3 episodes", BLUE,
+        "All three models\n8 evaluation seeds x 3 episodes", BLUE,
         title_size=12.5, body_size=9.6)
     box(ax, 0.57, 0.105, 0.31, 0.13, "Faithfulness audit",
         "GAT versus GAT-Outage\nclean + 10, 20, 30 and 60 s outages", ORANGE,

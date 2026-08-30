@@ -13,7 +13,7 @@ trading off control performance.
 > attention-drift function, eval-time scoring, train-time sampling, and the
 > structured-vs-random degradation ablation) is implemented in
 > `src/dispatch_marl/faithfulness.py` + `scripts/eval_degradation_ablation.py`.
-> Next: B1/B3 baselines, the paired clean/degraded drift harness, the
+> Next: the MLP baseline, paired clean/degraded drift harness, the
 > severity sweep, and the decoupled explanation head.
 >
 > **Definitive rerun protocol:** new experiments use
@@ -66,7 +66,6 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 | **B0** — Greedy dispatch (SUMO built-in bipartite matcher) | ✅ | via `scripts/run_baselines.py --policies sumo_greedy` |
 | **B1** — MAPPO + MLP (no graph) | ⚠️ | `DispatchMLPPolicy` implemented (`--policy mlp`, ~param-matched to the GAT, verified end-to-end); full training run pending |
 | **B2** — GAT-MAPPO (proposed) | ✅ | current `DispatchGATPolicy` |
-| **B3** — GAT-MAPPO without AoI (ablation, AoI-unaware) | ⚠️ | `aoi_unaware` env flag implemented (`--aoi-unaware`, zeroes the AoI feature, shapes unchanged, verified end-to-end); full training run pending |
 | Extras: Random, NearestReservation (naive baselines beyond proposal) | ✅ | useful as lower bounds; kept in `policies.py` |
 
 ### D. Faithfulness evaluation infrastructure (Section 7.4 · Objectives 3 & 5 · Milestone M2 — **the core novel contribution**)
@@ -102,7 +101,7 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 
 | Item | Status | Notes |
 |---|---|---|
-| Sweep {B0, B1, B2, B3} × severity × seed | ⚠️ | `sweep_severity.py` runs one GAT ckpt × severity × seed; multi-checkpoint orchestration + B0/B1 rows still manual |
+| Sweep {B0, B1, B2} × severity × seed | ⚠️ | `sweep_severity.py` runs one GAT ckpt × severity × seed; multi-checkpoint orchestration + B0/B1 rows still manual |
 | Paired significance tests over matched clean/degraded episodes | ⚠️ | H2's paired sign-flip pairs each degraded cell with the same-seed clean cell; per-episode demand variants still pending (section E) |
 | **H1** — degradation ↑ → DEF ↓ | ⚠️ | test implemented in `analyze_hypotheses.py` (one-sided permutation Spearman, both axes); needs a trained ckpt + sweep to run |
 | **H2** — DEF declines faster than performance (decoupling) | ⚠️ | implemented: faith-rate vs perf-rate per (level × seed), sign-flip test |
@@ -123,7 +122,7 @@ Aug, M3 = 1 Sep). Legend: ✅ done, ⚠️ partial / in progress, ❌ not starte
 
 By milestone budget:
 
-- **M1 (19 Jul)** — mostly done. Missing: **B1** MAPPO+MLP baseline and **B3** AoI-unaware ablation (§C). Neither is conceptually hard: B1 needs a plain-MLP policy variant sharing the same MAPPO trainer; B3 is a `SELF_FEAT_DIM=4` obs-shape flag plus a separate training run.
+- **M1 (19 Jul)** — mostly done. The remaining baseline task was the B1 MAPPO+MLP condition sharing the same MAPPO trainer.
 - **M2 (9 Aug)** — section D's metric core is done (DEF, WAMSN, occlusion,
   random baseline, eval- and train-time scoring, structured-vs-random
   ablation). Remaining blockers: the paired clean/degraded drift harness,
@@ -131,8 +130,8 @@ By milestone budget:
   the H1–H5 analysis script, and the decoupled explanation head.
 - **M3 (1 Sep)** — write-up, unblocked once M2 lands.
 
-**Next best things to work on:** (1) close M1 with the B1 MAPPO+MLP baseline
-and B3 AoI-unaware ablation; (2) the paired clean/degraded attention-drift
+**Next best things to work on:** (1) close M1 with the B1 MAPPO+MLP baseline;
+(2) the paired clean/degraded attention-drift
 harness (the degradation layer only mutates observations, so the env can
 emit clean obs alongside degraded ones in `infos` — no paired-episode
 machinery needed); (3) the severity-sweep script that generates the dataset

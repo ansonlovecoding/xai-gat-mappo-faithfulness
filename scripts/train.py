@@ -145,10 +145,6 @@ def main() -> int:
     parser.add_argument("--outage-duration", type=float, default=0.0,
                         help="observation-layer outage duration after a trigger "
                              "(seconds)")
-    parser.add_argument("--aoi-unaware", action="store_true",
-                        help="B3 ablation: zero the AoI feature on self + "
-                             "neighbour nodes so the policy can't condition "
-                             "on telemetry staleness (obs shapes unchanged)")
     # Reward shaping.
     parser.add_argument("--pickup-reward", type=float, default=10.0)
     parser.add_argument("--dispatch-reward", type=float, default=0.5)
@@ -251,7 +247,6 @@ def main() -> int:
         degradation=DegradationConfig(mode=args.degradation,
                                       dropout_rate=args.dropout_rate,
                                       outage_duration_s=args.outage_duration),
-        aoi_unaware=args.aoi_unaware,
     )
     env = DispatchEnv(env_cfg)
 

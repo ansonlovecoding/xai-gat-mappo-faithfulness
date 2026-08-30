@@ -1,4 +1,4 @@
-# B1/B2/B3 matched trio + first full severity sweep (July 2026)
+# B1/B2 matched comparison + first full severity sweep (July 2026)
 
 First matched comparison of the proposal's learned baselines at a single
 code state, plus the first run of the complete H1–H4 pipeline. Trained on
@@ -8,16 +8,15 @@ not directly comparable to the older Apple-Silicon/SUMO-1.27 keepers.
 
 ## Setup
 
-All three: central_park, 300 epochs, seed 42, CTDE centralised critic,
+Both runs: central_park, 300 epochs, seed 42, CTDE centralised critic,
 reward shaping defaults (pickup 10.0 / dispatch 0.5 / wait λ 0.001),
-degradation **off** during training. B2/B3 additionally sampled train-time
+degradation **off** during training. B2 additionally sampled train-time
 DEF/WAMSN every 10 epochs (`--faith-every-epochs 10 --faith-sample-size 64`).
 
 | Run | Policy | Params | Command deltas |
 |---|---|---:|---|
 | `B1_mlp/` | MAPPO + MLP (no graph) | 106,487 | `--policy mlp` |
 | `B2_gat/` | GAT-MAPPO (proposed) | 113,731 | — |
-| `B3_gat_noaoi/` | GAT-MAPPO, AoI-unaware | 113,731 | `--aoi-unaware` |
 
 ## Results (clean condition)
 
@@ -28,12 +27,11 @@ Rolling-mean-of-10 training pickups (best window) vs held-out eval
 |---|---:|---:|---:|
 | B2 GAT | 91 | 14.2 | 5.80 ± 1.72 |
 | B1 MLP | 39 | 12.9 | 6.60 ± 2.24 |
-| B3 no-AoI | 25 | 11.5 | 8.20 ± 1.60 |
 
 Non-learning references under this SUMO version (`baselines_sumo120.json`):
 sumo_greedy **32**, nearest 1, random 0.
 
-The three learned policies are statistically indistinguishable at n=5
+The two learned policies are statistically indistinguishable at n=5
 clean episodes; rolling-best numbers are max-selected and upward-biased.
 B2's edge must be argued from its explanation channel, not clean pickups.
 
@@ -127,9 +125,8 @@ as below.
 
 ## Findings worth citing
 
-1. **Argmax evaluation degenerates on entropy-collapsed policies.** All
-   three runs entropy-collapse (B2 →0 pickups after ~epoch 130, B3 after
-   ~55); pickups come from residual stochasticity, so deterministic eval
+1. **Argmax evaluation degenerates on entropy-collapsed policies.** B2 drops
+   to zero pickups after about epoch 130; pickups come from residual stochasticity, so deterministic eval
    yields exactly 0 pickups (reward −45.59). All evaluation in this
    project is therefore stochastic; a deterministic sweep of the same
    checkpoint (`runs/sweeps/B2_main`, not kept) showed 0 pickups in every
@@ -147,7 +144,7 @@ as below.
 
 ```bash
 python scripts/train.py --area central_park --epochs 300 --save-every 50 \
-  --faith-every-epochs 10 --faith-sample-size 64          # B2 (add --aoi-unaware for B3)
+  --faith-every-epochs 10 --faith-sample-size 64          # B2
 python scripts/train.py --area central_park --epochs 300 --save-every 50 --policy mlp   # B1
 python scripts/eval_policy.py <ckpt_best.pt> --episodes 5 --stochastic
 python scripts/sweep_severity.py <B2 ckpt_best.pt> --episodes 2 --seeds 42 43 44 \

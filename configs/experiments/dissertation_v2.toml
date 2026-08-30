@@ -28,29 +28,17 @@ stochastic = true
 id = "B1_mlp"
 policy = "mlp"
 degradation = "off"
-aoi_unaware = false
 faithfulness_sweep = false
 
 [[models]]
 id = "B2_gat"
 policy = "gat"
 degradation = "off"
-aoi_unaware = false
 faithfulness_sweep = true
-
-[[models]]
-id = "B3_gat_noaoi"
-policy = "gat"
-degradation = "off"
-aoi_unaware = true
-# Its observation intentionally hides AoI, so observation-derived stale-node
-# metrics are not reportable. Keep it as an architectural/training ablation.
-faithfulness_sweep = false
 
 [[models]]
 id = "H5_gat_degraded"
 policy = "gat"
 degradation = "tunnel_triggered"
 outage_duration = 30.0
-aoi_unaware = false
 faithfulness_sweep = true

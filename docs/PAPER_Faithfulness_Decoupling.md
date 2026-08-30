@@ -152,14 +152,11 @@ audited as a possible explanation.
 |---|---|---|---|
 | B1 | MLP-MAPPO | clean | performance context without attention |
 | B2 | GAT-MAPPO | clean | primary attention audit |
-| B3 | GAT-MAPPO, no AoI input | clean | structural freshness-input control |
 | H5 | GAT-MAPPO | 30-second tunnel outages | degradation-aware training |
 
 Each model is trained for 150 epochs with seeds 42, 43, and 44. Checkpoints are
 saved every ten epochs and selected by stochastic mean pickups on validation
-demand; test demand is not used for selection. B2 and B3 are identical under
-clean evaluation because AoI is zero in both conditions. This does not test an
-AoI effect under degradation.
+demand; test demand is not used for selection.
 
 ### D. Degradation Sweep
 
@@ -226,7 +223,6 @@ pooled population p-value.
 |---|---:|---:|
 | B1 MLP | 13.25 | 11.50-14.67 |
 | B2 GAT | 13.29 | 11.46-14.67 |
-| B3 GAT without AoI | 13.29 | 11.46-14.67 |
 | H5 degradation-trained GAT | 9.56 | 4.54-12.88 |
 
 H5 seed 44 is substantially weaker than the other H5 policies. It is retained

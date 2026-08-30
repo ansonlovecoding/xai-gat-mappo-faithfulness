@@ -351,7 +351,7 @@ def fig6_capability_spectrum(out: Path, spectrum_json: Path) -> None:
     rows = [r for r in data["rows"] if "note" not in r]
     labels, u_vals, t_vals, pickups = [], [], [], []
     name_map = {
-        "B2_gat": "B2", "B3_gat_noaoi": "B3", "H5b_freeze": "H5′ s42",
+        "B2_gat": "B2", "H5b_freeze": "H5′ s42",
         "H5c_seed43": "H5′ s43", "H5d_seed44": "H5′ s44",
     }
     for r in rows:

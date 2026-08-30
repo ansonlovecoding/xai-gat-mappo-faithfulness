@@ -18,7 +18,6 @@ from dispatch_marl.provenance import atomic_write_json, sha256_file  # noqa: E40
 DISPLAY_IDS = {
     "B1_mlp": "MLP",
     "B2_gat": "GAT",
-    "B3_gat_noaoi": "GAT-NoAoI",
     "H5_gat_degraded": "GAT-Outage",
 }
 
@@ -33,7 +32,7 @@ def load_json(path: Path) -> dict:
 def chapter_checkpoint_rows(path: Path) -> dict[str, list[int]]:
     rows = {}
     pattern = re.compile(
-        r"^\|\s*(MLP|GAT|GAT-NoAoI|GAT-Outage)\s*\|"
+        r"^\|\s*(MLP|GAT|GAT-Outage)\s*\|"
         r"\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|$"
     )
     for line in path.read_text().splitlines():

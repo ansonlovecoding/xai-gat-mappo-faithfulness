@@ -63,7 +63,7 @@ mitigation effect") lands on **reject**: experiencing degradation during
 training does not make the built-in attention channel faithful.
 
 ⚠️ The earlier "H5 reverses the decoupling" result
-(`results/b1b2b3_sumo120_seed42_v1/`) was obtained under the legacy
+(`results/legacy_sumo120_seed42_v1/`) was obtained under the legacy
 noise mechanism (self-features jittered, relative geometry left true)
 and did NOT reproduce under the proposal-faithful freeze mechanism.
 Cite the freeze-era numbers; treat the noise-era reversal as a
@@ -71,8 +71,8 @@ mechanism-sensitivity finding, not a result.
 
 ## Capability spectrum + H5 across seeds (P3/P4 audit, `audit/capability_spectrum_clean.json`)
 
-Seven checkpoints spanning pickups 1→11.8, entropy 1.56→0.03, two
-architectures (B2/B3) and three H5′ training seeds, each scored under
+Six checkpoints spanning pickups 1→11.8, entropy 1.56→0.03, including
+B2 training stages and three H5′ training seeds, each scored under
 both baselines on clean test demand:
 
 | ckpt | pickups | uniform def_m | type-matched def_m |
@@ -80,7 +80,6 @@ both baselines on clean test demand:
 | B2 epoch 0 (untrained) | 1.0 | −1.35 | +0.16 [−0.12, +0.51] |
 | B2 epoch 50 | 6.2 | −0.47 | +0.00 |
 | B2 best (91) | 7.5 | −0.55 | −0.00 |
-| B3 best | 9.2 | **+1.69** | −0.01 |
 | H5′ s42 best (17) | 7.2 | −0.80 | +0.02 |
 | H5′ s43 best (91) | 3.0 | −0.49 | −0.01 |
 | H5′ s44 best (22) | 11.8 | **+1.78** | +0.01 |
@@ -138,11 +137,11 @@ the closing statement that faithful dispatch explanation remains open.
 
 ## Provenance
 
-- B2 ckpt: `../b1b2b3_sumo120_seed42_v1/B2_gat/ckpt_best.pt` (epoch 91)
+- B2 ckpt: `../legacy_sumo120_seed42_v1/B2_gat/ckpt_best.pt` (epoch 91)
 - H5′ ckpt: `H5b_train/ckpt_best.pt` (epoch 17, rolling 10.2)
 - Sweeps: `runs/sweeps/B2_aoi_ladder`, `runs/sweeps/H5b_aoi_ladder`
   (cell JSONs with per-decision records; manifests + analyses committed
-  here). Explainer head: `../b1b2b3_sumo120_seed42_v1/explainer/`.
+  here). Explainer head: `../legacy_sumo120_seed42_v1/explainer/`.
 - Empirical note: acting-agent degradation exposure ≈ 2 % at all levels
   (geography-limited; in-tunnel transits dominate, post-exit outage adds
   the level-dependence); max observed AoI 310 s (taxi idling on a

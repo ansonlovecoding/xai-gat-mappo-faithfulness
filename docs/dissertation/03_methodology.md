@@ -121,19 +121,15 @@ metric after seeing the result.
 The audit reduces the self-node attention row to node importance without
 modifying the actor, critic or selected action.
 
-Four policy conditions are included:
+Three policy conditions are included:
 
 | Model | Policy | Training observations | Purpose |
 |---|---|---|---|
 | MLP | MLP-MAPPO | clean | performance context without graph attention |
 | GAT | GAT-MAPPO | clean | primary attention model under audit |
-| GAT-NoAoI | GAT-MAPPO without AoI input | clean | structural AoI-input control |
 | GAT-Outage | GAT-MAPPO | tunnel-triggered 30-second outages | degradation-aware training condition |
 
-Each condition is trained for 150 epochs with seeds 42, 43, and 44. GAT and GAT-NoAoI
-produce identical clean-test behaviour because AoI is always zero during clean
-training and clean evaluation; GAT-NoAoI is useful only when observations can become
-stale. It should not be described as evidence that AoI has no effect.
+Each condition is trained for 150 epochs with seeds 42, 43, and 44.
 
 Candidate checkpoints are saved every ten epochs. Selection uses three
 stochastic validation episodes with seed 2026 and mean pickups as the primary
@@ -144,7 +140,6 @@ read during selection. The selected epochs are:
 |---|---:|---:|---:|
 | MLP | 50 | 30 | 40 |
 | GAT | 10 | 70 | 10 |
-| GAT-NoAoI | 10 | 70 | 10 |
 | GAT-Outage | 10 | 90 | 10 |
 
 The shared optimisation settings are shown below.
@@ -175,7 +170,7 @@ faithful, stable, or human-readable attention map.
 ![Model conditions and training process](../model_design_training_process.png)
 
 **Figure 3.3.** Common training and validation-based checkpoint selection for
-all four model conditions. Frozen checkpoints are evaluated on held-out demand;
+all three model conditions. Frozen checkpoints are evaluated on held-out demand;
 the faithfulness audit compares GAT and GAT-Outage.
 
 ## 3.5 Telemetry degradation
@@ -198,8 +193,8 @@ monitor and compare, and they create increasing empirical degradation rates.
 They are not treated as direct causal doses of explanation faithfulness.
 
 AoI is calculated as the current simulation time minus the time of the last
-valid update. It is included in the GAT observation unless the GAT-NoAoI control is
-used. WAMSN uses normalised AoI as a staleness weight. For this reason, an
+valid update and is included in each GAT observation. WAMSN uses normalised AoI
+as a staleness weight. For this reason, an
 increase in WAMSN with outage duration partly verifies that the manipulation
 created longer stale exposure; it is not by itself proof that AoI changed DEF.
 
@@ -304,7 +299,7 @@ delete request actions and does not depend on random subset overlap.
 
 ## 3.8 Evaluation matrix
 
-MLP, GAT, GAT-NoAoI, and GAT-Outage are evaluated under clean telemetry with eight evaluation
+MLP, GAT, and GAT-Outage are evaluated under clean telemetry with eight evaluation
 seeds (42-49) and three episodes per seed. This gives 24 held-out episodes per
 training seed for performance context.
 

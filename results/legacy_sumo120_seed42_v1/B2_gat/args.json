@@ -2,7 +2,6 @@
   "area": "central_park",
   "degradation": "off",
   "dropout_rate": 0.2,
-  "aoi_unaware": false,
   "pickup_reward": 10.0,
   "dispatch_reward": 0.5,
   "wait_lambda": 0.001,

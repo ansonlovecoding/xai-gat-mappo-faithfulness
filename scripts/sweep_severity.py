@@ -118,7 +118,6 @@ def main() -> int:
         parser.error("the severity sweep scores DEF/WAMSN/drift, which needs "
                      "a GAT checkpoint — B1 has no attention channel")
     area = args.area or ckpt["env_config"]["area"]
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
 
     demand_files: list[str] = []
     if args.demand_split != "none":
@@ -164,7 +163,6 @@ def main() -> int:
         "epoch": ckpt.get("epoch"),
         "policy_type": ckpt.get("policy_type", "gat"),
         "area": area,
-        "aoi_unaware": aoi_unaware,
         "corruption": args.corruption,
         "episodes_per_cell_seed": args.episodes,
         "stochastic": not args.deterministic,
@@ -227,7 +225,6 @@ def main() -> int:
                 dropout_rate=cell["dropout_rate"],
                 faith_evaluator=evaluator,
                 faith_every=args.faithfulness_every,
-                aoi_unaware=aoi_unaware,
                 keep_records=True,
                 stochastic=not args.deterministic,
                 outage_duration_s=cell["outage_s"],

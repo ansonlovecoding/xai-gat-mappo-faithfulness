@@ -99,17 +99,17 @@ TABLES = [(f"Table {chapter}.{number}", title)
 FIGURE_PAGES = {
     "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "11",
     "Figure 3.4": "12", "Figure 3.5": "14",
-    "Figure 4.1": "17", "Figure 4.2": "18", "Figure 4.3": "20",
-    "Figure 4.4": "21", "Figure 4.5": "22",
-    "Figure 4.6": "23", "Figure 4.7": "23", "Figure 4.8": "24",
-    "Figure 4.9": "25", "Figure 5.1": "26",
+    "Figure 4.1": "17", "Figure 4.2": "18", "Figure 4.3": "19",
+    "Figure 4.4": "20", "Figure 4.5": "21",
+    "Figure 4.6": "22", "Figure 4.7": "22", "Figure 4.8": "23",
+    "Figure 4.9": "24", "Figure 5.1": "25",
 }
 
 TABLE_PAGES = {
     "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "10",
     "Table 3.4": "11", "Table 4.1": "17", "Table 4.2": "18",
-    "Table 4.3": "19", "Table 4.4": "20", "Table 4.5": "22",
-    "Table 4.6": "25",
+    "Table 4.3": "19", "Table 4.4": "20", "Table 4.5": "21",
+    "Table 4.6": "24",
 }
 
 HEADING_PAGES = {
@@ -137,18 +137,18 @@ HEADING_PAGES = {
     "Chapter 4: Results": "17",
     "4.1 Policy capability and training stability": "17",
     "4.2 Construct-validity audit": "18",
-    "4.3 Evaluator sensitivity and ranking controls": "19",
-    "4.4 Small-graph resolution": "20",
-    "4.5 Telemetry manipulation and stale exposure": "21",
-    "4.6 Attention reallocation and aggregation sensitivity": "22",
-    "4.7 Faithfulness hypotheses": "24", "4.8 Result summary": "25",
-    "Chapter 5: Discussion": "26", "5.1 Answer to the central problem": "26",
-    "5.2 What the stale-exposure result means": "26",
-    "5.3 Dependence on checkpoint and analysis choice": "27",
-    "5.4 Role of the construct-validity audit": "27",
-    "5.5 Degradation-aware training": "27", "5.6 Practical implications": "28",
-    "5.7 Limitations": "28", "5.8 Future work": "28",
-    "Chapter 6: Conclusion": "30",
+    "4.3 Evaluator sensitivity and ranking controls": "18",
+    "4.4 Small-graph resolution": "19",
+    "4.5 Telemetry manipulation and stale exposure": "20",
+    "4.6 Attention reallocation and aggregation sensitivity": "21",
+    "4.7 Faithfulness hypotheses": "23", "4.8 Result summary": "24",
+    "Chapter 5: Discussion": "25", "5.1 Answer to the central problem": "25",
+    "5.2 What the stale-exposure result means": "25",
+    "5.3 Dependence on checkpoint and analysis choice": "26",
+    "5.4 Role of the construct-validity audit": "26",
+    "5.5 Degradation-aware training": "26", "5.6 Practical implications": "27",
+    "5.7 Limitations": "27", "5.8 Future work": "27",
+    "Chapter 6: Conclusion": "29",
 }
 
 

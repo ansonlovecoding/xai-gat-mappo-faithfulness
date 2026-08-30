@@ -303,8 +303,8 @@ def hypothesis_h4(
         return {"n": int(len(x)), "note": "insufficient data"}
     if np.allclose(x, x[0]):
         return {"n": int(len(x)),
-                "note": "WAMSN constant across decisions (e.g. AoI-unaware "
-                        "checkpoint or no stale nodes attended) — H4 untestable"}
+                "note": "WAMSN constant across decisions (for example, no "
+                        "stale nodes attended) — H4 untestable"}
     rho, p = spearman_permutation_p(x, y, "less", n_permutations, rng)
     return {"n": int(len(x)), "rho": rho, "p_one_sided": p}
 
@@ -464,7 +464,7 @@ def holm(pvals: dict[str, float]) -> dict[str, float]:
 
 
 def def_agreement(frame: dict) -> dict:
-    """Rank agreement between probability-DEF and margin-DEF (B3 check)."""
+    """Rank agreement between probability-DEF and margin-DEF."""
     m = (frame["valid_res"] > 0) & np.isfinite(frame["def_m"])
     if m.sum() < 10:
         return {"n": int(m.sum()), "note": "insufficient data"}

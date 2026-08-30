@@ -76,7 +76,6 @@ def _run_condition(
     dropout_rate: float,
     faith_evaluator: FaithfulnessEvaluator,
     faith_every: int,
-    aoi_unaware: bool = False,
     position_noise_m: float = 20.0,
     keep_records: bool = False,
     stochastic: bool = False,
@@ -106,7 +105,6 @@ def _run_condition(
             outage_duration_s=outage_duration_s,
             corruption=corruption,
         ),
-        aoi_unaware=aoi_unaware,
         emit_clean_obs=True,  # attention drift vs the clean twin, per decision
     )
     env = DispatchEnv(env_cfg)
@@ -205,7 +203,6 @@ def main() -> int:
                      "a GAT checkpoint — the MLP baseline (B1) has no "
                      "attention channel")
     area = args.area or ckpt["env_config"]["area"]
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
 
     # One evaluator shared across conditions — its RNG is reseeded per
     # __init__, so we're consistent. Sub-samples the same set of decisions
@@ -234,7 +231,6 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="tunnel_triggered", dropout_rate=0.0,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
-        aoi_unaware=aoi_unaware,
     )
     tunnel_rate = tunnel["empirical_degradation_rate"]
     matched_rate = args.matched_rate if args.matched_rate is not None else tunnel_rate
@@ -246,7 +242,6 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="random_dropout", dropout_rate=matched_rate,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
-        aoi_unaware=aoi_unaware,
     )
 
     print("[3/3] off (clean baseline)…")
@@ -254,7 +249,6 @@ def main() -> int:
         policy, device, area, args.seed, args.episodes,
         degradation_mode="off", dropout_rate=0.0,
         faith_evaluator=faith_evaluator, faith_every=args.faithfulness_every,
-        aoi_unaware=aoi_unaware,
     )
 
     # --- Comparison table ---

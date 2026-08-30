@@ -98,7 +98,6 @@ def main() -> int:
                      "(run scripts/distill_explainer.py first)")
     head, head_ckpt = DecoupledExplainerHead.load(explainer_path, device)
     area = ckpt["env_config"]["area"]
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
 
     print(f"policy:    {args.checkpoint.name} (epoch {ckpt.get('epoch')})")
     print(f"explainer: {explainer_path.name} "
@@ -110,7 +109,7 @@ def main() -> int:
     records: list[dict] = []
     for seed in args.seeds:
         env = DispatchEnv(DispatchEnvConfig(
-            area=area, seed=seed, aoi_unaware=aoi_unaware,
+            area=area, seed=seed,
             degradation=DegradationConfig(mode=args.degradation,
                                           dropout_rate=args.dropout_rate),
         ))

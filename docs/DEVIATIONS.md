@@ -67,7 +67,7 @@ lens with this justification.
 ## 5. B0 premise inversion
 
 The proposal expects B0 (greedy) to be a floor the learned policy beats.
-The definitive v4 clean evaluation gives about 11-15 pickups for B1-B3 and
+The definitive v4 clean evaluation gives about 11-15 pickups for B1-B2 and
 4.5-12.9 for H5 across training seeds; the archived greedy reference remains
 higher. The dissertation adopts the proposal's own risk-section
 stance: the contribution is measuring explanation faithfulness and its
@@ -77,16 +77,7 @@ policies as they are. The published-baseline sanity check ([1] Lin et
 al.) is likewise not meaningful at this performance level and is
 omitted.
 
-## 6. The B2-vs-B3 (AoI-feature) ablation is vacuous under clean training
-
-Under the proposal's own protocol (§7.7: B0–B3 trained on clean
-telemetry), the AoI observation feature is identically zero during
-training, so B3 (AoI-unaware) differs from B2 only by an unused input.
-The v4 B2 and B3 checkpoints and clean-test outputs are exactly identical for
-corresponding seeds, as expected. B3 is therefore a structural control for
-degraded observations, not evidence about an AoI effect under clean data.
-
-## 7. Offline dataset → online paired evaluation
+## 6. Offline dataset → online paired evaluation
 
 The proposal (§7.6) describes logging clean episodes and applying the
 staleness operator to the *logs* offline. The implementation applies

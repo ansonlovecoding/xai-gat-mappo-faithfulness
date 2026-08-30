@@ -227,7 +227,6 @@ def main() -> int:
                         dropout_rate=0.0,
                         faith_evaluator=evaluator,
                         faith_every=args.faithfulness_every,
-                        aoi_unaware=bool(ckpt["env_config"].get("aoi_unaware", False)),
                         keep_records=True,
                         stochastic=True,
                         outage_duration_s=condition["outage_s"],

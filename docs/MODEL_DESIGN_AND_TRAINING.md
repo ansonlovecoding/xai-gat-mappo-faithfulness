@@ -8,7 +8,7 @@ methodology chapter.
 ![Model conditions and training process](model_design_training_process.png)
 
 **Figure. Model conditions and shared MAPPO training process.** B0 is the
-non-learning dispatch reference; B1/B2/B3 are trained on clean telemetry; H5
+non-learning dispatch reference; B1/B2 are trained on clean telemetry; H5
 is trained with tunnel-freeze degradation. After training, checkpoints are
 selected on validation demand and evaluated on held-out test demand under
 clean telemetry and fixed observation-layer outage durations.
@@ -33,11 +33,10 @@ factor so the result can be interpreted more clearly.
 | B0 SUMO greedy | No | Not trained | Non-learning dispatch reference |
 | B1 MLP-MAPPO | Yes | Clean | RL baseline without graph attention |
 | B2 GAT-MAPPO | Yes | Clean | Main audited attention-based dispatcher |
-| B3 GAT-MAPPO without AoI | Yes | Clean | AoI-feature control |
 | H5′ degradation-aware GAT-MAPPO | Yes | Degraded | Training-side mitigation test |
 
 Strictly, B0 is a baseline condition rather than a trained model. The learned
-models are B1, B2, B3, and H5′.
+models are B1, B2, and H5′.
 
 ## 3. Purpose of each condition
 
@@ -89,22 +88,6 @@ B2 is trained on clean telemetry first. Then it is evaluated under both clean
 and degraded telemetry. This design simulates the realistic case where a
 standard dispatcher trained under normal conditions is deployed into a world
 where telemetry sometimes becomes stale.
-
-### B3: GAT-MAPPO without AoI
-
-**Purpose:** control for the explicit freshness feature.
-
-B3 has the same GAT-MAPPO architecture as B2, but the continuous AoI feature
-is hidden from the policy by zeroing it in the observation. This asks:
-
-> Does giving the policy explicit Age-of-Information information change its
-> behaviour?
-
-There is an important limitation: B2 and B3 are trained on clean telemetry, so
-AoI is mostly zero during training. Therefore B3 is not a strong mitigation
-experiment in the final design. It is best interpreted as a control showing
-that the AoI feature alone is not enough to create a faithful explanation
-channel under clean training.
 
 ### H5′: degradation-aware GAT-MAPPO
 
@@ -258,19 +241,6 @@ python scripts/train.py \
   --degradation off
 ```
 
-### B3: clean-trained GAT-MAPPO without AoI feature
-
-```bash
-python scripts/train.py \
-  --area central_park \
-  --policy gat \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train \
-  --degradation off \
-  --aoi-unaware
-```
-
 ### H5′: degradation-aware GAT-MAPPO
 
 ```bash
@@ -318,12 +288,11 @@ The model set is designed as a chain of controls:
 B0: Is the learned policy meaningful compared with a simple heuristic?
 B1: Does a non-graph RL policy behave similarly?
 B2: Are GAT attention explanations faithful?
-B3: Does explicit AoI input matter?
 H5′: Can degradation-aware training fix the explanation problem?
 ```
 
-The final dissertation conclusion relies most heavily on B2, with B0/B1/B3/H5′
+The final dissertation conclusion relies most heavily on B2, with B0/B1/H5′
 serving as controls and mitigation checks. The negative result is important:
 the coupled GAT attention channel remains practically unfaithful even after
-the experiment controls for architecture, freshness input, capability range,
-and degradation-aware training.
+the experiment controls for architecture, capability range, and
+degradation-aware training.

@@ -71,27 +71,6 @@
       }
     },
     {
-      "checkpoint": "runs/mappo/B3_gat_noaoi/central_park_1783964871/ckpt_best.pt",
-      "epoch": 25,
-      "n_decisions": 537,
-      "mean_pickups": 9.25,
-      "mean_entropy": 0.08730606500369807,
-      "def_m_uniform": {
-        "mean": 1.6873115220327395,
-        "ci95": [
-          1.6581016402970479,
-          1.7165692229351592
-        ]
-      },
-      "def_m_type_matched": {
-        "mean": -0.004674440537233075,
-        "ci95": [
-          -0.004992605773356301,
-          -0.004377118408642964
-        ]
-      }
-    },
-    {
       "checkpoint": "runs/mappo/H5b_freeze/central_park_1784138109/ckpt_best.pt",
       "epoch": 17,
       "n_decisions": 578,

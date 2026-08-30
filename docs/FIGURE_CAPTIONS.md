@@ -148,7 +148,7 @@ panel. Adjust figure numbers to match the final chapter layout.
 > spectrum; the composition-matched metric is stable at zero.** Clean
 > margin-DEF for seven checkpoints spanning completed pickups 1→11.8 and
 > policy entropy 1.56→0.03: an untrained network, mid-training and best
-> B2 checkpoints, the AoI-unaware B3 variant, and all three
+> B2 checkpoints and all three
 > degradation-aware H5′ seeds. Under the uniform baseline (blue) the
 > metric swings from −1.35 to +1.78 — the action-deletion artifact
 > manufactures both "far worse than random" and "far better than random"

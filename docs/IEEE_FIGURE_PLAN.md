@@ -7,7 +7,7 @@ an important result easier to understand than the corresponding table.
 | Paper location | Figure | Status | Purpose |
 |---|---|---|---|
 | Section III, before the environment details | Telemetry degradation data flow | Present | Separates the true SUMO state from the stale policy observation |
-| Section III-B | Model conditions and training process | Present | Explains why B0, B1, B2, B3 and H5' are needed |
+| Section III-B | Model conditions and training process | Present | Explains why B0, B1, B2 and H5' are needed |
 | Section III-C | Observation graph and GAT design | Present | Shows the node types, attention flow and action outputs |
 | Section III-F | DEF occlusion protocol | Present | Explains comprehensiveness, sufficiency and random controls |
 | Section IV-B, after Table IV | Clean faithfulness audit | Present | Shows why the uniform baseline gives a misleading result |

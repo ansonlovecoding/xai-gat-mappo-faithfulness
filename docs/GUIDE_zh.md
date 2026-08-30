@@ -52,7 +52,7 @@
 
 ⚠️ 历史注意：2026-07-15 之前的结果用的是"噪声机制"（只给自身位置加 20 m
 高斯噪声、邻车永远真值），信息损失几乎为零。旧结果保存在
-`results/b1b2b3_sumo120_seed42_v1/`，其中"H5 逆转"结论在冻结机制下**不成立**，
+`results/legacy_sumo120_seed42_v1/`，其中"H5 逆转"结论在冻结机制下**不成立**，
 只能作为机制敏感性引用。
 
 ### 2.3 DEF（调度解释忠实度）——"遮挡检验"
@@ -126,7 +126,6 @@ MAPPO（rollout → GAE → clipped PPO，参数共享，src/dispatch_marl/train
 | B0 | SUMO 内建贪心匹配器 | 性能上界参照（32 接单，学习策略只有 6–8——论文按提案风险条款定位：贡献是测量忠实度，不是造 SOTA 调度器） |
 | B1 | MAPPO+MLP（无图） | 性能背景表；无注意力通道，不进忠实度分析 |
 | B2 | GAT-MAPPO（主角），干净训练 | 第一、二幕的被测对象 |
-| B3 | B2 去掉 AoI 特征 | 干净训练下该消融是空转的（AoI 恒 0），只作背景 |
 | H5′ | B2 同配置 + 训练时开隧道冻结退化（outage 30 s） | 第三幕 a |
 | 解耦头 | B2 之上的旁路解释器 | 第三幕 b |
 
@@ -195,7 +194,7 @@ EOF
 ### 第 2 步：训练（或跳过，直接用已有 checkpoint）
 
 已提交的可用 checkpoint（跳过训练直接到第 3 步）：
-- B2：`results/b1b2b3_sumo120_seed42_v1/B2_gat/ckpt_best.pt`（epoch 91）
+- B2：`results/legacy_sumo120_seed42_v1/B2_gat/ckpt_best.pt`（epoch 91）
 - H5′：`results/story_freeze_v1/H5b_train/ckpt_best.pt`（epoch 17）
 
 自己重训（每个 300 轮，本机 CPU 约 1–2 小时）：
@@ -215,7 +214,7 @@ EOF
 ### 第 3 步：单点评估
 
 ```bash
-CKPT=results/b1b2b3_sumo120_seed42_v1/B2_gat/ckpt_best.pt
+CKPT=results/legacy_sumo120_seed42_v1/B2_gat/ckpt_best.pt
 ./.venv/bin/python scripts/eval_policy.py $CKPT --episodes 5 --stochastic --demand-split test
 ```
 **校验**：B2 约 **6.7±1.9** 接单（随机采样，允许 ±2 波动）；H5′ 约 **7.8±1.3**。
@@ -258,7 +257,7 @@ CKPT=results/b1b2b3_sumo120_seed42_v1/B2_gat/ckpt_best.pt
 ### 第 6 步：解耦头（第三幕 b）
 
 ```bash
-# 蒸馏（~15 分钟；或直接用 results/b1b2b3_sumo120_seed42_v1/explainer/explainer_head.pt）
+# 蒸馏（~15 分钟；或直接用 results/legacy_sumo120_seed42_v1/explainer/explainer_head.pt）
 ./.venv/bin/python scripts/distill_explainer.py $CKPT
 # 配对对比（clean 和 tunnel 各一次）
 ./.venv/bin/python scripts/eval_explainer.py $CKPT --episodes 2 --every 5
@@ -289,8 +288,8 @@ CKPT=results/b1b2b3_sumo120_seed42_v1/B2_gat/ckpt_best.pt
 | H1–H4 检验值 | 同上（H5′ 在 `H5b_sweep/analysis.json`） |
 | H5′ 更差：−0.77 vs −0.54 | 两个 analysis.json 对照；图 act3a |
 | 解耦头 +0.107/+0.113, p=0.0001 | `story_freeze_v1/explainer/compare_freeze_*.json` |
-| 蒸馏质量 Spearman +0.60 | `b1b2b3_sumo120_seed42_v1/explainer/explainer_head.report.json` |
-| B0 贪心 32 / random 0 / nearest 1 | `b1b2b3_sumo120_seed42_v1/baselines_sumo120.json` |
+| 蒸馏质量 Spearman +0.60 | `legacy_sumo120_seed42_v1/explainer/explainer_head.report.json` |
+| B0 贪心 32 / random 0 / nearest 1 | `legacy_sumo120_seed42_v1/baselines_sumo120.json` |
 | 熵坍缩曲线 | 各训练目录 `train_log.jsonl`（`entropy` 字段）；图 `B2_convergence.png` |
 | 与提案的全部偏离 | `docs/DEVIATIONS.md`（9 条） |
 

@@ -48,7 +48,6 @@ def evaluate_ckpt(ckpt_path: Path, device: str, episodes: int, seeds: list[int],
     if ckpt.get("policy_type", "gat") == "mlp":
         return {"checkpoint": str(ckpt_path), "note": "mlp — no attention channel"}
     area = ckpt["env_config"]["area"]
-    aoi_unaware = bool(ckpt["env_config"].get("aoi_unaware", False))
     demand = demand_split_files(area, "test")
 
     ev_u = FaithfulnessEvaluator(policy, FaithfulnessConfig(seed=0))
@@ -58,7 +57,7 @@ def evaluate_ckpt(ckpt_path: Path, device: str, episodes: int, seeds: list[int],
     vals_u, vals_t, entropies, pickups = [], [], [], []
     for seed in seeds:
         env = DispatchEnv(DispatchEnvConfig(
-            area=area, seed=seed, aoi_unaware=aoi_unaware,
+            area=area, seed=seed,
             degradation=DegradationConfig(mode=degradation,
                                           outage_duration_s=outage),
         ))
