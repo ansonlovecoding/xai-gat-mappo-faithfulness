@@ -54,7 +54,7 @@ Removing a request node can remove an available action, while removing a peer
 taxi only hides information. A uniform random occlusion therefore compares
 unlike interventions.
 
-| Random control | Mean margin-DEF | 95% CI | Interpretation |
+| Control baseline used to calculate DEF | Mean margin-DEF | 95% CI | Interpretation |
 |---|---:|---:|---|
 | Uniform random | -0.5540 | [-0.5808, -0.5288] | dominated by node-type and action-deletion imbalance |
 | Type-matched random | -0.0093 | [-0.0159, -0.0013] | small negative result after matching node types |

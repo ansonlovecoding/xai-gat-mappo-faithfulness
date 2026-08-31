@@ -170,8 +170,9 @@ faithful, stable, or human-readable attention map.
 ![Model conditions and training process](../model_design_training_process.png)
 
 **Figure 3.3.** Common training and validation-based checkpoint selection for
-all three model conditions. Frozen checkpoints are evaluated on held-out demand;
-the faithfulness audit compares GAT and GAT-Outage.
+all three model conditions. Each frozen checkpoint receives 24 clean held-out
+episodes. The faithfulness audit then compares the frozen GAT and GAT-Outage
+checkpoints across clean and four outage conditions without reselection.
 
 ## 3.5 Telemetry degradation
 
@@ -200,9 +201,9 @@ created longer stale exposure; it is not by itself proof that AoI changed DEF.
 
 ![Telemetry degradation data flow](../telemetry_degradation_data_flow.png)
 
-**Figure 3.4.** Tunnel entry starts a timed observation-layer outage. SUMO state
-continues to advance and receives the policy action; the clean twin is read only
-for counterfactual comparison.
+**Figure 3.4.** Tunnel entry triggers an observation-layer outage. SUMO keeps
+moving the vehicle while the policy sees its last valid position; the clean
+twin reads current state but never acts.
 
 ## 3.6 Explanation measures
 
@@ -232,10 +233,24 @@ explanation loses less evidence than keeping random nodes. The logit margin is
 clipped to `[-10, 10]` only when an action becomes unavailable or unopposed;
 every clamp is logged.
 
-Positive DEF means the explanation is more informative than its random
-control; zero means no measured advantage. Both probability DEF and an
-action-protected logit-margin variant are recorded. The final interpretation
-uses the type-matched baseline described below.
+Type-matched random subsets are the **control baseline**; they are not
+themselves a faithfulness score. Corrected DEF is the measured difference
+between the attention-ranked subset and this matched random control. Its sign
+is interpreted as follows:
+
+1. **Positive DEF:** the attention-ranked nodes affect the selected action more
+   than comparable random nodes. This supports decision-level faithfulness.
+2. **DEF near zero:** the attention ranking has no measured advantage over the
+   matched random control.
+3. **Negative DEF:** the attention-ranked nodes affect the selected action less
+   than the matched random nodes. This does not support the attention ranking
+   as a faithful explanation.
+
+These interpretations apply to both probability DEF and the action-protected
+logit-margin DEF. The final hypothesis tests use the type-matched baseline
+described in Section 3.7. DEF provides comparative perturbation evidence; even
+a positive value does not prove that attention is a complete causal
+explanation.
 
 ### 3.6.2 Stale-node attention
 
@@ -300,20 +315,46 @@ delete request actions and does not depend on random subset overlap.
 ## 3.8 Evaluation matrix
 
 MLP, GAT, and GAT-Outage are evaluated under clean telemetry with eight evaluation
-seeds (42-49) and three episodes per seed. This gives 24 held-out episodes per
-training seed for performance context.
+seeds (42-49) and three episodes per seed. One checkpoint is frozen for each
+model and training seed, so this gives 24 held-out episodes per checkpoint. The
+clean capability evaluation therefore contains 216 episode evaluations:
 
-GAT and GAT-Outage also receive the full faithfulness sweep:
+```text
+3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 3 episodes
+```
+
+The complete evaluation structure is summarised below. An episode evaluation is
+one complete rollout of one frozen checkpoint under one telemetry condition.
+
+| Evaluation | Models | Checkpoints | Conditions | Episodes per cell | Total episodes |
+|---|---:|---:|---:|---:|---:|
+| Clean capability context | 3 | 9 | 1 | 24 | 216 |
+| Faithfulness severity sweep | 2 | 6 | 5 | 24 | 720 |
+| Added ranking controls | 2 | 6 | 2 | 24 | 288 |
+
+GAT and GAT-Outage receive the full faithfulness sweep:
 
 ```text
 3 training seeds x 5 conditions x 8 evaluation seeds x 3 episodes
 ```
 
-The five conditions are clean plus four outage durations. Faithfulness is
-sampled every eight decisions, with raw per-decision records retained. Each
-sweep must pass preflight checks for expected cells, provenance, type-matched
-controls, chosen-action exclusion, and empirical degradation differentiation.
-All six evaluation sweeps pass.
+The five conditions and their roles are:
+
+| Condition | Observation-layer treatment | GAT-Outage relation | Evaluation purpose |
+|---|---|---|---|
+| Clean | Current vehicle readings | No imposed outage | Capability context and faithfulness baseline |
+| 10 s | Freeze last valid reading for 10 seconds | Unseen shorter duration | Mild-degradation transfer test |
+| 20 s | Freeze last valid reading for 20 seconds | Unseen shorter duration | Intermediate transfer test |
+| 30 s | Freeze last valid reading for 30 seconds | Training-matched duration | In-condition degradation test |
+| 60 s | Freeze last valid reading for 60 seconds | Unseen longer duration | Severe stress and transfer test |
+
+The relation column refers only to GAT-Outage; the clean-trained GAT has not
+seen any imposed outage duration during training. The evaluation changes the
+observation-layer condition but never retrains or reselects a checkpoint.
+Faithfulness is sampled every eight decisions, with raw per-decision records
+retained. Each sweep must pass preflight checks for expected cells, provenance,
+type-matched controls, chosen-action exclusion, and empirical degradation
+differentiation. All six evaluation sweeps pass.
 
 ## 3.9 Hypotheses and statistics
 

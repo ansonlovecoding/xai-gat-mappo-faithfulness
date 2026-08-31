@@ -267,14 +267,16 @@ Three functions, one file:
 
 1. **`collect_rollout(env, policy)`** — runs one full episode. For every
    acting agent at every RL step, appends an `AgentStep(agent, obs, action,
-   log_prob, value, reward, ...)` to a flat buffer. Team reward is
-   broadcast to every acting agent's record.
+   log_prob, value, reward, transition_id, ...)` to a flat buffer. Team task
+   reward is shared; a successful dispatcher receives additional difference
+   credit used only for training.
 2. **`compute_gae(buffer, gamma, gae_lambda)`** — groups by agent ID, runs
    backward-pass Generalised Advantage Estimation per trajectory. Episode
    end treated as terminal (V_{T+1} = 0).
 3. **`ppo_update(policy, optimizer, buffer, config)`** — clipped surrogate
-   loss + MSE value loss + entropy bonus, mini-batched over all agent-steps
-   in the buffer. Standard PPO.
+   loss + clipped value loss + decision-state entropy bonus. Minibatches keep
+   complete environment transitions together, target KL limits large updates,
+   and the centralised critic pools only agents from the same transition.
 
 ### Parameter sharing across the fleet
 
@@ -283,13 +285,12 @@ parameters means every agent-step (~2000 per episode) contributes to a
 single gradient update — critical for sample efficiency, since one SUMO
 episode is inherently limited by real-time constraints on the simulator.
 
-### Deliberate simplification: no centralised critic yet
+### Centralised critic grouping
 
-Textbook MAPPO uses a centralised critic that sees all agents' observations
-concatenated. The current implementation gives each agent's decision its
-own per-observation value estimate. Cheaper, simpler, and empirically
-sufficient to demonstrate learning; a centralised critic is a follow-up
-knob if training plateaus.
+The MAPPO critic pools all active agents from one environment transition and
+broadcasts that group value back to those agents. Transition ids preserve this
+grouping during PPO updates, so shuffled experiences from different simulation
+times cannot be mistaken for one joint state. The actor remains decentralised.
 
 ### Simplification: no explicit conflict handling in the policy
 
@@ -330,12 +331,17 @@ epoch 50 and had collapsed to 0 pickups by epoch 299.
   `best_metadata.json`.
 - Print `★ new best` on the corresponding console-table row.
 
-**Why rolling training pickups, not a separate deterministic eval:** an
-extra eval-per-epoch would double wall-clock time (~2 s per epoch, at 300+
-epochs). The rolling mean over stochastic rollouts already smooths
-single-epoch noise adequately. If the dissertation's final numbers demand
-tighter selection, an offline pass over saved checkpoints with
-`scripts/eval_policy.py --episodes N` is trivial to add.
+The rolling checkpoint is a training diagnostic, not the reportable model
+selection rule. Dissertation runs save periodic checkpoints, evaluate them on
+fixed validation demand with `scripts/select_checkpoint.py`, and copy the best
+candidate to `ckpt_selected.pt`. Held-out test demand is opened only after that
+selection is fixed. The v5 protocol also rejects runs whose final validation
+mean retains less than 80% of the selected checkpoint's mean.
+
+For v5, only 10% of the critic gradient enters the shared actor encoder. An
+adaptive entropy coefficient also activates below a decision-entropy floor.
+Both controls affect optimisation only; policy outputs and evaluation-time
+action selection are unchanged.
 
 ## Design justification: decentralised vs. classical fleet dispatch
 

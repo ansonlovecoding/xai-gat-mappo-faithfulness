@@ -75,6 +75,9 @@ class DispatchEnvConfig:
     # policy can't degenerate into "do nothing to avoid the wait penalty".
     pickup_reward: float = 10.0
     dispatch_reward: float = 0.5
+    # Actor-only difference credit. Team reward reporting remains unchanged;
+    # the agent whose dispatch succeeds receives this additional training cue.
+    dispatch_credit_reward: float = 0.5
     wait_penalty_lambda: float = 0.001
     seed: int = 42
     degradation: DegradationConfig = field(default_factory=DegradationConfig)
@@ -259,6 +262,7 @@ class DispatchEnv(ParallelEnv):
             live_res_ids = set()
 
         pickups_dispatched: list[str] = []  # reservation IDs we assigned
+        successful_dispatch_agents: set[str] = set()
         for agent, action in actions.items():
             if action == 0 or agent not in live_idle:
                 continue
@@ -272,6 +276,7 @@ class DispatchEnv(ParallelEnv):
             try:
                 traci.vehicle.dispatchTaxi(agent, [res_id])
                 pickups_dispatched.append(res_id)
+                successful_dispatch_agents.add(agent)
             except traci.exceptions.TraCIException:
                 continue
 
@@ -288,10 +293,13 @@ class DispatchEnv(ParallelEnv):
         n_pickups_delta = pickups_delta
         n_dispatches_ok = len(pickups_dispatched)
         mean_wait = self._mean_pending_wait_time()
-        team_r = (
+        shared_task_reward = (
             self.config.pickup_reward * float(n_pickups_delta)
-            + self.config.dispatch_reward * float(n_dispatches_ok)
             - self.config.wait_penalty_lambda * mean_wait
+        )
+        team_r = (
+            shared_task_reward
+            + self.config.dispatch_reward * float(n_dispatches_ok)
         )
 
         # 4. Decide termination and next agent set.
@@ -310,6 +318,14 @@ class DispatchEnv(ParallelEnv):
                 "dispatches_ok": n_dispatches_ok,
                 "mean_wait_time": mean_wait,
                 "sim_time": self._sim_time,
+                "team_reward": team_r,
+                # Preserve the reported team reward, then add an actor-only
+                # difference credit for the taxi whose dispatch was accepted.
+                "training_reward": (
+                    team_r
+                    + self.config.dispatch_credit_reward
+                    * float(a in successful_dispatch_agents)
+                ),
             }
             for a in actions
         }

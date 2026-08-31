@@ -45,8 +45,17 @@ def _training_is_compatible(manifest_path: Path, model: dict, seed: int,
         and arguments.get("demand_split") == train_cfg["demand_split"]
         and arguments.get("save_every") == train_cfg["save_every"]
         and arguments.get("best_window") == train_cfg["best_window"]
+        and all(arguments.get(key) == value for key, value in train_cfg.items()
+                if key in {
+                    "lr", "gamma", "gae_lambda", "clip_ratio", "ppo_epochs",
+                    "minibatch_size", "vf_coef", "ent_coef", "max_grad_norm",
+                    "entropy_floor", "max_ent_coef",
+                    "value_clip_ratio", "target_kl",
+                    "dispatch_credit_reward", "critic_encoder_gradient_scale",
+                })
         and bool(arguments.get("deterministic_torch"))
             == bool(train_cfg.get("deterministic_torch"))
+        and bool(arguments.get("anneal_lr")) == bool(train_cfg.get("anneal_lr"))
         and arguments.get("degradation") == model["degradation"]
         and float(arguments.get("outage_duration", 0.0))
             == float(model.get("outage_duration", 0.0))
@@ -90,6 +99,7 @@ def main() -> int:
     output_root = PROJECT_ROOT / config["output_root"]
     train_cfg = config["training"]
     eval_cfg = config["evaluation"]
+    stability_cfg = config.get("stability")
     models = _selected_models(config, args.model)
     stages = (["train", "select", "evaluate", "sweep", "preflight", "analyze", "summarize"]
               if args.stage == "all" else [args.stage])
@@ -136,6 +146,28 @@ def main() -> int:
                     ]
                     if train_cfg.get("deterministic_torch"):
                         command.append("--deterministic-torch")
+                    if train_cfg.get("anneal_lr"):
+                        command.append("--anneal-lr")
+                    option_names = {
+                        "lr": "--lr",
+                        "gamma": "--gamma",
+                        "gae_lambda": "--gae-lambda",
+                        "clip_ratio": "--clip-ratio",
+                        "ppo_epochs": "--ppo-epochs",
+                        "minibatch_size": "--minibatch-size",
+                        "vf_coef": "--vf-coef",
+                        "ent_coef": "--ent-coef",
+                        "entropy_floor": "--entropy-floor",
+                        "max_ent_coef": "--max-ent-coef",
+                        "max_grad_norm": "--max-grad-norm",
+                        "value_clip_ratio": "--value-clip-ratio",
+                        "target_kl": "--target-kl",
+                        "dispatch_credit_reward": "--dispatch-credit-reward",
+                        "critic_encoder_gradient_scale": "--critic-encoder-gradient-scale",
+                    }
+                    for key, option in option_names.items():
+                        if key in train_cfg:
+                            command += [option, str(train_cfg[key])]
                     if "outage_duration" in model:
                         command += ["--outage-duration", str(model["outage_duration"])]
                     _run(command, dry_run=args.dry_run)
@@ -159,6 +191,23 @@ def main() -> int:
                     if args.resume:
                         command.append("--resume")
                     _run(command, dry_run=args.dry_run)
+                    if stability_cfg:
+                        stability_command = [
+                            sys.executable, "scripts/check_training_stability.py",
+                            str(run_dir),
+                        ]
+                        option_names = {
+                            "final_window": "--final-window",
+                            "minimum_final_mean_pickups": "--minimum-final-mean-pickups",
+                            "maximum_consecutive_zero_pickups": "--maximum-consecutive-zero-pickups",
+                            "minimum_selected_mean_pickups": "--minimum-selected-mean-pickups",
+                            "minimum_final_validation_retention":
+                                "--minimum-final-validation-retention",
+                        }
+                        for key, option in option_names.items():
+                            if key in stability_cfg:
+                                stability_command += [option, str(stability_cfg[key])]
+                        _run(stability_command, dry_run=args.dry_run)
                     continue
 
                 if not model.get("faithfulness_sweep"):

@@ -1,0 +1,76 @@
+schema_version = 1
+name = "faithfulness_decoupling_dissertation_v5_stable"
+output_root = "runs/dissertation_v5"
+area = "central_park"
+
+[training]
+epochs = 40
+seeds = [42, 43, 44]
+demand_split = "train"
+save_every = 10
+best_window = 10
+deterministic_torch = true
+checkpoint_selection = "validation_pickups"
+
+# Stability controls selected without using held-out test results.
+lr = 0.0001
+anneal_lr = true
+gamma = 0.99
+gae_lambda = 0.95
+clip_ratio = 0.20
+ppo_epochs = 4
+minibatch_size = 256
+vf_coef = 0.25
+ent_coef = 0.05
+entropy_floor = 0.20
+max_ent_coef = 0.20
+max_grad_norm = 0.50
+value_clip_ratio = 0.20
+target_kl = 0.015
+dispatch_credit_reward = 1.0
+critic_encoder_gradient_scale = 0.10
+
+[selection]
+demand_split = "val"
+episodes = 8
+seed = 2026
+minimum_mean_pickups = 2.0
+minimum_improvement_over_initial = 1.0
+
+[stability]
+final_window = 10
+minimum_final_mean_pickups = 5.0
+maximum_consecutive_zero_pickups = 4
+minimum_selected_mean_pickups = 5.0
+minimum_final_validation_retention = 0.80
+
+[evaluation]
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+episodes_per_cell_seed = 3
+demand_split = "test"
+outage_durations_s = [10.0, 20.0, 30.0, 60.0]
+corruption = "freeze"
+faithfulness_every = 8
+random_baselines = 5
+random_baseline = "type_matched"
+exclusion_variant = true
+stochastic = true
+
+[[models]]
+id = "B1_mlp"
+policy = "mlp"
+degradation = "off"
+faithfulness_sweep = false
+
+[[models]]
+id = "B2_gat"
+policy = "gat"
+degradation = "off"
+faithfulness_sweep = true
+
+[[models]]
+id = "H5_gat_degraded"
+policy = "gat"
+degradation = "tunnel_triggered"
+outage_duration = 30.0
+faithfulness_sweep = true

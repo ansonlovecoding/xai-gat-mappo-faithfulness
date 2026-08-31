@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import Arc, Circle, FancyArrowPatch, FancyBboxPatch, Polygon, Rectangle, Wedge
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -259,12 +259,12 @@ def model_training_design():
 
     ax.text(0.5, 0.285, "HELD-OUT EVALUATION SCOPE", ha="center", va="center",
             fontsize=11.5, fontweight="bold", color=ORANGE)
-    box(ax, 0.18, 0.105, 0.28, 0.13, "Clean comparison",
-        "All three models\n8 evaluation seeds x 3 episodes", BLUE,
-        title_size=12.5, body_size=9.6)
-    box(ax, 0.57, 0.105, 0.31, 0.13, "Faithfulness audit",
-        "GAT versus GAT-Outage\nclean + 10, 20, 30 and 60 s outages", ORANGE,
-        title_size=12.5, body_size=9.6)
+    box(ax, 0.16, 0.105, 0.32, 0.13, "Clean-telemetry capability",
+        "MLP, GAT and GAT-Outage\nper checkpoint: 8 seeds x 3 episodes = 24", BLUE,
+        title_size=12.1, body_size=9.2)
+    box(ax, 0.55, 0.105, 0.35, 0.13, "Faithfulness audit",
+        "GAT and GAT-Outage; frozen checkpoints\nclean + 10, 20, 30 and 60 s outages", ORANGE,
+        title_size=12.5, body_size=9.2)
 
     for target_x, color, curvature in ((0.32, BLUE, 0.18),
                                        (0.725, ORANGE, -0.12)):
@@ -281,110 +281,154 @@ def model_training_design():
     save(fig, "model_design_training_process")
 
 def telemetry_flow():
-    fig, ax = canvas("Tunnel Trigger and Observation-Layer Degradation", (16, 8.8))
+    fig, ax = canvas("Tunnel-Triggered Telemetry Degradation", (16, 8.8))
 
-    ax.add_patch(FancyBboxPatch(
-        (0.02, 0.11), 0.68, 0.75,
-        boxstyle="round,pad=0.012,rounding_size=0.012",
-        linewidth=1.1, edgecolor="#CAD1D6", facecolor="#FAFBFC",
-    ))
-    ax.add_patch(FancyBboxPatch(
-        (0.73, 0.11), 0.25, 0.75,
-        boxstyle="round,pad=0.012,rounding_size=0.012",
-        linewidth=1.2, edgecolor=GREY, facecolor="#F8F8F8",
-    ))
-    ax.text(0.04, 0.82, "OPERATIONAL SIMULATION", ha="left", va="center",
-            fontsize=12, fontweight="bold", color=BLUE)
-    ax.text(0.855, 0.82, "READ-ONLY AUDIT", ha="center", va="center",
-            fontsize=12, fontweight="bold", color=GREY)
+    def taxi(x, y, color, alpha=1.0, scale=1.0, outline=False):
+        width, height = 0.065 * scale, 0.035 * scale
+        face = "white" if outline else color
+        linestyle = "--" if outline else "-"
+        ax.add_patch(Rectangle(
+            (x - width / 2, y - height / 2), width, height,
+            linewidth=1.4, edgecolor=color, facecolor=face,
+            linestyle=linestyle, alpha=alpha, zorder=8,
+        ))
+        roof = Polygon([
+            (x - width * 0.26, y + height / 2),
+            (x - width * 0.12, y + height * 0.92),
+            (x + width * 0.20, y + height * 0.92),
+            (x + width * 0.34, y + height / 2),
+        ], closed=True, linewidth=1.3, edgecolor=color, facecolor=face,
+           linestyle=linestyle, alpha=alpha, zorder=8)
+        ax.add_patch(roof)
+        for wheel_x in (x - width * 0.27, x + width * 0.27):
+            ax.add_patch(Circle((wheel_x, y - height * 0.55),
+                                0.007 * scale, facecolor="#202020",
+                                edgecolor="white", linewidth=0.7,
+                                alpha=alpha, zorder=9))
+        if not outline:
+            ax.text(x, y, "TAXI", ha="center", va="center", fontsize=7.2 * scale,
+                    color="white", fontweight="bold", alpha=alpha, zorder=10)
 
-    lane_specs = [
-        (0.695, "SUMO\nGROUND TRUTH", BLUE),
-        (0.455, "OBSERVATION\nLAYER", ORANGE),
-        (0.215, "POLICY", GREEN),
-    ]
-    for y, label, color in lane_specs:
-        ax.text(0.045, y, label, ha="left", va="center", fontsize=9.7,
-                fontweight="bold", color=color, linespacing=1.15)
+    def signal(x, y, color, crossed=False):
+        ax.add_patch(Circle((x, y), 0.006, facecolor=color,
+                            edgecolor="none", zorder=10))
+        for radius in (0.018, 0.031, 0.044):
+            ax.add_patch(Arc((x, y), radius * 2, radius * 2,
+                             theta1=35, theta2=145, linewidth=1.5,
+                             color=color, zorder=10))
+        if crossed:
+            ax.plot([x - 0.037, x + 0.037], [y + 0.04, y - 0.025],
+                    color="#B02A37", linewidth=2.5, zorder=11)
 
-    box(ax, 0.16, 0.63, 0.14, 0.13, "Live state",
-        "position, speed, edge", BLUE, title_size=11.7, body_size=9.1)
-    box(ax, 0.36, 0.63, 0.14, 0.13, "Tunnel entry",
-        "outage trigger", ORANGE, title_size=11.4, body_size=9.1)
-    box(ax, 0.56, 0.63, 0.12, 0.13, "State advances",
-        "SUMO stays live", BLUE, title_size=10.9, body_size=8.9)
-    arrow(ax, (0.30, 0.695), (0.36, 0.695), color=BLUE)
-    arrow(ax, (0.50, 0.695), (0.56, 0.695), color=BLUE)
+    # Road scene: tunnel entry is the physical trigger, but SUMO motion continues.
+    ax.add_patch(Rectangle((0.03, 0.58), 0.94, 0.24,
+                           facecolor="#EDF6F8", edgecolor="none", zorder=0))
+    ax.add_patch(Rectangle((0.03, 0.58), 0.94, 0.105,
+                           facecolor="#484D50", edgecolor="none", zorder=1))
+    for start in [0.06, 0.18, 0.30, 0.68, 0.80, 0.92]:
+        ax.plot([start, min(start + 0.055, 0.97)], [0.632, 0.632],
+                color="white", linewidth=2.0, alpha=0.85, zorder=2)
 
-    box(ax, 0.16, 0.39, 0.14, 0.13, "Current telemetry",
-        "latest reading", ORANGE, title_size=11.2, body_size=9.1)
-    stale_patch = FancyBboxPatch(
-        (0.36, 0.39), 0.14, 0.13,
-        boxstyle="round,pad=0.018,rounding_size=0.018",
-        linewidth=1.7, edgecolor=ORANGE, facecolor="#FFF3E8",
-        hatch="///", zorder=2,
-    )
-    ax.add_patch(stale_patch)
-    ax.text(0.43, 0.485, "Last update held", ha="center", va="center",
-            fontsize=11.2, fontweight="bold", color=ORANGE, zorder=3,
-            bbox=dict(facecolor="#FFF9F5", edgecolor="none", pad=1.2))
-    ax.text(0.43, 0.425, "x, y, speed frozen\nAoI increases",
-            ha="center", va="center", fontsize=8.7, color="#202020", zorder=3,
-            linespacing=1.15,
-            bbox=dict(facecolor="#FFF9F5", edgecolor="none", pad=1.0))
-    box(ax, 0.56, 0.39, 0.12, 0.13, "Telemetry resumes",
-        "current reading", GREEN, title_size=10.5, body_size=8.8)
-    arrow(ax, (0.30, 0.455), (0.36, 0.455), color=ORANGE)
-    arrow(ax, (0.50, 0.455), (0.56, 0.455), color=GREEN)
+    tunnel_x, tunnel_y = 0.50, 0.60
+    ax.add_patch(Wedge((tunnel_x, tunnel_y), 0.165, 0, 180,
+                       facecolor="#7D858A", edgecolor="#555555",
+                       linewidth=2.0, zorder=3))
+    ax.add_patch(Wedge((tunnel_x, tunnel_y), 0.118, 0, 180,
+                       facecolor="#25292C", edgecolor="#B9C0C4",
+                       linewidth=1.2, zorder=4))
+    ax.add_patch(Rectangle((tunnel_x - 0.165, 0.58), 0.33, 0.052,
+                           facecolor="#7D858A", edgecolor="#555555",
+                           linewidth=1.5, zorder=3))
+    ax.add_patch(Rectangle((tunnel_x - 0.118, 0.58), 0.236, 0.052,
+                           facecolor="#25292C", edgecolor="none", zorder=5))
+    ax.text(tunnel_x, 0.79, "TUNNEL", ha="center", va="center",
+            fontsize=12.5, color="#303030", fontweight="bold")
 
-    arrow(ax, (0.23, 0.63), (0.23, 0.52), color=BLUE)
-    arrow(ax, (0.43, 0.63), (0.43, 0.52), color=ORANGE)
-    arrow(ax, (0.62, 0.63), (0.62, 0.52), color=GREEN)
+    taxi(0.26, 0.64, BLUE, scale=0.92)
+    taxi(0.49, 0.64, "#8DB7C4", alpha=0.45, scale=0.92)
+    taxi(0.75, 0.64, GREEN, scale=0.92)
+    arrow(ax, (0.30, 0.64), (0.42, 0.64), color=BLUE)
+    arrow(ax, (0.57, 0.64), (0.70, 0.64), color=GREEN)
+    signal(0.26, 0.73, BLUE)
+    signal(0.43, 0.73, ORANGE, crossed=True)
 
-    box(ax, 0.34, 0.15, 0.18, 0.13, "Observed graph",
-        "contains stale taxi data", GREEN, title_size=11.5, body_size=9.1)
-    box(ax, 0.56, 0.15, 0.12, 0.13, "Policy action",
-        "live decision", GREEN, title_size=10.8, body_size=8.9)
-    arrow(ax, (0.43, 0.39), (0.43, 0.28), color=GREEN)
-    arrow(ax, (0.52, 0.215), (0.56, 0.215), color=GREEN)
+    ax.axvline(0.38, ymin=0.58, ymax=0.82, color=ORANGE,
+               linewidth=2.0, linestyle="--", zorder=7)
+    ax.text(0.38, 0.845, "Tunnel entry", ha="center", va="bottom",
+            fontsize=11.3, color=ORANGE, fontweight="bold")
+    ax.text(0.38, 0.805, "starts outage timer", ha="center", va="bottom",
+            fontsize=9.2, color="#202020")
+    ax.text(0.75, 0.72, "SUMO vehicle keeps moving", ha="center", va="center",
+            fontsize=10.5, color=GREEN, fontweight="bold")
 
-    ax.plot([0.68, 0.70], [0.215, 0.215], color=GREEN, linewidth=1.7)
-    ax.plot([0.70, 0.70], [0.215, 0.695], color=GREEN, linewidth=1.7)
-    arrow(ax, (0.70, 0.695), (0.68, 0.695), color=GREEN)
-    ax.text(0.695, 0.35, "action to SUMO", ha="right", va="center",
-            rotation=90, fontsize=8.8, color=GREEN, fontweight="bold")
+    # Timeline labels and shared time markers.
+    x0, x1, x2 = 0.28, 0.56, 0.79
+    ax.text(0.045, 0.45, "SUMO TRUE STATE", ha="left", va="center",
+            fontsize=11.5, color=BLUE, fontweight="bold")
+    ax.text(0.045, 0.27, "POLICY OBSERVATION", ha="left", va="center",
+            fontsize=11.5, color=ORANGE, fontweight="bold")
+    ax.text(0.045, 0.105, "READ-ONLY CLEAN TWIN", ha="left", va="center",
+            fontsize=10.8, color=GREY, fontweight="bold")
+    for x, label in ((x0, "t0"), (x1, "during outage"), (x2, "t0 + T")):
+        ax.plot([x, x], [0.08, 0.50], color="#D5DADD", linewidth=0.8,
+                linestyle=":" if x != x0 else "--", zorder=0)
+        ax.text(x, 0.515, label, ha="center", va="bottom", fontsize=9.2,
+                color="#404040", fontweight="bold" if x == x0 else "normal")
 
-    audit_steps = [
-        (0.64, "Same SUMO step", "true current state"),
-        (0.44, "Clean observation", "no telemetry freeze"),
-        (0.24, "Paired comparison", "clean versus degraded"),
-    ]
-    for y, title, body in audit_steps:
-        box(ax, 0.77, y, 0.17, 0.11, title, body, GREY,
-            title_size=10.8, body_size=8.9)
-    arrow(ax, (0.855, 0.64), (0.855, 0.55), color=GREY, dashed=True)
-    arrow(ax, (0.855, 0.44), (0.855, 0.35), color=GREY, dashed=True)
-    ax.text(0.855, 0.155, "No action is sent to SUMO.",
-            ha="center", va="center", fontsize=9.4, color=GREY,
+    # SUMO path continues through the complete outage window.
+    arrow(ax, (0.22, 0.45), (0.86, 0.45), color=BLUE)
+    taxi(x0, 0.45, BLUE, scale=0.72)
+    taxi(x1, 0.45, BLUE, scale=0.72)
+    taxi(x2, 0.45, BLUE, scale=0.72)
+    ax.text(0.88, 0.45, "live", ha="left", va="center", fontsize=9.4,
+            color=BLUE, fontweight="bold")
+
+    # The policy-side observation is pinned to the last valid location.
+    ax.plot([0.22, x0], [0.27, 0.27], color=ORANGE, linewidth=1.8)
+    ax.plot([x0, x2], [0.27, 0.27], color=ORANGE, linewidth=5.5,
+            alpha=0.22, solid_capstyle="round")
+    taxi(x0, 0.27, ORANGE, scale=0.78)
+    taxi(x1, 0.27, ORANGE, alpha=0.35, scale=0.78, outline=True)
+    ax.plot([x1 - 0.025, x1 + 0.025], [0.295, 0.245],
+            color="#B02A37", linewidth=2.0)
+    ax.plot([x1 - 0.025, x1 + 0.025], [0.245, 0.295],
+            color="#B02A37", linewidth=2.0)
+    taxi(x2, 0.27, GREEN, scale=0.78)
+    ax.text((x0 + x2) / 2, 0.335, "last valid position held; AoI increases",
+            ha="center", va="center", fontsize=10.2, color=ORANGE,
             fontweight="bold")
+    ax.text(x0, 0.205, "AoI = 0", ha="center", fontsize=9.1, color="#303030")
+    ax.text(x2, 0.205, "current reading resumes", ha="center", fontsize=9.1,
+            color=GREEN, fontweight="bold")
 
-    ax.add_patch(FancyBboxPatch(
-        (0.04, 0.045), 0.025, 0.022,
-        boxstyle="square,pad=0", linewidth=1.2, edgecolor=ORANGE,
-        facecolor="#FFF3E8", hatch="///",
-    ))
-    ax.text(0.075, 0.056, "frozen observation", ha="left", va="center",
-            fontsize=9.8, color="#202020")
-    ax.plot([0.27, 0.31], [0.056, 0.056], color=GREEN, linewidth=1.8)
-    ax.text(0.32, 0.056, "operational path", ha="left", va="center",
-            fontsize=9.8, color="#202020")
-    ax.plot([0.50, 0.54], [0.056, 0.056], color=GREY, linewidth=1.5,
+    # The clean twin reads the same SUMO step for comparison but never acts.
+    ax.plot([0.22, 0.85], [0.105, 0.105], color=GREY, linewidth=1.4,
             linestyle="--")
-    ax.text(0.55, 0.056, "audit-only path", ha="left", va="center",
-            fontsize=9.8, color="#202020")
-    ax.text(0.98, 0.056, "Trigger in SUMO; degradation in observation layer.",
-            ha="right", va="center", fontsize=10.2, fontweight="bold",
-            color="#202020")
+    taxi(x1, 0.105, GREY, scale=0.66, outline=True)
+    taxi(x2, 0.105, GREY, scale=0.66, outline=True)
+    ax.text(0.47, 0.052, "true current state for paired comparison only",
+            ha="center", va="center", fontsize=9.4, color=GREY)
+    ax.text(0.84, 0.105, "no action", ha="left", va="center", fontsize=9.2,
+            color=GREY, fontweight="bold")
+
+    # Operational action returns to SUMO; the clean twin remains read only.
+    ax.add_patch(Circle((0.91, 0.27), 0.045, facecolor="#EEF6EF",
+                        edgecolor=GREEN, linewidth=1.7, zorder=6))
+    ax.text(0.91, 0.27, "GAT\npolicy", ha="center", va="center",
+            fontsize=9.0, color=GREEN, fontweight="bold", zorder=7)
+    arrow(ax, (0.82, 0.27), (0.865, 0.27), color=GREEN)
+    ax.add_patch(FancyArrowPatch(
+        (0.91, 0.315), (0.84, 0.43), arrowstyle="-|>",
+        connectionstyle="arc3,rad=-0.25", mutation_scale=16,
+        linewidth=1.7, color=GREEN,
+    ))
+    ax.text(0.925, 0.39, "action to\nSUMO", ha="center", va="center",
+            fontsize=8.7, color=GREEN, fontweight="bold")
+
+    ax.text(0.50, 0.005,
+            "Tunnel entry is the trigger; stale telemetry is created at the observation boundary.",
+            ha="center", va="bottom", fontsize=10.5, color="#202020",
+            fontweight="bold")
     save(fig, "telemetry_degradation_data_flow")
 
 

@@ -4,6 +4,12 @@ This guide reproduces the final experiment for *When Explanations Outlive Their
 Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under
 Telemetry Degradation*.
 
+> **Version note.** This document records the archived v4 experiment currently
+> reported in the thesis. A corrected training protocol has been prepared for
+> the planned full rerun, but its partial probe results must not be mixed with
+> v4. See `docs/TRAINING_STABILITY_RERUN.md` and
+> `configs/experiments/dissertation_v5.toml`.
+
 The definitive protocol is:
 
 ```text

@@ -23,10 +23,9 @@ Design notes:
   way it can distinguish "padded slot" from "valid node at the origin".
 - **Invalid reservation actions are still masked to -inf** in the logits,
   exactly as in the GAT policy. Action-space semantics are identical.
-- **Centralised critic** mirrors the GAT policy's CTDE shortcut: mean-pool
-  the trunk embedding across the batch (one RL step's acting agents during
-  rollout), feed the critic head once, broadcast the team V. Same
-  approximation, same caveats — see PolicyConfig's docstring in policy.py.
+- **Centralised critic** mean-pools the trunk embeddings within each recorded
+  environment transition. PPO minibatches preserve those groups, so unrelated
+  simulation times are never treated as one joint state.
 """
 from __future__ import annotations
 
@@ -53,6 +52,7 @@ class MLPPolicyConfig:
     # Same CTDE trade-off as the GAT policy; default matches B2 so the
     # B1-vs-B2 comparison isolates the encoder, not the critic regime.
     centralised_critic: bool = True
+    critic_encoder_gradient_scale: float = 1.0
     device: str = "cpu"
 
     @property
@@ -73,6 +73,8 @@ class DispatchMLPPolicy(nn.Module):
         super().__init__()
         self.config = config or MLPPolicyConfig()
         c = self.config
+        if not 0.0 <= c.critic_encoder_gradient_scale <= 1.0:
+            raise ValueError("critic_encoder_gradient_scale must be in [0, 1]")
         d = c.hidden_dim
 
         layers: list[nn.Module] = [nn.Linear(c.input_dim, d), nn.GELU()]
@@ -103,7 +105,11 @@ class DispatchMLPPolicy(nn.Module):
         ]
         return torch.cat(parts, dim=1)
 
-    def forward(self, obs: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    def forward(
+        self,
+        obs: dict[str, torch.Tensor],
+        critic_group: torch.Tensor | None = None,
+    ) -> dict[str, torch.Tensor]:
         """Returns {"logits": (B, K_r+1), "value": (B,)}.
 
         No "attention" key, by design — B1 has no explanation channel.
@@ -121,12 +127,28 @@ class DispatchMLPPolicy(nn.Module):
             dim=1,
         )
 
+        scale = self.config.critic_encoder_gradient_scale
+        critic_h = h.detach() + scale * (h - h.detach())
         if self.config.centralised_critic:
             B = h.shape[0]
-            team_value = self.critic_head(h.mean(dim=0, keepdim=True)).squeeze()
-            value = team_value.expand(B)
+            if critic_group is None:
+                critic_group = torch.zeros(B, dtype=torch.long, device=h.device)
+            _, inverse = torch.unique(
+                critic_group.to(device=h.device, dtype=torch.long),
+                sorted=True,
+                return_inverse=True,
+            )
+            n_groups = int(inverse.max().item()) + 1
+            group_sum = torch.zeros(
+                n_groups, h.shape[-1], dtype=h.dtype, device=h.device
+            ).index_add_(0, inverse, critic_h)
+            group_count = torch.zeros(
+                n_groups, 1, dtype=h.dtype, device=h.device
+            ).index_add_(0, inverse, torch.ones(B, 1, dtype=h.dtype, device=h.device))
+            group_values = self.critic_head(group_sum / group_count).squeeze(-1)
+            value = group_values[inverse]
         else:
-            value = self.critic_head(h).squeeze(-1)
+            value = self.critic_head(critic_h).squeeze(-1)
 
         return {"logits": logits, "value": value}
 
@@ -136,10 +158,11 @@ class DispatchMLPPolicy(nn.Module):
         self,
         obs: dict[str, torch.Tensor],
         action: torch.Tensor | None = None,
+        critic_group: torch.Tensor | None = None,
     ) -> dict[str, Any]:
         """Same contract as DispatchGATPolicy.get_action_and_value, minus the
         attention/node_emb aux outputs (an MLP has neither)."""
-        out = self.forward(obs)
+        out = self.forward(obs, critic_group=critic_group)
         dist = torch.distributions.Categorical(logits=out["logits"])
         if action is None:
             action = dist.sample()

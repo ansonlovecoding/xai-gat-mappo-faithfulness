@@ -77,12 +77,14 @@ class PolicyConfig:
     # baseline after ~epoch 100. See results/ab_centralised_critic_v1_seed42/
     # for the full comparison.
     #
-    # NOTE: during PPO update, mini-batches shuffle experiences from
-    # different RL steps; pooling across such a mini-batch mixes joint
-    # states, which is an approximation rather than strict CTDE semantics.
-    # It reduces variance similarly and is a standard shortcut in the
-    # MAPPO-with-parameter-sharing literature.
+    # During PPO update, transition ids keep every joint state intact and the
+    # critic pools agents within that transition only. This matches rollout
+    # semantics and prevents unrelated simulation times from being mixed.
     centralised_critic: bool = True
+    # Scale only the critic gradient entering the shared GAT encoder.  The
+    # critic head still receives its full gradient and the forward value is
+    # unchanged.  Values below 1 reduce actor/critic gradient interference.
+    critic_encoder_gradient_scale: float = 1.0
     device: str = "cpu"
 
 
@@ -91,6 +93,8 @@ class DispatchGATPolicy(nn.Module):
         super().__init__()
         self.config = config or PolicyConfig()
         c = self.config
+        if not 0.0 <= c.critic_encoder_gradient_scale <= 1.0:
+            raise ValueError("critic_encoder_gradient_scale must be in [0, 1]")
         d = c.hidden_dim
 
         # Per-type embeddings project heterogeneous input feature widths
@@ -183,7 +187,11 @@ class DispatchGATPolicy(nn.Module):
 
         return nodes, node_mask
 
-    def forward(self, obs: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    def forward(
+        self,
+        obs: dict[str, torch.Tensor],
+        critic_group: torch.Tensor | None = None,
+    ) -> dict[str, torch.Tensor]:
         """Run one forward pass. Returns:
             {
                 "logits":   (B, K_r + 1),
@@ -224,21 +232,35 @@ class DispatchGATPolicy(nn.Module):
         #
         #   Centralised (CTDE per §7.7): pool across *all* valid nodes of
         #   *all* agents in the current batch, feed the resulting joint
-        #   embedding to the critic, and broadcast the single team V to
-        #   every agent. During rollout this batch is one RL step's acting
-        #   agents — a real joint state. During PPO update mini-batches
-        #   mix RL steps, so the pooling is approximate; see PolicyConfig
-        #   docstring for the trade-off.
+        #   embedding to the critic, and broadcast the team V to every agent
+        #   in that transition. ``critic_group`` separates multiple complete
+        #   transitions when PPO evaluates a minibatch.
         w = node_mask.float().unsqueeze(-1)             # (B, N, 1)
+        scale = c.critic_encoder_gradient_scale
+        critic_nodes = nodes.detach() + scale * (nodes - nodes.detach())
         if c.centralised_critic:
             B = nodes.shape[0]
-            joint_num = (nodes * w).sum(dim=(0, 1))     # (D,)
-            joint_den = w.sum(dim=(0, 1)).clamp_min(1.0)
-            joint = joint_num / joint_den               # (D,)
-            team_value = self.critic_head(joint.unsqueeze(0)).squeeze()  # ()
-            value = team_value.expand(B)                # (B,)
+            if critic_group is None:
+                critic_group = torch.zeros(B, dtype=torch.long, device=nodes.device)
+            _, inverse = torch.unique(
+                critic_group.to(device=nodes.device, dtype=torch.long),
+                sorted=True,
+                return_inverse=True,
+            )
+            n_groups = int(inverse.max().item()) + 1
+            agent_num = (critic_nodes * w).sum(dim=1)   # (B, D)
+            agent_den = w.sum(dim=1)                    # (B, 1)
+            joint_num = torch.zeros(
+                n_groups, nodes.shape[-1], dtype=nodes.dtype, device=nodes.device
+            ).index_add_(0, inverse, agent_num)
+            joint_den = torch.zeros(
+                n_groups, 1, dtype=nodes.dtype, device=nodes.device
+            ).index_add_(0, inverse, agent_den).clamp_min(1.0)
+            joint = joint_num / joint_den               # (groups, D)
+            group_values = self.critic_head(joint).squeeze(-1)
+            value = group_values[inverse]               # (B,)
         else:
-            pooled = (nodes * w).sum(dim=1) / w.sum(dim=1).clamp_min(1.0)
+            pooled = (critic_nodes * w).sum(dim=1) / w.sum(dim=1).clamp_min(1.0)
             value = self.critic_head(pooled).squeeze(-1)    # (B,)
 
         return {
@@ -255,11 +277,12 @@ class DispatchGATPolicy(nn.Module):
         self,
         obs: dict[str, torch.Tensor],
         action: torch.Tensor | None = None,
+        critic_group: torch.Tensor | None = None,
     ) -> dict[str, Any]:
         """PPO/MAPPO-style hook. If `action` is provided (during PPO update)
         we compute log_prob and entropy at that action; otherwise we sample.
         """
-        out = self.forward(obs)
+        out = self.forward(obs, critic_group=critic_group)
         dist = torch.distributions.Categorical(logits=out["logits"])
         if action is None:
             action = dist.sample()

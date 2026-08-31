@@ -148,12 +148,17 @@ def main() -> int:
     # Reward shaping.
     parser.add_argument("--pickup-reward", type=float, default=10.0)
     parser.add_argument("--dispatch-reward", type=float, default=0.5)
+    parser.add_argument("--dispatch-credit-reward", type=float, default=0.5,
+                        help="extra training-only credit for the taxi whose dispatch succeeds")
     parser.add_argument("--wait-lambda", type=float, default=0.001)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--deterministic-torch", action="store_true",
                         help="request deterministic PyTorch kernels where available")
     parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument("--anneal-lr", action=argparse.BooleanOptionalAction,
+                        default=False,
+                        help="linearly decay the learning rate to zero across training")
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -161,7 +166,17 @@ def main() -> int:
     parser.add_argument("--minibatch-size", type=int, default=256)
     parser.add_argument("--vf-coef", type=float, default=0.5)
     parser.add_argument("--ent-coef", type=float, default=0.01)
+    parser.add_argument("--entropy-floor", type=float, default=-1.0,
+                        help="adapt entropy regularisation below this decision "
+                             "entropy; negative disables")
+    parser.add_argument("--max-ent-coef", type=float, default=-1.0,
+                        help="upper bound for adaptive entropy coefficient; "
+                             "negative leaves it unbounded")
     parser.add_argument("--max-grad-norm", type=float, default=0.5)
+    parser.add_argument("--value-clip-ratio", type=float, default=0.2,
+                        help="PPO value-function clipping range; negative disables")
+    parser.add_argument("--target-kl", type=float, default=0.015,
+                        help="stop a PPO update early above this approximate KL; negative disables")
     parser.add_argument("--policy", default="gat", choices=["gat", "mlp"],
                         help="gat = GAT-MAPPO (B2, the proposed model); "
                              "mlp = MAPPO+MLP baseline (B1, no graph — "
@@ -182,6 +197,9 @@ def main() -> int:
                              "over all agents in the batch (proposal §7.7). "
                              "DEFAULT: enabled. Use --no-centralised-critic to "
                              "fall back to a per-agent V.")
+    parser.add_argument("--critic-encoder-gradient-scale", type=float, default=1.0,
+                        help="fraction of critic gradient allowed into the shared "
+                             "policy encoder (0=actor-only encoder, 1=fully shared)")
     parser.add_argument("--save-every", type=int, default=10)
     # Best-checkpoint tracking: after each epoch, compute the mean of the last
     # `--best-window` training-episode pickup counts. Whenever that rolling
@@ -243,6 +261,7 @@ def main() -> int:
         seed=args.seed,
         pickup_reward=args.pickup_reward,
         dispatch_reward=args.dispatch_reward,
+        dispatch_credit_reward=args.dispatch_credit_reward,
         wait_penalty_lambda=args.wait_lambda,
         degradation=DegradationConfig(mode=args.degradation,
                                       dropout_rate=args.dropout_rate,
@@ -294,6 +313,7 @@ def main() -> int:
             hidden_dim=args.mlp_hidden_dim,
             n_layers=args.mlp_layers,
             centralised_critic=args.centralised_critic,
+            critic_encoder_gradient_scale=args.critic_encoder_gradient_scale,
             device=device,
         )
         policy = DispatchMLPPolicy(pol_cfg)
@@ -305,6 +325,7 @@ def main() -> int:
             n_gat_layers=args.n_gat_layers,
             n_heads=args.n_heads,
             centralised_critic=args.centralised_critic,
+            critic_encoder_gradient_scale=args.critic_encoder_gradient_scale,
             device=device,
         )
         policy = DispatchGATPolicy(pol_cfg)
@@ -318,7 +339,12 @@ def main() -> int:
         minibatch_size=args.minibatch_size,
         vf_coef=args.vf_coef,
         ent_coef=args.ent_coef,
+        entropy_floor=args.entropy_floor if args.entropy_floor >= 0 else None,
+        max_ent_coef=args.max_ent_coef if args.max_ent_coef >= 0 else None,
         max_grad_norm=args.max_grad_norm,
+        value_clip_ratio=(args.value_clip_ratio
+                          if args.value_clip_ratio >= 0 else None),
+        target_kl=args.target_kl if args.target_kl >= 0 else None,
     )
 
     # ---- faithfulness sampler (built once so the RNG stays consistent)
@@ -338,11 +364,11 @@ def main() -> int:
               f"top_k={args.faith_top_k}, random_baselines={args.faith_random_baselines}")
 
     # ---- table header
-    header = ("epoch", "pickups", "reward", "n_steps", "π_loss", "V_loss", "H", "KL", "clipfrac", "wall_s")
-    fmt = "{:>5}  {:>7}  {:>+8.2f}  {:>7}  {:>8.4f}  {:>8.4f}  {:>7.3f}  {:>7.4f}  {:>8.3f}  {:>6.1f}"
+    header = ("epoch", "pickups", "reward", "n_steps", "π_loss", "V_loss", "H_dec", "noop", "KL", "clipfrac", "wall_s")
+    fmt = "{:>5}  {:>7}  {:>+8.2f}  {:>7}  {:>8.4f}  {:>8.4f}  {:>7.3f}  {:>6.3f}  {:>7.4f}  {:>8.3f}  {:>6.1f}"
     print()
-    print("{:>5}  {:>7}  {:>8}  {:>7}  {:>8}  {:>8}  {:>7}  {:>7}  {:>8}  {:>6}".format(*header))
-    print("-" * 95)
+    print("{:>5}  {:>7}  {:>8}  {:>7}  {:>8}  {:>8}  {:>7}  {:>6}  {:>7}  {:>8}  {:>6}".format(*header))
+    print("-" * 104)
 
     # ---- best-checkpoint tracking state
     recent_pickups: list[int] = []
@@ -378,12 +404,27 @@ def main() -> int:
     for epoch in range(args.epochs):
         t0 = time.time()
 
+        if args.anneal_lr:
+            learning_rate = args.lr * (1.0 - epoch / max(1, args.epochs))
+            for group in optimizer.param_groups:
+                group["lr"] = learning_rate
+        else:
+            learning_rate = args.lr
+
         # 1. rollout (on this epoch's demand variant, if rotation is on)
         reset_options = None
         if demand_files:
             reset_options = {"taxi_route_file": demand_files[epoch % len(demand_files)]}
         buffer, ep_stats = collect_rollout(env, policy, device=device,
                                            reset_options=reset_options)
+        decision_steps = [
+            step for step in buffer
+            if np.asarray(step.obs["reservations_mask"]).sum() > 0
+        ]
+        decision_noop_rate = (
+            sum(step.action == 0 for step in decision_steps) / len(decision_steps)
+            if decision_steps else 0.0
+        )
 
         # 1b. Optional faithfulness sample on the just-rolled-out buffer.
         # Done before compute_gae/ppo_update so the metrics reflect the same
@@ -431,6 +472,9 @@ def main() -> int:
             "wall_s": round(elapsed, 1),
             "rolling_mean_pickups": round(rolling_mean, 3) if rolling_mean is not None else None,
             "is_new_best": is_new_best,
+            "decision_steps": len(decision_steps),
+            "decision_noop_rate": round(decision_noop_rate, 5),
+            "learning_rate": learning_rate,
             **{k: round(v, 5) for k, v in loss_d.items()},
         }
         if faith_stats is not None:
@@ -452,7 +496,8 @@ def main() -> int:
             ep_stats.n_agent_steps,
             loss_d["policy_loss"],
             loss_d["value_loss"],
-            loss_d["entropy"],
+            loss_d["decision_entropy"],
+            decision_noop_rate,
             loss_d["approx_kl"],
             loss_d["clipfrac"],
             elapsed,

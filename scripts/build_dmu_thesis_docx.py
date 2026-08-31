@@ -67,6 +67,8 @@ TABLE_TITLES = {
     (3, 2): "Policy conditions used in the experiment",
     (3, 3): "Validation-selected checkpoint epochs",
     (3, 4): "Shared training and optimisation settings",
+    (3, 5): "Held-out evaluation structure and episode counts",
+    (3, 6): "Telemetry conditions used in held-out evaluation",
     (4, 1): "Policy capability on held-out demand",
     (4, 2): "Construct-validity audit of random controls",
     (4, 3): "Clean-telemetry faithfulness controls by training seed",
@@ -107,7 +109,8 @@ FIGURE_PAGES = {
 
 TABLE_PAGES = {
     "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "10",
-    "Table 3.4": "11", "Table 4.1": "17", "Table 4.2": "18",
+    "Table 3.4": "11", "Table 3.5": "15", "Table 3.6": "15",
+    "Table 4.1": "17", "Table 4.2": "18",
     "Table 4.3": "19", "Table 4.4": "20", "Table 4.5": "21",
     "Table 4.6": "24",
 }
@@ -133,7 +136,7 @@ HEADING_PAGES = {
     "3.6.1 Decision-level explanation faithfulness": "12",
     "3.6.2 Stale-node attention": "13", "3.7 Construct-validity audit": "13",
     "3.8 Evaluation matrix": "14", "3.9 Hypotheses and statistics": "15",
-    "3.10 Reproducibility": "15", "3.11 Ethics and data governance": "15",
+    "3.10 Reproducibility": "16", "3.11 Ethics and data governance": "16",
     "Chapter 4: Results": "17",
     "4.1 Policy capability and training stability": "17",
     "4.2 Construct-validity audit": "18",
@@ -402,6 +405,22 @@ def ensure_list_style(doc: Document, name: str, *, bullet: bool):
     return style
 
 
+def set_paragraph_numbering(paragraph, num_id: int) -> None:
+    """Assign a list instance so each independent numbered list restarts at 1."""
+    p_pr = paragraph._p.get_or_add_pPr()
+    existing = p_pr.find(qn("w:numPr"))
+    if existing is not None:
+        p_pr.remove(existing)
+    num_pr = OxmlElement("w:numPr")
+    level = OxmlElement("w:ilvl")
+    level.set(qn("w:val"), "0")
+    num_pr.append(level)
+    number = OxmlElement("w:numId")
+    number.set(qn("w:val"), str(num_id))
+    num_pr.append(number)
+    p_pr.append(num_pr)
+
+
 def apply_inline(paragraph, text: str) -> None:
     """Add a small Markdown subset while preserving DMU body typography."""
     text = text.replace("`", "")
@@ -540,6 +559,11 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
             if row_index == 0:
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
+    if len(rows) <= 4:
+        for row in table.rows[:-1]:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.paragraph_format.keep_with_next = True
     move_before(table._tbl, anchor)
     return caption_paragraph
 
@@ -645,7 +669,10 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
     current_chapter = 0
     for chapter_path in sorted((ROOT / "docs" / "dissertation").glob("0[1-6]_*.md")):
         blocks = collect_blocks(chapter_path)
+        numbered_list_id = None
         for block_index, (block_type, payload) in enumerate(blocks):
+            if block_type != "number":
+                numbered_list_id = None
             if block_type == "heading":
                 level, text = payload
                 if level == 1:
@@ -684,6 +711,10 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
             elif block_type in {"bullet", "number"}:
                 style = "DMU Bullet" if block_type == "bullet" else "DMU Number"
                 paragraph = add_paragraph_before(doc, anchor, payload, style)
+                if block_type == "number":
+                    if numbered_list_id is None:
+                        numbered_list_id = add_numbering_definition(doc, bullet=False)
+                    set_paragraph_numbering(paragraph, numbered_list_id)
                 paragraph.paragraph_format.keep_together = True
                 next_is_same_list = (
                     block_index + 1 < len(blocks)
