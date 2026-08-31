@@ -114,6 +114,10 @@ def main() -> int:
                   str(output_root)], dry_run=args.dry_run)
             continue
         for model in models:
+            model_train_cfg = {
+                **train_cfg,
+                **model.get("training", {}),
+            }
             for seed in train_cfg["seeds"]:
                 run_dir = output_root / "training" / model["id"] / f"seed_{seed}"
                 final_checkpoint = run_dir / "ckpt_final.pt"
@@ -124,7 +128,7 @@ def main() -> int:
                 if stage == "train":
                     if final_checkpoint.exists() and args.resume:
                         if _training_is_compatible(
-                            run_dir / "manifest.json", model, seed, train_cfg,
+                            run_dir / "manifest.json", model, seed, model_train_cfg,
                             config["area"], current_revision
                         ):
                             print(f"SKIP complete training: {final_checkpoint}")
@@ -136,18 +140,20 @@ def main() -> int:
                         sys.executable, "scripts/train.py",
                         "--area", config["area"],
                         "--policy", model["policy"],
-                        "--epochs", str(train_cfg["epochs"]),
+                        "--epochs", str(model_train_cfg["epochs"]),
                         "--seed", str(seed),
-                        "--demand-split", train_cfg["demand_split"],
-                        "--save-every", str(train_cfg["save_every"]),
-                        "--best-window", str(train_cfg["best_window"]),
+                        "--demand-split", model_train_cfg["demand_split"],
+                        "--save-every", str(model_train_cfg["save_every"]),
+                        "--best-window", str(model_train_cfg["best_window"]),
                         "--degradation", model["degradation"],
                         "--run-dir", str(run_dir),
                     ]
-                    if train_cfg.get("deterministic_torch"):
+                    if model_train_cfg.get("deterministic_torch"):
                         command.append("--deterministic-torch")
-                    if train_cfg.get("anneal_lr"):
+                    if model_train_cfg.get("anneal_lr"):
                         command.append("--anneal-lr")
+                    elif "anneal_lr" in model_train_cfg:
+                        command.append("--no-anneal-lr")
                     option_names = {
                         "lr": "--lr",
                         "gamma": "--gamma",
@@ -166,8 +172,8 @@ def main() -> int:
                         "critic_encoder_gradient_scale": "--critic-encoder-gradient-scale",
                     }
                     for key, option in option_names.items():
-                        if key in train_cfg:
-                            command += [option, str(train_cfg[key])]
+                        if key in model_train_cfg:
+                            command += [option, str(model_train_cfg[key])]
                     if "outage_duration" in model:
                         command += ["--outage-duration", str(model["outage_duration"])]
                     _run(command, dry_run=args.dry_run)

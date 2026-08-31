@@ -7,16 +7,18 @@ Those results must remain unchanged until the complete replacement experiment
 has finished. The corrected training protocol is defined in:
 
 ```text
-configs/experiments/dissertation_v5.toml
+configs/experiments/dissertation_v6.toml
 ```
 
-Its outputs use `runs/dissertation_v5/`, so they cannot overwrite v4.
+Its outputs use `runs/dissertation_v6/`, so they cannot overwrite v4. The v5
+training outputs are development diagnostics: they revealed that the GAT
+schedule was too conservative for the MLP baseline and are not thesis results.
 
 ## Why the correction was needed
 
 The clean GAT runs for seeds 42 and 44 learned useful policies early but then
 collapsed. Their final ten training epochs averaged zero pickups, with longest
-zero-pickup runs of 117 and 128 epochs. Inspection found four linked problems:
+zero-pickup runs of 117 and 128 epochs. Inspection found five linked problems:
 
 1. During rollout, the centralised critic pooled agents from one simulation
    step. During PPO, shuffled minibatches pooled agents from unrelated steps.
@@ -32,7 +34,7 @@ zero-pickup runs of 117 and 128 epochs. Inspection found four linked problems:
 
 ## Corrected training design
 
-The v5 protocol applies the following controls:
+The v6 protocol applies the following controls:
 
 1. Every agent step stores its environment-transition id. PPO minibatches keep
    complete transitions together, and the centralised critic pools only within
@@ -52,7 +54,7 @@ The v5 protocol applies the following controls:
 8. A stability gate runs after checkpoint selection and rejects a seed before
    held-out evaluation if late-run capability has collapsed.
 
-## Fixed v5 settings
+## Fixed v6 settings
 
 | Setting | Value |
 |---|---:|
@@ -69,13 +71,19 @@ The v5 protocol applies the following controls:
 | Critic-to-encoder gradient scale | 0.10 |
 | Validation episodes | 8 |
 
+The table above is the GAT schedule. The MLP baseline uses 60 epochs, learning
+rate 0.0003, and no learning-rate decay. This model-specific override was fixed
+after a validation-only probe: seed 42 retained 11.88/13.38 validation pickups
+(88.8%) at the final checkpoint. Applying the lower GAT learning rate to MLP
+left it near its initial policy and did not provide a meaningful baseline.
+
 ## Stability probes
 
 The corrected clean GAT protocol was tested first on the two v4 seeds that had
 the earliest and longest collapse. These are development diagnostics, not
 dissertation results.
 
-| Seed | v4 final-10 mean pickups | v5 probe final-10 | Longest zero run | Selected validation pickups | Final validation pickups | Retention |
+| Seed | v4 final-10 mean pickups | corrected probe final-10 | Longest zero run | Selected validation pickups | Final validation pickups | Retention |
 |---:|---:|---:|---:|---:|---:|---:|
 | 42 | 0.0 | 13.3 | 2 | 14.12 | 14.12 | 100.0% |
 | 44 | 0.0 | 9.9 | 1 | 13.50 | 12.50 | 92.6% |
@@ -93,17 +101,17 @@ Inspect commands first:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v5.toml --dry-run
+  --config configs/experiments/dissertation_v6.toml --dry-run
 ```
 
 Then train and select checkpoints:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v5.toml --stage train
+  --config configs/experiments/dissertation_v6.toml --stage train
 
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v5.toml --stage select
+  --config configs/experiments/dissertation_v6.toml --stage select
 ```
 
 The selection stage runs `check_training_stability.py` for every seed. Do not
