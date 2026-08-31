@@ -7,12 +7,13 @@ Those results must remain unchanged until the complete replacement experiment
 has finished. The corrected training protocol is defined in:
 
 ```text
-configs/experiments/dissertation_v6.toml
+configs/experiments/dissertation_v7.toml
 ```
 
-Its outputs use `runs/dissertation_v6/`, so they cannot overwrite v4. The v5
-training outputs are development diagnostics: they revealed that the GAT
-schedule was too conservative for the MLP baseline and are not thesis results.
+Its outputs use `runs/dissertation_v7/`, so they cannot overwrite v4. The v5
+and v6 outputs are development diagnostics and are not thesis results. V5
+showed that the GAT schedule was too conservative for MLP. V6 showed that MLP
+performance peaked near epoch 40 and drifted after epoch 50.
 
 ## Why the correction was needed
 
@@ -34,7 +35,7 @@ zero-pickup runs of 117 and 128 epochs. Inspection found five linked problems:
 
 ## Corrected training design
 
-The v6 protocol applies the following controls:
+The v7 protocol applies the following controls:
 
 1. Every agent step stores its environment-transition id. PPO minibatches keep
    complete transitions together, and the centralised critic pools only within
@@ -54,7 +55,7 @@ The v6 protocol applies the following controls:
 8. A stability gate runs after checkpoint selection and rejects a seed before
    held-out evaluation if late-run capability has collapsed.
 
-## Fixed v6 settings
+## Fixed v7 settings
 
 | Setting | Value |
 |---|---:|
@@ -71,11 +72,11 @@ The v6 protocol applies the following controls:
 | Critic-to-encoder gradient scale | 0.10 |
 | Validation episodes | 8 |
 
-The table above is the GAT schedule. The MLP baseline uses 60 epochs, learning
-rate 0.0003, and no learning-rate decay. This model-specific override was fixed
-after a validation-only probe: seed 42 retained 11.88/13.38 validation pickups
-(88.8%) at the final checkpoint. Applying the lower GAT learning rate to MLP
-left it near its initial policy and did not provide a meaningful baseline.
+The table above is the GAT schedule. The MLP baseline uses 50 epochs, learning
+rate 0.0003, and no learning-rate decay. Validation-only diagnostics showed
+that the lower GAT learning rate left MLP near its initial policy, while 60
+epochs reduced seed 43's final retention to 79.66%. The shorter budget keeps
+the fixed 80% gate unchanged and avoids the observed late drift.
 
 ## Stability probes
 
@@ -101,17 +102,17 @@ Inspect commands first:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v6.toml --dry-run
+  --config configs/experiments/dissertation_v7.toml --dry-run
 ```
 
 Then train and select checkpoints:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v6.toml --stage train
+  --config configs/experiments/dissertation_v7.toml --stage train
 
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v6.toml --stage select
+  --config configs/experiments/dissertation_v7.toml --stage select
 ```
 
 The selection stage runs `check_training_stability.py` for every seed. Do not

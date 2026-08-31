@@ -8,7 +8,7 @@ Telemetry Degradation*.
 > reported in the thesis. A corrected training protocol has been prepared for
 > the planned full rerun, but its partial probe results must not be mixed with
 > v4. See `docs/TRAINING_STABILITY_RERUN.md` and
-> `configs/experiments/dissertation_v6.toml`.
+> `configs/experiments/dissertation_v7.toml`.
 
 The definitive protocol is:
 
