@@ -1,6 +1,6 @@
 schema_version = 1
-name = "faithfulness_decoupling_dissertation_v7_early_stop"
-output_root = "runs/dissertation_v7"
+name = "faithfulness_decoupling_dissertation_v8_model_budgets"
+output_root = "runs/dissertation_v8"
 area = "central_park"
 
 [training]
@@ -74,3 +74,5 @@ policy = "gat"
 degradation = "tunnel_triggered"
 outage_duration = 30.0
 faithfulness_sweep = true
+# The degraded seed 43 was still improving at epoch 40.
+training = { epochs = 50 }
