@@ -14,6 +14,7 @@ from matplotlib.patches import FancyBboxPatch
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs" / "dissertation_v4"
+TRAINING_RUNS = RUNS
 OUT = ROOT / "docs" / "figures"
 PREFIX = "v4"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
@@ -89,7 +90,8 @@ def checkpoint_selection_figure() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(8.0, 3.5), sharex=True, sharey=True)
     for ax, model in zip(axes, models):
         for seed in SEED_STYLES:
-            path = RUNS / "training" / model / f"seed_{seed}" / "checkpoint_selection.json"
+            path = (TRAINING_RUNS / "training" / model / f"seed_{seed}"
+                    / "checkpoint_selection.json")
             payload = json.loads(path.read_text(encoding="utf-8"))
             candidates = [item for item in payload["candidates"]
                           if item["checkpoint"].startswith("ckpt_epoch_")]
@@ -134,7 +136,7 @@ def training_diagnostics_figure() -> None:
     )
 
     for seed, style in SEED_STYLES.items():
-        run_dir = RUNS / "training" / "B2_gat" / f"seed_{seed}"
+        run_dir = TRAINING_RUNS / "training" / "B2_gat" / f"seed_{seed}"
         records = [json.loads(line) for line in
                    (run_dir / "train_log.jsonl").read_text().splitlines() if line]
         epochs = np.array([row["epoch"] for row in records])
@@ -387,13 +389,18 @@ def consistency_figure() -> None:
 
 
 def main() -> None:
-    global RUNS, OUT, PREFIX
+    global RUNS, TRAINING_RUNS, OUT, PREFIX
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=RUNS)
+    parser.add_argument(
+        "--training-root", type=Path,
+        help="experiment root containing training logs (defaults to --root)",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--prefix", default=PREFIX)
     args = parser.parse_args()
     RUNS = args.root
+    TRAINING_RUNS = args.training_root or RUNS
     OUT = args.out
     PREFIX = args.prefix
     performance_figure()

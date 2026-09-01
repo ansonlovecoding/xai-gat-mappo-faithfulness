@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 from .provenance import MANIFEST_SCHEMA_VERSION
@@ -162,23 +163,33 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
         report.errors.append("clean-twin drift is non-zero in the clean condition")
 
     levels = sorted({float(cell["cell"]["level"]) for cell in degraded})
-    empirical_max = {
-        str(level): max(
-            (float(record.get("max_aoi_s", 0.0)) for cell in degraded
-             if float(cell["cell"]["level"]) == level
-             for record in cell.get("faith_records", [])),
-            default=0.0,
-        )
+    empirical_aoi = {
+        str(level): [
+            float(record.get("max_aoi_s", 0.0))
+            for cell in degraded
+            if float(cell["cell"]["level"]) == level
+            for record in cell.get("faith_records", [])
+            if record.get("n_stale_veh", 0) > 0
+        ]
         for level in levels
     }
-    max_values = [empirical_max[str(level)] for level in levels]
-    if len(levels) > 1 and len({round(value, 6) for value in max_values}) == 1:
+    empirical_max = {
+        str(level): max(empirical_aoi[str(level)], default=0.0)
+        for level in levels
+    }
+    empirical_median = {
+        str(level): median(empirical_aoi[str(level)])
+        if empirical_aoi[str(level)] else 0.0
+        for level in levels
+    }
+    median_values = [empirical_median[str(level)] for level in levels]
+    if len(levels) > 1 and len({round(value, 6) for value in median_values}) == 1:
         report.errors.append(
             "configured outage levels produced no empirical AoI differentiation"
         )
-    if any(right < left for left, right in zip(max_values, max_values[1:])):
+    if any(right < left for left, right in zip(median_values, median_values[1:])):
         report.warnings.append(
-            "empirical maximum AoI is not monotonic; report the observed distribution "
+            "empirical median AoI is not monotonic; report the observed distribution "
             "and do not treat configured AoI as a causal dose"
         )
 
@@ -195,5 +206,6 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
             sum(shifts) / len(shifts) if shifts else None
         ),
         "empirical_max_aoi_s_by_level": empirical_max,
+        "empirical_median_aoi_s_by_level": empirical_median,
     }
     return report

@@ -84,6 +84,54 @@ def test_preflight_rejects_levels_without_empirical_differentiation(tmp_path) ->
     assert any("no empirical AoI differentiation" in error for error in report.errors)
 
 
+def test_preflight_uses_median_aoi_instead_of_outlier_maximum(tmp_path) -> None:
+    cells = [
+        {"axis": "outage_duration", "level": 10.0},
+        {"axis": "outage_duration", "level": 20.0},
+    ]
+    manifest = {
+        "schema_version": MANIFEST_SCHEMA_VERSION,
+        "checkpoint_sha256": "abc",
+        "faithfulness_config": {
+            "random_baseline": "type_matched",
+            "exclusion_variant": True,
+        },
+        "provenance": {"git": {"dirty": False}},
+        "cells": cells,
+        "seeds": [42],
+    }
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    cell_dir = tmp_path / "cells"
+    cell_dir.mkdir()
+    for level, values in ((10, [10.0, 10.0, 60.0]), (20, [20.0, 20.0, 60.0])):
+        payload = {
+            "cell": {"axis": "outage_duration", "level": level, "seed": 42},
+            "empirical_degradation_rate": 0.1,
+            "faith_records": [
+                {
+                    "n_stale_veh": 1,
+                    "max_aoi_s": value,
+                    "stale_attention_shift": 0.1,
+                }
+                for value in values
+            ],
+        }
+        (cell_dir / f"outage_duration_{level}_seed42.json").write_text(
+            json.dumps(payload)
+        )
+
+    report = validate_sweep(tmp_path)
+    assert report.ok, report.errors
+    assert report.summary["empirical_max_aoi_s_by_level"] == {
+        "10.0": 60.0,
+        "20.0": 60.0,
+    }
+    assert report.summary["empirical_median_aoi_s_by_level"] == {
+        "10.0": 10.0,
+        "20.0": 20.0,
+    }
+
+
 def test_preflight_enforces_exposure_conditioned_audit_gates(tmp_path) -> None:
     cell = {"axis": "outage_duration", "level": 10.0}
     manifest = {
