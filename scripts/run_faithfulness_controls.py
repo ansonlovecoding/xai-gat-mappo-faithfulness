@@ -168,6 +168,11 @@ def main() -> int:
     parser.add_argument("--out", type=Path,
                         default=PROJECT_ROOT / "runs" / "dissertation_revision_v1"
                         / "faithfulness_controls")
+    parser.add_argument(
+        "--checkpoint-root", type=Path,
+        default=PROJECT_ROOT / "runs" / "dissertation_v4" / "training",
+        help="training directory containing MODEL/seed_N/ckpt_selected.pt",
+    )
     args = parser.parse_args()
 
     if args.smoke:
@@ -191,8 +196,8 @@ def main() -> int:
 
     for model_id in args.models:
         for training_seed in args.training_seeds:
-            checkpoint = (PROJECT_ROOT / "runs" / "dissertation_v4" / "training"
-                          / model_id / f"seed_{training_seed}" / "ckpt_selected.pt")
+            checkpoint = (args.checkpoint_root / model_id
+                          / f"seed_{training_seed}" / "ckpt_selected.pt")
             if not checkpoint.exists():
                 parser.error(f"checkpoint not found: {checkpoint}")
             policy, ckpt = load_policy(checkpoint, device)
@@ -242,7 +247,7 @@ def main() -> int:
                         "training_seed": training_seed,
                         "eval_seed": eval_seed,
                         "condition_name": condition_name,
-                        "checkpoint": str(checkpoint.relative_to(PROJECT_ROOT)),
+                        "checkpoint": str(checkpoint),
                         "checkpoint_sha256": sha256_file(checkpoint),
                         "faithfulness_every": args.faithfulness_every,
                         "wall_s": round(time.time() - started, 1),
@@ -283,6 +288,7 @@ def main() -> int:
             "chosen_request_protected": True,
             "random_baseline": "type_matched",
             "action_row_only": args.action_row_only,
+            "checkpoint_root": str(args.checkpoint_root),
         },
         "runtime": runtime,
         "summary": _summarise_cells(cells),

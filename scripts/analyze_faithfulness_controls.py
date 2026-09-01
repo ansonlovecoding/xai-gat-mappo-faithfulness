@@ -20,6 +20,7 @@ DEFAULT_INPUTS = [
 ]
 DEFAULT_OUT = ROOT / "results/dissertation_revision_v1/faithfulness_controls"
 FIG_DIR = ROOT / "docs/figures"
+FIG_PREFIX = "v4"
 MODEL_LABEL = {"B2_gat": "B2", "H5_gat_degraded": "D30"}
 MODEL_DISPLAY = {"B2": "GAT", "D30": "GAT-Outage"}
 RANKER_LABEL = {
@@ -280,9 +281,9 @@ def _plot_controls(seed_rows: list[dict]) -> None:
     axes[0, 1].legend(frameon=False, fontsize=8)
     fig.suptitle("Faithfulness controls vary across trained checkpoints")
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "v4_faithfulness_positive_controls.png", dpi=220,
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_faithfulness_positive_controls.png", dpi=220,
                 bbox_inches="tight")
-    fig.savefig(FIG_DIR / "v4_faithfulness_positive_controls.pdf",
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_faithfulness_positive_controls.pdf",
                 bbox_inches="tight")
     plt.close(fig)
 
@@ -306,9 +307,9 @@ def _plot_overlap(rows: list[dict]) -> None:
     axes[1].legend(frameon=False, fontsize=8)
     fig.suptitle("Top-k overlap limits DEF resolution")
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "v4_def_overlap_diagnostic.png", dpi=220,
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_def_overlap_diagnostic.png", dpi=220,
                 bbox_inches="tight")
-    fig.savefig(FIG_DIR / "v4_def_overlap_diagnostic.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_def_overlap_diagnostic.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -361,9 +362,9 @@ def _plot_aggregation(rows: list[dict]) -> None:
     colorbar.set_label("Stale-attention shift x 10^3")
     ax.set_title("Attention response depends on layer, head and checkpoint")
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "v4_attention_aggregation_sensitivity.png", dpi=220,
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_attention_aggregation_sensitivity.png", dpi=220,
                 bbox_inches="tight")
-    fig.savefig(FIG_DIR / "v4_attention_aggregation_sensitivity.pdf",
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_attention_aggregation_sensitivity.pdf",
                 bbox_inches="tight")
     plt.close(fig)
 
@@ -405,19 +406,24 @@ def _plot_action_rows(seed_rows: list[dict]) -> None:
     axes[0, 1].legend(frameon=False, fontsize=8)
     fig.suptitle("Query-row choice changes DEF differently by checkpoint")
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "v4_action_query_row_sensitivity.png", dpi=220,
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_action_query_row_sensitivity.png", dpi=220,
                 bbox_inches="tight")
-    fig.savefig(FIG_DIR / "v4_action_query_row_sensitivity.pdf",
+    fig.savefig(FIG_DIR / f"{FIG_PREFIX}_action_query_row_sensitivity.pdf",
                 bbox_inches="tight")
     plt.close(fig)
 
 
 def main() -> int:
+    global FIG_DIR, FIG_PREFIX
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("inputs", nargs="*", type=Path, default=DEFAULT_INPUTS)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--fig-dir", type=Path, default=FIG_DIR)
+    parser.add_argument("--fig-prefix", default=FIG_PREFIX)
     parser.add_argument("--seed", type=int, default=2026)
     args = parser.parse_args()
+    FIG_DIR = args.fig_dir
+    FIG_PREFIX = args.fig_prefix
     cells = _load_cells(args.inputs)
     args.out.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(args.seed)
