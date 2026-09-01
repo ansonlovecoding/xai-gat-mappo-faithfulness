@@ -13,9 +13,9 @@ that attention cannot be trusted by default.
 The research questions lead to that answer:
 
 - **RQ1: Is attention faithful under clean telemetry?** No stable result is
-  found. Raw-attention DEF ranges from -0.0084 to +0.0187 across checkpoints.
+  found. Raw-attention DEF ranges from -0.0009 to +0.0031 across checkpoints.
   LOO gives a larger positive result for all six checkpoints, while taxi-only
-  attention-LOO rank correlation ranges from -0.710 to +0.319.
+  attention-LOO rank correlation ranges from +0.088 to +0.699.
 - **RQ2: Does attention move toward stale vehicle nodes?** Not consistently.
   The declared aggregation moves toward stale nodes for seeds 42 and 43 and
   away from them for seed 44 under both training regimes. Individual heads can

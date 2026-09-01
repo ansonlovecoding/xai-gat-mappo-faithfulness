@@ -1,0 +1,569 @@
+{
+  "manifest": {
+    "checkpoint": "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/runs/dissertation_v8/training/B2_gat/seed_43/ckpt_selected.pt",
+    "git_rev": null
+  },
+  "H1_outage_duration": {
+    "n": 6663,
+    "rho": -0.058389718048987634,
+    "p_one_sided": 9.999000099990002e-05,
+    "per_level_mean": {
+      "0": 0.00033273195876288664,
+      "10": 0.00028288822947576653,
+      "20": 9.961449498843484e-05,
+      "30": 0.00014305194805194806,
+      "60": 0.00026395291809710645
+    }
+  },
+  "H2_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": 0.08818501856201694,
+    "p_one_sided": 0.23457654234576542,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.0337
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.1456
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5561
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.8144
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.5131
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5738
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.2868
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4897
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.9281
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.6316
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.4766
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5297
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.4911
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6182
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5313
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.462
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5307
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5681
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 1.068
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.2039
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.5265
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7874
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.621
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4743
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.2397
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": -0.0317,
+        "faith_rate": 0.6872
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": -0.0179,
+        "faith_rate": 1.3847
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": -0.0345,
+        "faith_rate": -1.1762
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": 0.1852,
+        "faith_rate": -0.4737
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -1.4453
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": -0.0789,
+        "faith_rate": 0.6209
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.02,
+        "faith_rate": -0.486
+      }
+    ]
+  },
+  "H3_outage_duration": {
+    "n": 7511,
+    "rho": 0.4616097803276647,
+    "p_one_sided": 9.999000099990002e-05,
+    "per_level_mean": {
+      "0": 0.0,
+      "10": 0.00809426433915212,
+      "20": 0.017855809267965077,
+      "30": 0.029070900692840643,
+      "60": 0.05420891976692067
+    }
+  },
+  "H1m_outage_duration": {
+    "n": 6663,
+    "rho": -0.05692988802911766,
+    "p_one_sided": 9.999000099990002e-05,
+    "per_level_mean": {
+      "0": 0.05515309278350516,
+      "10": 0.045633926805143415,
+      "20": 0.020878411719352348,
+      "30": 0.033890129870129876,
+      "60": 0.05568548307994114
+    }
+  },
+  "H2m_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": 0.027438088979264308,
+    "p_one_sided": 0.40935906409359063,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0206
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.1886
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5469
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.7548
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.5259
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5426
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.2981
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5204
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.7614
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.6286
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.4686
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5336
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.6587
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.587
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5229
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5036
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.3369
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": 0.4778
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": 0.9564
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": 0.1886
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.1111,
+        "faith_rate": -0.6721
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7558
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": 0.5827
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7127
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": 0.0315
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": -0.0317,
+        "faith_rate": 0.5451
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": -0.0179,
+        "faith_rate": 1.2489
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": -0.0345,
+        "faith_rate": -1.0941
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": 0.1852,
+        "faith_rate": -0.6199
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -1.3144
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": -0.0789,
+        "faith_rate": 0.5945
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.02,
+        "faith_rate": -0.9331
+      }
+    ]
+  },
+  "H4_pooled": {
+    "n": 5887,
+    "rho": -0.13222152870956058,
+    "p_one_sided": 9.999000099990002e-05
+  },
+  "robust": {
+    "primary_axis": "outage_duration",
+    "primary_stale_attention_shift": {
+      "mean_shift": 0.00020826375048196648,
+      "ci95": [
+        0.00015667069770621973,
+        0.0002559367010231167
+      ],
+      "p_one_sided": 9.999000099990002e-05,
+      "n_decisions": 3418,
+      "n_episode_blocks": 192,
+      "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+    },
+    "exposure_conditioned_paired_followup": {
+      "probability_def": {
+        "metric": "paired_def_delta",
+        "mean_degraded_minus_clean": -8.386876164777113e-05,
+        "ci95": [
+          -0.0001892463468334248,
+          1.4328235473596097e-05
+        ],
+        "p_one_sided_decrease": 0.05019498050194981,
+        "n_decisions": 2970,
+        "n_episode_blocks": 178,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "margin_def": {
+        "metric": "paired_def_m_delta",
+        "mean_degraded_minus_clean": -0.018112521634011336,
+        "ci95": [
+          -0.031088728387691306,
+          -0.006638170229439209
+        ],
+        "p_one_sided_decrease": 0.001999800019998,
+        "n_decisions": 2970,
+        "n_episode_blocks": 178,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "protected_probability_def": {
+        "metric": "paired_def_excl_delta",
+        "mean_degraded_minus_clean": -2.433048433048433e-05,
+        "ci95": [
+          -3.7949074074074076e-05,
+          -1.1778133903133918e-05
+        ],
+        "p_one_sided_decrease": 0.00019998000199980003,
+        "n_decisions": 250,
+        "n_episode_blocks": 117,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "protected_margin_def": {
+        "metric": "paired_def_m_excl_delta",
+        "mean_degraded_minus_clean": -0.0003377207977207978,
+        "ci95": [
+          -0.0006337895299145298,
+          -6.318767806267808e-05
+        ],
+        "p_one_sided_decrease": 0.0100989901009899,
+        "n_decisions": 250,
+        "n_episode_blocks": 117,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      }
+    },
+    "H1_robust": {
+      "n": 6663,
+      "n_episode_blocks": 240,
+      "rho": -0.058389718048987634,
+      "p_episode_perm": 9.999000099990002e-05,
+      "rho_cluster_ci95": [
+        -0.08836455504678926,
+        -0.027000026707168553
+      ]
+    },
+    "H1m_robust": {
+      "n": 6663,
+      "n_episode_blocks": 240,
+      "rho": -0.05692988802911765,
+      "p_episode_perm": 0.00039996000399960006,
+      "rho_cluster_ci95": [
+        -0.08496829759975079,
+        -0.0278870313600592
+      ]
+    },
+    "H3_robust": {
+      "n": 7511,
+      "n_episode_blocks": 240,
+      "rho": 0.46160978032766464,
+      "p_episode_perm": 9.999000099990002e-05,
+      "rho_cluster_ci95": [
+        0.4317678638618843,
+        0.48782935777508796
+      ]
+    },
+    "H4_within_episode": {
+      "n_episodes": 178,
+      "mean_rho_within_episode": -0.08386542304744589,
+      "frac_negative": 0.651685393258427,
+      "p_one_sided": 9.999000099990002e-05
+    },
+    "H4m_within_episode": {
+      "n_episodes": 178,
+      "mean_rho_within_episode": -0.07683959980274085,
+      "frac_negative": 0.6460674157303371,
+      "p_one_sided": 0.00029997000299970003
+    },
+    "confirmatory_family_raw_p": {
+      "H1": 9.999000099990002e-05,
+      "H2": 0.23457654234576542,
+      "H3": 9.999000099990002e-05,
+      "H4": 9.999000099990002e-05
+    },
+    "confirmatory_family_holm_p": {
+      "H1": 0.00039996000399960006,
+      "H3": 0.00039996000399960006,
+      "H4": 0.00039996000399960006,
+      "H2": 0.23457654234576542
+    },
+    "def_agreement": {
+      "n": 6663,
+      "spearman_def_vs_def_m": 0.9546645050062013
+    }
+  }
+}

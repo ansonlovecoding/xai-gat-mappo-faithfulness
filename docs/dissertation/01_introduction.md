@@ -88,12 +88,12 @@ The completed experiment gives one consistent overall answer: **raw attention
 weights are not validated as dependable explanations by this study**. This is a
 negative assurance result, supported by three connected findings.
 
-First, clean type-matched DEF varies from -0.0084 to +0.0187 across the audited
+First, clean type-matched DEF varies from -0.0009 to +0.0031 across the audited
 checkpoints. An LOO perturbation control is larger and positive in every
-checkpoint, while taxi-only rank agreement with LOO changes sign. The evidence
-therefore does not support one reproducible account of decision relevance. The
-supporting audit also shows why a uniform random baseline is misleading when
-request nodes are actions.
+checkpoint. Taxi-only rank agreement with LOO is positive but ranges from
+0.088 to 0.699. Attention therefore contains some decision-relevant ordering,
+but not one reproducible strength of evidence. The supporting audit also shows
+why a uniform random baseline is misleading when request nodes are actions.
 
 Second, longer outages consistently increase WAMSN. This result appears in all
 three GAT policies and all three GAT-Outage policies.
@@ -111,8 +111,8 @@ without giving every trained policy the same response to degradation.
 
 The result is also sensitive to how attention is turned into one explanation.
 Individual heads can reverse the stale-attention direction within a checkpoint,
-and changing from the self row to the selected request row improves one GAT
-checkpoint but worsens others. These checks make the lack of a default
+and changing from the self row to the selected request row mainly improves the
+seed-43 policies. These checks make the lack of a default
 explanation guarantee more precise.
 
 Finally, degradation-aware training does not remove training-seed variation.

@@ -17,8 +17,8 @@ effects are also small.
 The added controls make the interpretation stronger and narrower. LOO produces
 a positive DEF for every checkpoint, so the evaluator has some sensitivity to
 a perturbation-based ranking. However, expected top-k overlap reaches about
-61% at `k=3`, which limits resolution. Taxi-only attention-LOO correlation is
-also inconsistent. The result is not “the evaluator is perfect and attention
+60% at `k=3`, which limits resolution. Taxi-only attention-LOO correlation is
+positive but varies substantially in strength. The result is not “the evaluator is perfect and attention
 fails.” It is “within a measured but limited audit, attention gives no
 reproducible explanation guarantee.”
 
@@ -53,18 +53,18 @@ cross-model seed pattern suggests sensitivity to the learned policy instance,
 not a stable response created by outage-aware training.
 
 The aggregation audit reveals a second problem. Individual heads can reverse
-the sign within the same checkpoint. For GAT seed 43, alternative results span
-about -0.0060 to +0.0067. An analyst could therefore obtain a different verbal
+the sign within the same checkpoint. The six checkpoint ranges extend from
+-0.0109 to +0.0089 across the tested reductions. An analyst could therefore obtain a different verbal
 conclusion by selecting another head or layer after seeing the data. The
 declared mean remains the primary result, but the sensitivity analysis shows
 that it is not a unique explanation produced by the network.
 
 Query-row choice is similarly checkpoint-dependent. The selected request row
-improves request-action DEF for GAT seed 43, changes little for four checkpoints,
-and sharply reduces DEF for GAT-Outage seed 43. This rules out a simple explanation
-that near-zero or negative DEF occurred only because the audit used the self
-row. More broadly, an operator-facing attention map needs a declared and tested
-rule for choosing its query, layer, and heads.
+improves request-action DEF by about 0.0064 for GAT seed 43 and 0.0073 for
+GAT-Outage seed 43, but changes little for the other four checkpoints. This
+rules out a simple explanation that one query-row change generally corrects
+near-zero or negative DEF. An operator-facing attention map needs a declared
+and tested rule for choosing its query, layer, and heads.
 
 ## 5.4 Role of the construct-validity audit
 
@@ -76,15 +76,16 @@ chosen-request protection make the comparison fairer.
 The LOO control checks a different question: can DEF respond when nodes are
 ranked by their own single-node margin loss? Its consistently positive result
 shows limited sensitivity, mainly for comprehensiveness. It is not an oracle
-for the combined comprehensiveness-sufficiency score. Gradient x Input is
-negative in every checkpoint, showing that a familiar post-hoc method is not
-automatically a stronger explanation in this task.
+for the combined comprehensiveness-sufficiency score. Gradient x Input changes
+sign across checkpoints and is not automatically a stronger explanation in
+this task.
 
 Together, these checks change the conclusion from a simple “attention is near
-random” statement to a more defensible one. Raw attention varies in sign and
-size, remains below the LOO control, correlates inconsistently with taxi-node
-effects, and is sensitive to analysis choices. None of these observations
-provides a stable default assurance.
+random” statement to a more defensible one. Raw attention remains below the
+LOO control in all six checkpoints and has positive taxi-only agreement with
+LOO, but both DEF and rank agreement vary by trained policy. The aggregation
+and query-row audits add further sensitivity. This is partial evidence of
+decision relevance, not a stable default assurance.
 
 ## 5.5 Degradation-aware training
 

@@ -70,39 +70,56 @@ request in the margin variant, and logs action-margin clamps.
 
 ## 4.3 Evaluator sensitivity and ranking controls
 
-The revision evaluates raw attention, Gradient x Input, and an LOO
-perturbation ranking under clean and 60-second conditions. Each model, training
-seed, and condition contains eight evaluation seeds and three episodes. Table
-4.3 shows clean results. For each checkpoint, the 60-second DEF values differ
-by less than 0.001 from clean; taxi-only rho changes by at most 0.012.
+Raw attention, Gradient x Input, and an LOO perturbation ranking are evaluated
+under clean and 60-second conditions. Each model, training seed, and condition
+contains eight evaluation seeds and three episodes. Table 4.3 shows clean
+results. The 60-second aggregate means remain close to clean.
 
 | Model | Seed | Raw DEF | GxI DEF | LOO DEF | Taxi-only rho |
 |---|---:|---:|---:|---:|---:|
-| GAT | 42 | +0.0001 | -0.0050 | +0.0007 | +0.022 |
-| GAT | 43 | -0.0084 | -0.0082 | +0.0114 | +0.205 |
-| GAT | 44 | -0.0015 | -0.0023 | +0.0024 | -0.411 |
-| GAT-Outage | 42 | +0.0003 | -0.0054 | +0.0011 | +0.319 |
-| GAT-Outage | 43 | +0.0187 | -0.0405 | +0.0663 | -0.710 |
-| GAT-Outage | 44 | -0.0008 | -0.0013 | +0.0019 | -0.261 |
+| GAT | 42 | +0.0003 | -0.0055 | +0.0008 | +0.088 |
+| GAT | 43 | -0.0009 | -0.0033 | +0.0099 | +0.404 |
+| GAT | 44 | +0.0015 | +0.0012 | +0.0030 | +0.426 |
+| GAT-Outage | 42 | +0.0011 | -0.0019 | +0.0020 | +0.472 |
+| GAT-Outage | 43 | +0.0006 | -0.0010 | +0.0089 | +0.602 |
+| GAT-Outage | 44 | +0.0031 | +0.0052 | +0.0044 | +0.699 |
 
 LOO is positive and larger than raw attention for all six checkpoints. This
-shows that DEF responds to a ranking built from single-node margin loss. It is
-still only a perturbation control: its gain is mainly expected in
-comprehensiveness, and it does not prove that the combined DEF has an ideal
-upper bound. Gradient x Input is negative for every checkpoint and is not a
-better explanation under this evaluator.
+shows that DEF responds to a ranking built from single-node margin loss. LOO
+is still a perturbation control, not a ground-truth explanation. Gradient x
+Input changes sign across checkpoints and provides no uniform improvement.
 
-Raw attention does not have one clean-telemetry result. It ranges from -0.0084
-to +0.0187, with mixed signs. Taxi-only rank correlation with LOO ranges from
--0.710 to +0.319. The important result is therefore not that attention equals
-random in every model. It is that its measured decision relevance does not
-reproduce across independently trained checkpoints.
+Raw-attention DEF ranges from -0.0009 to +0.0031. Taxi-only rank correlation
+with LOO is positive in all six checkpoints, but ranges from 0.088 to 0.699.
+Attention therefore contains some decision-relevant ordering, while the size
+of that agreement remains policy-dependent.
 
-![Faithfulness perturbation controls by checkpoint](../figures/v4_faithfulness_positive_controls.png)
+![Faithfulness perturbation controls by checkpoint](../figures/v9_faithfulness_positive_controls.png)
 
 **Figure 4.3.** Episode means are first calculated within each checkpoint.
-Lines identify training seeds; they are not population trends. LOO is positive
-for every checkpoint, while raw attention and Gradient x Input vary.
+Lines identify training seeds; they are not population trends. LOO exceeds raw
+attention for every checkpoint under clean and 60-second conditions.
+
+The attention reduction rule remains important. Across the declared mean,
+individual heads, layer maxima, and rollout, every checkpoint contains both a
+positive and a negative stale-attention shift. The widest ranges are -0.0109
+to +0.0063 for GAT seed 44 and -0.0097 to +0.0064 for GAT-Outage seed 44.
+
+![Attention aggregation sensitivity](../figures/v9_attention_aggregation_sensitivity.png)
+
+**Figure 4.4.** Stale-attention shift multiplied by 1,000. Selecting a layer,
+head, or rollout rule after seeing the result could reverse the conclusion.
+
+Changing from the declared self row to the selected request row has little
+effect for seeds 42 and 44, but increases request-action DEF by about 0.0064
+for GAT seed 43 and 0.0073 for GAT-Outage seed 43. The aggregate gap is +0.0022
+for GAT and +0.0025 for GAT-Outage because it averages these different policy
+responses.
+
+![Attention query-row sensitivity](../figures/v9_action_query_row_sensitivity.png)
+
+**Figure 4.5.** Each grey line joins self-row and selected-request-row DEF for
+one checkpoint. Query-row choice helps seed 43 but is not a general correction.
 
 ## 4.4 Small-graph resolution
 
@@ -111,22 +128,23 @@ The scored graphs usually contain the maximum number of visible nodes.
 | Model | Node count | Mean | Median | 5th percentile | 95th percentile |
 |---|---|---:|---:|---:|---:|
 | GAT | peer taxis | 5.00 | 5 | 5 | 5 |
-| GAT | requests | 4.61 | 5 | 1 | 5 |
-| GAT | non-self total | 9.61 | 10 | 6 | 10 |
-| GAT-Outage | peer taxis | 4.99 | 5 | 5 | 5 |
-| GAT-Outage | requests | 4.64 | 5 | 1 | 5 |
-| GAT-Outage | non-self total | 9.63 | 10 | 6 | 10 |
+| GAT | requests | 4.51 | 5 | 1 | 5 |
+| GAT | non-self total | 9.51 | 10 | 6 | 10 |
+| GAT-Outage | peer taxis | 5.00 | 5 | 5 | 5 |
+| GAT-Outage | requests | 4.52 | 5 | 1 | 5 |
+| GAT-Outage | non-self total | 9.52 | 10 | 6 | 10 |
 
 Even so, type matching creates substantial top-k overlap. The expected random
-intersection is about 0.21 for `k=1`, 0.41 for `k=2`, and 0.61 for `k=3`.
-Attention-LOO agreement at `k=3` is 0.48 for GAT and 0.52 for GAT-Outage, below the
-expected random overlap. Restricting analysis to at least six non-self nodes
+intersection is about 0.22 for `k=1`, 0.41 for `k=2`, and 0.60 for `k=3`.
+Attention-LOO agreement at `k=1` exceeds random overlap for both models. At
+`k=3`, it is 0.60 for GAT and 0.49 for GAT-Outage, compared with expected
+overlap of about 0.60. Restricting analysis to at least six non-self nodes
 does not change the sample because every scored decision already meets that
 threshold.
 
-![Top-k overlap diagnostic](../figures/v4_def_overlap_diagnostic.png)
+![Top-k overlap diagnostic](../figures/v9_def_overlap_diagnostic.png)
 
-**Figure 4.4.** Large expected overlap between the explanation and its matched
+**Figure 4.6.** Large expected overlap between the explanation and its matched
 random set compresses DEF, especially at `k=3`.
 
 ## 4.5 Telemetry manipulation and stale exposure
@@ -145,7 +163,7 @@ AoI causes lower faithfulness.
 
 ![WAMSN, type-matched DEF and pickups by outage duration](../figures/v9_decoupling_by_outage_duration.png)
 
-**Figure 4.5.** Longer observation outages increase WAMSN for every policy.
+**Figure 4.7.** Longer observation outages increase WAMSN for every policy.
 DEF changes are much smaller, while pickups remain supporting context rather
 than the research outcome.
 
@@ -167,7 +185,7 @@ faithfulness under degradation.
 
 ![Paired attention and faithfulness shifts](../figures/v9_paired_attention_and_faithfulness_shift.png)
 
-**Figure 4.6.** Seeds 42 and 43 move attention toward stale nodes and have a
+**Figure 4.8.** Seeds 42 and 43 move attention toward stale nodes and have a
 negative mean DEF shift. Seed 44 reverses both directions. Error bars are 95%
 episode-block bootstrap intervals.
 
@@ -189,7 +207,7 @@ and from -0.423 to -0.212 for GAT-Outage. H3 remains consistently supported.
 
 ![Within-episode WAMSN-DEF correlation by training seed](../figures/v9_h4_correlation_by_training_seed.png)
 
-**Figure 4.7.** Every checkpoint has a negative within-episode WAMSN-DEF
+**Figure 4.9.** Every checkpoint has a negative within-episode WAMSN-DEF
 association after Holm correction. This association does not remove the mixed
 direction of the direct degraded-minus-clean paired effect.
 

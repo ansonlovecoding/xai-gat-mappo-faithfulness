@@ -24,6 +24,7 @@ reported numbers.
 | `ab_centralised_critic_v1_seed42/` | central_park | A/B comparison | B (centralised, ckpt_50) beats A (decentralised) by +18 % mean pickups |
 | `legacy_sumo120_seed42_v1/` | central_park | matched B1/B2 comparison + first H1–H4 sweep (SUMO 1.20, Intel mac) | B1 6.60 ± 2.24, B2 5.80 ± 1.72 (stochastic eval) |
 | `story_freeze_v1/` | central_park | three-act story under the corrected freeze mechanism + max-AoI ladder (test demand, 8 seeds) | Act1 clean DEF −0.54; H5 mitigation rejected; decoupled head +0.11 (p=1e-4) |
+| `dissertation_v9_exposure_audit/` | central_park | final exposure-conditioned audit across six frozen policies | stale exposure rises; paired attention and DEF response is mixed by training seed |
 
 Only the citable artefacts are committed (SUMMARY.md, configs, train logs,
 eval JSONs, and each summary's cited checkpoint); periodic
@@ -39,7 +40,8 @@ the SUMO version, machine, and observation layout that produced it:
 | `mappo_central_park_reshaped_v1/` | 1.27 | Apple Silicon | self 3-d / taxi 4-d | ✗ (obs layout predates AoI/velocity features) |
 | `ab_centralised_critic_v1_seed42/` | 1.27 | Apple Silicon | self 5-d / taxi 4-d | ✗ (same reason) |
 | `legacy_sumo120_seed42_v1/` | 1.20 | Intel mac | current | ✓ — but degradation = legacy NOISE mechanism, AOI_MAX_S=300 (WAMSN scale ×5 vs later) |
-| `story_freeze_v1/` | 1.20 | Intel mac | current | ✓ — freeze mechanism, AOI_MAX_S=60 (definitive for the dissertation) |
+| `story_freeze_v1/` | 1.20 | Intel mac | current | ✓ — supporting historical construct-validity audit |
+| `dissertation_v9_exposure_audit/` | recorded in per-sweep preflight | Intel mac | current | ✓ — final dissertation audit |
 
 > **Compatibility warning (July 2026):** both keepers were trained on
 > older observation layouts (`reshaped_v1`: self 3-dim / taxi 4-dim;

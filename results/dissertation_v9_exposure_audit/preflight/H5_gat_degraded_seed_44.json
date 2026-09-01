@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "planned_cells": 40,
+    "completed_cells": 40,
+    "degraded_records": 8689,
+    "stale_exposed_records": 3601,
+    "minimum_stale_exposed_records_per_degraded_cell": 20,
+    "minimum_stale_exposed_episodes_per_degraded_cell": 3,
+    "mean_stale_attention_shift_when_exposed": -0.003442266037211919,
+    "empirical_max_aoi_s_by_level": {
+      "10.0": 30.0,
+      "20.0": 40.0,
+      "30.0": 50.0,
+      "60.0": 60.0
+    },
+    "empirical_median_aoi_s_by_level": {
+      "10.0": 10.0,
+      "20.0": 10.0,
+      "30.0": 20.0,
+      "60.0": 30.0
+    }
+  }
+}
