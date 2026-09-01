@@ -86,6 +86,7 @@ def _run_condition(
     attention_aggregation_sensitivity: bool = False,
     attention_action_row_sensitivity: bool = False,
     faithfulness_request_actions_only: bool = False,
+    faithfulness_exposed_every: int | None = None,
 ) -> dict:
     """Run `episodes` eval episodes under one degradation condition.
 
@@ -132,6 +133,7 @@ def _run_condition(
             attention_aggregation_sensitivity=attention_aggregation_sensitivity,
             attention_action_row_sensitivity=attention_action_row_sensitivity,
             faithfulness_request_actions_only=faithfulness_request_actions_only,
+            faithfulness_exposed_every=faithfulness_exposed_every,
         )
         per_episode.append(summary)
         all_faith.extend(faith_records)
@@ -158,6 +160,24 @@ def _run_condition(
         "faithfulness": faith_summary,
         "per_episode": per_episode,
         "n_faith_records": len(all_faith),
+        "stale_exposure_audit": {
+            "faithfulness_exposed_every": faithfulness_exposed_every,
+            "decisions_seen": int(sum(
+                episode.get("decisions_seen", 0) for episode in per_episode
+            )),
+            "stale_exposed_decisions_seen": int(sum(
+                episode.get("stale_exposed_decisions_seen", 0)
+                for episode in per_episode
+            )),
+            "stale_exposed_decisions_scored": int(sum(
+                episode.get("stale_exposed_decisions_scored", 0)
+                for episode in per_episode
+            )),
+            "stale_exposed_episodes": int(sum(
+                episode.get("stale_exposed_decisions_seen", 0) > 0
+                for episode in per_episode
+            )),
+        },
         "wall_s": round(time.time() - t0, 1),
     }
     if keep_records:

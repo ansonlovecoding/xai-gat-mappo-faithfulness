@@ -41,6 +41,7 @@ top of the coupled attention channel already exposed by `DispatchGATPolicy`:
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -728,6 +729,29 @@ class FaithfulnessEvaluator:
             stale_attention_share=stale_attention_share,
             per_k=per_k,
         )
+
+    def evaluate_paired_decision(
+        self,
+        degraded_obs: dict[str, torch.Tensor],
+        clean_obs: dict[str, torch.Tensor],
+        *,
+        action: int,
+    ) -> tuple[DecisionFaithfulness, DecisionFaithfulness]:
+        """Score degraded and clean-twin observations with identical controls.
+
+        The evaluator's random-baseline stream advances exactly once. Restoring
+        its state around the clean-twin call makes both sides use the same
+        type-matched subsets without changing subsequent decision samples.
+        """
+        state_before = copy.deepcopy(self._rng.bit_generator.state)
+        degraded = self.evaluate_decision(degraded_obs, action=action)
+        state_after = copy.deepcopy(self._rng.bit_generator.state)
+        self._rng.bit_generator.state = state_before
+        try:
+            clean = self.evaluate_decision(clean_obs, action=action)
+        finally:
+            self._rng.bit_generator.state = state_after
+        return degraded, clean
 
     # -------------------------------------------------- internals
 

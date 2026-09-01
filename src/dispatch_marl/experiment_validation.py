@@ -108,6 +108,52 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
     if exposed and not all("stale_attention_shift" in record for record in exposed):
         report.errors.append("binary stale-attention shift is missing from exposed records")
 
+    faith_cfg = manifest.get("faithfulness_config", {})
+    exposed_every = int(faith_cfg.get("faithfulness_exposed_every", 0) or 0)
+    min_exposed_records = int(
+        faith_cfg.get("minimum_stale_exposed_records_per_degraded_cell", 0) or 0
+    )
+    min_exposed_episodes = int(
+        faith_cfg.get("minimum_stale_exposed_episodes_per_degraded_cell", 0) or 0
+    )
+    if exposed_every:
+        for cell in degraded:
+            name = (
+                f"{cell['cell']['axis']}={cell['cell']['level']:g}, "
+                f"seed={cell['cell']['seed']}"
+            )
+            cell_exposed = [
+                record for record in cell.get("faith_records", [])
+                if record.get("n_stale_veh", 0) > 0
+            ]
+            exposed_episode_count = len({
+                int(record["episode"]) for record in cell_exposed
+            })
+            if len(cell_exposed) < min_exposed_records:
+                report.errors.append(
+                    f"{name} has {len(cell_exposed)} stale-exposed records; "
+                    f"minimum is {min_exposed_records}"
+                )
+            if exposed_episode_count < min_exposed_episodes:
+                report.errors.append(
+                    f"{name} has {exposed_episode_count} stale-exposed episodes; "
+                    f"minimum is {min_exposed_episodes}"
+                )
+            audit = cell.get("stale_exposure_audit", {})
+            if exposed_every == 1 and (
+                int(audit.get("stale_exposed_decisions_seen", -1))
+                != int(audit.get("stale_exposed_decisions_scored", -2))
+            ):
+                report.errors.append(
+                    f"{name} did not score every stale-exposed decision"
+                )
+            if cell_exposed and not all(
+                "paired_def_delta" in record for record in cell_exposed
+            ):
+                report.errors.append(
+                    f"{name} is missing paired clean-twin DEF values"
+                )
+
     clean_drifts = [
         abs(float(record["drift"])) for cell in clean
         for record in cell.get("faith_records", []) if "drift" in record
@@ -143,6 +189,8 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
         "completed_cells": len(actual),
         "degraded_records": len(records),
         "stale_exposed_records": len(exposed),
+        "minimum_stale_exposed_records_per_degraded_cell": min_exposed_records,
+        "minimum_stale_exposed_episodes_per_degraded_cell": min_exposed_episodes,
         "mean_stale_attention_shift_when_exposed": (
             sum(shifts) / len(shifts) if shifts else None
         ),

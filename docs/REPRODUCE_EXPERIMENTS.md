@@ -4,11 +4,52 @@ This guide reproduces the final experiment for *When Explanations Outlive Their
 Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under
 Telemetry Degradation*.
 
-> **Version note.** This document records the archived v4 experiment currently
-> reported in the thesis. A corrected training protocol has been prepared for
-> the planned full rerun, but its partial probe results must not be mixed with
-> v4. See `docs/TRAINING_STABILITY_RERUN.md` and
-> `configs/experiments/dissertation_v8.toml`.
+> **Version note.** The stable models and clean evaluation are stored under
+> `runs/dissertation_v8/`. The exposure-conditioned follow-up audit uses those
+> frozen checkpoints and writes to a separate v9 directory. It does not retrain
+> or select models after seeing the faithfulness results.
+
+## Exposure-conditioned follow-up audit
+
+The follow-up protocol addresses sparse tunnel exposure without changing the
+policy, SUMO state, tunnel trigger, outage durations, or held-out demand. Its
+fixed configuration is:
+
+```text
+configs/experiments/dissertation_v9_exposure_audit.toml
+```
+
+Compared with the original sweep, it:
+
+1. runs six episodes per condition and evaluation seed;
+2. keeps a broad background audit at one in every 16 decisions;
+3. audits every decision containing at least one stale vehicle node;
+4. evaluates the degraded observation and its exact clean twin with the same
+   selected action and the same type-matched random subsets;
+5. requires at least 20 stale-exposed records from at least three episodes in
+   every degraded cell before analysis is accepted.
+
+Run the follow-up stages with:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage sweep
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage preflight
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage analyze
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage summarize
+```
+
+The primary follow-up statistic is degraded type-matched DEF minus clean-twin
+DEF among stale-exposed decisions. Negative values mean lower measured
+faithfulness under the degraded observation. This paired test does not treat
+the configured outage duration or AoI value as a causal dose.
 
 The definitive protocol is:
 

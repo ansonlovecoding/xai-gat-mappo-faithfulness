@@ -86,6 +86,20 @@ def main() -> int:
                              "degenerates to all-no-op, making the performance "
                              "axis vacuous")
     parser.add_argument("--faithfulness-every", type=int, default=5)
+    parser.add_argument(
+        "--faithfulness-exposed-every", type=int, default=0,
+        help="also score every Nth decision containing a stale vehicle; "
+             "0 disables event-aware scoring",
+    )
+    parser.add_argument(
+        "--minimum-stale-exposed-records", type=int, default=0,
+        help="preflight quality gate per degraded (severity, evaluation-seed) "
+             "cell; 0 disables the gate",
+    )
+    parser.add_argument(
+        "--minimum-stale-exposed-episodes", type=int, default=0,
+        help="preflight quality gate per degraded cell; 0 disables the gate",
+    )
     parser.add_argument("--faithfulness-top-k", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--faithfulness-random-baselines", type=int, default=5)
     parser.add_argument("--random-baseline", default="type_matched",
@@ -108,6 +122,11 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=None,
                         help="sweep output dir (default runs/sweeps/<ckpt-stem>_<ts>)")
     args = parser.parse_args()
+
+    if args.faithfulness_every < 1:
+        parser.error("--faithfulness-every must be at least 1")
+    if args.faithfulness_exposed_every < 0:
+        parser.error("--faithfulness-exposed-every cannot be negative")
 
     if not args.checkpoint.exists():
         parser.error(f"checkpoint not found: {args.checkpoint}")
@@ -174,8 +193,13 @@ def main() -> int:
             "top_k_values": list(args.faithfulness_top_k),
             "n_random_baselines": args.faithfulness_random_baselines,
             "faithfulness_every": args.faithfulness_every,
+            "faithfulness_exposed_every": args.faithfulness_exposed_every,
             "random_baseline": args.random_baseline,
             "exclusion_variant": args.exclusion_variant,
+            "minimum_stale_exposed_records_per_degraded_cell":
+                args.minimum_stale_exposed_records,
+            "minimum_stale_exposed_episodes_per_degraded_cell":
+                args.minimum_stale_exposed_episodes,
         },
         "code_revision": runtime["git"]["revision"],
         "tracked_diff_sha256": runtime["git"]["tracked_diff_sha256"],
@@ -225,6 +249,9 @@ def main() -> int:
                 dropout_rate=cell["dropout_rate"],
                 faith_evaluator=evaluator,
                 faith_every=args.faithfulness_every,
+                faithfulness_exposed_every=(
+                    args.faithfulness_exposed_every or None
+                ),
                 keep_records=True,
                 stochastic=not args.deterministic,
                 outage_duration_s=cell["outage_s"],

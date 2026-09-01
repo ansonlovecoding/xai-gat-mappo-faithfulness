@@ -1,6 +1,7 @@
-"""Create thesis figures from the validated dissertation_v4 summaries."""
+"""Create thesis figures from a validated dissertation experiment."""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -14,6 +15,7 @@ from matplotlib.patches import FancyBboxPatch
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs" / "dissertation_v4"
 OUT = ROOT / "docs" / "figures"
+PREFIX = "v4"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
 LABELS = {
     "B1_mlp": "MLP",
@@ -42,8 +44,9 @@ def _csv(path: Path) -> list[dict[str, str]]:
 
 def _save(fig: plt.Figure, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / f"{name}.png", dpi=220, bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    filename = f"{PREFIX}_{name}"
+    fig.savefig(OUT / f"{filename}.png", dpi=220, bbox_inches="tight")
+    fig.savefig(OUT / f"{filename}.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -73,7 +76,7 @@ def performance_figure() -> None:
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    _save(fig, "v4_clean_performance_by_training_seed")
+    _save(fig, "clean_performance_by_training_seed")
 
 
 def checkpoint_selection_figure() -> None:
@@ -115,7 +118,7 @@ def checkpoint_selection_figure() -> None:
     axes[-1].legend(frameon=False, fontsize=8, ncol=1)
     fig.suptitle("Validation checkpoint selection")
     fig.tight_layout()
-    _save(fig, "v4_checkpoint_selection_by_model_and_seed")
+    _save(fig, "checkpoint_selection_by_model_and_seed")
 
 
 def training_diagnostics_figure() -> None:
@@ -181,7 +184,7 @@ def training_diagnostics_figure() -> None:
         fontsize=11,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.93))
-    _save(fig, "v4_b2_training_diagnostics")
+    _save(fig, "gat_training_diagnostics")
 
 
 def decoupling_figure() -> None:
@@ -203,7 +206,8 @@ def decoupling_figure() -> None:
                          and row["axis"] == "clean")
             axes[0, column].plot(
                 [float(row["level_s"]) for row in seed_rows],
-                [float(row["mean_wamsn_when_exposed_secondary"]) for row in seed_rows],
+                [float(row["mean_stale_attention_shift_when_exposed"])
+                 for row in seed_rows],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
                 color=SEED_STYLES[seed]["color"],
@@ -234,13 +238,13 @@ def decoupling_figure() -> None:
         for ax in axes[:, column]:
             ax.grid(color="#D8D8D8", linewidth=0.7)
             ax.spines[["top", "right"]].set_visible(False)
-    axes[0, 0].set_ylabel("Conditional WAMSN")
+    axes[0, 0].set_ylabel("Paired stale-attention shift")
     axes[1, 0].set_ylabel("Type-matched DEF")
     axes[2, 0].set_ylabel("Mean pickups per episode")
     axes[0, 1].legend(frameon=False, fontsize=8)
-    wamsn_limits = [axes[0, column].get_ylim() for column in range(2)]
-    axes[0, 0].set_ylim(min(v[0] for v in wamsn_limits),
-                        max(v[1] for v in wamsn_limits))
+    shift_limits = [axes[0, column].get_ylim() for column in range(2)]
+    axes[0, 0].set_ylim(min(v[0] for v in shift_limits),
+                        max(v[1] for v in shift_limits))
     axes[0, 1].set_ylim(axes[0, 0].get_ylim())
     pickup_limits = [axes[2, column].get_ylim() for column in range(2)]
     axes[2, 0].set_ylim(min(0, min(v[0] for v in pickup_limits)),
@@ -248,10 +252,17 @@ def decoupling_figure() -> None:
     axes[2, 1].set_ylim(axes[2, 0].get_ylim())
     fig.suptitle("Outage-duration sweep by policy and training seed")
     fig.tight_layout()
-    _save(fig, "v4_decoupling_by_outage_duration")
+    _save(fig, "decoupling_by_outage_duration")
 
 
 def evidence_summary_figure() -> None:
+    synthesis = json.loads((RUNS / "training_seed_synthesis.json").read_text())
+    aggregate = synthesis["rows"]
+    total = sum(int(row["training_seeds"]) for row in aggregate)
+    positive_shift = sum(
+        int(row["positive_stale_attention_shift_seeds"]) for row in aggregate
+    )
+    h1_supported = sum(int(row["H1_supported_seeds"]) for row in aggregate)
     fig, ax = plt.subplots(figsize=(8.0, 4.2))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -267,8 +278,12 @@ def evidence_summary_figure() -> None:
                 fontsize=9.2, fontweight="bold")
     rows = [
         ("RQ1", "Clean DEF", "Near type-matched random baseline", "Not validated", "#A33A3A"),
-        ("RQ2", "Paired attention shift", "Positive in 4/6; negative in 2/6", "Seed-dependent", "#B06C00"),
-        ("RQ3", "DEF and pickups", "H1 and H2 supported in 0/6 policies", "No decline found", "#555555"),
+        ("RQ2", "Paired attention shift",
+         f"Positive in {positive_shift}/{total} trained policies",
+         "Seed-dependent", "#B06C00"),
+        ("RQ3", "Outage duration vs DEF",
+         f"H1 supported in {h1_supported}/{total} trained policies",
+         "No consistent effect", "#555555"),
         ("RQ4", "Degradation training", "No consistent mitigation", "Not supported", "#A33A3A"),
     ]
     for index, (rq, measure, result, verdict, color) in enumerate(rows):
@@ -288,7 +303,7 @@ def evidence_summary_figure() -> None:
             "Conclusion: raw attention provides no reproducible faithfulness guarantee across trained policies.",
             ha="center", va="center", fontsize=9.0, fontweight="bold")
     fig.tight_layout()
-    _save(fig, "v4_evidence_path_summary")
+    _save(fig, "evidence_path_summary")
 
 
 def shift_figure() -> None:
@@ -309,8 +324,8 @@ def shift_figure() -> None:
             value = row["stale_attention_shift"]
             style = SEED_STYLES[int(row["training_seed"])]
             ax.errorbar(index + offset, value,
-                        yerr=[[value - low], [high - value]], fmt="none", markersize=7,
-                        marker=style["marker"], capsize=4,
+                        yerr=[[value - low], [high - value]],
+                        fmt=style["marker"], markersize=7, capsize=4,
                         color=style["color"], zorder=3)
             ax.annotate(str(row["training_seed"]),
                         (index + offset, value),
@@ -318,15 +333,19 @@ def shift_figure() -> None:
                         ha="center", fontsize=8)
     ax.axhline(0, color="#202020", linewidth=1)
     ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
-    for index in range(len(COLORS)):
-        ax.text(index, 0.00325, "2/3 positive",
+    y_top = ax.get_ylim()[1]
+    for index, model in enumerate(COLORS):
+        aggregate_row = next(row for row in payload["rows"] if row["model"] == model)
+        ax.text(index, y_top * 0.92,
+                f"{aggregate_row['positive_stale_attention_shift_seeds']}/"
+                f"{aggregate_row['training_seeds']} positive",
                 ha="center", va="bottom", fontsize=8.2, color="#444444")
     ax.set_ylabel("Attention mass on exposed peers:\ndegraded minus clean twin")
     ax.set_title("Paired stale-attention shift")
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    _save(fig, "v4_paired_stale_attention_shift")
+    _save(fig, "paired_stale_attention_shift")
 
 
 def consistency_figure() -> None:
@@ -364,10 +383,19 @@ def consistency_figure() -> None:
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    _save(fig, "v4_h4_correlation_by_training_seed")
+    _save(fig, "h4_correlation_by_training_seed")
 
 
 def main() -> None:
+    global RUNS, OUT, PREFIX
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=RUNS)
+    parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument("--prefix", default=PREFIX)
+    args = parser.parse_args()
+    RUNS = args.root
+    OUT = args.out
+    PREFIX = args.prefix
     performance_figure()
     checkpoint_selection_figure()
     training_diagnostics_figure()

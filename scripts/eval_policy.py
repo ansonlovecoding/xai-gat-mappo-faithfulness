@@ -66,6 +66,15 @@ from dispatch_marl.runtime import (  # noqa: E402
 )
 
 
+def _has_stale_vehicle(obs: dict[str, torch.Tensor]) -> bool:
+    """Return whether one batch-one observation contains a stale vehicle."""
+    if float(obs["self"][0, 4].item()) > 0.0:
+        return True
+    taxi_aoi = obs["neighbor_taxis"][0, :, 4]
+    taxi_valid = obs["neighbor_taxis_mask"][0].bool()
+    return bool(((taxi_aoi > 0) & taxi_valid).any().item())
+
+
 def _run_episode(
     env: DispatchEnv,
     policy: DispatchGATPolicy,
@@ -81,6 +90,7 @@ def _run_episode(
     attention_aggregation_sensitivity: bool = False,
     attention_action_row_sensitivity: bool = False,
     faithfulness_request_actions_only: bool = False,
+    faithfulness_exposed_every: int | None = None,
 ) -> tuple[dict, list[dict]]:
     """Run one eval episode; return (episode summary, per-decision faithfulness records).
 
@@ -104,6 +114,10 @@ def _run_episode(
     # A global counter over decisions is what we sub-sample against, so the
     # cadence is consistent regardless of how many agents act on a given step.
     decision_counter = 0
+    exposed_decision_counter = 0
+    n_stale_exposed_seen = 0
+    n_stale_exposed_scored = 0
+    n_cadence_scored = 0
     # Empirical degradation rate — fraction of agent-obs pairs where
     # position_valid == 0. Used by the degradation ablation script to
     # calibrate the matched-rate random_dropout baseline.
@@ -133,18 +147,49 @@ def _run_episode(
                 # Snapshot the clean twins BEFORE env.step() rebuilds them.
                 clean_obs_by_agent = dict(env.last_clean_obs) if compute_drift else {}
                 for i, a in enumerate(agents):
-                    should_score = decision_counter % faithfulness_every == 0
+                    single = {k: v[i : i + 1] for k, v in batched.items()}
+                    stale_exposed = _has_stale_vehicle(single)
+                    cadence_score = decision_counter % faithfulness_every == 0
+                    exposure_score = False
+                    if stale_exposed:
+                        n_stale_exposed_seen += 1
+                        if faithfulness_exposed_every is not None:
+                            exposure_score = (
+                                exposed_decision_counter
+                                % faithfulness_exposed_every == 0
+                            )
+                        exposed_decision_counter += 1
+                    should_score = cadence_score or exposure_score
                     if faithfulness_request_actions_only:
                         should_score = should_score and int(actions_np[i]) >= 1
                     if should_score:
-                        single = {k: v[i : i + 1] for k, v in batched.items()}
                         n_valid_res = int(single["reservations_mask"].sum().item())
                         n_valid_taxi = int(
                             single["neighbor_taxis_mask"].sum().item()
                         )
-                        result = faithfulness_evaluator.evaluate_decision(
-                            single, action=int(actions_np[i])
-                        )
+                        clean_single = None
+                        clean_twin_result = None
+                        if compute_drift and a in clean_obs_by_agent:
+                            clean_single = {
+                                k: torch.as_tensor(
+                                    v, dtype=torch.float32, device=device
+                                ).unsqueeze(0)
+                                for k, v in clean_obs_by_agent[a].items()
+                            }
+                        if stale_exposed and clean_single is not None:
+                            result, clean_twin_result = (
+                                faithfulness_evaluator.evaluate_paired_decision(
+                                    single,
+                                    clean_single,
+                                    action=int(actions_np[i]),
+                                )
+                            )
+                        else:
+                            result = faithfulness_evaluator.evaluate_decision(
+                                single, action=int(actions_np[i])
+                            )
+                        n_cadence_scored += int(cadence_score)
+                        n_stale_exposed_scored += int(stale_exposed)
                         control_fields: dict = {}
                         if faithfulness_positive_control:
                             loo = faithfulness_evaluator.leave_one_out_importance(
@@ -309,13 +354,7 @@ def _run_episode(
                         stale_attention_clean = None
                         stale_attention_mass_clean = None
                         aggregation_shifts = None
-                        if compute_drift and a in clean_obs_by_agent:
-                            clean_single = {
-                                k: torch.as_tensor(
-                                    v, dtype=torch.float32, device=device
-                                ).unsqueeze(0)
-                                for k, v in clean_obs_by_agent[a].items()
-                            }
+                        if clean_single is not None:
                             clean_row = faithfulness_evaluator.attention_row(clean_single)
                             drift = compute_attention_drift(
                                 clean_row, result.attention_row
@@ -369,6 +408,13 @@ def _run_episode(
                             "episode": episode_index,
                             "rl_step": step,
                             "agent": a,
+                            "score_reason": (
+                                "cadence+stale_exposure"
+                                if cadence_score and exposure_score
+                                else "stale_exposure" if exposure_score
+                                else "cadence"
+                            ),
+                            "stale_exposed_precheck": stale_exposed,
                             "action": result.action,
                             "pi_full": round(result.pi_full, 4),
                             "def": round(result.def_score, 4),
@@ -406,6 +452,39 @@ def _run_episode(
                             **({"def_excl": round(result.def_excl, 4),
                                 "def_m_excl": round(result.def_m_excl, 4)}
                                if result.excl_evaluated else {}),
+                            **({
+                                "def_clean_twin": round(
+                                    clean_twin_result.def_score, 4
+                                ),
+                                "def_m_clean_twin": round(
+                                    clean_twin_result.def_margin, 4
+                                ),
+                                "paired_def_delta": round(
+                                    result.def_score
+                                    - clean_twin_result.def_score, 4
+                                ),
+                                "paired_def_m_delta": round(
+                                    result.def_margin
+                                    - clean_twin_result.def_margin, 4
+                                ),
+                                **({
+                                    "def_excl_clean_twin": round(
+                                        clean_twin_result.def_excl, 4
+                                    ),
+                                    "def_m_excl_clean_twin": round(
+                                        clean_twin_result.def_m_excl, 4
+                                    ),
+                                    "paired_def_excl_delta": round(
+                                        result.def_excl
+                                        - clean_twin_result.def_excl, 4
+                                    ),
+                                    "paired_def_m_excl_delta": round(
+                                        result.def_m_excl
+                                        - clean_twin_result.def_m_excl, 4
+                                    ),
+                                } if result.excl_evaluated
+                                and clean_twin_result.excl_evaluated else {}),
+                            } if clean_twin_result is not None else {}),
                             **({"top3_churn": top3_churn}
                                if top3_churn is not None else {}),
                             **control_fields,
@@ -433,6 +512,10 @@ def _run_episode(
         "empirical_degradation_rate": (
             round(n_degraded_obs / n_total_obs, 4) if n_total_obs > 0 else 0.0
         ),
+        "decisions_seen": decision_counter,
+        "stale_exposed_decisions_seen": n_stale_exposed_seen,
+        "stale_exposed_decisions_scored": n_stale_exposed_scored,
+        "cadence_decisions_scored": n_cadence_scored,
     }
     return summary, faith_records
 
@@ -643,6 +726,31 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
                 )
         out["stale_in_top3_rate"] = float(np.mean(
             [bool(r.get("stale_in_top3")) for r in records]))
+    paired = [
+        r for r in non_trivial
+        if r.get("stale_exposed_precheck") and "paired_def_delta" in r
+    ]
+    if paired:
+        out.update({
+            "n_stale_exposed_paired_decisions": len(paired),
+            "paired_def_delta_mean": float(np.mean([
+                r["paired_def_delta"] for r in paired
+            ])),
+            "paired_def_m_delta_mean": float(np.mean([
+                r["paired_def_m_delta"] for r in paired
+            ])),
+        })
+        paired_excl = [r for r in paired if "paired_def_m_excl_delta" in r]
+        if paired_excl:
+            out.update({
+                "n_stale_exposed_paired_exclusion_decisions": len(paired_excl),
+                "paired_def_excl_delta_mean": float(np.mean([
+                    r["paired_def_excl_delta"] for r in paired_excl
+                ])),
+                "paired_def_m_excl_delta_mean": float(np.mean([
+                    r["paired_def_m_excl_delta"] for r in paired_excl
+                ])),
+            })
     # Attention drift — like WAMSN, meaningful for every decision.
     drifts = np.array([r["drift"] for r in records if "drift" in r])
     if drifts.size > 0:

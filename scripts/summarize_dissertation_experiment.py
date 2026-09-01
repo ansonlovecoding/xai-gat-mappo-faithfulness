@@ -47,6 +47,8 @@ def summarize(root: Path) -> list[dict]:
                       if record.get("valid_reservations", 0) > 0]
             exposed = [record for record in records
                        if record.get("n_stale_veh", 0) > 0]
+            paired_exposed = [record for record in exposed
+                              if "paired_def_delta" in record]
             rows.append({
                 "model": model_id,
                 "training_seed": training_seed,
@@ -59,6 +61,7 @@ def summarize(root: Path) -> list[dict]:
                 ]),
                 "faithfulness_records": len(records),
                 "stale_exposed_records": len(exposed),
+                "paired_stale_exposed_records": len(paired_exposed),
                 "mean_type_matched_def": _mean([
                     float(record["def"]) for record in scored
                 ]),
@@ -85,6 +88,14 @@ def summarize(root: Path) -> list[dict]:
                 ]),
                 "mean_wamsn_when_exposed_secondary": _mean([
                     float(record.get("wamsn", float("nan"))) for record in exposed
+                ]),
+                "mean_paired_type_matched_def_delta": _mean([
+                    float(record.get("paired_def_delta", float("nan")))
+                    for record in paired_exposed
+                ]),
+                "mean_paired_type_matched_def_m_delta": _mean([
+                    float(record.get("paired_def_m_delta", float("nan")))
+                    for record in paired_exposed
                 ]),
             })
     if not rows:
@@ -195,9 +206,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path,
                         nargs="?", default=PROJECT_ROOT / "runs/dissertation_v4")
+    parser.add_argument(
+        "--performance-root", type=Path, default=None,
+        help="experiment root containing frozen clean evaluations; defaults "
+             "to root",
+    )
     args = parser.parse_args()
     rows = summarize(args.root)
-    performance_rows = summarize_performance(args.root)
+    performance_rows = summarize_performance(args.performance_root or args.root)
     training_seed_rows, per_seed_rows = summarize_training_seeds(args.root)
     atomic_write_json(args.root / "summary.json", {"rows": rows})
     csv_path = args.root / "summary.csv"

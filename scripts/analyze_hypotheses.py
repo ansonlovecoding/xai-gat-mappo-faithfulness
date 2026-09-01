@@ -129,6 +129,7 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     axis, level, seed, episode = [], [], [], []
     def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
     stale_count, stale_share, stale_shift = [], [], []
+    paired_def, paired_def_m, paired_def_excl, paired_def_m_excl = [], [], [], []
     for c in cells:
         meta = c["cell"]
         for r in c.get("faith_records", []):
@@ -144,6 +145,10 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             stale_count.append(r.get("n_stale_veh", 0))
             stale_share.append(r.get("stale_attention_share", np.nan))
             stale_shift.append(r.get("stale_attention_shift", np.nan))
+            paired_def.append(r.get("paired_def_delta", np.nan))
+            paired_def_m.append(r.get("paired_def_m_delta", np.nan))
+            paired_def_excl.append(r.get("paired_def_excl_delta", np.nan))
+            paired_def_m_excl.append(r.get("paired_def_m_excl_delta", np.nan))
     return {
         "axis": np.array(axis),
         "level": np.array(level, dtype=np.float64),
@@ -157,6 +162,12 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "stale_count": np.array(stale_count, dtype=np.int64),
         "stale_share": np.array(stale_share, dtype=np.float64),
         "stale_shift": np.array(stale_shift, dtype=np.float64),
+        "paired_def_delta": np.array(paired_def, dtype=np.float64),
+        "paired_def_m_delta": np.array(paired_def_m, dtype=np.float64),
+        "paired_def_excl_delta": np.array(paired_def_excl, dtype=np.float64),
+        "paired_def_m_excl_delta": np.array(
+            paired_def_m_excl, dtype=np.float64
+        ),
     }
 
 
@@ -197,6 +208,48 @@ def stale_attention_shift_test(
         "interpretation": (
             "positive values mean the degraded observation assigned more "
             "attention mass to stale nodes than its exact clean twin"
+        ),
+    }
+
+
+def paired_exposed_def_test(
+    frame: dict,
+    axis: str,
+    metric: str,
+    n_permutations: int,
+    n_boot: int,
+    rng: np.random.Generator,
+) -> dict:
+    """Episode-cluster test of degraded DEF minus exact clean-twin DEF."""
+    mask = (
+        (frame["axis"] == axis)
+        & (frame["stale_count"] > 0)
+        & (frame["valid_res"] > 0)
+        & np.isfinite(frame[metric])
+    )
+    if mask.sum() == 0:
+        return {"n_decisions": 0, "note": "paired exposed DEF unavailable"}
+    keys = np.array([
+        f"{seed}|{level:g}|{episode}" for seed, level, episode in zip(
+            frame["seed"][mask], frame["level"][mask], frame["episode"][mask]
+        )
+    ])
+    values = frame[metric][mask]
+    blocks = np.unique(keys)
+    block_means = np.array([values[keys == block].mean() for block in blocks])
+    lo, hi = bootstrap_ci(block_means, n_boot, rng)
+    return {
+        "metric": metric,
+        "mean_degraded_minus_clean": float(block_means.mean()),
+        "ci95": [lo, hi],
+        "p_one_sided_decrease": signflip_p(
+            -block_means, n_permutations, rng
+        ),
+        "n_decisions": int(mask.sum()),
+        "n_episode_blocks": int(len(block_means)),
+        "interpretation": (
+            "negative values mean lower faithfulness on the degraded "
+            "observation than on its exact clean twin"
         ),
     }
 
@@ -577,6 +630,27 @@ def main() -> int:
             f"p={attention_shift['p_one_sided']:.4f}  "
             f"(episode blocks={attention_shift['n_episode_blocks']})"
         )
+    paired_followup = {}
+    for label, metric in (
+        ("probability_def", "paired_def_delta"),
+        ("margin_def", "paired_def_m_delta"),
+        ("protected_probability_def", "paired_def_excl_delta"),
+        ("protected_margin_def", "paired_def_m_excl_delta"),
+    ):
+        paired = paired_exposed_def_test(
+            frame, primary_axis, metric, args.n_permutations,
+            args.n_bootstrap, rng
+        )
+        paired_followup[label] = paired
+        if "note" not in paired:
+            print(
+                f"  paired exposed {label}: "
+                f"delta={paired['mean_degraded_minus_clean']:+.4f}  "
+                f"CI95=[{paired['ci95'][0]:+.4f}, {paired['ci95'][1]:+.4f}]  "
+                f"p(decrease)={paired['p_one_sided_decrease']:.4f}  "
+                f"(blocks={paired['n_episode_blocks']})"
+            )
+    robust["exposure_conditioned_paired_followup"] = paired_followup
     for label, metric, alt in (("H1_robust", "def", "less"),
                                ("H1m_robust", "def_m", "less"),
                                ("H3_robust", "wamsn", "greater")):

@@ -97,6 +97,10 @@ def main() -> int:
         parser.error("unsupported experiment-config schema")
 
     output_root = PROJECT_ROOT / config["output_root"]
+    checkpoint_root = (
+        PROJECT_ROOT / config["checkpoint_root"]
+        if config.get("checkpoint_root") else output_root / "training"
+    )
     train_cfg = config["training"]
     eval_cfg = config["evaluation"]
     stability_cfg = config.get("stability")
@@ -110,8 +114,16 @@ def main() -> int:
 
     for stage in stages:
         if stage == "summarize":
-            _run([sys.executable, "scripts/summarize_dissertation_experiment.py",
-                  str(output_root)], dry_run=args.dry_run)
+            command = [
+                sys.executable, "scripts/summarize_dissertation_experiment.py",
+                str(output_root),
+            ]
+            if config.get("performance_root"):
+                command += [
+                    "--performance-root",
+                    str(PROJECT_ROOT / config["performance_root"]),
+                ]
+            _run(command, dry_run=args.dry_run)
             continue
         for model in models:
             model_train_cfg = {
@@ -119,7 +131,13 @@ def main() -> int:
                 **model.get("training", {}),
             }
             for seed in train_cfg["seeds"]:
-                run_dir = output_root / "training" / model["id"] / f"seed_{seed}"
+                training_run_dir = (
+                    output_root / "training" / model["id"] / f"seed_{seed}"
+                )
+                run_dir = (
+                    training_run_dir if stage in ("train", "select")
+                    else checkpoint_root / model["id"] / f"seed_{seed}"
+                )
                 final_checkpoint = run_dir / "ckpt_final.pt"
                 selection_cfg = config.get("selection")
                 checkpoint = (run_dir / "ckpt_selected.pt"
@@ -268,6 +286,17 @@ def main() -> int:
                         "--random-baseline", eval_cfg["random_baseline"],
                         "--out", str(sweep_dir),
                     ]
+                    option_names = {
+                        "faithfulness_exposed_every":
+                            "--faithfulness-exposed-every",
+                        "minimum_stale_exposed_records":
+                            "--minimum-stale-exposed-records",
+                        "minimum_stale_exposed_episodes":
+                            "--minimum-stale-exposed-episodes",
+                    }
+                    for key, option in option_names.items():
+                        if key in eval_cfg:
+                            command += [option, str(eval_cfg[key])]
                     if not eval_cfg.get("exclusion_variant", True):
                         command.append("--no-exclusion-variant")
                     if not eval_cfg.get("stochastic", True):

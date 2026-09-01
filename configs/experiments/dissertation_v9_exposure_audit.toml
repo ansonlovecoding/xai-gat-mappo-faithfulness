@@ -1,0 +1,65 @@
+schema_version = 1
+name = "faithfulness_decoupling_exposure_conditioned_audit"
+output_root = "runs/dissertation_v9_exposure_audit"
+checkpoint_root = "runs/dissertation_v8/training"
+performance_root = "runs/dissertation_v8"
+area = "central_park"
+
+# Training is frozen. These fields retain the provenance contract expected by
+# the shared runner; the sweep reads the selected v8 checkpoints above.
+[training]
+epochs = 40
+seeds = [42, 43, 44]
+demand_split = "train"
+save_every = 10
+best_window = 10
+deterministic_torch = true
+lr = 0.0001
+anneal_lr = true
+
+[selection]
+demand_split = "val"
+episodes = 8
+seed = 2026
+minimum_mean_pickups = 2.0
+minimum_improvement_over_initial = 1.0
+
+[evaluation]
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+episodes_per_cell_seed = 6
+demand_split = "test"
+outage_durations_s = [10.0, 20.0, 30.0, 60.0]
+corruption = "freeze"
+
+# Maintain a broad background sample while scoring every decision that
+# actually contains at least one stale vehicle node.
+faithfulness_every = 16
+faithfulness_exposed_every = 1
+random_baselines = 5
+random_baseline = "type_matched"
+exclusion_variant = true
+
+# Predeclared measurement-capability gates, evaluated independently for every
+# (checkpoint, outage duration, evaluation seed) cell.
+minimum_stale_exposed_records = 20
+minimum_stale_exposed_episodes = 3
+stochastic = true
+
+[[models]]
+id = "B1_mlp"
+policy = "mlp"
+degradation = "off"
+faithfulness_sweep = false
+
+[[models]]
+id = "B2_gat"
+policy = "gat"
+degradation = "off"
+faithfulness_sweep = true
+
+[[models]]
+id = "H5_gat_degraded"
+policy = "gat"
+degradation = "tunnel_triggered"
+outage_duration = 30.0
+faithfulness_sweep = true
