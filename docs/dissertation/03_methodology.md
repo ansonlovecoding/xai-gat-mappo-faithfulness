@@ -150,8 +150,8 @@ The shared optimisation settings are shown below.
 |---|---:|
 | Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
 | Learning rate | 0.0001 (GAT variants), 0.0003 (MLP) |
-| Discount factor (`gamma`) | 0.99 |
-| GAE factor (`lambda`) | 0.95 |
+| Discount factor (gamma) | 0.99 |
+| GAE factor (lambda) | 0.95 |
 | PPO clip ratio | 0.20 |
 | PPO passes per update | 4 |
 | Minibatch size | 256 |
@@ -428,11 +428,10 @@ outputs are documented in `docs/REPRODUCE_EXPERIMENTS.md`.
 
 ## 3.11 Ethics and data governance
 
-The experiment uses a simulated taxi fleet, generated passenger demand, and an
+The experiment uses a simulated taxi fleet, generated demand, and an
 OpenStreetMap-derived road network. It contains no human participants,
-personal passenger records, live vehicle identifiers, or commercial dispatch
-data. The study evaluates model behaviour rather than people. Its main ethical
-risk is miscommunication: presenting an attention map as a trustworthy reason
-could give an operator false confidence. The reporting therefore separates
-freshness exposure, task behaviour, and explanation faithfulness, and states
-negative or mixed findings without turning them into stronger causal claims.
+personal records, live vehicle identifiers, or commercial dispatch data. Its
+main ethical risk is miscommunication: presenting attention as a trustworthy
+reason could give an operator false confidence. The reporting therefore keeps
+freshness, task behaviour, and faithfulness separate and avoids unsupported
+causal claims.

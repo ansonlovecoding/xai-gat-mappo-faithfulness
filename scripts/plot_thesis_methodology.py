@@ -243,7 +243,7 @@ def model_training_design():
             fontsize=11.5, fontweight="bold", color=GREY)
 
     pipeline = [
-        (0.145, "Train all three", "150 epochs\nseeds 42, 43, 44\nsave every 10 epochs", BLUE),
+        (0.145, "Train all three", "40 / 50 / 50 epochs\nseeds 42, 43, 44\nsave every 10 epochs", BLUE),
         (0.38, "Validate and select",
          "validation demand\npickups first; reward tie-break", GREEN),
         (0.615, "Freeze", "one checkpoint\nper model and seed", GREY),

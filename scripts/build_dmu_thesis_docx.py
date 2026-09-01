@@ -19,7 +19,7 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASE = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis.docx"
-DEFAULT_OUTPUT = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis_v4.docx"
+DEFAULT_OUTPUT = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.docx"
 
 CITATIONS = {
     1: "Lin et al., 2018",
@@ -73,7 +73,7 @@ TABLE_TITLES = {
     (4, 2): "Construct-validity audit of random controls",
     (4, 3): "Clean-telemetry faithfulness controls by training seed",
     (4, 4): "Valid node-count distribution in scored graphs",
-    (4, 5): "Paired stale-attention shift estimates and confidence intervals",
+    (4, 5): "Exposure-conditioned paired attention and DEF shifts",
     (4, 6): "Hypothesis outcomes across training seeds",
 }
 
@@ -86,11 +86,11 @@ FIGURES = [
     ("Figure 4.1", "GAT training and checkpoint-selection diagnostics"),
     ("Figure 4.2", "Clean-test pickups by training seed"),
     ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
-    ("Figure 4.4", "Top-k overlap and DEF resolution"),
-    ("Figure 4.5", "Outage-duration sweep by policy and training seed"),
-    ("Figure 4.6", "Paired stale-attention shift by training seed"),
-    ("Figure 4.7", "Attention aggregation sensitivity"),
-    ("Figure 4.8", "Attention query-row sensitivity"),
+    ("Figure 4.4", "Attention aggregation sensitivity"),
+    ("Figure 4.5", "Attention query-row sensitivity"),
+    ("Figure 4.6", "Top-k overlap and DEF resolution"),
+    ("Figure 4.7", "Outage-duration sweep by policy and training seed"),
+    ("Figure 4.8", "Paired attention and faithfulness shift by training seed"),
     ("Figure 4.9", "WAMSN-DEF correlation by training seed"),
     ("Figure 5.1", "Cross-seed evidence matrix"),
 ]
@@ -103,16 +103,16 @@ FIGURE_PAGES = {
     "Figure 3.4": "12", "Figure 3.5": "14",
     "Figure 4.1": "17", "Figure 4.2": "18", "Figure 4.3": "19",
     "Figure 4.4": "20", "Figure 4.5": "21",
-    "Figure 4.6": "22", "Figure 4.7": "22", "Figure 4.8": "23",
-    "Figure 4.9": "24", "Figure 5.1": "25",
+    "Figure 4.6": "22", "Figure 4.7": "23", "Figure 4.8": "24",
+    "Figure 4.9": "25", "Figure 5.1": "26",
 }
 
 TABLE_PAGES = {
     "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "10",
     "Table 3.4": "11", "Table 3.5": "15", "Table 3.6": "15",
-    "Table 4.1": "17", "Table 4.2": "18",
-    "Table 4.3": "19", "Table 4.4": "20", "Table 4.5": "21",
-    "Table 4.6": "24",
+    "Table 4.1": "18", "Table 4.2": "18",
+    "Table 4.3": "19", "Table 4.4": "21", "Table 4.5": "23",
+    "Table 4.6": "25",
 }
 
 HEADING_PAGES = {
@@ -140,18 +140,18 @@ HEADING_PAGES = {
     "Chapter 4: Results": "17",
     "4.1 Policy capability and training stability": "17",
     "4.2 Construct-validity audit": "18",
-    "4.3 Evaluator sensitivity and ranking controls": "18",
-    "4.4 Small-graph resolution": "19",
-    "4.5 Telemetry manipulation and stale exposure": "20",
-    "4.6 Attention reallocation and aggregation sensitivity": "21",
-    "4.7 Faithfulness hypotheses": "23", "4.8 Result summary": "24",
-    "Chapter 5: Discussion": "25", "5.1 Answer to the central problem": "25",
-    "5.2 What the stale-exposure result means": "25",
-    "5.3 Dependence on checkpoint and analysis choice": "26",
-    "5.4 Role of the construct-validity audit": "26",
-    "5.5 Degradation-aware training": "26", "5.6 Practical implications": "27",
-    "5.7 Limitations": "27", "5.8 Future work": "27",
-    "Chapter 6: Conclusion": "29",
+    "4.3 Evaluator sensitivity and ranking controls": "19",
+    "4.4 Small-graph resolution": "21",
+    "4.5 Telemetry manipulation and stale exposure": "22",
+    "4.6 Exposure-conditioned paired audit": "23",
+    "4.7 Faithfulness hypotheses": "24", "4.8 Result summary": "25",
+    "Chapter 5: Discussion": "26", "5.1 Answer to the central problem": "26",
+    "5.2 What the stale-exposure result means": "26",
+    "5.3 Dependence on checkpoint and analysis choice": "27",
+    "5.4 Role of the construct-validity audit": "27",
+    "5.5 Degradation-aware training": "27", "5.6 Practical implications": "28",
+    "5.7 Limitations": "28", "5.8 Future work": "28",
+    "Chapter 6: Conclusion": "30",
 }
 
 
@@ -531,12 +531,15 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
     total = 9020
-    weights = []
-    for column in range(len(rows[0])):
-        longest = max(len(row[column]) for row in rows)
-        weights.append(max(8, min(longest, 45)))
-    widths = [int(total * weight / sum(weights)) for weight in weights]
-    widths[-1] += total - sum(widths)
+    if title.startswith("Table 3.2:"):
+        widths = [1200, 1650, 2650, 3520]
+    else:
+        weights = []
+        for column in range(len(rows[0])):
+            longest = max(len(row[column]) for row in rows)
+            weights.append(max(8, min(longest, 45)))
+        widths = [int(total * weight / sum(weights)) for weight in weights]
+        widths[-1] += total - sum(widths)
     set_table_geometry(table, widths)
     for row_index, values in enumerate(rows):
         row = table.rows[row_index]
@@ -993,7 +996,7 @@ def style_references_and_appendices(doc: Document) -> None:
             paragraph.text = (
                 "The complete reproduction procedure is provided in "
                 "docs/REPRODUCE_EXPERIMENTS.md. Compact citable outputs are "
-                "stored under results/dissertation_v4/."
+                "stored under results/dissertation_v9_exposure_audit/."
             )
         if paragraph.text.startswith("The project repository contains"):
             paragraph.text = (

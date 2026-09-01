@@ -24,9 +24,9 @@ reproducible explanation guarantee.”
 
 ![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
 
-**Figure 5.1.** The evidence separates policy capability, evaluator validity,
-stale exposure, attention response, and decision relevance. No single arrow is
-treated as a causal chain.
+**Figure 5.1.** The evidence separates capability, evaluator validity, stale
+exposure, attention response, and decision relevance. These are not treated as
+one causal chain.
 
 ## 5.2 What the stale-exposure result means
 

@@ -118,8 +118,8 @@ responses.
 
 ![Attention query-row sensitivity](../figures/v9_action_query_row_sensitivity.png)
 
-**Figure 4.5.** Each grey line joins self-row and selected-request-row DEF for
-one checkpoint. Query-row choice helps seed 43 but is not a general correction.
+**Figure 4.5.** Each grey line joins the two query-row results for one
+checkpoint. The selected request row helps seed 43 but is not a general fix.
 
 ## 4.4 Small-graph resolution
 
