@@ -103,11 +103,11 @@ faithfulness.
 
 Third, the paired change in stale-node attention is not consistent across
 training seeds. It is positive for seeds 42 and 43 but negative for seed 44 in
-both GAT and GAT-Outage. H1 and H2 are unsupported in every trained policy. The
-association between WAMSN and DEF is supported for two GAT-Outage seeds, but not the
-third and not any GAT seed. This disagreement is not an absence of a conclusion:
-it shows that raw attention has no stable, model-independent response to stale
-telemetry.
+both GAT and GAT-Outage. H1 is supported in five of six policies and the
+within-episode WAMSN-DEF association is supported in all six. However, the
+direct clean-twin DEF shift is negative for four policies and positive for two.
+This distinction matters: a within-policy association can be reproducible
+without giving every trained policy the same response to degradation.
 
 The result is also sensitive to how attention is turned into one explanation.
 Individual heads can reverse the stale-attention direction within a checkpoint,
@@ -116,7 +116,8 @@ checkpoint but worsens others. These checks make the lack of a default
 explanation guarantee more precise.
 
 Finally, degradation-aware training does not remove training-seed variation.
-It also produces one weak policy replicate, which limits any mitigation claim.
+All selected policies pass the declared capability and stability gates, so the
+mixed explanation response cannot be dismissed as a failed training run.
 Taken together, the results do not prove that attention is always unfaithful.
 They show that attention cannot be trusted by default; freshness and
 faithfulness must be checked separately for every released policy.

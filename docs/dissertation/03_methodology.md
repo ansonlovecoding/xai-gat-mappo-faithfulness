@@ -8,8 +8,9 @@ once with degraded telemetry. A real operational log cannot provide this exact
 clean twin. SUMO provides the simulated physical state, while a separate
 observation layer controls what the policy receives.
 
-The final protocol is defined in
-`configs/experiments/dissertation_v4.toml`. The full run contains three stages:
+The final training protocol and exposure-conditioned audit are defined in
+`configs/experiments/dissertation_v8.toml` and
+`configs/experiments/dissertation_v9_exposure_audit.toml`. The full run contains three stages:
 training, validation-based checkpoint selection, and held-out evaluation.
 Faithfulness sweeps are run only after the selected checkpoints are frozen.
 
@@ -129,32 +130,34 @@ Three policy conditions are included:
 | GAT | GAT-MAPPO | clean | primary attention model under audit |
 | GAT-Outage | GAT-MAPPO | tunnel-triggered 30-second outages | degradation-aware training condition |
 
-Each condition is trained for 150 epochs with seeds 42, 43, and 44.
+MLP is trained for 50 epochs, GAT for 40 epochs, and GAT-Outage for 50
+epochs. Each condition uses independent training seeds 42, 43, and 44.
 
-Candidate checkpoints are saved every ten epochs. Selection uses three
+Candidate checkpoints are saved every ten epochs. Selection uses eight
 stochastic validation episodes with seed 2026 and mean pickups as the primary
 criterion; mean reward and earlier epoch break ties. The test split is not
 read during selection. The selected epochs are:
 
 | Model | seed 42 | seed 43 | seed 44 |
 |---|---:|---:|---:|
-| MLP | 50 | 30 | 40 |
-| GAT | 10 | 70 | 10 |
-| GAT-Outage | 10 | 90 | 10 |
+| MLP | 20 | 40 | 34 |
+| GAT | 39 | 39 | 30 |
+| GAT-Outage | 49 | 40 | 40 |
 
 The shared optimisation settings are shown below.
 
 | Setting | Value |
 |---|---:|
-| Training epochs | 150 |
-| Learning rate | 0.0003 |
+| Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
+| Learning rate | 0.0001 (GAT variants), 0.0003 (MLP) |
 | Discount factor (`gamma`) | 0.99 |
 | GAE factor (`lambda`) | 0.95 |
 | PPO clip ratio | 0.20 |
 | PPO passes per update | 4 |
 | Minibatch size | 256 |
-| Value-loss coefficient | 0.50 |
-| Entropy coefficient | 0.01 |
+| Value-loss coefficient | 0.25 |
+| Entropy coefficient | 0.05, adaptive to a 0.20 entropy floor |
+| Target KL divergence | 0.015 |
 | Gradient-norm limit | 0.50 |
 | GAT hidden width / layers / heads | 64 / 2 / 4 |
 
@@ -329,13 +332,13 @@ one complete rollout of one frozen checkpoint under one telemetry condition.
 | Evaluation | Models | Checkpoints | Conditions | Episodes per cell | Total episodes |
 |---|---:|---:|---:|---:|---:|
 | Clean capability context | 3 | 9 | 1 | 24 | 216 |
-| Faithfulness severity sweep | 2 | 6 | 5 | 24 | 720 |
+| Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
 | Added ranking controls | 2 | 6 | 2 | 24 | 288 |
 
 GAT and GAT-Outage receive the full faithfulness sweep:
 
 ```text
-3 training seeds x 5 conditions x 8 evaluation seeds x 3 episodes
+3 training seeds x 5 conditions x 8 evaluation seeds x 6 episodes
 ```
 
 The five conditions and their roles are:
@@ -351,10 +354,16 @@ The five conditions and their roles are:
 The relation column refers only to GAT-Outage; the clean-trained GAT has not
 seen any imposed outage duration during training. The evaluation changes the
 observation-layer condition but never retrains or reselects a checkpoint.
-Faithfulness is sampled every eight decisions, with raw per-decision records
-retained. Each sweep must pass preflight checks for expected cells, provenance,
-type-matched controls, chosen-action exclusion, and empirical degradation
-differentiation. All six evaluation sweeps pass.
+Outside stale exposure, faithfulness is sampled every 16 decisions. Every
+decision that contains at least one stale vehicle node is scored. Each such
+observation is also compared with its exact clean twin at the same simulation
+step. The degraded and clean evaluations reuse the same matched-random draw,
+so the paired difference does not contain avoidable baseline-sampling noise.
+
+Each degraded condition must contain at least 20 stale-exposed records from at
+least three episodes. Preflight also checks expected cells, clean source
+provenance, type-matched controls, chosen-action exclusion, complete event
+capture, and empirical AoI differentiation. All six sweeps pass these gates.
 
 ## 3.9 Hypotheses and statistics
 
@@ -371,6 +380,13 @@ confidence intervals. H2 uses paired cell-level sign flips relative to each
 evaluation seed's clean condition. H4 calculates Spearman correlation within
 each episode before a sign-flip test. Holm correction is applied to H1-H4
 within each trained policy.
+
+The exposure-conditioned paired follow-up directly subtracts clean-twin DEF
+from degraded DEF for the same decision. Negative values mean lower measured
+faithfulness under the degraded observation. This paired estimate is reported
+with an episode-block confidence interval and is interpreted by effect size,
+direction across trained policies, and uncertainty rather than by a decision-
+level p-value alone.
 
 H2 is retained as a pre-declared but exploratory comparison. Its original rate
 divides by clean DEF, which is close to zero and can make a small absolute
@@ -404,8 +420,8 @@ least one stale vehicle node is visible.
 
 The experiment runner records the configuration, commands, seeds, checkpoint
 hashes, source revision, and preflight reports under the local
-`runs/dissertation_v4/` directory. Compact thesis-ready outputs are committed
-under `results/dissertation_v4/`: `summary.csv`,
+`runs/dissertation_v9_exposure_audit/` directory. Compact thesis-ready outputs
+are committed under `results/dissertation_v9_exposure_audit/`: `summary.csv`,
 `performance_context.csv`, and `training_seed_synthesis.csv`. The last file
 makes training-seed consistency explicit. Reproduction commands and expected
 outputs are documented in `docs/REPRODUCE_EXPERIMENTS.md`.

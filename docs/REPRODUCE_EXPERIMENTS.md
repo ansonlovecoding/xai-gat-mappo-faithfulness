@@ -51,20 +51,20 @@ DEF among stale-exposed decisions. Negative values mean lower measured
 faithfulness under the degraded observation. This paired test does not treat
 the configured outage duration or AoI value as a causal dose.
 
-The definitive protocol is:
+The frozen-model training protocol is:
 
 ```text
-configs/experiments/dissertation_v4.toml
+configs/experiments/dissertation_v8.toml
 ```
 
-The completed local outputs are under:
+The final audit protocol is:
 
 ```text
-runs/dissertation_v4/
+configs/experiments/dissertation_v9_exposure_audit.toml
 ```
 
 Compact citable summaries, analyses, manifests, and selection records are
-committed under `results/dissertation_v4/`.
+committed under `results/dissertation_v9_exposure_audit/`.
 
 The older `results/story_freeze_v1/` directory is retained only for the
 supporting construct-validity audit and historical comparison. It is not the
@@ -74,10 +74,10 @@ source of the final H1-H5 verdicts.
 
 The runner performs five linked tasks:
 
-1. trains B1, B2, and D30 with seeds 42, 43, and 44;
+1. trains MLP, GAT, and GAT-Outage with seeds 42, 43, and 44;
 2. selects checkpoints on validation demand, not test demand;
 3. evaluates every selected policy on held-out clean test demand;
-4. runs faithfulness sweeps for B2 and D30 under clean telemetry and 10, 20,
+4. runs faithfulness sweeps for GAT and GAT-Outage under clean telemetry and 10, 20,
    30, and 60-second observation-layer outages;
 5. validates, analyses, and summarises the outputs.
 
@@ -132,39 +132,48 @@ failure if the script ends with `evaluator OK`.
 Print every command without running it:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py --dry-run
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml --dry-run
 ```
 
 Important fixed settings are:
 
 | Item | Value |
 |---|---|
-| Training epochs | 150 |
+| Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
 | Training seeds | 42, 43, 44 |
 | Checkpoint selection | stochastic validation pickups |
-| Validation seed and episodes | 2026, three episodes |
+| Validation seed and episodes | 2026, eight episodes |
 | Evaluation seeds | 42-49 |
-| Test episodes per seed/condition | three |
+| Clean capability episodes per seed | three |
+| Final audit episodes per seed/condition | six |
 | Outage durations | 10, 20, 30, 60 seconds |
 | Corruption | freeze last valid position and speed |
-| Faithfulness sampling | every eight decisions |
+| Faithfulness sampling | every 16 decisions plus every stale-exposed decision |
 | Random control | five type-matched subsets |
 
 ## 4. Run the complete experiment
 
-From a new output directory, run:
+Train, select, and evaluate the stable model set first:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py --stage all
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml --stage train
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml --stage select
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml --stage evaluate
 ```
 
-This is a long experiment. Training and the 240-episode faithfulness matrix for
-each audited model can take many hours on CPU.
+Then run the four v9 audit commands listed at the start of this guide. The final
+faithfulness matrix contains 1,440 episodes and can take many hours on CPU.
 
 If a completed stage already exists, use `--resume`:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py --stage all --resume
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage sweep --resume
 ```
 
 Resume skips complete immutable stages. It rejects partial training runs rather
@@ -182,24 +191,31 @@ Examples:
 
 ```bash
 # Train and select all models
-.venv/bin/python scripts/run_dissertation_experiments.py --stage train
-.venv/bin/python scripts/run_dissertation_experiments.py --stage select
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml --stage train
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml --stage select
 
 # Evaluate one model
 .venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v8.toml \
   --stage evaluate --model B2_gat --resume
 
 # Run and validate one faithfulness matrix
 .venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage sweep --model B2_gat --resume
 .venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage preflight --model B2_gat
 
-# Analyse D30 and rebuild all summary tables. H5_gat_degraded is the
-# backward-compatible code identifier for the D30 dissertation condition.
+# Analyse GAT-Outage and rebuild all summary tables.
 .venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage analyze --model H5_gat_degraded
-.venv/bin/python scripts/run_dissertation_experiments.py --stage summarize
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage summarize
 ```
 
 Valid model identifiers are:
@@ -210,19 +226,18 @@ B2_gat
 H5_gat_degraded
 ```
 
-Only B2 and D30 have faithfulness sweeps. B1 supplies performance context.
+Only GAT (`B2_gat`) and GAT-Outage (`H5_gat_degraded`) have faithfulness
+sweeps. MLP (`B1_mlp`) supplies performance context.
 
 ## 6. Run the revision audits
 
-Verify that the v4 checkpoints, evaluation files, sweep manifests, source
-revision, and Chapter 3 checkpoint table agree:
+The archived v4 audit remains available for historical verification:
 
 ```bash
 .venv/bin/python scripts/audit_dissertation_v4.py
 ```
 
-The command should report `100` passed checks and no failures for the archived
-v4 run.
+It is not the source of the final v9 hypothesis verdicts.
 
 Run the legal-random and greedy-nearest lower bounds on the same held-out
 protocol:
@@ -236,25 +251,37 @@ test, then run the complete B2 and D30 matrices. Cell files make these commands
 resumable.
 
 ```bash
-.venv/bin/python scripts/run_faithfulness_controls.py --smoke
+.venv/bin/python scripts/run_faithfulness_controls.py --smoke \
+  --checkpoint-root runs/dissertation_v8/training \
+  --out runs/dissertation_v9_exposure_audit/faithfulness_controls
 
 .venv/bin/python scripts/run_faithfulness_controls.py \
   --models B2_gat \
-  --out runs/dissertation_revision_v1/faithfulness_controls/B2_full
+  --checkpoint-root runs/dissertation_v8/training \
+  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full
 
 .venv/bin/python scripts/run_faithfulness_controls.py \
   --models H5_gat_degraded \
-  --out runs/dissertation_revision_v1/faithfulness_controls/D30_full
+  --checkpoint-root runs/dissertation_v8/training \
+  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full
 
 .venv/bin/python scripts/run_faithfulness_controls.py \
   --models B2_gat --action-row-only \
-  --out runs/dissertation_revision_v1/faithfulness_controls/B2_action_row
+  --checkpoint-root runs/dissertation_v8/training \
+  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row
 
 .venv/bin/python scripts/run_faithfulness_controls.py \
   --models H5_gat_degraded --action-row-only \
-  --out runs/dissertation_revision_v1/faithfulness_controls/D30_action_row
+  --checkpoint-root runs/dissertation_v8/training \
+  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row
 
-.venv/bin/python scripts/analyze_faithfulness_controls.py
+.venv/bin/python scripts/analyze_faithfulness_controls.py \
+  runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full \
+  runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full \
+  runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row \
+  runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row \
+  --out results/dissertation_v9_exposure_audit/faithfulness_controls \
+  --fig-dir docs/figures --fig-prefix v9
 ```
 
 The control run records raw attention, Gradient x Input, the LOO perturbation
@@ -265,7 +292,7 @@ blocks rather than treating decisions from the same episode as independent.
 ## 7. Expected directory structure
 
 ```text
-runs/dissertation_v4/
+runs/dissertation_v8/
   training/
     <model>/seed_<training-seed>/
       ckpt_selected.pt
@@ -287,6 +314,20 @@ runs/dissertation_v4/
   performance_context.csv
   training_seed_synthesis.json
   training_seed_synthesis.csv
+
+runs/dissertation_v9_exposure_audit/
+  sweeps/
+    B2_gat/seed_<training-seed>/
+    H5_gat_degraded/seed_<training-seed>/
+      manifest.json
+      cells/
+      preflight.json
+      analysis.json
+  faithfulness_controls/
+  summary.json
+  summary.csv
+  training_seed_synthesis.json
+  training_seed_synthesis.csv
 ```
 
 Do not delete `cells/` if another reader needs to audit or recompute the
@@ -303,7 +344,9 @@ Every sweep used in the thesis must contain `preflight.json` with:
 Run the checks again with:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py --stage preflight
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage preflight
 ```
 
 Preflight checks the expected condition/seed matrix, source provenance,
@@ -315,8 +358,13 @@ and empirical differentiation of the outage conditions.
 After all analyses exist:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py --stage summarize
-.venv/bin/python scripts/plot_dissertation_v4.py
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage summarize
+.venv/bin/python scripts/plot_dissertation_v4.py \
+  --root runs/dissertation_v9_exposure_audit \
+  --training-root runs/dissertation_v8 \
+  --out docs/figures --prefix v9
 ```
 
 The primary thesis tables are:
@@ -331,14 +379,14 @@ The plotting script writes PNG and PDF versions to `docs/figures/`.
 ## 10. Expected qualitative result
 
 A correct rerun should be interpreted from the generated files, not forced to
-match one seed exactly across hardware. In the completed local v4 run:
+match one seed exactly across hardware. In the completed local v9 run:
 
-- H3 is supported for all three B2 and all three D30 training seeds;
-- H1 and H2 are unsupported for all six policies;
-- H4 is unsupported for B2 and supported for two of three D30 seeds;
+- H3 and H4 are supported for all three GAT and all three GAT-Outage seeds;
+- H1 is supported for two of three GAT and all three GAT-Outage seeds;
 - the paired stale-attention shift is positive for seeds 42 and 43 and negative
   for seed 44 under both training regimes;
-- D30 seed 44 is a weak policy replicate and is retained in the synthesis.
+- paired probability-DEF decreases for seeds 42 and 43 but increases for seed
+  44 under both training regimes.
 
 The conclusion is therefore not that AoI causes lower faithfulness. Longer
 outages consistently increase stale-data exposure, while attention
@@ -358,7 +406,7 @@ results/story_freeze_v1/audit/compare_typematched_tunnel.json
 
 These files document the construct-validity problem: deleting a request node
 can also delete an action, while deleting a taxi node only removes information.
-They should not be substituted for the v4 H1-H5 analysis.
+They should not be substituted for the v9 H1-H5 analysis.
 
 ## 12. Troubleshooting
 

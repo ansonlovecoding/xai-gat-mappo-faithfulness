@@ -21,12 +21,12 @@ The research questions lead to that answer:
   away from them for seed 44 under both training regimes. Individual heads can
   reverse the direction within one checkpoint.
 - **RQ3: Does the explanation remain dependable as outage duration increases?**
-  No dependable relationship is found. Stale exposure increases, but DEF does
-  not consistently decline. The 60-second ranking-control results remain close
-  to their clean values.
+  No cross-policy guarantee is found. H1 is supported in five of six policies
+  and H4 in all six, but the direct paired DEF shift is negative for four
+  policies and positive for two. The effect is small and reverses for seed 44.
 - **RQ4: Does degradation-aware training improve explanation reliability?** No
-  consistent mitigation is observed. GAT-Outage retains checkpoint, aggregation, and
-  query-row dependence and includes one weak policy replicate.
+  consistent mitigation is observed. GAT-Outage retains the same seed-dependent
+  paired direction as GAT.
 
 The construct-validity audit is essential to this interpretation. Deleting a
 request can also delete an action, while deleting a peer taxi only hides

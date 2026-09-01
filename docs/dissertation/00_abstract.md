@@ -21,8 +21,10 @@ clean telemetry, DEF varies in sign across checkpoints and is lower than a
 leave-one-out perturbation control in all six policies. Longer outages increase
 stale-data exposure, but the paired change in attention toward stale nodes is
 positive for two training seeds and negative for one under both training
-regimes. DEF does not consistently decline with outage duration, and the result
-also depends on the layer, head, and query row used for explanation.
+regimes. Within-policy tests associate greater exposure with lower DEF, but the
+direct paired DEF change is negative for four policies and positive for two.
+The result also depends on the trained checkpoint and how attention is reduced
+to one explanation.
 
 The conclusion is not that stale telemetry always reduces faithfulness. It is
 that raw attention provides no stable guarantee of either data freshness or

@@ -7,12 +7,12 @@ when some of its vehicle data are stale. The answer from this experiment is:
 **not without separate validation**. Raw attention is not shown to provide a
 stable assurance of freshness or decision relevance.
 
-This answer does not depend on one expected hypothesis being confirmed. Under
-clean telemetry, raw-attention DEF has mixed signs and ranges from -0.0084 to
-+0.0187 across checkpoints. Under a 60-second outage, each checkpoint remains
-close to its own clean value. Longer outages increase stale-data exposure, but
-do not produce a consistent loss of DEF. Attention reallocation is positive
-for two seeds and negative for one under both training regimes.
+This answer does not depend on one p-value. Longer outages increase stale-data
+exposure, and within-policy tests usually associate that exposure with lower
+DEF. The direct clean-twin comparison is less uniform: attention reallocation
+and paired DEF shift have the expected directions for seeds 42 and 43, but
+both directions reverse for seed 44 under both training regimes. The measured
+effects are also small.
 
 The added controls make the interpretation stronger and narrower. LOO produces
 a positive DEF for every checkpoint, so the evaluator has some sensitivity to
@@ -22,7 +22,7 @@ also inconsistent. The result is not “the evaluator is perfect and attention
 fails.” It is “within a measured but limited audit, attention gives no
 reproducible explanation guarantee.”
 
-![Cross-seed evidence matrix](../figures/v4_evidence_path_summary.png)
+![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
 
 **Figure 5.1.** The evidence separates policy capability, evaluator validity,
 stale exposure, attention response, and decision relevance. No single arrow is
@@ -36,20 +36,21 @@ more weight attached to old vehicle readings.
 
 WAMSN is not evidence that AoI causes lower faithfulness. The metric itself
 weights attention by normalised AoI, so part of the increase follows directly
-from the manipulation. The paired stale-attention shift asks whether the model
-reallocates attention to stale nodes; that result changes sign across seeds.
-DEF asks whether ranked nodes are decision-relevant; it does not decline with
-duration. These three measures answer different questions and should remain
-separate.
+from the manipulation. H1 and H4 show that DEF tends to be lower at greater
+exposure within most frozen policies. The paired audit asks a stricter
+question: does replacing the current observation with its degraded twin
+change attention and DEF at the same decision? That result changes sign across
+seeds. Exposure, within-policy association, and paired intervention therefore
+answer different questions and should remain separate.
 
 ## 5.3 Dependence on checkpoint and analysis choice
 
 The primary aggregation gives positive stale-attention shifts for seeds 42 and
-43 and negative shifts for seed 44. The values are small: approximately -0.0013
-to +0.0027 of total attention mass. An operator may not perceive changes below
-three tenths of one percentage point. One reasonable interpretation is that all
-three are practically close to zero, even though the paired estimates have
-narrow intervals.
+43 and negative shifts for seed 44. The values are small: approximately
+-0.0035 to +0.0041 of total attention mass. Paired probability-DEF shifts are
+also small and reproduce the seed direction in both training regimes. This
+cross-model seed pattern suggests sensitivity to the learned policy instance,
+not a stable response created by outage-aware training.
 
 The aggregation audit reveals a second problem. Individual heads can reverse
 the sign within the same checkpoint. For GAT seed 43, alternative results span
@@ -87,10 +88,11 @@ provides a stable default assurance.
 
 ## 5.5 Degradation-aware training
 
-Training with 30-second outages does not solve the explanation problem. GAT-Outage
-retains the same seed-dependent primary attention shift as GAT. Its clean raw
-DEF ranges from -0.0008 to +0.0187, and its taxi-only correlation ranges from
--0.710 to +0.319. Query-row sensitivity is especially large for seed 43.
+Training with 30-second outages does not solve the explanation problem.
+GAT-Outage retains the same seed-dependent attention and paired DEF directions
+as GAT. It strengthens the H1 and H4 associations, but does not make the direct
+degraded-minus-clean response consistent across independently trained
+policies.
 
 This does not show that all robustness training is ineffective. The reward
 contains no term for explanation stability or faithfulness, so there is no
@@ -113,11 +115,12 @@ without additional evidence. A deployment should:
 
 ## 5.7 Limitations
 
-The study uses one simulated district, 20 taxis, 50 requests, and sparse tunnel
-exposure. It evaluates three independent training seeds per model. Three seeds
+The study uses one simulated district, 20 taxis, and 50 requests. Tunnel
+exposure remains scenario-dependent, although the event-aware audit now scores
+every observed stale-exposed decision. It evaluates three independent training seeds per model. Three seeds
 are sufficient to expose heterogeneity, but not to estimate a population
-distribution of training outcomes. GAT-Outage seed 44 is weak, and GAT training shows
-early entropy collapse. The selected GAT policies outperform random and greedy
+distribution of training outcomes. The selected policies pass the training
+stability gates and outperform random and greedy
 lower bounds, but the study does not isolate the contribution of graph edges to
 that capability.
 
