@@ -264,6 +264,10 @@ def evidence_summary_figure() -> None:
     positive_shift = sum(
         int(row["positive_stale_attention_shift_seeds"]) for row in aggregate
     )
+    negative_paired_def = sum(
+        int(row["negative_paired_probability_def_delta_seeds"])
+        for row in aggregate
+    )
     h1_supported = sum(int(row["H1_supported_seeds"]) for row in aggregate)
     fig, ax = plt.subplots(figsize=(8.0, 4.2))
     ax.set_xlim(0, 1)
@@ -282,10 +286,10 @@ def evidence_summary_figure() -> None:
         ("RQ1", "Clean DEF", "Near type-matched random baseline", "Not validated", "#A33A3A"),
         ("RQ2", "Paired attention shift",
          f"Positive in {positive_shift}/{total} trained policies",
-         "Seed-dependent", "#B06C00"),
-        ("RQ3", "Outage duration vs DEF",
-         f"H1 supported in {h1_supported}/{total} trained policies",
-         "No consistent effect", "#555555"),
+         "Mixed by seed", "#B06C00"),
+        ("RQ3", "Paired DEF shift",
+         f"Negative in {negative_paired_def}/{total} trained policies",
+         "Mixed by seed", "#B06C00"),
         ("RQ4", "Degradation training", "No consistent mitigation", "Not supported", "#A33A3A"),
     ]
     for index, (rq, measure, result, verdict, color) in enumerate(rows):
@@ -302,7 +306,7 @@ def evidence_summary_figure() -> None:
     ax.text(0.5, 0.94, "Cross-seed evidence matrix",
             ha="center", va="center", fontsize=15, fontweight="bold")
     ax.text(0.5, 0.055,
-            "Conclusion: raw attention provides no reproducible faithfulness guarantee across trained policies.",
+            "Conclusion: attention and paired faithfulness responses are not consistent across trained policies.",
             ha="center", va="center", fontsize=9.0, fontweight="bold")
     fig.tight_layout()
     _save(fig, "evidence_path_summary")
@@ -311,7 +315,7 @@ def evidence_summary_figure() -> None:
 def shift_figure() -> None:
     payload = json.loads((RUNS / "training_seed_synthesis.json").read_text())
     rows = payload["per_seed"]
-    fig, ax = plt.subplots(figsize=(6.8, 3.8))
+    fig, axes = plt.subplots(1, 2, figsize=(8.0, 3.8))
     for index, model in enumerate(COLORS):
         selected = sorted(
             (row for row in rows if row["model"] == model),
@@ -322,32 +326,36 @@ def shift_figure() -> None:
             analysis = json.loads((
                 RUNS / "sweeps" / model / f"seed_{row['training_seed']}" / "analysis.json"
             ).read_text())
-            low, high = analysis["robust"]["primary_stale_attention_shift"]["ci95"]
-            value = row["stale_attention_shift"]
             style = SEED_STYLES[int(row["training_seed"])]
-            ax.errorbar(index + offset, value,
-                        yerr=[[value - low], [high - value]],
-                        fmt=style["marker"], markersize=7, capsize=4,
-                        color=style["color"], zorder=3)
-            ax.annotate(str(row["training_seed"]),
-                        (index + offset, value),
-                        xytext=(0, 6), textcoords="offset points",
-                        ha="center", fontsize=8)
-    ax.axhline(0, color="#202020", linewidth=1)
-    ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
-    y_top = ax.get_ylim()[1]
-    for index, model in enumerate(COLORS):
-        aggregate_row = next(row for row in payload["rows"] if row["model"] == model)
-        ax.text(index, y_top * 0.92,
-                f"{aggregate_row['positive_stale_attention_shift_seeds']}/"
-                f"{aggregate_row['training_seeds']} positive",
-                ha="center", va="bottom", fontsize=8.2, color="#444444")
-    ax.set_ylabel("Attention mass on exposed peers:\ndegraded minus clean twin")
-    ax.set_title("Paired stale-attention shift")
-    ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
-    ax.spines[["top", "right"]].set_visible(False)
+            metrics = (
+                (analysis["robust"]["primary_stale_attention_shift"],
+                 "mean_shift", 1.0),
+                (analysis["robust"]["exposure_conditioned_paired_followup"]
+                 ["probability_def"], "mean_degraded_minus_clean", 1e4),
+            )
+            for ax, (result, key, scale) in zip(axes, metrics):
+                value = float(result[key]) * scale
+                low, high = [float(bound) * scale for bound in result["ci95"]]
+                ax.errorbar(index + offset, value,
+                            yerr=[[value - low], [high - value]],
+                            fmt=style["marker"], markersize=7, capsize=4,
+                            color=style["color"], zorder=3)
+                ax.annotate(str(row["training_seed"]),
+                            (index + offset, value),
+                            xytext=(0, 6), textcoords="offset points",
+                            ha="center", fontsize=8)
+    for ax in axes:
+        ax.axhline(0, color="#202020", linewidth=1)
+        ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
+        ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
+        ax.spines[["top", "right"]].set_visible(False)
+    axes[0].set_ylabel("Attention mass shift\n(degraded minus clean twin)")
+    axes[0].set_title("Stale-node attention")
+    axes[1].set_ylabel("Probability DEF shift (x10^-4)\n(degraded minus clean twin)")
+    axes[1].set_title("Explanation faithfulness")
+    fig.suptitle("Exposure-conditioned paired audit by trained policy")
     fig.tight_layout()
-    _save(fig, "paired_stale_attention_shift")
+    _save(fig, "paired_attention_and_faithfulness_shift")
 
 
 def consistency_figure() -> None:

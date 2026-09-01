@@ -150,10 +150,20 @@ def summarize_training_seeds(root: Path) -> tuple[list[dict], list[dict]]:
             analysis = json.loads(analysis_path.read_text())
             robust = analysis["robust"]
             holm = robust["confirmatory_family_holm_p"]
+            paired = robust["exposure_conditioned_paired_followup"]
             row = {
                 "model": model_dir.name,
                 "training_seed": int(sweep_dir.name.removeprefix("seed_")),
                 "stale_attention_shift": robust["primary_stale_attention_shift"]["mean_shift"],
+                "paired_probability_def_delta": (
+                    paired["probability_def"]["mean_degraded_minus_clean"]
+                ),
+                "paired_probability_def_p_decrease": (
+                    paired["probability_def"]["p_one_sided_decrease"]
+                ),
+                "paired_margin_def_delta": (
+                    paired["margin_def"]["mean_degraded_minus_clean"]
+                ),
                 "H1_rho": robust["H1_robust"]["rho"],
                 "H2_delta": analysis["H2_outage_duration"]["mean_delta_faith_minus_perf"],
                 "H3_rho": robust["H3_robust"]["rho"],
@@ -174,7 +184,8 @@ def summarize_training_seeds(root: Path) -> tuple[list[dict], list[dict]]:
             "model": model_dir.name,
             "training_seeds": len(analyses),
         }
-        for key in ("stale_attention_shift", "H1_rho", "H2_delta", "H3_rho",
+        for key in ("stale_attention_shift", "paired_probability_def_delta",
+                    "paired_margin_def_delta", "H1_rho", "H2_delta", "H3_rho",
                     "H4_within_episode_rho"):
             observed = values(key)
             aggregate[f"{key}_mean"] = _mean(observed)
@@ -182,6 +193,9 @@ def summarize_training_seeds(root: Path) -> tuple[list[dict], list[dict]]:
             aggregate[f"{key}_max"] = max(observed)
         aggregate["positive_stale_attention_shift_seeds"] = sum(
             row["stale_attention_shift"] > 0 for row in analyses
+        )
+        aggregate["negative_paired_probability_def_delta_seeds"] = sum(
+            row["paired_probability_def_delta"] < 0 for row in analyses
         )
         for hypothesis in ("H1", "H2", "H3", "H4"):
             supported = sum(bool(row[f"{hypothesis}_supported"]) for row in analyses)
