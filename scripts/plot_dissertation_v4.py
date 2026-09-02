@@ -209,7 +209,7 @@ def decoupling_figure() -> None:
                          and row["axis"] == "clean")
             axes[0, column].plot(
                 [float(row["level_s"]) for row in seed_rows],
-                [float(row["mean_stale_attention_shift_when_exposed"])
+                [float(row["mean_wamsn_when_exposed_secondary"])
                  for row in seed_rows],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
@@ -241,8 +241,8 @@ def decoupling_figure() -> None:
         for ax in axes[:, column]:
             ax.grid(color="#D8D8D8", linewidth=0.7)
             ax.spines[["top", "right"]].set_visible(False)
-    axes[0, 0].set_ylabel("Paired stale-attention shift")
-    axes[1, 0].set_ylabel("Type-matched DEF")
+    axes[0, 0].set_ylabel("WAMSN (stale-exposed decisions)")
+    axes[1, 0].set_ylabel("Probability DEF")
     axes[2, 0].set_ylabel("Mean pickups per episode")
     axes[0, 1].legend(frameon=False, fontsize=8)
     shift_limits = [axes[0, column].get_ylim() for column in range(2)]
@@ -406,10 +406,10 @@ def action_stratified_figure() -> None:
     by_key = {(row["model"], int(row["training_seed"]), row["stratum"]): row
               for row in rows}
 
-    fig = plt.figure(figsize=(8.0, 5.7))
+    fig = plt.figure(figsize=(8.0, 6.2))
     axes = fig.subplot_mosaic(
-        [["counts", "probability"], ["def", "def"]],
-        height_ratios=[0.9, 1.15],
+        [["counts", "probability"], ["def_full", "def_zoom"]],
+        height_ratios=[0.95, 1.05],
     )
     dispatch_fraction = np.array([
         float(by_key[model, seed, "dispatch"]["fraction_of_eligible_records"])
@@ -441,7 +441,6 @@ def action_stratified_figure() -> None:
     axes["counts"].set_ylabel("Eligible decisions (count)")
     axes["counts"].set_title("(a) Chosen-action counts", loc="left")
 
-    width = 0.32
     no_op_probability = np.array([
         float(by_key[model, seed, "no_op"]["mean_selected_action_probability"])
         for model, seed in checkpoints
@@ -450,54 +449,89 @@ def action_stratified_figure() -> None:
         float(by_key[model, seed, "dispatch"]["mean_selected_action_probability"])
         for model, seed in checkpoints
     ])
-    axes["probability"].bar(
-        x - width / 2, no_op_probability, width=width, color="#176B87",
-        label="No-op",
+    axes["probability"].scatter(
+        x - 0.12, no_op_probability, s=34, marker="s", color="#176B87",
+        label="No-op", zorder=3,
     )
-    axes["probability"].bar(
-        x + width / 2, dispatch_probability, width=width, color="#C75000",
-        hatch="///", edgecolor="white", linewidth=0.6, label="Dispatch",
+    axes["probability"].scatter(
+        x + 0.12, dispatch_probability, s=38, marker="^", color="#C75000",
+        label="Dispatch", zorder=3,
     )
-    axes["probability"].set_ylim(0, 1.04)
+    axes["probability"].set_yscale("log")
+    axes["probability"].set_ylim(0.005, 1.2)
     axes["probability"].set_ylabel("Mean selected-action probability")
-    axes["probability"].set_title("(b) Probability of the chosen action", loc="left")
-    axes["probability"].legend(frameon=False, fontsize=8, loc="center right")
+    axes["probability"].set_title(
+        "(b) Probability of the chosen action (log scale)", loc="left"
+    )
+    axes["probability"].legend(frameon=False, fontsize=8, loc="lower right")
 
     strata = (
         ("all", "All", "o", "#555555", -0.16),
         ("no_op", "No-op", "s", "#176B87", 0.0),
         ("dispatch", "Dispatch", "^", "#C75000", 0.16),
     )
+    series = []
     for stratum, label, marker, color, offset in strata:
-        values = []
-        lows = []
-        highs = []
+        values, ci_lows, ci_highs = [], [], []
         for model, seed in checkpoints:
             row = by_key[model, seed, stratum]
             value = float(row["paired_probability_def_delta"]) * 1e4
             values.append(value)
-            lows.append(value - float(row["paired_probability_def_ci_low"]) * 1e4)
-            highs.append(float(row["paired_probability_def_ci_high"]) * 1e4 - value)
-        axes["def"].errorbar(
-            x + offset, values, yerr=[lows, highs], fmt=marker, color=color,
+            ci_lows.append(float(row["paired_probability_def_ci_low"]) * 1e4)
+            ci_highs.append(float(row["paired_probability_def_ci_high"]) * 1e4)
+        values = np.asarray(values)
+        ci_lows = np.asarray(ci_lows)
+        ci_highs = np.asarray(ci_highs)
+        series.append((label, marker, color, offset, values, ci_lows, ci_highs))
+        axes["def_full"].errorbar(
+            x + offset, values,
+            yerr=[values - ci_lows, ci_highs - values], fmt=marker, color=color,
             markerfacecolor="white" if stratum == "all" else color,
             markersize=5.5, capsize=3, linewidth=1.1, label=label,
         )
-    axes["def"].axhline(0, color="#202020", linewidth=0.9)
-    axes["def"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
-    axes["def"].set_title("(c) Degraded twin minus clean twin", loc="left")
-    axes["def"].legend(frameon=False, fontsize=8, loc="lower left", ncol=3)
+    axes["def_full"].axhline(0, color="#202020", linewidth=0.9)
+    axes["def_full"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
+    axes["def_full"].set_title("(c) DEF change: full scale", loc="left")
+    axes["def_full"].legend(frameon=False, fontsize=7.5, loc="lower left", ncol=3)
+
+    zoom_low, zoom_high = -1.2, 1.2
+    for label, marker, color, offset, values, ci_lows, ci_highs in series:
+        visible = (values >= zoom_low) & (values <= zoom_high)
+        if np.any(visible):
+            shown = values[visible]
+            shown_lows = np.maximum(ci_lows[visible], zoom_low)
+            shown_highs = np.minimum(ci_highs[visible], zoom_high)
+            axes["def_zoom"].errorbar(
+                x[visible] + offset, shown,
+                yerr=[shown - shown_lows, shown_highs - shown],
+                fmt=marker, color=color, markerfacecolor=color,
+                markersize=5.5, capsize=3, linewidth=1.1,
+            )
+        for x_pos, value in zip(x[~visible] + offset, values[~visible]):
+            boundary = zoom_low + 0.04 if value < zoom_low else zoom_high - 0.04
+            direction = "v" if value < zoom_low else "^"
+            axes["def_zoom"].scatter(x_pos, boundary, marker=direction,
+                                     s=42, color=color, zorder=4)
+            axes["def_zoom"].annotate(
+                f"{value:+.1f}", (x_pos, boundary),
+                xytext=(8, 7 if value < zoom_low else -12),
+                textcoords="offset points", ha="center", fontsize=6.8,
+            )
+    axes["def_zoom"].axhline(0, color="#202020", linewidth=0.9)
+    axes["def_zoom"].set_ylim(zoom_low, zoom_high)
+    axes["def_zoom"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
+    axes["def_zoom"].set_title("(d) DEF change: enlarged near zero", loc="left")
 
     for ax in axes.values():
         ax.set_xticks(x, labels)
-        ax.text(1, -0.14, "GAT", transform=ax.get_xaxis_transform(),
+        ax.text(1, -0.16, "GAT", transform=ax.get_xaxis_transform(),
                 ha="center", va="top", fontsize=9, fontweight="bold")
-        ax.text(5, -0.14, "GAT-Outage", transform=ax.get_xaxis_transform(),
+        ax.text(5, -0.16, "GAT-Outage", transform=ax.get_xaxis_transform(),
                 ha="center", va="top", fontsize=9, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
     fig.suptitle("Action-stratified faithfulness diagnostic", y=0.995)
-    fig.tight_layout(rect=(0, 0.03, 1, 0.985))
+    fig.tight_layout(rect=(0, 0.035, 1, 0.985))
     _save(fig, "action_stratified_faithfulness")
 
 
@@ -516,7 +550,10 @@ def random_loss_robustness_figure() -> None:
         ("tunnel", "Tunnel trigger", "o", "#C75000", -0.12),
         ("random", "Random trigger", "s", "#176B87", 0.12),
     )
-    fig, axes = plt.subplots(1, 3, figsize=(8.0, 3.65))
+    fig = plt.figure(figsize=(8.0, 5.25))
+    axes = fig.subplot_mosaic(
+        [["exposure", "attention"], ["def_full", "def_zoom"]]
+    )
 
     width = 0.24
     for condition, label, _, color, offset in conditions:
@@ -524,43 +561,82 @@ def random_loss_robustness_figure() -> None:
             float(by_key[model, seed, condition]["empirical_degradation_rate"]) * 100
             for model, seed in checkpoints
         ]
-        axes[0].bar(
+        axes["exposure"].bar(
             x + offset, exposure, width=width, color=color,
             hatch="///" if condition == "random" else None,
             edgecolor="white", linewidth=0.5, label=label,
         )
-    axes[0].set_ylabel("Degraded observations (%)")
-    axes[0].set_title("(a) Observed exposure", loc="left")
+    axes["exposure"].set_ylabel("Degraded observations (%)")
+    axes["exposure"].set_title("(a) Observed exposure", loc="left")
 
-    metric_specs = (
-        ("stale_attention_shift", "stale_attention_ci_low",
-         "stale_attention_ci_high", 1e3,
-         r"Stale-attention shift ($\times 10^{-3}$)", "(b) Attention shift"),
-        ("paired_probability_def_shift", "paired_probability_def_ci_low",
-         "paired_probability_def_ci_high", 1e4,
-         r"Probability DEF shift ($\times 10^{-4}$)", "(c) Faithfulness shift"),
-    )
-    for ax, (value_key, low_key, high_key, scale, ylabel, title) in zip(
-        axes[1:], metric_specs
-    ):
-        for condition, label, marker, color, offset in conditions:
-            values, lows, highs = [], [], []
-            for model, seed in checkpoints:
-                row = by_key[model, seed, condition]
-                value = float(row[value_key]) * scale
-                values.append(value)
-                lows.append(value - float(row[low_key]) * scale)
-                highs.append(float(row[high_key]) * scale - value)
-            ax.errorbar(
-                x + offset, values, yerr=[lows, highs], fmt=marker,
-                color=color, markerfacecolor=color, markersize=4.8,
-                linewidth=1.0, capsize=2.5, label=label,
+    for condition, label, marker, color, offset in conditions:
+        values, ci_lows, ci_highs = [], [], []
+        for model, seed in checkpoints:
+            row = by_key[model, seed, condition]
+            value = float(row["stale_attention_shift"]) * 1e3
+            values.append(value)
+            ci_lows.append(float(row["stale_attention_ci_low"]) * 1e3)
+            ci_highs.append(float(row["stale_attention_ci_high"]) * 1e3)
+        values = np.asarray(values)
+        axes["attention"].errorbar(
+            x + offset, values,
+            yerr=[values - np.asarray(ci_lows), np.asarray(ci_highs) - values],
+            fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
+            linewidth=1.0, capsize=2.5, label=label,
+        )
+    axes["attention"].axhline(0, color="#202020", linewidth=0.8)
+    axes["attention"].set_ylabel(r"Stale-attention shift ($\times 10^{-3}$)")
+    axes["attention"].set_title("(b) Attention shift", loc="left")
+
+    def_series = []
+    for condition, label, marker, color, offset in conditions:
+        values, ci_lows, ci_highs = [], [], []
+        for model, seed in checkpoints:
+            row = by_key[model, seed, condition]
+            values.append(float(row["paired_probability_def_shift"]) * 1e4)
+            ci_lows.append(float(row["paired_probability_def_ci_low"]) * 1e4)
+            ci_highs.append(float(row["paired_probability_def_ci_high"]) * 1e4)
+        values = np.asarray(values)
+        ci_lows = np.asarray(ci_lows)
+        ci_highs = np.asarray(ci_highs)
+        def_series.append((label, marker, color, offset, values, ci_lows, ci_highs))
+        axes["def_full"].errorbar(
+            x + offset, values, yerr=[values - ci_lows, ci_highs - values],
+            fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
+            linewidth=1.0, capsize=2.5, label=label,
+        )
+    axes["def_full"].axhline(0, color="#202020", linewidth=0.8)
+    axes["def_full"].set_ylabel(r"Probability DEF shift ($\times 10^{-4}$)")
+    axes["def_full"].set_title("(c) Faithfulness shift: full scale", loc="left")
+
+    zoom_low, zoom_high = -1.0, 1.0
+    for label, marker, color, offset, values, ci_lows, ci_highs in def_series:
+        visible = (values >= zoom_low) & (values <= zoom_high)
+        shown = values[visible]
+        shown_lows = np.maximum(ci_lows[visible], zoom_low)
+        shown_highs = np.minimum(ci_highs[visible], zoom_high)
+        axes["def_zoom"].errorbar(
+            x[visible] + offset, shown,
+            yerr=[shown - shown_lows, shown_highs - shown],
+            fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
+            linewidth=1.0, capsize=2.5,
+        )
+        for x_pos, value in zip(x[~visible] + offset, values[~visible]):
+            boundary = zoom_low + 0.05 if value < zoom_low else zoom_high - 0.05
+            direction = "v" if value < zoom_low else "^"
+            axes["def_zoom"].scatter(x_pos, boundary, marker=direction,
+                                     s=42, color=color, zorder=4)
+            axes["def_zoom"].annotate(
+                f"{value:+.1f}", (x_pos, boundary),
+                xytext=(0, 7 if value < zoom_low else -12),
+                textcoords="offset points", ha="center", fontsize=6.8,
             )
-        ax.axhline(0, color="#202020", linewidth=0.8)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title, loc="left")
+    axes["def_zoom"].axhline(0, color="#202020", linewidth=0.8)
+    axes["def_zoom"].set_ylim(zoom_low, zoom_high)
+    axes["def_zoom"].set_ylabel(r"Probability DEF shift ($\times 10^{-4}$)")
+    axes["def_zoom"].set_title("(d) Faithfulness shift: enlarged near zero", loc="left")
 
-    for ax in axes:
+    for ax in axes.values():
         ax.set_xticks(x, labels)
         ax.text(1, -0.17, "GAT", transform=ax.get_xaxis_transform(),
                 ha="center", va="top", fontsize=8.5, fontweight="bold")
@@ -568,9 +644,9 @@ def random_loss_robustness_figure() -> None:
                 ha="center", va="top", fontsize=8.5, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
-    axes[0].legend(frameon=False, fontsize=7.5, loc="upper left")
+    axes["exposure"].legend(frameon=False, fontsize=7.5, loc="upper left")
     fig.suptitle("Sensitivity to tunnel-triggered versus random telemetry loss")
-    fig.tight_layout(rect=(0, 0.03, 1, 0.96))
+    fig.tight_layout(rect=(0, 0.035, 1, 0.96))
     _save(fig, "random_loss_robustness")
 
 

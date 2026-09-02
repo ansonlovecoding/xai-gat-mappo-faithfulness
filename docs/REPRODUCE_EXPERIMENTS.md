@@ -174,7 +174,7 @@ Train, select, and evaluate the stable model set first:
   --config configs/experiments/dissertation_v8.toml --stage evaluate
 ```
 
-Then run the four v9 audit commands listed at the start of this guide. The final
+Then run the five v9 audit commands listed at the start of this guide. The final
 faithfulness matrix contains 1,440 episodes and can take many hours on CPU.
 
 Run the frozen-policy random-loss sensitivity analysis separately:
@@ -208,7 +208,18 @@ than silently treating them as complete.
 The available stages are:
 
 ```text
-train -> select -> evaluate -> diagnose -> sweep -> robustness -> preflight -> analyze -> summarize
+train -> select -> evaluate
+framework: diagnose -> sweep -> robustness -> preflight -> analyze -> summarize
+           -> controls -> analyze-robustness -> analyze-controls -> audit
+```
+
+With selected checkpoints already available, run the complete explanation
+framework in the declared order with:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage framework --resume
 ```
 
 Examples:
@@ -313,6 +324,21 @@ control, valid-node distributions, exact random top-k overlap, taxi-only rank
 correlation, and attention aggregation sensitivity. The analysis uses episode
 blocks rather than treating decisions from the same episode as independent.
 
+After the control and random-loss analyses are complete, apply the explanation
+release rules:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage audit
+```
+
+This final stage is different from preflight. Preflight confirms that the
+experiment evidence is valid to analyze. The explanation audit decides whether
+the attention map may be presented as an explanation. See
+[`FRESHNESS_AWARE_EXPLANATION_AUDIT.md`](FRESHNESS_AWARE_EXPLANATION_AUDIT.md)
+for the inputs, decision rules, outputs, and use cases.
+
 ## 7. Expected directory structure
 
 ```text
@@ -338,6 +364,11 @@ runs/dissertation_v8/
   performance_context.csv
   training_seed_synthesis.json
   training_seed_synthesis.csv
+
+results/dissertation_v9_exposure_audit/explanation_audit/
+  audit_report.json
+  audit_checks.csv
+  AUDIT_REPORT.md
 
 runs/dissertation_v9_exposure_audit/
   sweeps/
@@ -383,6 +414,9 @@ Preflight checks the expected condition/seed matrix, source provenance,
 checkpoint identity, type-matched random controls, chosen-action exclusion,
 and empirical differentiation of the outage conditions.
 
+A passing preflight report does not mean that attention is eligible for release
+as an explanation. Run the final `audit` stage after all supporting analyses.
+
 ## 9. Rebuild tables and figures
 
 After all analyses exist:
@@ -410,6 +444,8 @@ The primary thesis tables are:
   across independently trained policies.
 - `random_loss_robustness.csv`: tunnel-triggered and random-triggered paired
   shifts for the 30-second sensitivity analysis.
+- `explanation_audit/AUDIT_REPORT.md`: the final explanation-release decision,
+  failed checks, checkpoint evidence, and permitted use.
 
 The plotting script writes PNG and PDF versions to `docs/figures/`.
 

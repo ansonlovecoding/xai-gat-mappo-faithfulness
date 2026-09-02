@@ -23,6 +23,14 @@ trading off control performance.
 > type-matched DEF, binary stale-attention shift, and preflight gates. See
 > [`docs/EXPERIMENT_CODEBASE.md`](docs/EXPERIMENT_CODEBASE.md). The checklist
 > below is a historical development record, not the current run command.
+
+> **Explanation release audit:** the freshness-aware explanation audit converts
+> the experiment evidence into an explicit `ELIGIBLE`, `WITHHOLD`, or
+> `INCOMPLETE` decision for every model and checkpoint. Run the complete frozen-
+> checkpoint workflow with `scripts/run_dissertation_experiments.py --config
+> configs/experiments/dissertation_v9_exposure_audit.toml --stage framework
+> --resume`. The inputs, checks, outputs, and operating scope are documented in
+> [`docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`](docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md).
 >
 > **See [`src/dispatch_marl/README.md`](src/dispatch_marl/README.md) for
 > the MARL package's design rationale — layer by layer, including the

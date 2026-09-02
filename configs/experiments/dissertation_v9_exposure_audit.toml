@@ -63,20 +63,46 @@ episodes_per_cell_seed = 3
 seeds = [42, 43, 44, 45, 46, 47, 48, 49]
 demand_split = "test"
 
+# Release rules for the freshness-aware explanation audit. These thresholds
+# are part of the reported protocol, not hidden implementation defaults.
+[explanation_audit]
+evidence_root = "results/dissertation_v9_exposure_audit"
+output_root = "results/dissertation_v9_exposure_audit/explanation_audit"
+controls_summary = "faithfulness_controls/summary.json"
+decision_relevance_ci_floor = 0.0
+minimum_dispatch_decisions = 1
+direction_epsilon = 1e-9
+require_deterministic_capability = true
+require_trigger_robustness = true
+
+[faithfulness_controls]
+evaluation_seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+episodes = 3
+conditions = ["clean", "outage_60s"]
+faithfulness_every = 8
+figure_directory = "docs/figures"
+figure_prefix = "v9"
+
 [[models]]
 id = "B1_mlp"
+label = "MLP"
+audit_slug = "B1"
 policy = "mlp"
 degradation = "off"
 faithfulness_sweep = false
 
 [[models]]
 id = "B2_gat"
+label = "GAT"
+audit_slug = "B2"
 policy = "gat"
 degradation = "off"
 faithfulness_sweep = true
 
 [[models]]
 id = "H5_gat_degraded"
+label = "GAT-Outage"
+audit_slug = "H5"
 policy = "gat"
 degradation = "tunnel_triggered"
 outage_duration = 30.0

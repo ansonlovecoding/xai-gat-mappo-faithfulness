@@ -77,7 +77,7 @@ TABLE_TITLES = {
     (4, 6): "Action composition and dispatch-stratified DEF diagnostic",
     (4, 7): "Tunnel-triggered and random-loss sensitivity results",
     (4, 8): "Hypothesis outcomes across training seeds",
-    (5, 1): "Freshness-aware explanation assurance approach",
+    (5, 1): "Freshness-aware explanation audit framework",
 }
 
 FIGURES = [
@@ -104,8 +104,8 @@ TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
 
 FIGURE_PAGES = {
-    "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "11",
-    "Figure 3.4": "12", "Figure 3.5": "14",
+    "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "12",
+    "Figure 3.4": "13", "Figure 3.5": "15",
     "Figure 4.1": "19", "Figure 4.2": "20", "Figure 4.3": "22",
     "Figure 4.4": "23", "Figure 4.5": "24",
     "Figure 4.6": "25", "Figure 4.7": "26", "Figure 4.8": "27",
@@ -115,10 +115,10 @@ FIGURE_PAGES = {
 
 TABLE_PAGES = {
     "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "11",
-    "Table 3.4": "11", "Table 3.5": "15", "Table 3.6": "15",
+    "Table 3.4": "11", "Table 3.5": "16", "Table 3.6": "16",
     "Table 4.1": "20", "Table 4.2": "21",
     "Table 4.3": "21", "Table 4.4": "24", "Table 4.5": "26",
-    "Table 4.6": "27", "Table 4.7": "28", "Table 4.8": "30",
+    "Table 4.6": "27", "Table 4.7": "29", "Table 4.8": "30",
     "Table 5.1": "34",
 }
 
@@ -139,11 +139,11 @@ HEADING_PAGES = {
     "3.2 SUMO environment and data": "8",
     "3.3 Observation graph and action space": "8",
     "3.4 Policy models and training": "9", "3.5 Telemetry degradation": "12",
-    "3.6 Explanation measures": "12",
-    "3.6.1 Decision-level explanation faithfulness": "12",
-    "3.6.2 Stale-node attention": "13", "3.7 Construct-validity audit": "14",
-    "3.8 Evaluation matrix": "15", "3.9 Hypotheses and statistics": "16",
-    "3.10 Reproducibility": "17", "3.11 Ethics and data governance": "17",
+    "3.6 Explanation measures": "13",
+    "3.6.1 Decision-level explanation faithfulness": "13",
+    "3.6.2 Stale-node attention": "14", "3.7 Construct-validity audit": "14",
+    "3.8 Evaluation matrix": "15", "3.9 Hypotheses and statistics": "17",
+    "3.10 Reproducibility": "18", "3.11 Ethics and data governance": "18",
     "Chapter 4: Results": "19",
     "4.1 Policy capability and training stability": "19",
     "4.2 Construct-validity audit": "21",
@@ -159,9 +159,9 @@ HEADING_PAGES = {
     "5.3 Dependence on checkpoint and analysis choice": "32",
     "5.4 Role of the construct-validity audit": "33",
     "5.5 Degradation-aware training": "33",
-    "5.6 Proposed assurance approach": "33",
-    "5.7 Limitations": "35", "5.8 Future work": "36",
-    "Chapter 6: Conclusion": "37",
+    "5.6 Proposed audit framework": "33",
+    "5.7 Limitations": "34", "5.8 Future work": "35",
+    "Chapter 6: Conclusion": "36",
 }
 
 
@@ -544,7 +544,7 @@ def add_caption_before(doc: Document, anchor, text: str):
 
 def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     caption_paragraph = add_caption_before(doc, anchor, title)
-    if title.startswith("Table 5.1:"):
+    if title.startswith("Table 4.7:"):
         caption_paragraph.paragraph_format.page_break_before = True
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
@@ -556,7 +556,7 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     elif title.startswith("Table 3.6:"):
         widths = [1150, 2550, 2200, 3120]
     elif title.startswith("Table 4.6:"):
-        widths = [1700, 950, 950, 1900, 3520]
+        widths = [1700, 800, 800, 1800, 3920]
     elif title.startswith("Table 5.1:"):
         widths = [1900, 2350, 1900, 2870]
     else:
@@ -987,7 +987,7 @@ def replace_abstract(doc: Document) -> None:
     keywords = (
         "Keywords: explainable reinforcement learning; graph attention; "
         "multi-agent reinforcement learning; fleet dispatch; telemetry "
-        "degradation; Age of Information; faithfulness."
+        "degradation; faithfulness."
     )
     paragraph = add_paragraph_before(doc, toc)
     label, terms = keywords.split(":", 1)
@@ -1026,18 +1026,25 @@ def update_front_text(doc: Document) -> None:
 
 def style_references_and_appendices(doc: Document) -> None:
     references = False
+    appendices = False
     for paragraph in doc.paragraphs:
         if paragraph.text == "References":
             references = True
             continue
         if paragraph.text == "Appendices":
             references = False
+            appendices = True
+            continue
         if references and paragraph.text.strip():
             paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             paragraph.paragraph_format.left_indent = Inches(0.5)
             paragraph.paragraph_format.first_line_indent = Inches(-0.5)
             paragraph.paragraph_format.line_spacing = 1.0
             paragraph.paragraph_format.space_after = Pt(6)
+        if appendices and paragraph.text.strip():
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        if paragraph.text == "Appendix B: Supporting Artefacts":
+            paragraph.text = "Appendix B: Supporting Artifacts"
         if paragraph.text.startswith("The complete reproduction procedure"):
             paragraph.text = (
                 "The complete reproduction procedure is provided in "

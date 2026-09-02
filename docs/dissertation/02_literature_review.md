@@ -1,11 +1,11 @@
 # 2. Literature review
 
-This chapter develops the research gap in a sequence of connected stages. It first explains why
-fleet dispatch is a relational reinforcement-learning problem. It then asks
-what an explanation should provide in sequential decision making, why raw
-attention is disputed as an explanation, how graph predictions are commonly
-explained, and why faithfulness tests can themselves be misleading. The final
-sections connect these issues to stale telemetry and position the experiment.
+This chapter reviews the literature needed to define the research gap. It
+first considers reinforcement learning for relational fleet dispatch, then
+examines explanations for sequential and graph-based decisions. It also
+reviews the debate over attention and the limits of faithfulness tests. The
+final sections connect these topics to stale telemetry and position the
+experiment.
 
 ## 2.1 Reinforcement learning for fleet dispatch
 
@@ -41,10 +41,10 @@ information that caused the decision.
 Recent dispatch methods continue to use relational structure. BMG-Q represents
 ride-pooling dispatch through a local bipartite matching graph [33]; CoopRide
 studies cooperation across city grids [37]; and DualG-MARL combines
-vehicle-state and task graphs [38]. Their primary outcomes are dispatch or
-scheduling quality. They do not test whether graph weights remain valid
-explanations when vehicle telemetry becomes stale. These studies are therefore
-useful task benchmarks, but not direct faithfulness benchmarks.
+vehicle-state and task graphs [38]. These studies evaluate dispatch or
+scheduling quality rather than whether graph weights remain valid explanations
+when vehicle telemetry becomes stale. They provide useful task benchmarks, but
+not direct faithfulness benchmarks.
 
 ## 2.2 Explainability in reinforcement learning
 
@@ -60,19 +60,19 @@ larger body of recent XRL studies.
 
 This dissertation concerns a local, post-decision operator question: *which
 visible vehicles or requests supported this dispatch action?* Earlier XRL work
-demonstrates several possible answers. Greydanus et al. [34] perturb image
+offers several ways to answer this question. Greydanus et al. [34] perturb image
 regions to visualize what changes an Atari policy. Madumal et al. [11] use a
 causal model to generate contrastive explanations. Mott et al. [35] introduce
 an attention bottleneck intended to expose what an RL agent uses. These
 approaches differ in mechanism, but they share an important lesson: a useful
 picture and a faithful account of model dependence are separate properties.
 
-That distinction is especially important in an operational dashboard. A
-plausible explanation may be easy for a person to read but weakly connected to
-the policy computation. A faithful explanation should change when information
-that matters to the action is removed or retained. The experiment therefore
-does not ask whether users like the attention map. It asks whether its ranking
-passes a controlled decision-level faithfulness test.
+For an operational dashboard, readability and faithfulness must be considered
+separately. An explanation may be easy to read but weakly connected to the
+policy computation. A faithful explanation should change when information that
+matters to the action is removed or retained. This experiment tests that link
+through a controlled decision-level faithfulness test; it does not measure user
+preference for the attention map.
 
 ## 2.3 Is attention an explanation?
 
@@ -82,9 +82,9 @@ different attention distributions could produce similar predictions.
 Wiegreffe and Pinter [13] argued that this does not justify rejecting all
 attention explanations and proposed more careful tests. Serrano and Smith [14]
 likewise showed that removing high-attention items can affect outputs, but that
-the relationship varies by model and task. The useful conclusion is not a
-universal yes or no. It is that attention needs an explicit claim and an
-appropriate test.
+the relationship varies by model and task. The literature therefore supports
+neither a universal acceptance nor a universal rejection of attention. Each
+explanation claim needs an explicit definition and an appropriate test.
 
 Attention became widely visible through Transformer models [9], but visibility
 also encouraged a broader interpretability claim than the mechanism alone can
@@ -93,11 +93,10 @@ several different goals that should be evaluated separately.
 
 Jacovi and Goldberg [17] separate *plausibility*, which concerns whether an
 explanation looks reasonable to a person, from *faithfulness*, which concerns
-whether it reflects the model's actual reasoning process. This
-dissertation follows that distinction. The attention weights are not rejected
-because they are internal values, and they are not accepted because they are
-coupled to the actor. They are treated as a candidate explanation whose
-decision relevance must be measured.
+whether it reflects the model's actual reasoning process. This dissertation
+follows that distinction. It treats the attention weights as a candidate
+explanation and measures their decision relevance rather than accepting them
+simply because they are part of the actor.
 
 Layer and head aggregation add another difficulty. A two-layer, multi-head
 network does not produce one unique attention map. Averaging heads, selecting a
@@ -123,7 +122,7 @@ The survey by Yuan et al. [25] organizes GNN explainers by target, mechanism,
 and scope. GraphFramEx goes further by comparing explanation methods under
 different user needs and combining necessity and sufficiency views [29]. Its
 results show that no single method dominates every evaluation dimension. This
-supports the use of more than one diagnostic in the present study: DEF tests
+supports the use of several checks in the present study: DEF tests
 counterfactual relevance, taxi-only rank correlation compares attention with
 leave-one-out effects, and stale-attention measures describe freshness
 exposure.
@@ -131,8 +130,8 @@ exposure.
 Most GNN explainability benchmarks study node or graph classification. Fleet
 dispatch differs because some graph nodes also define actions. A passenger
 request is both information and a selectable action, while a nearby taxi is
-context only. Deleting these node types is therefore not the same
-intervention. This action-linked graph structure motivates the
+context only. Deleting them creates different interventions. This action-linked
+graph structure motivates the
 construct-validity audit in Section 3.7.
 
 ## 2.5 Faithfulness evaluation and its pitfalls
@@ -154,8 +153,8 @@ removing features and retraining the model, showing why a simple deletion test
 can confound attribution quality with distribution shift [28]. Adebayo et al.
 [27] provide a different sanity check: an explanation should respond when model
 parameters or training labels are randomized. Alvarez-Melis and Jaakkola [19]
-show that explanation methods can also be locally unstable. Together,
-these studies make the evaluator part of the object being audited.
+show that explanation methods can also be locally unstable. Together, these
+studies show that the evaluator itself must be audited.
 
 The present action-deletion problem is related but more specific. If a selected
 request node is masked, its action logit becomes unavailable. A large margin
@@ -182,20 +181,19 @@ when a vehicle reading has stopped updating. The operator can see a strong
 weight without knowing that its source is old.
 
 This dissertation uses AoI only as a node-level freshness descriptor and as
-the weight inside WAMSN. The manipulated condition is the declared duration of
-an observation-layer outage triggered by tunnel entry. The design does not
-manipulate AoI independently, so it does not claim that a larger AoI value
-causes lower faithfulness. Instead, it asks whether stale exposure and
-attention-based explanation behavior provide consistent evidence under
-controlled outages.
+the weight inside WAMSN. The experiment manipulates the duration of an
+observation-layer outage triggered by tunnel entry, not AoI itself. It therefore
+makes no causal claim that a larger AoI value lowers faithfulness. The analysis
+instead asks whether stale exposure and attention-based explanation behavior
+provide consistent evidence under controlled outages.
 
 ## 2.7 Research gap and positioning
 
-The reviewed work establishes four points: relational RL is appropriate for
+The literature supports four points: relational RL is appropriate for
 fleet dispatch; attention is easy to expose but disputed as an explanation;
 GNN faithfulness requires graph-aware perturbations; and stale state matters to
-operational control. What is not joined is the assurance question at their
-intersection.
+operational control. Existing work has not brought these topics together as one
+explanation-assurance problem.
 
 Within the graph- and RL-explainability studies reviewed in Sections 2.2-2.5,
 no evaluation protocol was identified that combines all of the following:
@@ -206,7 +204,7 @@ no evaluation protocol was identified that combines all of the following:
 - a control for graph nodes that also remove available actions; and
 - replication across independently trained checkpoints.
 
-The contribution is therefore an audit protocol and an empirical test, not a
+This thesis contributes an audit protocol and an empirical test rather than a
 new dispatch algorithm. SUMO supplies a controlled simulated state [22]. The
 GAT-MAPPO policy supplies a realistic attention channel. The research contribution
 is to test whether that channel gives a reproducible freshness-aware and

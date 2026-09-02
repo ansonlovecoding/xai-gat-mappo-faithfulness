@@ -118,8 +118,9 @@ metric after seeing the result.
 ![Simplified graph-attention design](../simplified_graph_attention_design.png)
 
 **Figure 3.2.** The policy and audit share the same two-layer attention encoder.
-The audit reduces the self-node attention row to node importance without
-modifying the actor, critic, or selected action.
+The default audit reduces the self-node attention row to node importance
+without modifying the actor, critic, or selected action; the selected-request
+row is evaluated separately as a sensitivity check.
 
 Three policy conditions are included:
 
@@ -158,10 +159,24 @@ The shared optimization settings are shown below.
 | PPO passes per update | 4 |
 | Minibatch size | 256 |
 | Value-loss coefficient | 0.25 |
+| Value clip ratio | 0.20 |
 | Entropy coefficient | 0.05, adaptive to a 0.20 entropy floor |
+| Maximum adaptive entropy coefficient | 0.20 |
 | Target Kullback-Leibler divergence | 0.015 |
 | Gradient-norm limit | 0.50 |
+| Dispatch credit reward | 1.00 |
+| Critic encoder gradient scale | 0.10 |
 | GAT hidden width / layers / heads | 64 / 2 / 4 |
+| Stability window | Final 10 training epochs |
+| Minimum final-window mean pickups | 5.0 |
+| Maximum consecutive zero-pickup epochs | 4 |
+| Minimum selected validation pickups | 5.0 |
+| Minimum final validation retention | 0.80 |
+
+Final validation retention is the final checkpoint's mean validation pickups
+divided by the selected checkpoint's mean validation pickups. These four
+stability gates are applied to every training run before its checkpoint is
+accepted for evaluation.
 
 At simulation step `t`, the shared team reward is:
 
@@ -343,7 +358,7 @@ clean capability evaluation therefore contains 216 episode evaluations:
 The complete evaluation structure is summarized below. An episode evaluation is
 one complete rollout of one frozen checkpoint under one telemetry condition.
 
-| Evaluation | No. of models | Frozen checkpoints | Telemetry cases | Episodes/cell | Total |
+| Evaluation | Model families | Total frozen checkpoints | Telemetry cases | Episodes/cell | Total |
 |---|---:|---:|---:|---:|---:|
 | Clean capability context | 3 | 9 | 1 | 24 | 216 |
 | Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
@@ -423,7 +438,7 @@ with an episode-block confidence interval and is interpreted by effect size,
 direction across trained policies, and uncertainty rather than by a
 decision-level p-value alone.
 
-H2 is retained as a pre-declared but exploratory comparison. Its original rate
+H2 is treated as a predeclared exploratory comparison. Its original rate
 divides by clean DEF, which is close to zero and can make a small absolute
 change look arbitrarily large. The analysis therefore reports the support
 verdict and absolute trajectories, but does not use the ratio as the main

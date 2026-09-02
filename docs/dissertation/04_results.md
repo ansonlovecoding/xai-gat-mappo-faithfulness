@@ -20,13 +20,12 @@ limited.
 
 All nine training runs pass the declared stability gates. The following values
 describe the final ten training epochs, not the held-out evaluation in Table
-4.1. For GAT, the final ten-epoch mean pickups are 13.3, 9.0, and 9.9, and final validation retains
-100%, 100%, and 92.6% of the selected validation score. The corresponding
+4.1. For GAT, the final ten-epoch mean pickups are 13.3, 9.0, and 9.9, and final
+validation retention is 100%, 100%, and 92.6%. The corresponding
 GAT-Outage values are 12.4, 14.1, and 13.8 pickups, with validation retention
 of 100%, 93.9%, and 96.5%. Training metrics still fluctuate across epochs, but
 no selected checkpoint is a zero-pickup policy under stochastic validation.
-This statement does not apply to deterministic argmax action selection,
-reported below.
+Deterministic argmax results are reported separately below.
 
 Table 4.1 places the selected policies above two lower bounds evaluated on the
 same held-out demand. Performance is reported only to establish that the
@@ -44,18 +43,16 @@ The legal-random baseline has 24 independent episode clusters. Greedy nearest
 is deterministic, so its effective sample is the three demand variants rather
 than 24 repeated seed-episode records. GAT's seed means are 13.71, 9.42, and
 11.79. Every selected policy exceeds both lower bounds under stochastic action
-sampling. This establishes capability for the sampled policy distributions; it
-does not show that graph attention caused that capability or that the argmax
-policy is usable.
+sampling. These results confirm capability for the sampled policy distributions
+only; the role of graph attention and the usability of the argmax policy remain
+untested.
 
-The audit does not require GAT to outperform MLP; it requires the audited
-checkpoint's sampled policy distribution to perform above the declared lower
-bounds. That condition is met. However, MLP has the highest cross-seed mean in this
-implementation, and the replicate ranges overlap. The experiment therefore
-does not establish a task-performance advantage for graph attention. This
-limits how broadly the audit can be generalized, but it does not answer the
-separate question of whether the exposed attention weights faithfully explain
-the GAT policies' decisions.
+The audit requires each checkpoint's sampled policy distribution to exceed the
+declared lower bounds, not GAT to outperform MLP. That condition is met. MLP has
+the highest cross-seed mean in this implementation, although the replicate
+ranges overlap. The experiment finds no task-performance advantage for graph
+attention. This limits how broadly the audit can be generalized but remains
+separate from whether the exposed weights faithfully explain GAT decisions.
 
 ![Clean-telemetry performance by training seed](../figures/v9_clean_performance_by_training_seed.png)
 
@@ -66,15 +63,15 @@ The deterministic diagnostic changes the capability interpretation. All six
 selected GAT checkpoints choose no-op throughout three held-out episodes,
 giving 0 pickups in 18 of 18 checkpoint-episodes. Their common mean reward is
 -46.58 and final pending-request wait is 905.9 seconds. The stochastic results
-are therefore not evidence of a stable argmax dispatcher. They show that the
-policy distributions retain enough probability on dispatch actions to produce
-pickups when sampled.
+show only that the policy distributions assign enough probability to dispatch
+actions to produce pickups when sampled; they do not establish a stable argmax
+dispatcher.
 
 ## 4.2 Construct-validity audit
 
 Removing a request node can remove an available action, while removing a peer
 taxi only hides information. A uniform random occlusion therefore compares
-unlike interventions.
+different types of change.
 
 | Control baseline used to calculate DEF | Mean margin-DEF | 95% CI | Interpretation |
 |---|---:|---:|---|
@@ -83,8 +80,8 @@ unlike interventions.
 
 The type-matched interval excludes zero, but its magnitude is about two orders
 smaller than the uniform-control artifact. This 1,199-decision audit supports
-the measurement design; it is not a separate answer to the primary research
-question. The reported protocol uses type matching, protects the chosen request
+the measurement design rather than answering the primary research question.
+The reported protocol uses type matching, protects the chosen request
 in the margin variant, and logs action-margin clamps.
 
 ## 4.3 Evaluator sensitivity and ranking controls
@@ -97,11 +94,11 @@ results. The 60-second aggregate means remain close to clean.
 The two conditions are stored as separate evaluations and have different
 decision counts. Across the six checkpoints, the largest absolute 60-second
 minus clean change is `0.000071` for raw attention, `0.000254` for Gradient x
-Input, and `0.000306` for LOO. Figure 4.3 therefore shows the clean values and
-the condition difference separately instead of presenting two visually
+Input, and `0.000306` for LOO. Figure 4.3 shows the clean values and the
+condition difference separately instead of presenting two visually
 indistinguishable rows.
 
-| Model | Seed | Raw DEF | GxI DEF | LOO DEF | Taxi-only rho |
+| Model | Seed | Raw-attention margin-DEF | GxI margin-DEF | LOO margin-DEF | Taxi-only rho |
 |---|---:|---:|---:|---:|---:|
 | GAT | 42 | +0.0003 | -0.0055 | +0.0008 | +0.088 |
 | GAT | 43 | -0.0009 | -0.0033 | +0.0099 | +0.404 |
@@ -118,8 +115,8 @@ uniform improvement.
 
 Raw-attention DEF ranges from -0.0009 to +0.0031. Taxi-only rank correlation
 with LOO is positive in all six checkpoints, but ranges from 0.088 to 0.699.
-Attention therefore shows some agreement with decision-relevant LOO ordering,
-while the strength of that agreement remains checkpoint-dependent.
+Attention shows some agreement with decision-relevant LOO ordering, but the
+strength of that agreement remains checkpoint-dependent.
 
 ![Faithfulness perturbation controls by checkpoint](../figures/v9_faithfulness_positive_controls.png)
 
@@ -194,11 +191,11 @@ Conditional WAMSN rises from 0.0275-0.0289 at 10 seconds to 0.0804-0.0900 at
 normalized AoI, this verifies increasing stale exposure; it does not show that
 AoI causes lower faithfulness.
 
-![WAMSN, type-matched DEF and pickups by outage duration](../figures/v9_decoupling_by_outage_duration.png)
+![WAMSN, probability DEF and pickups by outage duration](../figures/v9_decoupling_by_outage_duration.png)
 
 **Figure 4.7.** Longer observation outages increase WAMSN for every policy.
-DEF changes are much smaller, while pickups remain supporting context rather
-than the research outcome.
+DEF changes are much smaller; pickups are reported only as context, not as the
+main research outcome.
 
 ## 4.6 Exposure-conditioned paired audit
 
@@ -207,14 +204,14 @@ at the same simulation step. Positive attention shift means more attention is
 assigned to nodes marked stale. Negative DEF shift means lower measured
 faithfulness under degradation.
 
-| Model | Seed | Attention shift [95% CI] | Paired probability-DEF shift [95% CI] |
+| Model | Seed | Attention shift x 1,000 [95% CI] | Paired probability-DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|
-| GAT | 42 | +0.004074 [+0.0039, +0.0042] | -0.0000041 [-0.0000060, -0.0000022] |
-| GAT | 43 | +0.000208 [+0.0002, +0.0003] | -0.0000839 [-0.0001892, +0.0000143] |
-| GAT | 44 | -0.003483 [-0.0036, -0.0034] | +0.0000092 [+0.0000068, +0.0000116] |
-| GAT-Outage | 42 | +0.003975 [+0.0038, +0.0041] | -0.0000253 [-0.0000323, -0.0000193] |
-| GAT-Outage | 43 | +0.000959 [+0.0009, +0.0010] | -0.0000114 [-0.0000343, +0.0000061] |
-| GAT-Outage | 44 | -0.003038 [-0.0031, -0.0029] | +0.0000172 [+0.0000135, +0.0000212] |
+| GAT | 42 | +4.074 [+3.9, +4.2] | -0.041 [-0.060, -0.022] |
+| GAT | 43 | +0.208 [+0.2, +0.3] | -0.839 [-1.892, +0.143] |
+| GAT | 44 | -3.483 [-3.6, -3.4] | +0.092 [+0.068, +0.116] |
+| GAT-Outage | 42 | +3.975 [+3.8, +4.1] | -0.253 [-0.323, -0.193] |
+| GAT-Outage | 43 | +0.959 [+0.9, +1.0] | -0.114 [-0.343, +0.061] |
+| GAT-Outage | 44 | -3.038 [-3.1, -2.9] | +0.172 [+0.135, +0.212] |
 
 ![Paired attention and faithfulness shifts](../figures/v9_paired_attention_and_faithfulness_shift.png)
 
@@ -242,31 +239,33 @@ all six checkpoints, 56,550 records contain at least one valid request. Of
 these, 52,585 (93.0%) select no-op and 3,965 (7.0%) dispatch a request.
 Decisions with no valid request are excluded from these percentages.
 
-| Checkpoint | No-op (%) | Dispatch (%) | Mean selected dispatch probability | Paired dispatch DEF shift [95% CI] |
+| Checkpoint | No-op (%) | Dispatch (%) | Mean selected dispatch probability | Paired dispatch DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|---:|
-| GAT, seed 42 | 96.6 | 3.4 | 0.0085 | 0.0000000 [0.0000000, 0.0000000] |
-| GAT, seed 43 | 88.4 | 11.6 | 0.0368 | -0.0020358 [-0.0032488, -0.0008371] |
-| GAT, seed 44 | 90.4 | 9.6 | 0.0211 | -0.0000011 [-0.0000029, 0.0000000] |
-| GAT-Outage, seed 42 | 91.4 | 8.6 | 0.0228 | +0.0000088 [+0.0000047, +0.0000131] |
-| GAT-Outage, seed 43 | 94.6 | 5.4 | 0.0127 | -0.0004403 [-0.0008368, -0.0001285] |
-| GAT-Outage, seed 44 | 92.8 | 7.2 | 0.0181 | -0.0000044 [-0.0000092, +0.0000004] |
+| GAT, seed 42 | 96.6 | 3.4 | 0.0085 | 0.000 [0.000, 0.000] |
+| GAT, seed 43 | 88.4 | 11.6 | 0.0368 | -20.358 [-32.488, -8.371] |
+| GAT, seed 44 | 90.4 | 9.6 | 0.0211 | -0.011 [-0.029, 0.000] |
+| GAT-Outage, seed 42 | 91.4 | 8.6 | 0.0228 | +0.088 [+0.047, +0.131] |
+| GAT-Outage, seed 43 | 94.6 | 5.4 | 0.0127 | -4.403 [-8.368, -1.285] |
+| GAT-Outage, seed 44 | 92.8 | 7.2 | 0.0181 | -0.044 [-0.092, +0.004] |
 
 ![Action-stratified faithfulness diagnostic](../figures/v9_action_stratified_faithfulness.png)
 
 **Figure 4.9.** (a) Absolute no-op and dispatch counts; labels give the dispatch
-share. (b) Mean probability assigned to the action that was sampled. (c) Paired
-degraded-minus-clean probability DEF for all eligible decisions, chosen no-op
-actions, and dispatch actions. Error bars are 95% episode-block bootstrap
+share. (b) Mean probability assigned to the sampled action on a logarithmic
+scale. (c) Paired degraded-minus-clean probability DEF on the full scale. (d)
+Enlarged view around zero; arrows mark intervals that extend beyond the panel.
+Error bars are 95% episode-block bootstrap
 intervals.
 
-The no-op stratum closely follows the combined result because it supplies most
-records. The dispatch stratum does not reproduce the combined H1 trend in any
-checkpoint (`p` = 0.44-1.00), and it provides no consistent H4 evidence. The
+The no-op stratum closely follows the combined result because it accounts for
+most records. The same H1 trend does not appear in the dispatch stratum for any
+checkpoint (`p` = 0.44-1.00), and the dispatch results show no consistent H4
+evidence. The
 paired dispatch DEF shift is negative in four checkpoints, positive in one,
 and exactly zero in one. In four of six checkpoints its direction differs from
 the combined estimate. These effects are small except for the seed-43
 checkpoints, and dispatch intervals are wider because fewer episodes contain
-scored dispatch actions. The diagnostic does not establish a separate law for
+scored dispatch actions. The diagnostic does not establish a separate pattern for
 dispatch decisions. It shows that the combined H1 and H4 findings should not be
 generalized to dispatch actions.
 
@@ -281,6 +280,10 @@ median of 0.78. The comparison therefore focuses on the direction of paired
 effects within stale-exposed decisions rather than treating the two conditions
 as perfectly exposure matched.
 
+This sensitivity analysis is a separate 24-episode evaluation. Its repeated
+30-second tunnel estimates therefore differ slightly from the 48-episode main
+sweep in Table 4.5; no checkpoint is retrained or reselected.
+
 | Checkpoint | Exposure tunnel/random (%) | Attention shift tunnel/random (values x 1,000) | Probability DEF shift tunnel/random (values x 10,000) |
 |---|---:|---:|---:|
 | GAT, seed 42 | 0.580 / 0.569 | +4.281 / +4.037 | -0.012 / +0.004 |
@@ -292,10 +295,10 @@ as perfectly exposure matched.
 
 ![Random telemetry-loss robustness check](../figures/v9_random_loss_robustness.png)
 
-**Figure 4.10.** (a) Realized degraded-observation rates. (b) Change in
-attention mass on stale nodes relative to the exact clean twin. (c) Paired
-degraded-minus-clean probability DEF. Error bars are 95% episode-block
-bootstrap intervals. Both degradation conditions use a 30-second freeze.
+**Figure 4.10.** Sensitivity to tunnel and random triggers under a 30-second
+freeze: (a) exposure rate; (b) stale-attention shift; (c) probability-DEF shift
+at full scale; and (d) enlarged DEF near zero. Arrows mark off-panel intervals;
+error bars show 95% episode-block bootstrap intervals.
 
 Attention-shift direction agrees between tunnel and random triggers in five of
 six checkpoints. Probability-DEF direction agrees in four of six. One mismatch
@@ -334,15 +337,12 @@ describe no-op decisions in this action-imbalanced sample. They do not by
 themselves establish that AoI causes lower faithfulness or that the same
 relationship holds for dispatch actions. The paired clean-twin
 audit supplies the more direct intervention contrast, and its sign still
-changes with training seed. H2 is retained as exploratory because clean DEF is
+changes with training seed. H2 is treated as exploratory because clean DEF is
 close to zero and the relative-rate formulation is unstable.
 
 ## 4.10 Result summary
 
-Longer outages reliably increase stale-data exposure, and greater WAMSN is
-associated with lower DEF within episodes. However, paired attention and DEF
-shifts reverse for seed 44, and 30-second outage training does not remove this
-checkpoint dependence. The combined results are dominated by no-op decisions,
-do not reproduce for dispatch actions, and retain exceptions under random
-triggering. Raw attention therefore provides no reproducible freshness or
-faithfulness guarantee across the independently trained policies tested here.
+Longer outages increase stale exposure, while greater WAMSN accompanies lower
+within-episode DEF. Yet seed reversals, no-op dominance, dispatch failures, and
+random-trigger exceptions mean that raw attention cannot provide a reliable
+indication of data freshness or explanation faithfulness.

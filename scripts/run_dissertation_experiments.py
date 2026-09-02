@@ -84,7 +84,9 @@ def main() -> int:
                         default=PROJECT_ROOT / "configs/experiments/dissertation_v4.toml")
     parser.add_argument("--stage", choices=["train", "select", "evaluate", "diagnose",
                                             "sweep", "robustness", "preflight",
-                                            "analyze", "summarize", "all"],
+                                            "analyze", "summarize", "controls",
+                                            "analyze-controls", "analyze-robustness",
+                                            "audit", "framework", "all"],
                         default="all")
     parser.add_argument("--model", action="append", default=[],
                         help="model id to run; repeatable; default is every model")
@@ -106,9 +108,16 @@ def main() -> int:
     eval_cfg = config["evaluation"]
     stability_cfg = config.get("stability")
     models = _selected_models(config, args.model)
-    stages = (["train", "select", "evaluate", "diagnose", "sweep", "robustness",
-               "preflight", "analyze", "summarize"]
-              if args.stage == "all" else [args.stage])
+    framework_stages = [
+        "diagnose", "sweep", "robustness", "preflight", "analyze", "summarize",
+        "controls", "analyze-robustness", "analyze-controls", "audit",
+    ]
+    stages = (
+        ["train", "select", "evaluate", *framework_stages]
+        if args.stage == "all"
+        else framework_stages if args.stage == "framework"
+        else [args.stage]
+    )
 
     current_revision = git_state(PROJECT_ROOT)["revision"]
     if any(stage in stages for stage in (
@@ -117,6 +126,10 @@ def main() -> int:
         _run([sys.executable, "scripts/check_environment.py"], dry_run=args.dry_run)
 
     for stage in stages:
+        audit_cfg = config.get("explanation_audit", {})
+        evidence_root = PROJECT_ROOT / audit_cfg.get(
+            "evidence_root", "results/dissertation_v9_exposure_audit"
+        )
         if stage == "summarize":
             command = [
                 sys.executable, "scripts/summarize_dissertation_experiment.py",
@@ -128,6 +141,72 @@ def main() -> int:
                     str(PROJECT_ROOT / config["performance_root"]),
                 ]
             _run(command, dry_run=args.dry_run)
+            continue
+        if stage == "controls":
+            controls_cfg = config.get("faithfulness_controls", {})
+            controls_root = output_root / "faithfulness_controls"
+            for model in models:
+                if not model.get("faithfulness_sweep"):
+                    continue
+                slug = model.get("audit_slug", model["id"])
+                common = [
+                    sys.executable, "scripts/run_faithfulness_controls.py",
+                    "--models", model["id"],
+                    "--training-seeds", *(str(seed) for seed in train_cfg["seeds"]),
+                    "--eval-seeds", *(str(seed) for seed in controls_cfg.get(
+                        "evaluation_seeds", eval_cfg["seeds"]
+                    )),
+                    "--episodes", str(controls_cfg.get("episodes", 3)),
+                    "--conditions", *controls_cfg.get(
+                        "conditions", ["clean", "outage_60s"]
+                    ),
+                    "--checkpoint-root", str(checkpoint_root),
+                ]
+                _run([
+                    *common,
+                    "--faithfulness-every", str(controls_cfg.get("faithfulness_every", 8)),
+                    "--out", str(controls_root / f"{slug}_full"),
+                ], dry_run=args.dry_run)
+                _run([
+                    *common,
+                    "--action-row-only",
+                    "--out", str(controls_root / f"{slug}_action_row"),
+                ], dry_run=args.dry_run)
+            continue
+        if stage == "analyze-robustness":
+            _run([
+                sys.executable, "scripts/analyze_random_loss_robustness.py",
+                str(output_root / "robustness" / "random_loss_30s"),
+                "--out", str(evidence_root / "random_loss_robustness"),
+            ], dry_run=args.dry_run)
+            continue
+        if stage == "analyze-controls":
+            controls_root = output_root / "faithfulness_controls"
+            inputs = []
+            for model in models:
+                if not model.get("faithfulness_sweep"):
+                    continue
+                slug = model.get("audit_slug", model["id"])
+                inputs += [
+                    str(controls_root / f"{slug}_full"),
+                    str(controls_root / f"{slug}_action_row"),
+                ]
+            controls_cfg = config.get("faithfulness_controls", {})
+            _run([
+                sys.executable, "scripts/analyze_faithfulness_controls.py",
+                *inputs,
+                "--out", str(evidence_root / "faithfulness_controls"),
+                "--fig-dir", str(PROJECT_ROOT / controls_cfg.get(
+                    "figure_directory", "docs/figures"
+                )),
+                "--fig-prefix", controls_cfg.get("figure_prefix", "v9"),
+            ], dry_run=args.dry_run)
+            continue
+        if stage == "audit":
+            _run([
+                sys.executable, "scripts/audit_explanations.py",
+                "--config", str(args.config),
+            ], dry_run=args.dry_run)
             continue
         for model in models:
             model_train_cfg = {
@@ -248,7 +327,7 @@ def main() -> int:
                     for evaluation_seed in eval_cfg["seeds"]:
                         output = (output_root / "evaluations" / model["id"]
                                   / f"seed_{seed}" / f"eval_seed_{evaluation_seed}.json")
-                        if output.exists() and args.resume:
+                        if output.exists() and args.resume and not args.dry_run:
                             if _evaluation_is_compatible(
                                 output, checkpoint, evaluation_seed,
                                 eval_cfg, current_revision
@@ -256,7 +335,7 @@ def main() -> int:
                                 print(f"SKIP complete evaluation: {output}")
                                 continue
                             raise SystemExit(f"existing evaluation is incompatible: {output}")
-                        if output.exists():
+                        if output.exists() and not args.dry_run:
                             raise SystemExit(
                                 f"immutable evaluation output already exists: {output}; "
                                 "use --resume or a new experiment root"
@@ -279,7 +358,7 @@ def main() -> int:
                         continue
                     output = (output_root / "deterministic_diagnostics" / model["id"]
                               / f"seed_{seed}.json")
-                    if output.exists() and args.resume:
+                    if output.exists() and args.resume and not args.dry_run:
                         expected = {
                             **eval_cfg,
                             "episodes_per_cell_seed": diagnostic_cfg["episodes"],
@@ -295,7 +374,7 @@ def main() -> int:
                         raise SystemExit(
                             f"existing deterministic diagnostic is incompatible: {output}"
                         )
-                    if output.exists():
+                    if output.exists() and not args.dry_run:
                         raise SystemExit(
                             f"immutable deterministic diagnostic already exists: {output}; "
                             "use --resume or a new experiment root"
