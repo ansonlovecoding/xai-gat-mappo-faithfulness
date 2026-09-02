@@ -51,6 +51,8 @@ results/**
 !results/**/best_metadata.json
 !results/**/*.eval.json
 !results/**/*.json
+!results/**/AUDIT_REPORT.md
+!results/**/audit_checks.csv
 !results/**/train_log.jsonl
 !results/**/ckpt_best.pt
 !results/**/ckpt_final.pt
