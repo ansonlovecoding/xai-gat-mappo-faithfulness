@@ -1,0 +1,82 @@
+{
+  "selection_split": "val",
+  "selection_seed": 2026,
+  "episodes": 8,
+  "stochastic": true,
+  "metric": "mean_pickups",
+  "tie_breakers": [
+    "mean_reward",
+    "earlier_epoch"
+  ],
+  "minimum_mean_pickups": 2.0,
+  "minimum_improvement_over_initial": 1.0,
+  "initial": {
+    "checkpoint": "ckpt_epoch_0000.pt",
+    "checkpoint_sha256": "b233f537496c3730b5e3493b2d7813de42b59cbb0cc779c347bbe6221a5bf64a",
+    "epoch": 0,
+    "mean_pickups": 1.0,
+    "mean_reward": 20.5845,
+    "validation_result": "validation/ckpt_epoch_0000.json"
+  },
+  "selected_improvement_over_initial": 7.5,
+  "selected": {
+    "checkpoint": "ckpt_epoch_0039.pt",
+    "checkpoint_sha256": "d3d808f650c50f9b42a6e92ca5bcb803a36801071a0e7fd5c95045cb2793f691",
+    "epoch": 39,
+    "mean_pickups": 8.5,
+    "mean_reward": 78.80587499999999,
+    "validation_result": "validation/ckpt_epoch_0039.json",
+    "copied_to": "ckpt_selected.pt",
+    "copied_checkpoint_sha256": "d3d808f650c50f9b42a6e92ca5bcb803a36801071a0e7fd5c95045cb2793f691"
+  },
+  "candidates": [
+    {
+      "checkpoint": "ckpt_epoch_0000.pt",
+      "checkpoint_sha256": "b233f537496c3730b5e3493b2d7813de42b59cbb0cc779c347bbe6221a5bf64a",
+      "epoch": 0,
+      "mean_pickups": 1.0,
+      "mean_reward": 20.5845,
+      "validation_result": "validation/ckpt_epoch_0000.json"
+    },
+    {
+      "checkpoint": "ckpt_epoch_0010.pt",
+      "checkpoint_sha256": "ce3468921fa268a6ba1f1b0426a2979196989f722a74bc3bc0c5e2263377eac1",
+      "epoch": 10,
+      "mean_pickups": 1.625,
+      "mean_reward": 26.837875,
+      "validation_result": "validation/ckpt_epoch_0010.json"
+    },
+    {
+      "checkpoint": "ckpt_epoch_0020.pt",
+      "checkpoint_sha256": "88cbdcbb206a9d98f9416d37391fc5efb57c112b0d14e02db7ff74b8c13e3a52",
+      "epoch": 20,
+      "mean_pickups": 0.875,
+      "mean_reward": 17.235125,
+      "validation_result": "validation/ckpt_epoch_0020.json"
+    },
+    {
+      "checkpoint": "ckpt_epoch_0030.pt",
+      "checkpoint_sha256": "f1933e6e19f2d09f03c706c9f30dbc48dafeeefda351c0a1985c894d9601bb1b",
+      "epoch": 30,
+      "mean_pickups": 6.125,
+      "mean_reward": 56.821124999999995,
+      "validation_result": "validation/ckpt_epoch_0030.json"
+    },
+    {
+      "checkpoint": "ckpt_best.pt",
+      "checkpoint_sha256": "cbccba09e016de6ddc19c3b47ecefdca71e2dbb40c99f5128800ea4958ce45ed",
+      "epoch": 38,
+      "mean_pickups": 8.5,
+      "mean_reward": 78.4725,
+      "validation_result": "validation/ckpt_best.json"
+    },
+    {
+      "checkpoint": "ckpt_epoch_0039.pt",
+      "checkpoint_sha256": "d3d808f650c50f9b42a6e92ca5bcb803a36801071a0e7fd5c95045cb2793f691",
+      "epoch": 39,
+      "mean_pickups": 8.5,
+      "mean_reward": 78.80587499999999,
+      "validation_result": "validation/ckpt_epoch_0039.json"
+    }
+  ]
+}

@@ -251,36 +251,46 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 
 def _plot_controls(seed_rows: list[dict]) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    fig, axes = plt.subplots(2, 2, figsize=(8.0, 5.5), sharey="col")
+    fig, axes = plt.subplots(2, 2, figsize=(8.0, 5.7), sharey="row")
     fields = list(RANKER_LABEL)
     labels = [RANKER_LABEL[field] for field in fields]
     colors = {42: "#176B87", 43: "#C75000", 44: "#3A7D44"}
-    for row_index, condition in enumerate(("clean", "outage_60s")):
-        for col_index, model in enumerate(("B2", "D30")):
-            ax = axes[row_index, col_index]
-            for seed in (42, 43, 44):
-                values = []
-                for field in fields:
+    for col_index, model in enumerate(("B2", "D30")):
+        for seed in (42, 43, 44):
+            clean_values = []
+            differences = []
+            for field in fields:
+                values = {}
+                for condition in ("clean", "outage_60s"):
                     match = next((r for r in seed_rows
                                   if r["model"] == model
                                   and r["condition"] == condition
                                   and r["training_seed"] == seed
                                   and r["field"] == field), None)
-                    values.append(match["mean"] if match else np.nan)
-                ax.plot(range(len(fields)), values, "o-", linewidth=1.0,
-                        color=colors[seed], label=f"seed {seed}")
+                    values[condition] = match["mean"] if match else np.nan
+                clean_values.append(values["clean"])
+                differences.append(
+                    (values["outage_60s"] - values["clean"]) * 1e4
+                )
+            axes[0, col_index].plot(
+                range(len(fields)), clean_values, "o-", linewidth=1.1,
+                color=colors[seed], label=f"seed {seed}",
+            )
+            axes[1, col_index].plot(
+                range(len(fields)), differences, "o-", linewidth=1.1,
+                color=colors[seed],
+            )
+        axes[0, col_index].set_title(MODEL_DISPLAY[model])
+        for ax in axes[:, col_index]:
             ax.axhline(0, color="#333333", linewidth=0.8)
-            ax.set_xticks(range(len(fields)), labels, rotation=18, ha="right")
+            ax.set_xticks(range(len(fields)), labels, rotation=14, ha="right")
             ax.grid(axis="y", color="#D8D8D8", linewidth=0.6)
             ax.spines[["top", "right"]].set_visible(False)
-            if row_index == 0:
-                ax.set_title(MODEL_DISPLAY[model])
-            if col_index == 0:
-                condition_label = "Clean" if condition == "clean" else "60 s outage"
-                ax.set_ylabel(f"{condition_label}\nDEF (logit margin)")
+    axes[0, 0].set_ylabel("Clean logit-margin DEF")
+    axes[1, 0].set_ylabel("60 s minus clean\nlogit-margin DEF (x10^-4)")
     axes[0, 1].legend(frameon=False, fontsize=8)
-    fig.suptitle("Faithfulness controls vary across trained checkpoints")
-    fig.tight_layout()
+    fig.suptitle("Faithfulness controls and the independently evaluated 60 s change")
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(FIG_DIR / f"{FIG_PREFIX}_faithfulness_positive_controls.png", dpi=220,
                 bbox_inches="tight")
     fig.savefig(FIG_DIR / f"{FIG_PREFIX}_faithfulness_positive_controls.pdf",
@@ -370,42 +380,51 @@ def _plot_aggregation(rows: list[dict]) -> None:
 
 
 def _plot_action_rows(seed_rows: list[dict]) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(7.6, 5.2), sharey="row")
+    fig, axes = plt.subplots(2, 2, figsize=(7.8, 5.4), sharex="col", sharey="row")
     colors = {"Fixed self row": "#176B87", "Selected request row": "#C75000"}
+    markers = {"Fixed self row": "o", "Selected request row": "s"}
     field_by_label = {
         "Fixed self row": "self_row_request_def_m",
         "Selected request row": "action_row_request_def_m",
     }
-    for row_index, model in enumerate(("B2", "D30")):
-        for col_index, condition in enumerate(("clean", "outage_60s")):
-            ax = axes[row_index, col_index]
-            for seed in (42, 43, 44):
-                pair = []
-                for label, field in field_by_label.items():
-                    match = next(r for r in seed_rows
-                                 if r["model"] == model
-                                 and r["condition"] == condition
-                                 and r["training_seed"] == seed
-                                 and r["field"] == field)
-                    pair.append(match["mean"])
-                positions = np.array([seed - 0.10, seed + 0.10])
-                ax.plot(positions, pair, color="#777777", linewidth=0.8, zorder=1)
-                for position, value, label in zip(positions, pair, field_by_label):
-                    ax.scatter(position, value, color=colors[label], s=28,
-                               label=label if seed == 42 else None, zorder=2)
+    seeds = (42, 43, 44)
+    for col_index, model in enumerate(("B2", "D30")):
+        for label, field in field_by_label.items():
+            clean_values = []
+            differences = []
+            for seed in seeds:
+                clean = next(r["mean"] for r in seed_rows
+                             if r["model"] == model
+                             and r["condition"] == "clean"
+                             and r["training_seed"] == seed
+                             and r["field"] == field)
+                outage = next(r["mean"] for r in seed_rows
+                              if r["model"] == model
+                              and r["condition"] == "outage_60s"
+                              and r["training_seed"] == seed
+                              and r["field"] == field)
+                clean_values.append(clean)
+                differences.append((outage - clean) * 1e4)
+            axes[0, col_index].plot(
+                seeds, clean_values, marker=markers[label], linewidth=1.3,
+                color=colors[label], label=label,
+            )
+            axes[1, col_index].plot(
+                seeds, differences, marker=markers[label], linewidth=1.3,
+                color=colors[label],
+            )
+        axes[0, col_index].set_title(MODEL_DISPLAY[model])
+        for ax in axes[:, col_index]:
             ax.axhline(0, color="#333333", linewidth=0.8)
-            ax.set_xticks((42, 43, 44), ("42", "43", "44"))
+            ax.set_xticks(seeds, [str(seed) for seed in seeds])
             ax.grid(axis="y", color="#D8D8D8", linewidth=0.6)
             ax.spines[["top", "right"]].set_visible(False)
-            if row_index == 0:
-                ax.set_title("Clean" if condition == "clean" else "60 s outage")
-            if col_index == 0:
-                ax.set_ylabel(f"{MODEL_DISPLAY[model]}\nRequest-action DEF")
-            if row_index == 1:
-                ax.set_xlabel("Training seed")
+        axes[1, col_index].set_xlabel("Training seed")
+    axes[0, 0].set_ylabel("Clean request-action DEF")
+    axes[1, 0].set_ylabel("60 s minus clean\nrequest-action DEF (x10^-4)")
     axes[0, 1].legend(frameon=False, fontsize=8)
-    fig.suptitle("Query-row choice changes DEF differently by checkpoint")
-    fig.tight_layout()
+    fig.suptitle("Query-row sensitivity and the independently evaluated 60 s change")
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(FIG_DIR / f"{FIG_PREFIX}_action_query_row_sensitivity.png", dpi=220,
                 bbox_inches="tight")
     fig.savefig(FIG_DIR / f"{FIG_PREFIX}_action_query_row_sensitivity.pdf",

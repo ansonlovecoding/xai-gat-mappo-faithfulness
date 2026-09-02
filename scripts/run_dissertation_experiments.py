@@ -82,7 +82,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path,
                         default=PROJECT_ROOT / "configs/experiments/dissertation_v4.toml")
-    parser.add_argument("--stage", choices=["train", "select", "evaluate", "sweep", "preflight",
+    parser.add_argument("--stage", choices=["train", "select", "evaluate", "diagnose",
+                                            "sweep", "robustness", "preflight",
                                             "analyze", "summarize", "all"],
                         default="all")
     parser.add_argument("--model", action="append", default=[],
@@ -105,11 +106,14 @@ def main() -> int:
     eval_cfg = config["evaluation"]
     stability_cfg = config.get("stability")
     models = _selected_models(config, args.model)
-    stages = (["train", "select", "evaluate", "sweep", "preflight", "analyze", "summarize"]
+    stages = (["train", "select", "evaluate", "diagnose", "sweep", "robustness",
+               "preflight", "analyze", "summarize"]
               if args.stage == "all" else [args.stage])
 
     current_revision = git_state(PROJECT_ROOT)["revision"]
-    if any(stage in stages for stage in ("train", "evaluate", "sweep")):
+    if any(stage in stages for stage in (
+        "train", "evaluate", "diagnose", "sweep", "robustness"
+    )):
         _run([sys.executable, "scripts/check_environment.py"], dry_run=args.dry_run)
 
     for stage in stages:
@@ -269,6 +273,43 @@ def main() -> int:
                         _run(command, dry_run=args.dry_run)
                     continue
 
+                if stage == "diagnose":
+                    diagnostic_cfg = config.get("deterministic_diagnostic")
+                    if not diagnostic_cfg or not model.get("faithfulness_sweep"):
+                        continue
+                    output = (output_root / "deterministic_diagnostics" / model["id"]
+                              / f"seed_{seed}.json")
+                    if output.exists() and args.resume:
+                        expected = {
+                            **eval_cfg,
+                            "episodes_per_cell_seed": diagnostic_cfg["episodes"],
+                            "demand_split": diagnostic_cfg["demand_split"],
+                            "stochastic": False,
+                        }
+                        if _evaluation_is_compatible(
+                            output, checkpoint, diagnostic_cfg["seed"],
+                            expected, current_revision
+                        ):
+                            print(f"SKIP complete deterministic diagnostic: {output}")
+                            continue
+                        raise SystemExit(
+                            f"existing deterministic diagnostic is incompatible: {output}"
+                        )
+                    if output.exists():
+                        raise SystemExit(
+                            f"immutable deterministic diagnostic already exists: {output}; "
+                            "use --resume or a new experiment root"
+                        )
+                    command = [
+                        sys.executable, "scripts/eval_policy.py", str(checkpoint),
+                        "--episodes", str(diagnostic_cfg["episodes"]),
+                        "--seed", str(diagnostic_cfg["seed"]),
+                        "--demand-split", diagnostic_cfg["demand_split"],
+                        "--output", str(output),
+                    ]
+                    _run(command, dry_run=args.dry_run)
+                    continue
+
                 sweep_dir = output_root / "sweeps" / model["id"] / f"seed_{seed}"
                 if stage == "sweep":
                     command = [
@@ -297,6 +338,39 @@ def main() -> int:
                     for key, option in option_names.items():
                         if key in eval_cfg:
                             command += [option, str(eval_cfg[key])]
+                    if not eval_cfg.get("exclusion_variant", True):
+                        command.append("--no-exclusion-variant")
+                    if not eval_cfg.get("stochastic", True):
+                        command.append("--deterministic")
+                    _run(command, dry_run=args.dry_run)
+                elif stage == "robustness":
+                    robustness_cfg = config.get("random_loss_robustness")
+                    if not robustness_cfg:
+                        continue
+                    robustness_dir = (
+                        output_root / "robustness" / "random_loss_30s"
+                        / model["id"] / f"seed_{seed}"
+                    )
+                    command = [
+                        sys.executable, "scripts/sweep_severity.py", str(checkpoint),
+                        "--episodes", str(robustness_cfg["episodes_per_cell_seed"]),
+                        "--seeds", *(str(value) for value in robustness_cfg["seeds"]),
+                        "--outage-durations", str(robustness_cfg["outage_duration_s"]),
+                        "--with-dropout-axis",
+                        "--dropout-rate", str(robustness_cfg["dropout_rate"]),
+                        "--demand-split", robustness_cfg["demand_split"],
+                        "--corruption", eval_cfg["corruption"],
+                        "--faithfulness-every", str(eval_cfg["faithfulness_every"]),
+                        "--faithfulness-random-baselines",
+                        str(eval_cfg["random_baselines"]),
+                        "--random-baseline", eval_cfg["random_baseline"],
+                        "--out", str(robustness_dir),
+                    ]
+                    if "faithfulness_exposed_every" in eval_cfg:
+                        command += [
+                            "--faithfulness-exposed-every",
+                            str(eval_cfg["faithfulness_exposed_every"]),
+                        ]
                     if not eval_cfg.get("exclusion_variant", True):
                         command.append("--no-exclusion-variant")
                     if not eval_cfg.get("stochastic", True):

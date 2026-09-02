@@ -396,6 +396,114 @@ def consistency_figure() -> None:
     _save(fig, "h4_correlation_by_training_seed")
 
 
+def action_stratified_figure() -> None:
+    """Show action volume, confidence, and paired DEF by chosen action."""
+    rows = _csv(RUNS / "action_stratified.csv")
+    checkpoints = sorted({(row["model"], int(row["training_seed"])) for row in rows})
+    labels = [str(seed) for _, seed in checkpoints]
+    x = np.array([0, 1, 2, 4, 5, 6], dtype=float)
+    by_key = {(row["model"], int(row["training_seed"]), row["stratum"]): row
+              for row in rows}
+
+    fig = plt.figure(figsize=(8.0, 5.7))
+    axes = fig.subplot_mosaic(
+        [["counts", "probability"], ["def", "def"]],
+        height_ratios=[0.9, 1.15],
+    )
+    dispatch_fraction = np.array([
+        float(by_key[model, seed, "dispatch"]["fraction_of_eligible_records"])
+        for model, seed in checkpoints
+    ])
+    no_op_counts = np.array([
+        int(by_key[model, seed, "no_op"]["n_records"])
+        for model, seed in checkpoints
+    ])
+    dispatch_counts = np.array([
+        int(by_key[model, seed, "dispatch"]["n_records"])
+        for model, seed in checkpoints
+    ])
+    axes["counts"].bar(x, no_op_counts, color="#AEB8C2", label="No-op")
+    axes["counts"].bar(
+        x, dispatch_counts, bottom=no_op_counts, color="#C75000",
+        hatch="///", edgecolor="white", linewidth=0.6, label="Dispatch",
+    )
+    count_ceiling = float(np.max(no_op_counts + dispatch_counts))
+    for x_pos, total, fraction in zip(
+        x, no_op_counts + dispatch_counts, dispatch_fraction
+    ):
+        axes["counts"].text(
+            x_pos, total + count_ceiling * 0.025,
+            f"{fraction * 100:.1f}% dispatch", ha="center", va="bottom",
+            fontsize=7.2,
+        )
+    axes["counts"].set_ylim(0, count_ceiling * 1.16)
+    axes["counts"].set_ylabel("Eligible decisions (count)")
+    axes["counts"].set_title("(a) Chosen-action counts", loc="left")
+    axes["counts"].legend(
+        frameon=True, facecolor="white", edgecolor="none", framealpha=0.92,
+        fontsize=8, loc="upper right",
+    )
+
+    width = 0.32
+    no_op_probability = np.array([
+        float(by_key[model, seed, "no_op"]["mean_selected_action_probability"])
+        for model, seed in checkpoints
+    ])
+    dispatch_probability = np.array([
+        float(by_key[model, seed, "dispatch"]["mean_selected_action_probability"])
+        for model, seed in checkpoints
+    ])
+    axes["probability"].bar(
+        x - width / 2, no_op_probability, width=width, color="#176B87",
+        label="No-op",
+    )
+    axes["probability"].bar(
+        x + width / 2, dispatch_probability, width=width, color="#C75000",
+        hatch="///", edgecolor="white", linewidth=0.6, label="Dispatch",
+    )
+    axes["probability"].set_ylim(0, 1.04)
+    axes["probability"].set_ylabel("Mean selected-action probability")
+    axes["probability"].set_title("(b) Probability of the chosen action", loc="left")
+    axes["probability"].legend(frameon=False, fontsize=8, loc="center right")
+
+    strata = (
+        ("all", "All", "o", "#555555", -0.16),
+        ("no_op", "No-op", "s", "#176B87", 0.0),
+        ("dispatch", "Dispatch", "^", "#C75000", 0.16),
+    )
+    for stratum, label, marker, color, offset in strata:
+        values = []
+        lows = []
+        highs = []
+        for model, seed in checkpoints:
+            row = by_key[model, seed, stratum]
+            value = float(row["paired_probability_def_delta"]) * 1e4
+            values.append(value)
+            lows.append(value - float(row["paired_probability_def_ci_low"]) * 1e4)
+            highs.append(float(row["paired_probability_def_ci_high"]) * 1e4 - value)
+        axes["def"].errorbar(
+            x + offset, values, yerr=[lows, highs], fmt=marker, color=color,
+            markerfacecolor="white" if stratum == "all" else color,
+            markersize=5.5, capsize=3, linewidth=1.1, label=label,
+        )
+    axes["def"].axhline(0, color="#202020", linewidth=0.9)
+    axes["def"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
+    axes["def"].set_title("(c) Degraded twin minus clean twin", loc="left")
+    axes["def"].legend(frameon=False, fontsize=8, loc="lower left", ncol=3)
+
+    for ax in axes.values():
+        ax.set_xticks(x, labels)
+        ax.text(1, -0.14, "GAT", transform=ax.get_xaxis_transform(),
+                ha="center", va="top", fontsize=9, fontweight="bold")
+        ax.text(5, -0.14, "GAT-Outage", transform=ax.get_xaxis_transform(),
+                ha="center", va="top", fontsize=9, fontweight="bold")
+        ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.suptitle("Action-stratified faithfulness diagnostic", y=0.995)
+    fig.tight_layout(rect=(0, 0.03, 1, 0.985))
+    _save(fig, "action_stratified_faithfulness")
+
+
 def main() -> None:
     global RUNS, TRAINING_RUNS, OUT, PREFIX
     parser = argparse.ArgumentParser(description=__doc__)
@@ -417,6 +525,7 @@ def main() -> None:
     decoupling_figure()
     shift_figure()
     consistency_figure()
+    action_stratified_figure()
     evidence_summary_figure()
     print(f"figures: {OUT}")
 

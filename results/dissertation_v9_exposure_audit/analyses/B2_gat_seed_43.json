@@ -564,6 +564,239 @@
     "def_agreement": {
       "n": 6663,
       "spearman_def_vs_def_m": 0.9546645050062013
-    }
+    },
+    "action_strata": {
+      "all": {
+        "n_records": 6663,
+        "n_clean_records": 776,
+        "n_stale_exposed_records": 2970,
+        "mean_selected_action_probability": 0.7800350592826055,
+        "clean_probability_def_mean": 0.00033273195876288664,
+        "clean_margin_def_mean": 0.05515309278350516,
+        "fraction_of_eligible_records": 1.0,
+        "primary_stale_attention_shift": {
+          "mean_shift": 0.00017971674460733243,
+          "ci95": [
+            0.00010732568846429688,
+            0.00024338638523667042
+          ],
+          "p_one_sided": 9.999000099990002e-05,
+          "n_decisions": 2970,
+          "n_episode_blocks": 178,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": -8.386876164777113e-05,
+          "ci95": [
+            -0.00019115263657929602,
+            1.1458182775373429e-05
+          ],
+          "p_one_sided_decrease": 0.051994800519948,
+          "n_decisions": 2970,
+          "n_episode_blocks": 178,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": -0.018112521634011336,
+          "ci95": [
+            -0.031544494478491066,
+            -0.006277755826123394
+          ],
+          "p_one_sided_decrease": 0.0023997600239976003,
+          "n_decisions": 2970,
+          "n_episode_blocks": 178,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 6663,
+          "n_episode_blocks": 240,
+          "rho": -0.01103555979169773,
+          "p_episode_perm": 0.42075792420757924,
+          "rho_cluster_ci95": [
+            -0.1437575040016508,
+            0.12213000622634969
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 6663,
+          "n_episode_blocks": 240,
+          "rho": 0.024325005128946725,
+          "p_episode_perm": 0.6525347465253475,
+          "rho_cluster_ci95": [
+            -0.1128565806075369,
+            0.1524207174104285
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 178,
+          "mean_rho_within_episode": -0.08386542304744589,
+          "frac_negative": 0.651685393258427,
+          "p_one_sided": 9.999000099990002e-05
+        },
+        "H4_margin_def": {
+          "n_episodes": 178,
+          "mean_rho_within_episode": -0.07683959980274085,
+          "frac_negative": 0.6460674157303371,
+          "p_one_sided": 0.00019998000199980003
+        }
+      },
+      "no_op": {
+        "n_records": 5887,
+        "n_clean_records": 670,
+        "n_stale_exposed_records": 2720,
+        "mean_selected_action_probability": 0.8780030066247665,
+        "clean_probability_def_mean": -8.208955223880597e-06,
+        "clean_margin_def_mean": -0.0003043283582089552,
+        "fraction_of_eligible_records": 0.8835359447696233,
+        "primary_stale_attention_shift": {
+          "mean_shift": 0.0002122782695760759,
+          "ci95": [
+            0.00012884987266223476,
+            0.00028595006203464715
+          ],
+          "p_one_sided": 9.999000099990002e-05,
+          "n_decisions": 2720,
+          "n_episode_blocks": 178,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": 8.659348757289418e-05,
+          "ci95": [
+            6.250547563227514e-05,
+            0.00011085335008385953
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 2720,
+          "n_episode_blocks": 178,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": 0.001480503391203886,
+          "ci95": [
+            0.0010646134668940751,
+            0.0019214706524858373
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 2720,
+          "n_episode_blocks": 178,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 5887,
+          "n_episode_blocks": 240,
+          "rho": -0.20697548918134998,
+          "p_episode_perm": 0.0008999100089991,
+          "rho_cluster_ci95": [
+            -0.32356783246626475,
+            -0.07708812168077596
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 5887,
+          "n_episode_blocks": 240,
+          "rho": -0.25213803393273626,
+          "p_episode_perm": 0.00019998000199980003,
+          "rho_cluster_ci95": [
+            -0.3632037268344851,
+            -0.12919709055166181
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 178,
+          "mean_rho_within_episode": -0.11761545270040381,
+          "frac_negative": 0.6853932584269663,
+          "p_one_sided": 9.999000099990002e-05
+        },
+        "H4_margin_def": {
+          "n_episodes": 178,
+          "mean_rho_within_episode": -0.11478928239487006,
+          "frac_negative": 0.6910112359550562,
+          "p_one_sided": 9.999000099990002e-05
+        }
+      },
+      "dispatch": {
+        "n_records": 776,
+        "n_clean_records": 106,
+        "n_stale_exposed_records": 250,
+        "mean_selected_action_probability": 0.03681688144329897,
+        "clean_probability_def_mean": 0.002487735849056604,
+        "clean_margin_def_mean": 0.40568584905660376,
+        "fraction_of_eligible_records": 0.1164640552303767,
+        "primary_stale_attention_shift": {
+          "mean_shift": -0.0002014245014245015,
+          "ci95": [
+            -0.0005493283475783476,
+            0.00011754024216524211
+          ],
+          "p_one_sided": 0.8812118788121188,
+          "n_decisions": 250,
+          "n_episode_blocks": 117,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": -0.0020357549857549853,
+          "ci95": [
+            -0.0032488105413105415,
+            -0.0008371271367521376
+          ],
+          "p_one_sided_decrease": 0.0007999200079992001,
+          "n_decisions": 250,
+          "n_episode_blocks": 117,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": -0.25539176638176636,
+          "ci95": [
+            -0.43752710541310535,
+            -0.09911644373219383
+          ],
+          "p_one_sided_decrease": 0.0016998300169983002,
+          "n_decisions": 250,
+          "n_episode_blocks": 117,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 776,
+          "n_episode_blocks": 231,
+          "rho": 0.030632410783768074,
+          "p_episode_perm": 0.6378362163783622,
+          "rho_cluster_ci95": [
+            -0.1061567151373489,
+            0.16045084452960026
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 776,
+          "n_episode_blocks": 231,
+          "rho": 0.02714745845322697,
+          "p_episode_perm": 0.6201379862013798,
+          "rho_cluster_ci95": [
+            -0.1059314007365666,
+            0.15923662406455105
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 3,
+          "note": "insufficient usable episodes"
+        },
+        "H4_margin_def": {
+          "n_episodes": 3,
+          "note": "insufficient usable episodes"
+        }
+      }
+    },
+    "action_strata_interpretation": "Exploratory diagnostic. The all-decision result is split into no-op and request-dispatch decisions without changing the frozen policy or the predeclared primary hypothesis family."
   }
 }

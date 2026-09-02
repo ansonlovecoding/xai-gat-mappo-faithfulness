@@ -8,11 +8,10 @@ once with degraded telemetry. A real operational log cannot provide this exact
 clean twin. SUMO provides the simulated physical state, while a separate
 observation layer controls what the policy receives.
 
-The final training protocol and exposure-conditioned audit are defined in
-`configs/experiments/dissertation_v8.toml` and
-`configs/experiments/dissertation_v9_exposure_audit.toml`. The full run contains three stages:
-training, validation-based checkpoint selection, and held-out evaluation.
-Faithfulness sweeps are run only after the selected checkpoints are frozen.
+The protocol is defined in version-controlled configuration files. It contains
+three stages: training, validation-based checkpoint selection, and held-out
+evaluation. Faithfulness sweeps are run only after the selected checkpoints are
+frozen.
 
 ## 3.2 SUMO environment and data
 
@@ -29,7 +28,7 @@ separation prevents test results from influencing model selection.
 
 SUMO is a simulator rather than a neutral source of observed data [22]. Its
 outputs depend on the chosen road network, generated demand, routes, vehicle
-behaviour parameters, tunnel locations, and random seeds. The experiment is
+behavior parameters, tunnel locations, and random seeds. The experiment is
 therefore not described as free from bias. Instead, it uses these assumptions
 consistently in a paired design. At each sampled decision, the clean and
 degraded observations share the same underlying SUMO state and trained-policy
@@ -40,7 +39,7 @@ of every real city.
 
 ## 3.3 Observation graph and action space
 
-Each idle taxi receives a self-centred graph containing:
+Each idle taxi receives a self-centered graph containing:
 
 | Node type | Main features | Role |
 |---|---|---|
@@ -49,7 +48,7 @@ Each idle taxi receives a self-centred graph containing:
 | Passenger request | pickup/drop-off vectors, waiting time | candidate request and action |
 
 The graph contains up to five nearby taxis and five nearby requests. Features
-are normalised and request/taxi masks prevent padded nodes from receiving
+are normalized and request/taxi masks prevent padded nodes from receiving
 attention.
 
 The discrete action space contains no-op plus one action for each visible
@@ -69,17 +68,16 @@ to dispatch actions, which motivates the construct-validity controls.
 
 The main policy uses per-node-type feature projections followed by two graph
 attention layers with four heads. The actor scores no-op and the visible
-requests. The critic estimates value for MAPPO training with centralised
-training and decentralised execution. The GAT implementation returns its
+requests. The critic estimates value for MAPPO training with centralized
+training and decentralized execution. The GAT implementation returns its
 attention tensors directly so they can be audited without changing the trained
 network.
 
 The implementation uses scaled dot-product graph attention on the fully
-connected set of valid local nodes. For node `i`, node `j`, layer `l`, and head
-`h`:
-This differs from the additive attention score in the original GAT paper, so
-"GAT" in the experiment labels denotes the graph-attention policy family, not
-an exact reproduction of that layer.
+connected set of valid local nodes. This differs from the additive attention
+score in the original GAT paper, so "GAT" in the experiment labels denotes the
+graph-attention policy family, not an exact reproduction of that layer. For
+node `i`, node `j`, layer `l`, and head `h`:
 
 ```text
 q_i = W_Q,h LayerNorm(h_i^l),  k_j = W_K,h LayerNorm(h_j^l)
@@ -91,19 +89,20 @@ u_i = h_i^l + W_O z_i
 h_i^(l+1) = u_i + FFN(LayerNorm(u_i))
 ```
 
-The mask removes padded nodes before the softmax. A residual connection keeps
+Here, FFN denotes the feed-forward network within each attention layer. The
+mask removes padded nodes before the softmax. A residual connection keeps
 the previous node embedding. The actor reads the updated self embedding for
 no-op and each updated request embedding for its matching dispatch action.
 The default explanation is the self row (`i = 0`) averaged over both layers
-and all four heads, then renormalised:
+and all four heads, then renormalized:
 
 ```text
-alpha_j = normalise((1 / (L H)) sum_l sum_h alpha_0j^(l,h))
+alpha_j = normalize((1 / (L H)) sum_l sum_h alpha_0j^(l,h))
 ```
 
 This aggregation is declared before evaluation. A sensitivity analysis also
 reports each layer, head-wise values, head maximums, and attention rollout; it
-does not select an aggregation after seeing which result is favourable.
+does not select an aggregation after seeing which result is favorable.
 The explanation average is an analysis choice: inside the policy, head outputs
 are concatenated and projected rather than averaged.
 
@@ -111,7 +110,7 @@ The fixed self row represents the acting taxi's dashboard view and is the
 explanation channel originally declared for audit. It directly contributes to
 the no-op embedding. A request-action logit, however, is read from that
 request's updated embedding, so its corresponding request row is more directly
-aligned with the selected logit. The revision audit therefore reports a
+aligned with the selected logit. A sensitivity analysis therefore reports a
 separate request-action sensitivity comparison between the fixed self row and
 the selected request row. This comparison is not used to redefine the primary
 metric after seeing the result.
@@ -120,7 +119,7 @@ metric after seeing the result.
 
 **Figure 3.2.** The policy and audit share the same two-layer attention encoder.
 The audit reduces the self-node attention row to node importance without
-modifying the actor, critic or selected action.
+modifying the actor, critic, or selected action.
 
 Three policy conditions are included:
 
@@ -133,10 +132,13 @@ Three policy conditions are included:
 MLP is trained for 50 epochs, GAT for 40 epochs, and GAT-Outage for 50
 epochs. Each condition uses independent training seeds 42, 43, and 44.
 
-Candidate checkpoints are saved every ten epochs. Selection uses eight
-stochastic validation episodes with seed 2026 and mean pickups as the primary
-criterion; mean reward and earlier epoch break ties. The test split is not
-read during selection. The selected epochs are:
+Candidate checkpoints include periodic snapshots saved every ten epochs, the
+final snapshot, and a rolling-best snapshot updated when the ten-epoch mean
+pickup count improves. The implementation records zero-based epoch indices, so
+index 39 denotes the checkpoint saved after 40 training epochs. Selection uses
+eight stochastic validation episodes with seed 2026 and mean pickups as the
+primary criterion; mean reward and the earlier checkpoint index break ties. The
+test split is not read during selection. The selected checkpoint indices are:
 
 | Model | seed 42 | seed 43 | seed 44 |
 |---|---:|---:|---:|
@@ -144,20 +146,20 @@ read during selection. The selected epochs are:
 | GAT | 39 | 39 | 30 |
 | GAT-Outage | 49 | 40 | 40 |
 
-The shared optimisation settings are shown below.
+The shared optimization settings are shown below.
 
 | Setting | Value |
 |---|---:|
 | Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
 | Learning rate | 0.0001 (GAT variants), 0.0003 (MLP) |
 | Discount factor (gamma) | 0.99 |
-| GAE factor (lambda) | 0.95 |
+| Generalized advantage estimation factor (lambda) | 0.95 |
 | PPO clip ratio | 0.20 |
 | PPO passes per update | 4 |
 | Minibatch size | 256 |
 | Value-loss coefficient | 0.25 |
 | Entropy coefficient | 0.05, adaptive to a 0.20 entropy floor |
-| Target KL divergence | 0.015 |
+| Target Kullback-Leibler divergence | 0.015 |
 | Gradient-norm limit | 0.50 |
 | GAT hidden width / layers / heads | 64 / 2 / 4 |
 
@@ -167,7 +169,7 @@ At simulation step `t`, the shared team reward is:
 r_t = 10 N_pickup,t + 0.5 N_dispatch,t - 0.001 mean_wait_t
 ```
 
-The reward trains dispatch behaviour. It contains no term that rewards a
+The reward trains dispatch behavior. It contains no term that rewards a
 faithful, stable, or human-readable attention map.
 
 ![Model conditions and training process](../model_design_training_process.png)
@@ -197,7 +199,7 @@ monitor and compare, and they create increasing empirical degradation rates.
 They are not treated as direct causal doses of explanation faithfulness.
 
 AoI is calculated as the current simulation time minus the time of the last
-valid update and is included in each GAT observation. WAMSN uses normalised AoI
+valid update and is included in each GAT observation. WAMSN uses normalized AoI
 as a staleness weight. For this reason, an
 increase in WAMSN with outage duration partly verifies that the manipulation
 created longer stale exposure; it is not by itself proof that AoI changed DEF.
@@ -213,18 +215,25 @@ twin reads current state but never acts.
 ### 3.6.1 Decision-level explanation faithfulness
 
 DEF asks whether the nodes ranked highly by an explanation affect the chosen
-action more than a size- and type-matched random set. For top-k nodes
-`R_k`, comprehensiveness measures the output change when those nodes are
+action more than a size- and type-matched random set. Two score functions are
+recorded from the same counterfactual forward passes. **Probability DEF** uses
+the selected action probability, `p(G,a)`, and is bounded by the probability
+scale. **Logit-margin DEF** uses the selected action logit minus the strongest
+available alternative, `m(G,a)`. The margin can retain resolution when the
+softmax probability is saturated, but its value depends on a checkpoint's
+logit scale.
+
+For top-k nodes `R_k`, comprehensiveness measures the output change when those nodes are
 removed; sufficiency measures the output retained when only those nodes remain.
 The two gains are compared with five matched random subsets for each
 `k in {1,2,3}` and then averaged.
 
-Let `m(G,a)` be the selected action's logit minus its strongest available
-alternative. For explanation subset `R_k` and a matched random subset `B_k`:
+Let `s(G,a)` denote either `p(G,a)` or `m(G,a)`. For explanation subset `R_k`
+and a matched random subset `B_k`:
 
 ```text
-Comp(R_k) = m(G,a) - m(G without R_k,a)
-Suff(R_k) = m(G,a) - m(G keeping only R_k,a)
+Comp(R_k) = s(G,a) - s(G without R_k,a)
+Suff(R_k) = s(G,a) - s(G keeping only R_k,a)
 g_comp(k) = Comp(R_k) - mean_b Comp(B_k,b)
 g_suff(k) = mean_b Suff(B_k,b) - Suff(R_k)
 DEF = mean_k 0.5 [g_comp(k) + g_suff(k)]
@@ -249,18 +258,23 @@ is interpreted as follows:
    than the matched random nodes. This does not support the attention ranking
    as a faithful explanation.
 
-These interpretations apply to both probability DEF and the action-protected
-logit-margin DEF. The final hypothesis tests use the type-matched baseline
-described in Section 3.7. DEF provides comparative perturbation evidence; even
-a positive value does not prove that attention is a complete causal
-explanation.
+These interpretations apply to both variants. The confirmatory H1-H4 family
+and the paired clean-twin comparison use probability DEF, following the
+declared hypothesis analysis. Logit-margin DEF is used for the
+construct-validity and ranking-control diagnostics because it can show output
+movement that a saturated probability hides. It is action-protected where
+request deletion could remove the chosen action. The two variants have
+different units and cannot be converted into one another. Both use the
+type-matched baseline described in Section 3.7. DEF provides comparative
+perturbation evidence; even a positive value does not prove that attention is
+a complete causal explanation.
 
 ### 3.6.2 Stale-node attention
 
 WAMSN measures attention attached to stale vehicle information:
 
 ```text
-WAMSN = sum(attention_i * normalised_AoI_i) / sum(attention_i)
+WAMSN = sum(attention_i * normalized_AoI_i) / sum(attention_i)
 ```
 
 Only self and peer-taxi nodes contribute because request nodes do not carry
@@ -299,7 +313,7 @@ The corrected protocol uses three controls:
 occlusion removes context only. Corrected DEF matches subset size and node types,
 protects the chosen request, and logs margin clamps.
 
-The earlier uniform-baseline results are retained only as an audit trail. They
+Uniform-baseline results are retained only as an audit trail. They
 are not used for the final hypothesis verdicts.
 
 Three additional diagnostics test whether a near-zero DEF can be interpreted.
@@ -326,10 +340,10 @@ clean capability evaluation therefore contains 216 episode evaluations:
 3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 3 episodes
 ```
 
-The complete evaluation structure is summarised below. An episode evaluation is
+The complete evaluation structure is summarized below. An episode evaluation is
 one complete rollout of one frozen checkpoint under one telemetry condition.
 
-| Evaluation | Models | Checkpoints | Conditions | Episodes per cell | Total episodes |
+| Evaluation | No. of models | Frozen checkpoints | Telemetry cases | Episodes/cell | Total |
 |---|---:|---:|---:|---:|---:|
 | Clean capability context | 3 | 9 | 1 | 24 | 216 |
 | Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
@@ -343,13 +357,31 @@ GAT and GAT-Outage receive the full faithfulness sweep:
 
 The five conditions and their roles are:
 
-| Condition | Observation-layer treatment | GAT-Outage relation | Evaluation purpose |
+| Telemetry condition | Observation-layer treatment | GAT-Outage relation | Evaluation purpose |
 |---|---|---|---|
 | Clean | Current vehicle readings | No imposed outage | Capability context and faithfulness baseline |
 | 10 s | Freeze last valid reading for 10 seconds | Unseen shorter duration | Mild-degradation transfer test |
 | 20 s | Freeze last valid reading for 20 seconds | Unseen shorter duration | Intermediate transfer test |
 | 30 s | Freeze last valid reading for 30 seconds | Training-matched duration | In-condition degradation test |
 | 60 s | Freeze last valid reading for 60 seconds | Unseen longer duration | Severe stress and transfer test |
+
+The legal-random capability baseline samples uniformly from no-op and the
+currently valid request actions. The greedy baseline is deliberately naive:
+each idle taxi chooses its nearest visible request independently. If several
+taxis choose the same request, the environment accepts the first action in the
+step and rejects the later conflicts; there is no fleet-wide assignment or
+conflict optimization. The policy is deterministic for a fixed demand variant,
+so its uncertainty is based on three independent demand variants rather than
+the repeated evaluation-seed records. It is therefore interpreted only as a
+lower bound, not as a competitive dispatch algorithm.
+
+The primary learned-policy evaluation samples from the policy distribution.
+This matches training and preserves both no-op and request-dispatch decisions
+for explanation auditing. A separate descriptive diagnostic evaluates each of
+the six selected GAT checkpoints by deterministic argmax over three held-out
+test episodes. This diagnostic is not used for checkpoint selection or the
+primary capability comparison. It checks whether sampled performance also
+corresponds to a usable deterministic policy.
 
 The relation column refers only to GAT-Outage; the clean-trained GAT has not
 seen any imposed outage duration during training. The evaluation changes the
@@ -363,7 +395,8 @@ so the paired difference does not contain avoidable baseline-sampling noise.
 Each degraded condition must contain at least 20 stale-exposed records from at
 least three episodes. Preflight also checks expected cells, clean source
 provenance, type-matched controls, chosen-action exclusion, complete event
-capture, and empirical AoI differentiation. All six sweeps pass these gates.
+capture, and separation in empirical AoI between conditions. All six sweeps
+pass these gates.
 
 ## 3.9 Hypotheses and statistics
 
@@ -373,7 +406,8 @@ The confirmatory hypotheses are:
 - **H2:** faithfulness declines faster than dispatch performance.
 - **H3:** WAMSN increases as outage duration increases.
 - **H4:** decisions with greater WAMSN have lower DEF within an episode.
-- **H5:** degradation-aware training changes or mitigates these relationships.
+- **H5:** compared with clean training, degradation-aware training reduces the
+  decline in DEF associated with longer outages and higher WAMSN.
 
 H1 and H3 use episode-block permutation trend tests and cluster bootstrap
 confidence intervals. H2 uses paired cell-level sign flips relative to each
@@ -385,8 +419,8 @@ The exposure-conditioned paired follow-up directly subtracts clean-twin DEF
 from degraded DEF for the same decision. Negative values mean lower measured
 faithfulness under the degraded observation. This paired estimate is reported
 with an episode-block confidence interval and is interpreted by effect size,
-direction across trained policies, and uncertainty rather than by a decision-
-level p-value alone.
+direction across trained policies, and uncertainty rather than by a
+decision-level p-value alone.
 
 H2 is retained as a pre-declared but exploratory comparison. Its original rate
 divides by clean DEF, which is close to zero and can make a small absolute
@@ -400,7 +434,15 @@ training seed as one trained-policy replicate. With only three seeds per model,
 the dissertation reports the range and number of supporting seeds and does not
 claim a cross-seed population p-value.
 
-The added ranking controls use the same held-out demand and stochastic action
+An exploratory action-stratified audit separates eligible decisions into
+`no-op` and `dispatch`. Decisions with no available request are excluded because
+no-op is then forced rather than chosen. Within each stratum, records are still
+averaged by episode before permutation tests or bootstrap intervals are formed.
+This diagnostic tests whether the combined statistics describe both actions or
+are driven by the more common action. It was added after the primary analysis
+and is interpreted descriptively rather than as a new confirmatory hypothesis.
+
+The ranking controls use the same held-out demand and stochastic action
 protocol. They evaluate GAT and GAT-Outage under clean telemetry and a 60-second
 outage:
 
@@ -419,12 +461,12 @@ least one stale vehicle node is visible.
 ## 3.10 Reproducibility
 
 The experiment runner records the configuration, commands, seeds, checkpoint
-hashes, source revision, and preflight reports under the local
-`runs/dissertation_v9_exposure_audit/` directory. Compact thesis-ready outputs
-are committed under `results/dissertation_v9_exposure_audit/`: `summary.csv`,
-`performance_context.csv`, and `training_seed_synthesis.csv`. The last file
-makes training-seed consistency explicit. Reproduction commands and expected
-outputs are documented in `docs/REPRODUCE_EXPERIMENTS.md`.
+hashes, source revision, and preflight reports in versioned run directories.
+Compact outputs include the summary, performance context, deterministic
+diagnostic, action-stratified audit, and training-seed synthesis tables. The
+training-seed synthesis makes consistency across trained policies explicit.
+Reproduction commands, file locations, and expected outputs
+are documented in `docs/REPRODUCE_EXPERIMENTS.md`.
 
 ## 3.11 Ethics and data governance
 
@@ -433,5 +475,5 @@ OpenStreetMap-derived road network. It contains no human participants,
 personal records, live vehicle identifiers, or commercial dispatch data. Its
 main ethical risk is miscommunication: presenting attention as a trustworthy
 reason could give an operator false confidence. The reporting therefore keeps
-freshness, task behaviour, and faithfulness separate and avoids unsupported
+freshness, task behavior, and faithfulness separate and avoids unsupported
 causal claims.

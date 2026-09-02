@@ -208,6 +208,119 @@ def summarize_training_seeds(root: Path) -> tuple[list[dict], list[dict]]:
     return aggregate_rows, seed_rows
 
 
+def summarize_action_strata(root: Path) -> tuple[list[dict], list[dict]]:
+    """Collect exploratory no-op versus request-dispatch diagnostics."""
+    per_seed: list[dict] = []
+    for model_dir in sorted((root / "sweeps").glob("*")):
+        for sweep_dir in sorted(model_dir.glob("seed_*")):
+            analysis_path = sweep_dir / "analysis.json"
+            if not analysis_path.exists():
+                continue
+            robust = json.loads(analysis_path.read_text()).get("robust", {})
+            for stratum, values in robust.get("action_strata", {}).items():
+                paired = values.get("paired_probability_def", {})
+                paired_margin = values.get("paired_margin_def", {})
+                attention = values.get("primary_stale_attention_shift", {})
+                h1 = values.get("H1_probability_def", {})
+                h4 = values.get("H4_probability_def", {})
+                per_seed.append({
+                    "model": model_dir.name,
+                    "training_seed": int(sweep_dir.name.removeprefix("seed_")),
+                    "stratum": stratum,
+                    "n_records": values.get("n_records"),
+                    "n_clean_records": values.get("n_clean_records"),
+                    "n_stale_exposed_records": values.get("n_stale_exposed_records"),
+                    "fraction_of_eligible_records": values.get(
+                        "fraction_of_eligible_records"
+                    ),
+                    "mean_selected_action_probability": values.get(
+                        "mean_selected_action_probability"
+                    ),
+                    "clean_probability_def_mean": values.get(
+                        "clean_probability_def_mean"
+                    ),
+                    "clean_margin_def_mean": values.get("clean_margin_def_mean"),
+                    "paired_probability_def_delta": paired.get(
+                        "mean_degraded_minus_clean"
+                    ),
+                    "paired_probability_def_ci_low": (
+                        paired.get("ci95", [None, None])[0]
+                    ),
+                    "paired_probability_def_ci_high": (
+                        paired.get("ci95", [None, None])[1]
+                    ),
+                    "paired_probability_def_blocks": paired.get("n_episode_blocks"),
+                    "paired_margin_def_delta": paired_margin.get(
+                        "mean_degraded_minus_clean"
+                    ),
+                    "stale_attention_shift": attention.get("mean_shift"),
+                    "H1_rho": h1.get("rho"),
+                    "H1_p_episode": h1.get("p_episode_perm"),
+                    "H4_mean_within_episode_rho": h4.get(
+                        "mean_rho_within_episode"
+                    ),
+                    "H4_p_one_sided": h4.get("p_one_sided"),
+                })
+
+    aggregate: list[dict] = []
+    groups = sorted({(row["model"], row["stratum"]) for row in per_seed})
+    for model, stratum in groups:
+        rows = [row for row in per_seed
+                if row["model"] == model and row["stratum"] == stratum]
+
+        def observed(key: str) -> list[float]:
+            return [float(row[key]) for row in rows if row.get(key) is not None]
+
+        paired = observed("paired_probability_def_delta")
+        aggregate.append({
+            "model": model,
+            "stratum": stratum,
+            "training_seeds": len(rows),
+            "total_records": sum(int(row["n_records"]) for row in rows),
+            "mean_fraction_of_eligible_records": _mean(
+                observed("fraction_of_eligible_records")
+            ),
+            "mean_selected_action_probability": _mean(
+                observed("mean_selected_action_probability")
+            ),
+            "clean_probability_def_mean": _mean(
+                observed("clean_probability_def_mean")
+            ),
+            "paired_probability_def_delta_mean": _mean(paired),
+            "paired_probability_def_delta_min": min(paired) if paired else None,
+            "paired_probability_def_delta_max": max(paired) if paired else None,
+            "negative_paired_delta_seeds": sum(value < 0 for value in paired),
+        })
+    return aggregate, per_seed
+
+
+def summarize_deterministic_diagnostics(root: Path) -> list[dict]:
+    """Summarize the held-out argmax diagnostic for selected GAT checkpoints."""
+    rows: list[dict] = []
+    for path in sorted((root / "deterministic_diagnostics").glob("*/seed_*.json")):
+        payload = json.loads(path.read_text())
+        episodes = payload.get("per_episode", [])
+        waits = [float(item["final_mean_pending_wait_s"])
+                 for item in episodes if item.get("final_mean_pending_wait_s") is not None]
+        rows.append({
+            "model": path.parent.name,
+            "training_seed": int(path.stem.removeprefix("seed_")),
+            "evaluation_seed": payload.get("seed"),
+            "episodes": payload.get("episodes"),
+            "mean_pickups": payload.get("mean_pickups"),
+            "mean_reward": payload.get("mean_reward"),
+            "mean_final_pending_wait_s": _mean(waits),
+            "zero_pickup_episodes": sum(
+                float(item.get("total_pickups", 0)) == 0 for item in episodes
+            ),
+            "all_episodes_zero_pickups": bool(episodes) and all(
+                float(item.get("total_pickups", 0)) == 0 for item in episodes
+            ),
+            "checkpoint_sha256": payload.get("checkpoint_sha256"),
+        })
+    return rows
+
+
 def _write_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -229,6 +342,8 @@ def main() -> int:
     rows = summarize(args.root)
     performance_rows = summarize_performance(args.performance_root or args.root)
     training_seed_rows, per_seed_rows = summarize_training_seeds(args.root)
+    action_rows, action_per_seed = summarize_action_strata(args.root)
+    deterministic_rows = summarize_deterministic_diagnostics(args.root)
     atomic_write_json(args.root / "summary.json", {"rows": rows})
     csv_path = args.root / "summary.csv"
     _write_csv(csv_path, rows)
@@ -247,11 +362,34 @@ def main() -> int:
     })
     seed_csv = args.root / "training_seed_synthesis.csv"
     _write_csv(seed_csv, training_seed_rows)
+    if action_rows:
+        atomic_write_json(args.root / "action_stratified.json", {
+            "interpretation": (
+                "Exploratory no-op versus request-dispatch diagnostic. "
+                "Per-seed episode-block statistics remain the inferential unit."
+            ),
+            "rows": action_rows,
+            "per_seed": action_per_seed,
+        })
+        _write_csv(args.root / "action_stratified.csv", action_per_seed)
+    if deterministic_rows:
+        atomic_write_json(args.root / "deterministic_diagnostics.json", {
+            "interpretation": (
+                "Descriptive held-out argmax diagnostic. It identifies deterministic "
+                "policy collapse but is not the primary capability comparison."
+            ),
+            "rows": deterministic_rows,
+        })
+        _write_csv(args.root / "deterministic_diagnostics.csv", deterministic_rows)
     print(f"summary rows: {len(rows)}")
     print(f"json: {args.root / 'summary.json'}")
     print(f"csv:  {csv_path}")
     print(f"performance: {performance_csv}")
     print(f"training seeds: {seed_csv}")
+    if action_rows:
+        print(f"action strata: {args.root / 'action_stratified.csv'}")
+    if deterministic_rows:
+        print(f"deterministic: {args.root / 'deterministic_diagnostics.csv'}")
     return 0
 
 

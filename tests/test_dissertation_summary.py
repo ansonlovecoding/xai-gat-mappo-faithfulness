@@ -1,6 +1,10 @@
 import json
 
-from scripts.summarize_dissertation_experiment import summarize_training_seeds
+from scripts.analyze_hypotheses import action_stratum_masks, decisions_frame
+from scripts.summarize_dissertation_experiment import (
+    summarize_deterministic_diagnostics,
+    summarize_training_seeds,
+)
 
 
 def _analysis(shift: float, paired_def_delta: float, supported: set[str]) -> dict:
@@ -51,3 +55,54 @@ def test_training_seed_synthesis_reports_consistency_without_pooling(tmp_path) -
     assert aggregate[0]["H3_consistency"] == "consistent"
     assert aggregate[0]["H4_consistency"] == "mixed"
     assert aggregate[0]["H1_consistency"] == "not_supported"
+
+
+def test_action_strata_exclude_forced_no_op_and_split_eligible_actions() -> None:
+    cells = [{
+        "cell": {"axis": "clean", "level": 0.0, "seed": 42},
+        "faith_records": [
+            {
+                "action": 0, "pi_full": 1.0, "def": 0.0, "def_m": 0.0,
+                "wamsn": 0.0, "valid_reservations": 0,
+            },
+            {
+                "action": 0, "pi_full": 0.9, "def": 0.1, "def_m": 0.2,
+                "wamsn": 0.0, "valid_reservations": 2,
+            },
+            {
+                "action": 2, "pi_full": 0.1, "def": 0.3, "def_m": 0.4,
+                "wamsn": 0.0, "valid_reservations": 2,
+            },
+        ],
+    }]
+
+    frame = decisions_frame(cells)
+    masks = action_stratum_masks(frame)
+
+    assert masks["all"].tolist() == [False, True, True]
+    assert masks["no_op"].tolist() == [False, True, False]
+    assert masks["dispatch"].tolist() == [False, False, True]
+
+
+def test_deterministic_diagnostic_counts_zero_pickup_episodes(tmp_path) -> None:
+    output = tmp_path / "deterministic_diagnostics" / "B2_gat" / "seed_42.json"
+    output.parent.mkdir(parents=True)
+    output.write_text(json.dumps({
+        "seed": 42,
+        "episodes": 3,
+        "mean_pickups": 0.0,
+        "mean_reward": -2.0,
+        "checkpoint_sha256": "abc",
+        "per_episode": [
+            {"total_pickups": 0, "final_mean_pending_wait_s": 10.0},
+            {"total_pickups": 0, "final_mean_pending_wait_s": 20.0},
+            {"total_pickups": 0, "final_mean_pending_wait_s": 30.0},
+        ],
+    }))
+
+    rows = summarize_deterministic_diagnostics(tmp_path)
+
+    assert rows[0]["training_seed"] == 42
+    assert rows[0]["mean_final_pending_wait_s"] == 20.0
+    assert rows[0]["zero_pickup_episodes"] == 3
+    assert rows[0]["all_episodes_zero_pickups"] is True

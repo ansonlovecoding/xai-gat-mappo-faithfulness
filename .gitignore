@@ -57,6 +57,7 @@ results/**
 !results/mappo_central_park_reshaped_v1/ckpt_epoch_0050.pt
 docs/.~search_Proposal_Faithfulness_Decoupling.docx
 docs/.~*.docx
+docs/~$*.docx
 docs/Research_Proposal_Faithfulness_Decoupling.backup.docx
 .claude/!results/**/*.png
 .claude/skills/*-workspace/

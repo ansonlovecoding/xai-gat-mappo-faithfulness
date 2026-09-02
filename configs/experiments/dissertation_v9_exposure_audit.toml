@@ -45,6 +45,24 @@ minimum_stale_exposed_records = 20
 minimum_stale_exposed_episodes = 3
 stochastic = true
 
+# A small held-out diagnostic checks what each selected checkpoint does when
+# actions are chosen by argmax instead of sampling. This is descriptive only;
+# the stochastic protocol above remains the primary evaluation.
+[deterministic_diagnostic]
+episodes = 3
+seed = 42
+demand_split = "test"
+
+# Frozen-policy sensitivity check. For a 30 s freeze (about three observation
+# steps), p=0.00194 gives an expected degraded-observation share near 0.58%,
+# matching the empirical tunnel-triggered exposure at the same duration.
+[random_loss_robustness]
+outage_duration_s = 30.0
+dropout_rate = 0.00194
+episodes_per_cell_seed = 6
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+demand_split = "test"
+
 [[models]]
 id = "B1_mlp"
 policy = "mlp"

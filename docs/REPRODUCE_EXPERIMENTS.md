@@ -27,7 +27,11 @@ Compared with the original sweep, it:
 4. evaluates the degraded observation and its exact clean twin with the same
    selected action and the same type-matched random subsets;
 5. requires at least 20 stale-exposed records from at least three episodes in
-   every degraded cell before analysis is accepted.
+   every degraded cell before analysis is accepted;
+6. reports no-op and dispatch decisions separately, excluding forced no-op
+   records with no valid request;
+7. runs a three-episode deterministic argmax diagnostic for each selected GAT
+   checkpoint.
 
 Run the follow-up stages with:
 
@@ -41,6 +45,9 @@ Run the follow-up stages with:
 .venv/bin/python scripts/run_dissertation_experiments.py \
   --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage analyze
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage diagnose
 .venv/bin/python scripts/run_dissertation_experiments.py \
   --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage summarize
@@ -79,7 +86,8 @@ The runner performs five linked tasks:
 3. evaluates every selected policy on held-out clean test demand;
 4. runs faithfulness sweeps for GAT and GAT-Outage under clean telemetry and 10, 20,
    30, and 60-second observation-layer outages;
-5. validates, analyses, and summarises the outputs.
+5. validates and analyzes the outputs, including no-op/dispatch strata;
+6. runs a descriptive deterministic diagnostic and summarizes all outputs.
 
 Tunnel entry triggers each outage. SUMO continues to simulate the true vehicle
 state, while the policy observation freezes the last valid position and speed.
@@ -184,7 +192,7 @@ than silently treating them as complete.
 The available stages are:
 
 ```text
-train -> select -> evaluate -> sweep -> preflight -> analyze -> summarize
+train -> select -> evaluate -> diagnose -> sweep -> preflight -> analyze -> summarize
 ```
 
 Examples:
@@ -324,8 +332,14 @@ runs/dissertation_v9_exposure_audit/
       preflight.json
       analysis.json
   faithfulness_controls/
+  deterministic_diagnostics/
+    <model>/seed_<training-seed>.json
   summary.json
   summary.csv
+  action_stratified.json
+  action_stratified.csv
+  deterministic_diagnostics.json
+  deterministic_diagnostics.csv
   training_seed_synthesis.json
   training_seed_synthesis.csv
 ```
@@ -371,6 +385,10 @@ The primary thesis tables are:
 
 - `summary.csv`: condition-level measurements for each training seed;
 - `performance_context.csv`: clean-test pickups and reward;
+- `action_stratified.csv`: eligible no-op and dispatch counts and their
+  separate faithfulness diagnostics;
+- `deterministic_diagnostics.csv`: three-episode argmax behavior for each
+  selected GAT checkpoint;
 - `training_seed_synthesis.csv`: effect ranges and hypothesis consistency
   across independently trained policies.
 
@@ -386,7 +404,11 @@ match one seed exactly across hardware. In the completed local v9 run:
 - the paired stale-attention shift is positive for seeds 42 and 43 and negative
   for seed 44 under both training regimes;
 - paired probability-DEF decreases for seeds 42 and 43 but increases for seed
-  44 under both training regimes.
+  44 under both training regimes;
+- eligible records are dominated by no-op decisions, and the combined H1/H4
+  patterns do not reproduce in the dispatch stratum;
+- the six GAT checkpoints select no-op throughout the 18 deterministic
+  diagnostic episodes.
 
 The conclusion is therefore not that AoI causes lower faithfulness. Longer
 outages consistently increase stale-data exposure, while attention

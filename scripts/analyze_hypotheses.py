@@ -127,6 +127,7 @@ def load_sweep(sweep_dir: Path) -> tuple[dict, list[dict]]:
 def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
     axis, level, seed, episode = [], [], [], []
+    action, pi_full = [], []
     def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
     stale_count, stale_share, stale_shift = [], [], []
     paired_def, paired_def_m, paired_def_excl, paired_def_m_excl = [], [], [], []
@@ -137,6 +138,8 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             level.append(meta["level"])
             seed.append(meta["seed"])
             episode.append(r.get("episode", 0))
+            action.append(r["action"])
+            pi_full.append(r.get("pi_full", np.nan))
             def_.append(r["def"])
             def_m.append(r.get("def_m", np.nan))  # absent in pre-margin sweeps
             wamsn.append(r["wamsn"])
@@ -154,6 +157,8 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "level": np.array(level, dtype=np.float64),
         "seed": np.array(seed),
         "episode": np.array(episode, dtype=np.int64),
+        "action": np.array(action, dtype=np.int64),
+        "pi_full": np.array(pi_full, dtype=np.float64),
         "def": np.array(def_, dtype=np.float64),
         "def_m": np.array(def_m, dtype=np.float64),
         "wamsn": np.array(wamsn, dtype=np.float64),
@@ -168,6 +173,40 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "paired_def_m_excl_delta": np.array(
             paired_def_m_excl, dtype=np.float64
         ),
+    }
+
+
+def subset_frame(frame: dict[str, np.ndarray], mask: np.ndarray) -> dict[str, np.ndarray]:
+    """Return a row-aligned frame subset."""
+    return {key: values[mask] for key, values in frame.items()}
+
+
+def action_stratum_masks(frame: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    """Eligible decisions split by whether the policy dispatched a request."""
+    eligible = frame["valid_res"] > 0
+    return {
+        "all": eligible,
+        "no_op": eligible & (frame["action"] == 0),
+        "dispatch": eligible & (frame["action"] > 0),
+    }
+
+
+def action_stratum_summary(frame: dict[str, np.ndarray]) -> dict:
+    """Describe action composition and clean-telemetry faithfulness."""
+    clean = frame["axis"] == "clean"
+    exposed = (frame["axis"] != "clean") & (frame["stale_count"] > 0)
+
+    def finite_mean(key: str, mask: np.ndarray) -> float | None:
+        values = frame[key][mask & np.isfinite(frame[key])]
+        return float(values.mean()) if len(values) else None
+
+    return {
+        "n_records": int(len(frame["action"])),
+        "n_clean_records": int(clean.sum()),
+        "n_stale_exposed_records": int(exposed.sum()),
+        "mean_selected_action_probability": finite_mean("pi_full", np.ones(len(clean), dtype=bool)),
+        "clean_probability_def_mean": finite_mean("def", clean),
+        "clean_margin_def_mean": finite_mean("def_m", clean),
     }
 
 
@@ -472,6 +511,63 @@ def clustered_h1_h3(
             "rho_cluster_ci95": ci}
 
 
+def block_level_trend_test(
+    frame: dict, axis: str, metric: str, alternative: str,
+    n_permutations: int, n_boot: int, rng: np.random.Generator,
+) -> dict:
+    """Equal-weight episode-block trend test for action-stratified diagnostics."""
+    mask = _axis_mask(frame, axis) & np.isfinite(frame[metric])
+    if mask.sum() < 10:
+        return {"n": int(mask.sum()), "note": "insufficient data"}
+
+    keys = np.array([
+        f"{seed}|{level:g}|{episode}"
+        for seed, level, episode in zip(
+            frame["seed"][mask], frame["level"][mask], frame["episode"][mask]
+        )
+    ])
+    levels = frame["level"][mask]
+    seeds = frame["seed"][mask]
+    values = frame[metric][mask]
+    blocks = np.unique(keys)
+    block_levels = np.array([levels[keys == block][0] for block in blocks])
+    block_seeds = np.array([seeds[keys == block][0] for block in blocks])
+    block_means = np.array([values[keys == block].mean() for block in blocks])
+    if len(blocks) < 10 or len(np.unique(block_levels)) < 2:
+        return {"n": int(mask.sum()), "n_episode_blocks": int(len(blocks)),
+                "note": "insufficient episode blocks"}
+
+    observed = spearman(block_levels, block_means)
+    count = 0
+    permuted = block_levels.copy()
+    seed_groups = [np.where(block_seeds == seed)[0]
+                   for seed in np.unique(block_seeds)]
+    for _ in range(n_permutations):
+        for group in seed_groups:
+            permuted[group] = block_levels[group][rng.permutation(len(group))]
+        rho = spearman(permuted, block_means)
+        if alternative == "less" and rho <= observed:
+            count += 1
+        elif alternative == "greater" and rho >= observed:
+            count += 1
+
+    boot_rhos = []
+    for _ in range(n_boot):
+        picked = rng.integers(0, len(blocks), len(blocks))
+        boot_rhos.append(spearman(block_levels[picked], block_means[picked]))
+    return {
+        "n": int(mask.sum()),
+        "n_episode_blocks": int(len(blocks)),
+        "rho": observed,
+        "p_episode_perm": float((count + 1) / (n_permutations + 1)),
+        "rho_cluster_ci95": [
+            float(np.percentile(boot_rhos, 2.5)),
+            float(np.percentile(boot_rhos, 97.5)),
+        ],
+        "analysis_unit": "equal-weight episode block",
+    }
+
+
 def stratified_h4(
     frame: dict, n_permutations: int, rng: np.random.Generator,
     def_key: str = "def",
@@ -713,6 +809,60 @@ def main() -> int:
     if "spearman_def_vs_def_m" in da:
         print(f"\nprob-DEF vs margin-DEF rank agreement: "
               f"rho={da['spearman_def_vs_def_m']:+.3f} (n={da['n']})")
+
+    # Action strata are a declared diagnostic because request dispatches and
+    # no-op decisions have different operational meanings and frequencies.
+    masks = action_stratum_masks(frame)
+    eligible_count = int(masks["all"].sum())
+    action_strata = {}
+    print("\naction-stratified diagnostics (exploratory):")
+    for name, mask in masks.items():
+        stratum = subset_frame(frame, mask)
+        summary = action_stratum_summary(stratum)
+        summary["fraction_of_eligible_records"] = (
+            float(mask.sum() / eligible_count) if eligible_count else 0.0
+        )
+        summary["primary_stale_attention_shift"] = stale_attention_shift_test(
+            stratum, primary_axis, args.n_permutations, args.n_bootstrap, rng
+        )
+        summary["paired_probability_def"] = paired_exposed_def_test(
+            stratum, primary_axis, "paired_def_delta",
+            args.n_permutations, args.n_bootstrap, rng
+        )
+        summary["paired_margin_def"] = paired_exposed_def_test(
+            stratum, primary_axis, "paired_def_m_delta",
+            args.n_permutations, args.n_bootstrap, rng
+        )
+        summary["H1_probability_def"] = block_level_trend_test(
+            stratum, primary_axis, "def", "less",
+            args.n_permutations, args.n_bootstrap, rng
+        )
+        summary["H1_margin_def"] = block_level_trend_test(
+            stratum, primary_axis, "def_m", "less",
+            args.n_permutations, args.n_bootstrap, rng
+        )
+        summary["H4_probability_def"] = stratified_h4(
+            stratum, args.n_permutations, rng, def_key="def"
+        )
+        summary["H4_margin_def"] = stratified_h4(
+            stratum, args.n_permutations, rng, def_key="def_m"
+        )
+        action_strata[name] = summary
+        paired = summary["paired_probability_def"]
+        paired_value = paired.get("mean_degraded_minus_clean")
+        paired_text = "n/a" if paired_value is None else f"{paired_value:+.6f}"
+        print(
+            f"  {name:<8} n={summary['n_records']:<6} "
+            f"({summary['fraction_of_eligible_records']:.1%})  "
+            f"mean pi={summary['mean_selected_action_probability']:.4f}  "
+            f"paired DEF={paired_text}"
+        )
+    robust["action_strata"] = action_strata
+    robust["action_strata_interpretation"] = (
+        "Exploratory diagnostic. The all-decision result is split into no-op "
+        "and request-dispatch decisions without changing the frozen policy or "
+        "the predeclared primary hypothesis family."
+    )
     results["robust"] = robust
 
     out_path = args.sweep_dir / "analysis.json"

@@ -1,6 +1,6 @@
 # 2. Literature review
 
-This chapter develops the research gap in five steps. It first explains why
+This chapter develops the research gap in a sequence of connected stages. It first explains why
 fleet dispatch is a relational reinforcement-learning problem. It then asks
 what an explanation should provide in sequential decision making, why raw
 attention is disputed as an explanation, how graph predictions are commonly
@@ -14,15 +14,14 @@ time. A decision for one taxi changes the demand available to others, so a
 collection of independent single-agent policies can create competition or
 duplicated assignments. Lin et al. [1] model city-scale fleet management as a
 cooperative multi-agent reinforcement-learning (MARL) problem. Qin, Zhu and Ye
-[2] show that reinforcement learning is used
-for matching, repositioning, pricing, and route decisions, often under changing
-supply and demand [2].
+[2] show that reinforcement learning is used for matching, repositioning,
+pricing, and route decisions, often under changing supply and demand.
 
-MARL offers several ways to represent coordination. MADDPG learns decentralised
-actors with centralised critics [3]. QMIX factorises a team value into agent
+MARL offers several ways to represent coordination. MADDPG learns decentralized
+actors with centralized critics [3]. QMIX factorizes a team value into agent
 values while preserving a monotonic relation to the joint action [4]. MAPPO
-uses the more familiar PPO objective with centralised training and
-decentralised execution; its empirical stability makes it a practical baseline
+uses the more familiar PPO objective with centralized training and
+decentralized execution; its empirical stability makes it a practical baseline
 for cooperative tasks [5]. This dissertation adopts MAPPO because the research
 focus is the explanation attached to each taxi's local decision, not a new MARL
 algorithm.
@@ -30,10 +29,13 @@ algorithm.
 Graphs provide a natural representation of the local dispatch problem. Nodes
 can represent the acting taxi, nearby taxis, and open requests; edges permit
 their information to be combined [6]. A graph attention network (GAT) assigns
-learned weights while aggregating neighbouring nodes [7]. Actor-Attention-Critic
-similarly uses attention for communication in MARL [8]. These weights are easy
-to visualise, which makes them tempting to present as reasons for an action.
-Ease of display, however, is not evidence that the weights identify the
+learned weights while aggregating neighboring nodes [7]. Actor-Attention-Critic
+similarly uses attention for communication in MARL [8]. This makes GAT-MARL a
+suitable test case, not because it is assumed to be the best dispatch model,
+but because it matches the relational, multi-agent structure of fleet dispatch
+while exposing an attention channel that can be audited. These weights are
+easy to visualize, which makes them tempting to present as reasons for an
+action. Ease of display, however, is not evidence that the weights identify the
 information that caused the decision.
 
 Recent dispatch methods continue to use relational structure. BMG-Q represents
@@ -47,7 +49,7 @@ useful task benchmarks, but not direct faithfulness benchmarks.
 ## 2.2 Explainability in reinforcement learning
 
 Explainable reinforcement learning (XRL) covers more than a visual saliency
-map. An explanation may describe which state features mattered, summarise a
+map. An explanation may describe which state features mattered, summarize a
 policy, contrast the selected action with an alternative, or show the sequence
 of events that led to an outcome. Reviews by Heuillet, Couthouis and
 Diaz-Rodriguez [10], Puiutta and Veith [32], and Milani et al. [30] all stress
@@ -59,7 +61,7 @@ larger body of recent XRL studies.
 This dissertation concerns a local, post-decision operator question: *which
 visible vehicles or requests supported this dispatch action?* Earlier XRL work
 demonstrates several possible answers. Greydanus et al. [34] perturb image
-regions to visualise what changes an Atari policy. Madumal et al. [11] use a
+regions to visualize what changes an Atari policy. Madumal et al. [11] use a
 causal model to generate contrastive explanations. Mott et al. [35] introduce
 an attention bottleneck intended to expose what an RL agent uses. These
 approaches differ in mechanism, but they share an important lesson: a useful
@@ -111,13 +113,13 @@ defined and its sensitivity is checked.
 
 GNN explanations may identify important features, nodes, edges, or subgraphs.
 GNNExplainer learns a compact subgraph and feature mask that preserves a
-prediction [23]. PGExplainer parameterises explanation generation so that it
+prediction [23]. PGExplainer parameterizes explanation generation so that it
 can be shared across examples [24]. SubgraphX searches for important subgraphs
 using Shapley-value approximations [36]. These methods show that graph
 explanation is a distinct problem: removing one node can alter both its own
 features and the messages available to other nodes.
 
-The survey by Yuan et al. [25] organises GNN explainers by target, mechanism,
+The survey by Yuan et al. [25] organizes GNN explainers by target, mechanism,
 and scope. GraphFramEx goes further by comparing explanation methods under
 different user needs and combining necessity and sufficiency views [29]. Its
 results show that no single method dominates every evaluation dimension. This
@@ -130,8 +132,8 @@ Most GNN explainability benchmarks study node or graph classification. Fleet
 dispatch differs because some graph nodes also define actions. A passenger
 request is both information and a selectable action, while a nearby taxi is
 context only. Deleting these node types is therefore not the same
-intervention. This action-linked graph structure motivates the construct-
-validity audit in Section 3.7.
+intervention. This action-linked graph structure motivates the
+construct-validity audit in Section 3.7.
 
 ## 2.5 Faithfulness evaluation and its pitfalls
 
@@ -140,7 +142,7 @@ ERASER benchmark, comprehensiveness asks how much a prediction weakens when the
 explanation is removed, while sufficiency asks how well the selected evidence
 alone preserves it [16]. Liu et al. [15] similarly test attention by measuring
 faithfulness violations. These measures are useful because they connect an
-explanation to model behaviour instead of visual appeal.
+explanation to model behavior instead of visual appeal.
 
 Model-agnostic methods such as LIME also use local perturbations to estimate
 which inputs support a prediction [18]. Their usefulness depends on whether the
@@ -151,7 +153,7 @@ samples unlike the data seen during training. ROAR addresses this issue by
 removing features and retraining the model, showing why a simple deletion test
 can confound attribution quality with distribution shift [28]. Adebayo et al.
 [27] provide a different sanity check: an explanation should respond when model
-parameters or training labels are randomised. Alvarez-Melis and Jaakkola [19]
+parameters or training labels are randomized. Alvarez-Melis and Jaakkola [19]
 show that explanation methods can also be locally unstable. Together,
 these studies make the evaluator part of the object being audited.
 
@@ -184,7 +186,8 @@ the weight inside WAMSN. The manipulated condition is the declared duration of
 an observation-layer outage triggered by tunnel entry. The design does not
 manipulate AoI independently, so it does not claim that a larger AoI value
 causes lower faithfulness. Instead, it asks whether stale exposure and
-attention behaviour remain separately trustworthy under controlled outages.
+attention-based explanation behavior provide consistent evidence under
+controlled outages.
 
 ## 2.7 Research gap and positioning
 
@@ -204,8 +207,8 @@ no evaluation protocol was identified that combines all of the following:
 - replication across independently trained checkpoints.
 
 The contribution is therefore an audit protocol and an empirical test, not a
-new dispatch algorithm. SUMO supplies a controlled simulated state [22]. The GAT-
-MAPPO policy supplies a realistic attention channel. The research contribution
+new dispatch algorithm. SUMO supplies a controlled simulated state [22]. The
+GAT-MAPPO policy supplies a realistic attention channel. The research contribution
 is to test whether that channel gives a reproducible freshness-aware and
 decision-relevant explanation, and to state clearly when the evidence cannot
 support that claim.

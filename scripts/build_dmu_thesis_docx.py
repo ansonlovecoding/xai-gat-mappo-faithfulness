@@ -65,8 +65,8 @@ CITATIONS = {
 TABLE_TITLES = {
     (3, 1): "Observation graph node types and roles",
     (3, 2): "Policy conditions used in the experiment",
-    (3, 3): "Validation-selected checkpoint epochs",
-    (3, 4): "Shared training and optimisation settings",
+    (3, 3): "Validation-selected checkpoint indices (zero-based)",
+    (3, 4): "Shared training and optimization settings",
     (3, 5): "Held-out evaluation structure and episode counts",
     (3, 6): "Telemetry conditions used in held-out evaluation",
     (4, 1): "Policy capability on held-out demand",
@@ -74,7 +74,9 @@ TABLE_TITLES = {
     (4, 3): "Clean-telemetry faithfulness controls by training seed",
     (4, 4): "Valid node-count distribution in scored graphs",
     (4, 5): "Exposure-conditioned paired attention and DEF shifts",
-    (4, 6): "Hypothesis outcomes across training seeds",
+    (4, 6): "Action composition and dispatch-stratified DEF diagnostic",
+    (4, 7): "Hypothesis outcomes across training seeds",
+    (5, 1): "Freshness-aware explanation assurance approach",
 }
 
 FIGURES = [
@@ -84,14 +86,15 @@ FIGURES = [
     ("Figure 3.4", "Tunnel-triggered observation-layer telemetry degradation"),
     ("Figure 3.5", "Construct-validity controls for action-linked request nodes"),
     ("Figure 4.1", "GAT training and checkpoint-selection diagnostics"),
-    ("Figure 4.2", "Clean-test pickups by training seed"),
+    ("Figure 4.2", "Clean-telemetry pickups by training seed"),
     ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
     ("Figure 4.4", "Attention aggregation sensitivity"),
     ("Figure 4.5", "Attention query-row sensitivity"),
     ("Figure 4.6", "Top-k overlap and DEF resolution"),
     ("Figure 4.7", "Outage-duration sweep by policy and training seed"),
     ("Figure 4.8", "Paired attention and faithfulness shift by training seed"),
-    ("Figure 4.9", "WAMSN-DEF correlation by training seed"),
+    ("Figure 4.9", "Action-stratified faithfulness diagnostic"),
+    ("Figure 4.10", "WAMSN-DEF correlation by training seed"),
     ("Figure 5.1", "Cross-seed evidence matrix"),
 ]
 
@@ -101,18 +104,18 @@ TABLES = [(f"Table {chapter}.{number}", title)
 FIGURE_PAGES = {
     "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "11",
     "Figure 3.4": "12", "Figure 3.5": "14",
-    "Figure 4.1": "17", "Figure 4.2": "18", "Figure 4.3": "19",
-    "Figure 4.4": "20", "Figure 4.5": "21",
-    "Figure 4.6": "22", "Figure 4.7": "23", "Figure 4.8": "24",
-    "Figure 4.9": "25", "Figure 5.1": "26",
+    "Figure 4.1": "19", "Figure 4.2": "20", "Figure 4.3": "22",
+    "Figure 4.4": "23", "Figure 4.5": "24",
+    "Figure 4.6": "25", "Figure 4.7": "26", "Figure 4.8": "27",
+    "Figure 4.9": "28", "Figure 4.10": "29", "Figure 5.1": "31",
 }
 
 TABLE_PAGES = {
-    "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "10",
+    "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "11",
     "Table 3.4": "11", "Table 3.5": "15", "Table 3.6": "15",
-    "Table 4.1": "18", "Table 4.2": "18",
-    "Table 4.3": "19", "Table 4.4": "21", "Table 4.5": "23",
-    "Table 4.6": "25",
+    "Table 4.1": "20", "Table 4.2": "21",
+    "Table 4.3": "21", "Table 4.4": "24", "Table 4.5": "26",
+    "Table 4.6": "27", "Table 4.7": "29", "Table 5.1": "34",
 }
 
 HEADING_PAGES = {
@@ -131,27 +134,29 @@ HEADING_PAGES = {
     "Chapter 3: Methodology": "8", "3.1 Study design": "8",
     "3.2 SUMO environment and data": "8",
     "3.3 Observation graph and action space": "8",
-    "3.4 Policy models and training": "9", "3.5 Telemetry degradation": "11",
+    "3.4 Policy models and training": "9", "3.5 Telemetry degradation": "12",
     "3.6 Explanation measures": "12",
     "3.6.1 Decision-level explanation faithfulness": "12",
-    "3.6.2 Stale-node attention": "13", "3.7 Construct-validity audit": "13",
-    "3.8 Evaluation matrix": "14", "3.9 Hypotheses and statistics": "15",
-    "3.10 Reproducibility": "16", "3.11 Ethics and data governance": "16",
-    "Chapter 4: Results": "17",
-    "4.1 Policy capability and training stability": "17",
-    "4.2 Construct-validity audit": "18",
-    "4.3 Evaluator sensitivity and ranking controls": "19",
-    "4.4 Small-graph resolution": "21",
-    "4.5 Telemetry manipulation and stale exposure": "22",
-    "4.6 Exposure-conditioned paired audit": "23",
-    "4.7 Faithfulness hypotheses": "24", "4.8 Result summary": "25",
-    "Chapter 5: Discussion": "26", "5.1 Answer to the central problem": "26",
-    "5.2 What the stale-exposure result means": "26",
-    "5.3 Dependence on checkpoint and analysis choice": "27",
-    "5.4 Role of the construct-validity audit": "27",
-    "5.5 Degradation-aware training": "27", "5.6 Practical implications": "28",
-    "5.7 Limitations": "28", "5.8 Future work": "28",
-    "Chapter 6: Conclusion": "30",
+    "3.6.2 Stale-node attention": "13", "3.7 Construct-validity audit": "14",
+    "3.8 Evaluation matrix": "15", "3.9 Hypotheses and statistics": "16",
+    "3.10 Reproducibility": "17", "3.11 Ethics and data governance": "17",
+    "Chapter 4: Results": "19",
+    "4.1 Policy capability and training stability": "19",
+    "4.2 Construct-validity audit": "21",
+    "4.3 Evaluator sensitivity and ranking controls": "21",
+    "4.4 Small-graph resolution": "24",
+    "4.5 Telemetry manipulation and stale exposure": "25",
+    "4.6 Exposure-conditioned paired audit": "26",
+    "4.7 Action-stratified diagnostic": "27",
+    "4.8 Faithfulness hypotheses": "28", "4.9 Result summary": "29",
+    "Chapter 5: Discussion": "31", "5.1 Answer to the central problem": "31",
+    "5.2 What the stale-exposure result means": "32",
+    "5.3 Dependence on checkpoint and analysis choice": "32",
+    "5.4 Role of the construct-validity audit": "33",
+    "5.5 Degradation-aware training": "33",
+    "5.6 Proposed assurance approach": "33",
+    "5.7 Limitations": "34", "5.8 Future work": "35",
+    "Chapter 6: Conclusion": "36",
 }
 
 
@@ -441,6 +446,12 @@ def apply_inline(paragraph, text: str) -> None:
 def convert_citations(text: str) -> str:
     # Preserve narrative Harvard citations: "Author [n]" becomes
     # "Author (year)", while a standalone [n] remains "(Author, year)".
+    ordered_groups = ([6, 7], [12, 14, 13, 15])
+    for group in ordered_groups:
+        token = ", ".join(f"[{number}]" for number in group)
+        citation = "; ".join(CITATIONS[number] for number in group)
+        text = text.replace(token, f"({citation})")
+
     for number, citation in CITATIONS.items():
         authors, year = citation.rsplit(", ", 1)
         text = text.replace(f"{authors} [{number}]", f"{authors} ({year})")
@@ -528,11 +539,21 @@ def add_caption_before(doc: Document, anchor, text: str):
 
 def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     caption_paragraph = add_caption_before(doc, anchor, title)
+    if title.startswith("Table 5.1:"):
+        caption_paragraph.paragraph_format.page_break_before = True
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
     total = 9020
     if title.startswith("Table 3.2:"):
         widths = [1200, 1650, 2650, 3520]
+    elif title.startswith("Table 3.5:"):
+        widths = [2350, 1100, 1500, 1250, 1600, 1220]
+    elif title.startswith("Table 3.6:"):
+        widths = [1150, 2550, 2200, 3120]
+    elif title.startswith("Table 4.6:"):
+        widths = [1700, 950, 950, 1900, 3520]
+    elif title.startswith("Table 5.1:"):
+        widths = [1900, 2350, 1900, 2870]
     else:
         weights = []
         for column in range(len(rows[0])):
@@ -856,17 +877,29 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
         )
 
     _, abstract_anchor = clear_between(doc, "LIST OF ABBREVIATIONS", "ABSTRACT")
+    abbreviations_heading = next(
+        p for p in doc.paragraphs if p.text == "LIST OF ABBREVIATIONS"
+    )
+    abbreviations_heading.paragraph_format.page_break_before = True
     abbreviation_rows = [
         ["Abbreviation", "Full form"],
         ["AoI", "Age of Information"],
-        ["CTDE", "Centralised Training with Decentralised Execution"],
+        ["CI", "Confidence Interval"],
+        ["CTDE", "Centralized Training with Decentralized Execution"],
         ["DEF", "Decision-level Explanation Faithfulness"],
         ["GAT", "Graph Attention Network"],
-        ["MAPPO", "Multi-Agent Proximal Policy Optimisation"],
+        ["GNN", "Graph Neural Network"],
+        ["GxI", "Gradient x Input"],
+        ["LOO", "Leave-One-Out"],
+        ["MAPPO", "Multi-Agent Proximal Policy Optimization"],
         ["MARL", "Multi-Agent Reinforcement Learning"],
-        ["SUMO", "Simulation of Urban MObility"],
+        ["MLP", "Multilayer Perceptron"],
+        ["PPO", "Proximal Policy Optimization"],
+        ["RL", "Reinforcement Learning"],
+        ["SUMO", "Simulation of Urban Mobility"],
         ["WAMSN", "Weighted Attention Mass on Stale Nodes"],
         ["XAI", "Explainable Artificial Intelligence"],
+        ["XRL", "Explainable Reinforcement Learning"],
     ]
     table = doc.add_table(rows=len(abbreviation_rows), cols=2)
     table.style = None
@@ -888,7 +921,12 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
                 set_cell_shading(cell, "E7E6E6")
     move_before(table._tbl, abstract_anchor)
 
+    abstract_heading = next(p for p in doc.paragraphs if p.text == "ABSTRACT")
+    abstract_heading.paragraph_format.page_break_before = True
+
     toc = find_body_child(doc, "TABLE OF CONTENTS")
+    toc_heading = next(p for p in doc.paragraphs if p.text == "TABLE OF CONTENTS")
+    toc_heading.paragraph_format.page_break_before = True
     chapter_one = find_body_child(doc, "Chapter 1: Introduction")
     between = list(doc.element.body.iterchildren())
     start_index = between.index(toc)
@@ -955,13 +993,16 @@ def replace_abstract(doc: Document) -> None:
 def update_front_text(doc: Document) -> None:
     replacements = {
         "Supervisor: Farhan S. Ujager": "Supervisor: Farhan S. Ujager",
-        "August 2026": "August 2026",
+        "August 2026": "September 2026",
+        "No publication is claimed in this dissertation draft.":
+            "No publication is claimed in this dissertation.",
+        "ACKNOWLEDGEMENT": "ACKNOWLEDGMENT",
     }
     for paragraph in doc.paragraphs:
         if paragraph.text in replacements:
             paragraph.text = replacements[paragraph.text]
-    acknowledgement = next(p for p in doc.paragraphs if p.text == "ACKNOWLEDGEMENT")
-    body = acknowledgement._p.getnext()
+    acknowledgment = next(p for p in doc.paragraphs if p.text == "ACKNOWLEDGMENT")
+    body = acknowledgment._p.getnext()
     while body is not None and body.tag != qn("w:p"):
         body = body.getnext()
     if body is not None:
@@ -996,7 +1037,8 @@ def style_references_and_appendices(doc: Document) -> None:
             paragraph.text = (
                 "The complete reproduction procedure is provided in "
                 "docs/REPRODUCE_EXPERIMENTS.md. Compact citable outputs are "
-                "stored under results/dissertation_v9_exposure_audit/."
+                "stored in the version-controlled results directory identified "
+                "in that guide."
             )
         if paragraph.text.startswith("The project repository contains"):
             paragraph.text = (
