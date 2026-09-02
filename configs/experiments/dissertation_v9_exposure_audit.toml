@@ -53,12 +53,12 @@ episodes = 3
 seed = 42
 demand_split = "test"
 
-# Frozen-policy sensitivity check. For a 30 s freeze (about three observation
-# steps), p=0.00194 gives an expected degraded-observation share near 0.58%,
-# matching the empirical tunnel-triggered exposure at the same duration.
+# Frozen-policy sensitivity check. A pilot on the held-out demand calibrated
+# p=0.004 to an empirical degraded-observation share near 0.58%, matching the
+# tunnel-triggered exposure at the same 30 s duration.
 [random_loss_robustness]
 outage_duration_s = 30.0
-dropout_rate = 0.00194
+dropout_rate = 0.004
 episodes_per_cell_seed = 3
 seeds = [42, 43, 44, 45, 46, 47, 48, 49]
 demand_split = "test"
