@@ -348,6 +348,7 @@ one complete rollout of one frozen checkpoint under one telemetry condition.
 | Clean capability context | 3 | 9 | 1 | 24 | 216 |
 | Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
 | Added ranking controls | 2 | 6 | 2 | 24 | 288 |
+| Random-trigger sensitivity analysis | 2 | 6 | 3 | 24 | 432 |
 
 GAT and GAT-Outage receive the full faithfulness sweep:
 
@@ -441,6 +442,19 @@ averaged by episode before permutation tests or bootstrap intervals are formed.
 This diagnostic tests whether the combined statistics describe both actions or
 are driven by the more common action. It was added after the primary analysis
 and is interpreted descriptively rather than as a new confirmatory hypothesis.
+
+A second sensitivity analysis checks whether the paired result is specific to
+the fixed tunnel location. The six checkpoints remain frozen and are evaluated
+under clean telemetry, a 30-second tunnel-triggered freeze, and a 30-second
+randomly triggered freeze. The random trigger is an independent Bernoulli draw
+for each taxi at each observation step. A preliminary run without faithfulness
+scoring selected a trigger probability of 0.0023: for the reference GAT
+checkpoint, this produced a 0.569% degraded-observation rate, close to the
+0.580% tunnel rate. The same probability is then held fixed for all
+checkpoints. Because policy actions change taxi availability and trajectories,
+the realized exposure rates can differ; they are reported rather than assumed
+equal. The comparison is therefore interpreted mainly from paired shifts among
+decisions that actually contain a stale vehicle node.
 
 The ranking controls use the same held-out demand and stochastic action
 protocol. They evaluate GAT and GAT-Outage under clean telemetry and a 60-second

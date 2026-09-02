@@ -270,7 +270,45 @@ scored dispatch actions. The diagnostic does not establish a separate law for
 dispatch decisions. It shows that the combined H1 and H4 findings should not be
 generalized to dispatch actions.
 
-## 4.8 Faithfulness hypotheses
+## 4.8 Random-trigger sensitivity analysis
+
+The random-loss control replaces the fixed tunnel-entry trigger with an
+independent per-taxi trigger while retaining the same 30-second
+observation-layer freeze. The trigger probability is fixed across checkpoints,
+so realized exposure remains dependent on the trajectory induced by each
+policy. Random-to-tunnel exposure-rate ratios range from 0.44 to 0.98, with a
+median of 0.78. The comparison therefore focuses on the direction of paired
+effects within stale-exposed decisions rather than treating the two conditions
+as perfectly exposure matched.
+
+| Checkpoint | Exposure tunnel/random (%) | Attention shift tunnel/random (values x 1,000) | Probability DEF shift tunnel/random (values x 10,000) |
+|---|---:|---:|---:|
+| GAT, seed 42 | 0.580 / 0.569 | +4.281 / +4.037 | -0.012 / +0.004 |
+| GAT, seed 43 | 1.176 / 0.517 | +0.231 / -0.286 | -0.479 / +7.361 |
+| GAT, seed 44 | 0.818 / 0.532 | -3.623 / -3.165 | +0.020 / +0.322 |
+| GAT-Outage, seed 42 | 0.967 / 0.713 | +4.279 / +5.453 | -0.205 / -0.093 |
+| GAT-Outage, seed 43 | 0.584 / 0.480 | +0.958 / +0.444 | -0.088 / -0.014 |
+| GAT-Outage, seed 44 | 0.712 / 0.648 | -3.063 / -4.296 | +0.091 / +0.518 |
+
+![Random telemetry-loss robustness check](../figures/v9_random_loss_robustness.png)
+
+**Figure 4.10.** (a) Realized degraded-observation rates. (b) Change in
+attention mass on stale nodes relative to the exact clean twin. (c) Paired
+degraded-minus-clean probability DEF. Error bars are 95% episode-block
+bootstrap intervals. Both degradation conditions use a 30-second freeze.
+
+Attention-shift direction agrees between tunnel and random triggers in five of
+six checkpoints. Probability-DEF direction agrees in four of six. One mismatch
+for GAT seed 42 consists of values very close to zero. GAT seed 43 is the clear
+exception, but its random-trigger DEF interval is wide and crosses zero. The
+seed-42 positive attention pattern and seed-44 negative pattern otherwise
+remain visible under random triggering in both training regimes. This reduces
+the likelihood that the overall checkpoint dependence is produced only by the
+chosen tunnel location. It does not establish a location-independent effect,
+because the realized exposure rates and stale-node populations are not
+identical.
+
+## 4.9 Faithfulness hypotheses
 
 The event-aware audit uses every decision with visible stale exposure rather
 than a periodic sample. H1 is supported for two of three GAT checkpoints and
@@ -280,7 +318,7 @@ WAMSN-DEF correlations range from -0.199 to -0.084 for GAT and from -0.423 to
 
 ![Within-episode WAMSN-DEF correlation by training seed](../figures/v9_h4_correlation_by_training_seed.png)
 
-**Figure 4.10.** All checkpoints have a negative within-episode WAMSN-DEF
+**Figure 4.11.** All checkpoints have a negative within-episode WAMSN-DEF
 association after Holm correction; the direct paired effect remains mixed.
 
 | Hypothesis | GAT seeds supporting | GAT-Outage seeds supporting | Verdict |
@@ -299,14 +337,12 @@ audit supplies the more direct intervention contrast, and its sign still
 changes with training seed. H2 is retained as exploratory because clean DEF is
 close to zero and the relative-rate formulation is unstable.
 
-## 4.9 Result summary
+## 4.10 Result summary
 
-The experiment establishes three points. First, longer outages reliably
-increase stale-data exposure. Second, higher exposure is associated with lower
-DEF within episodes, but the direct paired change in attention and DEF reverses
-for seed 44. Third, 30-second outage training does not remove this seed
-dependence. The action-stratified audit further shows that combined associations
-are dominated by no-op decisions and do not reproduce for dispatch actions.
-The supported conclusion is therefore not that degradation has
-one fixed effect. It is that raw attention does not provide a reproducible
-freshness or faithfulness guarantee across independently trained policies.
+Longer outages reliably increase stale-data exposure, and greater WAMSN is
+associated with lower DEF within episodes. However, paired attention and DEF
+shifts reverse for seed 44, and 30-second outage training does not remove this
+checkpoint dependence. The combined results are dominated by no-op decisions,
+do not reproduce for dispatch actions, and retain exceptions under random
+triggering. Raw attention therefore provides no reproducible freshness or
+faithfulness guarantee across the independently trained policies tested here.

@@ -15,6 +15,7 @@ from matplotlib.patches import FancyBboxPatch
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs" / "dissertation_v4"
 TRAINING_RUNS = RUNS
+ANALYSIS = ROOT / "results" / "dissertation_v9_exposure_audit"
 OUT = ROOT / "docs" / "figures"
 PREFIX = "v4"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
@@ -439,10 +440,6 @@ def action_stratified_figure() -> None:
     axes["counts"].set_ylim(0, count_ceiling * 1.16)
     axes["counts"].set_ylabel("Eligible decisions (count)")
     axes["counts"].set_title("(a) Chosen-action counts", loc="left")
-    axes["counts"].legend(
-        frameon=True, facecolor="white", edgecolor="none", framealpha=0.92,
-        fontsize=8, loc="upper right",
-    )
 
     width = 0.32
     no_op_probability = np.array([
@@ -504,19 +501,97 @@ def action_stratified_figure() -> None:
     _save(fig, "action_stratified_faithfulness")
 
 
+def random_loss_robustness_figure() -> None:
+    """Compare tunnel and random triggers at the same 30 s freeze duration."""
+    payload = json.loads((ANALYSIS / "random_loss_robustness.json").read_text())
+    rows = payload["rows"]
+    checkpoints = sorted({(row["model"], int(row["training_seed"])) for row in rows})
+    by_key = {
+        (row["model"], int(row["training_seed"]), row["condition"]): row
+        for row in rows
+    }
+    x = np.array([0, 1, 2, 4, 5, 6], dtype=float)
+    labels = [str(seed) for _, seed in checkpoints]
+    conditions = (
+        ("tunnel", "Tunnel trigger", "o", "#C75000", -0.12),
+        ("random", "Random trigger", "s", "#176B87", 0.12),
+    )
+    fig, axes = plt.subplots(1, 3, figsize=(8.0, 3.65))
+
+    width = 0.24
+    for condition, label, _, color, offset in conditions:
+        exposure = [
+            float(by_key[model, seed, condition]["empirical_degradation_rate"]) * 100
+            for model, seed in checkpoints
+        ]
+        axes[0].bar(
+            x + offset, exposure, width=width, color=color,
+            hatch="///" if condition == "random" else None,
+            edgecolor="white", linewidth=0.5, label=label,
+        )
+    axes[0].set_ylabel("Degraded observations (%)")
+    axes[0].set_title("(a) Observed exposure", loc="left")
+
+    metric_specs = (
+        ("stale_attention_shift", "stale_attention_ci_low",
+         "stale_attention_ci_high", 1e3,
+         r"Stale-attention shift ($\times 10^{-3}$)", "(b) Attention shift"),
+        ("paired_probability_def_shift", "paired_probability_def_ci_low",
+         "paired_probability_def_ci_high", 1e4,
+         r"Probability DEF shift ($\times 10^{-4}$)", "(c) Faithfulness shift"),
+    )
+    for ax, (value_key, low_key, high_key, scale, ylabel, title) in zip(
+        axes[1:], metric_specs
+    ):
+        for condition, label, marker, color, offset in conditions:
+            values, lows, highs = [], [], []
+            for model, seed in checkpoints:
+                row = by_key[model, seed, condition]
+                value = float(row[value_key]) * scale
+                values.append(value)
+                lows.append(value - float(row[low_key]) * scale)
+                highs.append(float(row[high_key]) * scale - value)
+            ax.errorbar(
+                x + offset, values, yerr=[lows, highs], fmt=marker,
+                color=color, markerfacecolor=color, markersize=4.8,
+                linewidth=1.0, capsize=2.5, label=label,
+            )
+        ax.axhline(0, color="#202020", linewidth=0.8)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title, loc="left")
+
+    for ax in axes:
+        ax.set_xticks(x, labels)
+        ax.text(1, -0.17, "GAT", transform=ax.get_xaxis_transform(),
+                ha="center", va="top", fontsize=8.5, fontweight="bold")
+        ax.text(5, -0.17, "GAT-Outage", transform=ax.get_xaxis_transform(),
+                ha="center", va="top", fontsize=8.5, fontweight="bold")
+        ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
+        ax.spines[["top", "right"]].set_visible(False)
+    axes[0].legend(frameon=False, fontsize=7.5, loc="upper left")
+    fig.suptitle("Sensitivity to tunnel-triggered versus random telemetry loss")
+    fig.tight_layout(rect=(0, 0.03, 1, 0.96))
+    _save(fig, "random_loss_robustness")
+
+
 def main() -> None:
-    global RUNS, TRAINING_RUNS, OUT, PREFIX
+    global RUNS, TRAINING_RUNS, ANALYSIS, OUT, PREFIX
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=RUNS)
     parser.add_argument(
         "--training-root", type=Path,
         help="experiment root containing training logs (defaults to --root)",
     )
+    parser.add_argument(
+        "--analysis-root", type=Path, default=ANALYSIS,
+        help="directory containing cross-sweep analysis JSON files",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--prefix", default=PREFIX)
     args = parser.parse_args()
     RUNS = args.root
     TRAINING_RUNS = args.training_root or RUNS
+    ANALYSIS = args.analysis_root
     OUT = args.out
     PREFIX = args.prefix
     performance_figure()
@@ -526,6 +601,7 @@ def main() -> None:
     shift_figure()
     consistency_figure()
     action_stratified_figure()
+    random_loss_robustness_figure()
     evidence_summary_figure()
     print(f"figures: {OUT}")
 

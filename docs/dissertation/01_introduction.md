@@ -111,6 +111,11 @@ the direct clean-twin DEF shift is negative for four checkpoints and positive
 for two. This distinction matters: a within-policy association can be reproducible
 without giving every trained policy the same response to degradation.
 
+A 30-second random-trigger sensitivity check retains the attention-shift
+direction in five of six checkpoints and the probability-DEF direction in four
+of six. This reduces concern that the checkpoint pattern is only an artifact of
+the fixed tunnel location, while preserving the need for a cautious conclusion.
+
 The action audit narrows this result further. After decisions with no available
 request are removed, 93.0% of records still select no-op and only 7.0% dispatch
 a request. The H1 and H4 patterns found in the combined data are not reproduced

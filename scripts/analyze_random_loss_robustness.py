@@ -62,7 +62,7 @@ def main() -> int:
         sweep_dir = manifest_path.parent
         manifest, cells = load_sweep(sweep_dir)
         frame = decisions_frame(cells)
-        model = sweep_dir.parent.parent.name
+        model = sweep_dir.parent.name
         training_seed = int(sweep_dir.name.removeprefix("seed_"))
         for axis, condition in AXES.items():
             rng = np.random.default_rng(10_000 + training_seed)

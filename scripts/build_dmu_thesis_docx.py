@@ -75,7 +75,8 @@ TABLE_TITLES = {
     (4, 4): "Valid node-count distribution in scored graphs",
     (4, 5): "Exposure-conditioned paired attention and DEF shifts",
     (4, 6): "Action composition and dispatch-stratified DEF diagnostic",
-    (4, 7): "Hypothesis outcomes across training seeds",
+    (4, 7): "Tunnel-triggered and random-loss sensitivity results",
+    (4, 8): "Hypothesis outcomes across training seeds",
     (5, 1): "Freshness-aware explanation assurance approach",
 }
 
@@ -94,7 +95,8 @@ FIGURES = [
     ("Figure 4.7", "Outage-duration sweep by policy and training seed"),
     ("Figure 4.8", "Paired attention and faithfulness shift by training seed"),
     ("Figure 4.9", "Action-stratified faithfulness diagnostic"),
-    ("Figure 4.10", "WAMSN-DEF correlation by training seed"),
+    ("Figure 4.10", "Tunnel-triggered and random telemetry-loss sensitivity"),
+    ("Figure 4.11", "WAMSN-DEF correlation by training seed"),
     ("Figure 5.1", "Cross-seed evidence matrix"),
 ]
 
@@ -107,7 +109,8 @@ FIGURE_PAGES = {
     "Figure 4.1": "19", "Figure 4.2": "20", "Figure 4.3": "22",
     "Figure 4.4": "23", "Figure 4.5": "24",
     "Figure 4.6": "25", "Figure 4.7": "26", "Figure 4.8": "27",
-    "Figure 4.9": "28", "Figure 4.10": "29", "Figure 5.1": "31",
+    "Figure 4.9": "28", "Figure 4.10": "29", "Figure 4.11": "30",
+    "Figure 5.1": "31",
 }
 
 TABLE_PAGES = {
@@ -115,7 +118,8 @@ TABLE_PAGES = {
     "Table 3.4": "11", "Table 3.5": "15", "Table 3.6": "15",
     "Table 4.1": "20", "Table 4.2": "21",
     "Table 4.3": "21", "Table 4.4": "24", "Table 4.5": "26",
-    "Table 4.6": "27", "Table 4.7": "29", "Table 5.1": "34",
+    "Table 4.6": "27", "Table 4.7": "28", "Table 4.8": "30",
+    "Table 5.1": "34",
 }
 
 HEADING_PAGES = {
@@ -148,15 +152,16 @@ HEADING_PAGES = {
     "4.5 Telemetry manipulation and stale exposure": "25",
     "4.6 Exposure-conditioned paired audit": "26",
     "4.7 Action-stratified diagnostic": "27",
-    "4.8 Faithfulness hypotheses": "28", "4.9 Result summary": "29",
+    "4.8 Random-trigger sensitivity analysis": "28",
+    "4.9 Faithfulness hypotheses": "29", "4.10 Result summary": "30",
     "Chapter 5: Discussion": "31", "5.1 Answer to the central problem": "31",
     "5.2 What the stale-exposure result means": "32",
     "5.3 Dependence on checkpoint and analysis choice": "32",
     "5.4 Role of the construct-validity audit": "33",
     "5.5 Degradation-aware training": "33",
     "5.6 Proposed assurance approach": "33",
-    "5.7 Limitations": "34", "5.8 Future work": "35",
-    "Chapter 6: Conclusion": "36",
+    "5.7 Limitations": "35", "5.8 Future work": "36",
+    "Chapter 6: Conclusion": "37",
 }
 
 

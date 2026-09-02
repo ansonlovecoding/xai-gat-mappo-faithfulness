@@ -18,6 +18,8 @@ retrained or reselected after the faithfulness results were observed.
   separately; forced no-op records are excluded.
 - Deterministic diagnostic: three held-out argmax episodes per selected GAT
   checkpoint.
+- Random-trigger sensitivity: clean, tunnel-triggered, and random-triggered
+  30-second conditions; eight seeds and three episodes per condition.
 
 All six sweeps pass preflight, including stale-exposure coverage gates.
 
@@ -45,12 +47,18 @@ The supported conclusion is that raw attention does not provide a reproducible
 freshness or faithfulness guarantee across independently trained policies. The
 results do not establish that AoI itself causes lower faithfulness.
 
+The random-trigger check retains the attention-shift direction in five of six
+checkpoints and the probability-DEF direction in four of six. It reduces the
+likelihood that the checkpoint pattern is only a fixed-tunnel artifact, but the
+realized exposure rates are not identical across policies.
+
 ## Files
 
 - `summary.csv`: condition-level audit measurements.
 - `action_stratified.csv`: no-op and dispatch decision diagnostics.
 - `deterministic_diagnostics.csv`: held-out argmax behavior.
 - `training_seed_synthesis.csv`: cross-checkpoint consistency summary.
+- `random_loss_robustness.json`: 30-second tunnel/random sensitivity summary.
 - `analyses/`: complete per-checkpoint statistical analyses.
 - `preflight/`: validation reports for all six sweeps.
 - `faithfulness_controls/`: LOO, Gradient x Input, overlap, aggregation, and

@@ -159,6 +159,7 @@ Important fixed settings are:
 | Corruption | freeze last valid position and speed |
 | Faithfulness sampling | every 16 decisions plus every stale-exposed decision |
 | Random control | five type-matched subsets |
+| Random-loss sensitivity | 30-second freeze; trigger probability 0.0023 |
 
 ## 4. Run the complete experiment
 
@@ -176,6 +177,21 @@ Train, select, and evaluate the stable model set first:
 Then run the four v9 audit commands listed at the start of this guide. The final
 faithfulness matrix contains 1,440 episodes and can take many hours on CPU.
 
+Run the frozen-policy random-loss sensitivity analysis separately:
+
+```bash
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --stage robustness
+.venv/bin/python scripts/analyze_random_loss_robustness.py \
+  runs/dissertation_v9_exposure_audit/robustness/random_loss_30s \
+  --out results/dissertation_v9_exposure_audit/random_loss_robustness
+```
+
+This adds 432 rollout evaluations: clean, 30-second tunnel-triggered, and
+30-second randomly triggered conditions for each of six frozen checkpoints.
+Each condition contains eight evaluation seeds and three held-out episodes.
+
 If a completed stage already exists, use `--resume`:
 
 ```bash
@@ -192,7 +208,7 @@ than silently treating them as complete.
 The available stages are:
 
 ```text
-train -> select -> evaluate -> diagnose -> sweep -> preflight -> analyze -> summarize
+train -> select -> evaluate -> diagnose -> sweep -> robustness -> preflight -> analyze -> summarize
 ```
 
 Examples:
@@ -378,6 +394,7 @@ After all analyses exist:
 .venv/bin/python scripts/plot_dissertation_v4.py \
   --root runs/dissertation_v9_exposure_audit \
   --training-root runs/dissertation_v8 \
+  --analysis-root results/dissertation_v9_exposure_audit \
   --out docs/figures --prefix v9
 ```
 
@@ -391,6 +408,8 @@ The primary thesis tables are:
   selected GAT checkpoint;
 - `training_seed_synthesis.csv`: effect ranges and hypothesis consistency
   across independently trained policies.
+- `random_loss_robustness.csv`: tunnel-triggered and random-triggered paired
+  shifts for the 30-second sensitivity analysis.
 
 The plotting script writes PNG and PDF versions to `docs/figures/`.
 
@@ -409,6 +428,8 @@ match one seed exactly across hardware. In the completed local v9 run:
   patterns do not reproduce in the dispatch stratum;
 - the six GAT checkpoints select no-op throughout the 18 deterministic
   diagnostic episodes.
+- tunnel and random triggers agree on attention-shift direction in five of six
+  checkpoints and on probability-DEF direction in four of six checkpoints.
 
 The conclusion is therefore not that AoI causes lower faithfulness. Longer
 outages consistently increase stale-data exposure, while attention

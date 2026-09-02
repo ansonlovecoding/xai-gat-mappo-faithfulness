@@ -38,6 +38,9 @@ training regimes. Within-policy tests show an association between greater
 exposure and lower DEF, but the direct paired DEF change is negative for four
 checkpoints and positive for two. The result also depends on the selected
 checkpoint and the rule used to aggregate attention into a single explanation.
+A random-trigger control retains the attention-shift direction in five of six
+checkpoints and the DEF-shift direction in four of six, so the variation cannot
+be attributed only to the fixed tunnel location.
 
 The conclusion is not that stale telemetry always reduces faithfulness. It is
 that raw attention provides no stable guarantee of either data freshness or

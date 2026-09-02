@@ -19,8 +19,9 @@ The research questions lead to that answer:
 - **RQ2: Does attention move toward stale vehicle nodes?** Not consistently.
   The declared aggregation moves toward stale nodes for checkpoints trained
   with seeds 42 and 43 and away from them for checkpoints trained with seed 44
-  under both training regimes. Individual heads can reverse the direction
-  within one checkpoint.
+  under both training regimes. A random-trigger control retains the
+  attention-shift direction in five of six checkpoints, while individual heads
+  can still reverse the direction within one checkpoint.
 - **RQ3: Does the explanation remain dependable as outage duration increases?**
   No cross-policy guarantee is found. H1 is supported in five of six selected
   checkpoints and H4 in all six, but the direct paired DEF shift is negative
@@ -39,6 +40,12 @@ artifact. The positive LOO result shows that DEF has some perturbation
 sensitivity, but the high expected top-k overlap limits its resolution. The
 conclusion is therefore based on several checks rather than one near-zero
 number.
+
+The 30-second random-trigger sensitivity analysis reduces concern that the
+checkpoint-dependent pattern is produced only by the selected tunnel. It does
+not remove the need for multiple tunnel placements or real telemetry traces,
+because realized exposure and the stale-node population still differ between
+trigger mechanisms.
 
 The capability evidence also has a clear boundary. Sampled policies outperform
 the basic lower bounds, but all six GAT checkpoints choose no-op in 18 of 18

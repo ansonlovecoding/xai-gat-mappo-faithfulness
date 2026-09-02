@@ -66,6 +66,17 @@ the two training-condition means. With only three training seeds, this is a
 descriptive comparison of selected checkpoints, not a variance decomposition
 or evidence that the seed value itself causes the response.
 
+The random-trigger sensitivity analysis checks whether this pattern is only an
+artifact of the fixed tunnel location. Attention-shift direction is retained
+in five of six checkpoints, and probability-DEF direction in four of six. The
+seed-42 positive attention pattern and seed-44 negative pattern appear under
+both triggers and both training regimes. This makes a tunnel-only explanation
+less plausible, but it is not a complete location control. A fixed trigger
+probability produces different realized exposure rates after each policy
+changes taxi trajectories, and the identity of the stale taxis also changes.
+The result supports checkpoint dependence; it does not prove one general
+effect of random or tunnel-triggered loss.
+
 The paired probability-DEF effects are small enough that their practical
 importance should not be overstated. Reading all six estimates as operationally
 close to zero is a reasonable challenge. The evidence against a dependable
@@ -206,9 +217,10 @@ should not be read as population estimates for real fleets or cities.
 ## 5.8 Future work
 
 Future experiments should add training seeds and use multiple road networks,
-demand levels, tunnel placements, and public mobility traces. A randomized
-telemetry-loss control would help distinguish a general stale-node effect from
-one produced by tunnel location. Experiments should also include
+demand levels, tunnel placements, and public mobility traces. The present
+random-trigger control should be extended to several calibrated exposure rates
+and persistent loss processes so that trigger location, exposure frequency,
+and outage duration can be separated. Experiments should also include
 disconnected-edge and message-passing ablations to establish how much the policy uses its
 graph channel. Delayed, intermittent, and biased telemetry should be compared
 with fixed freezes.
