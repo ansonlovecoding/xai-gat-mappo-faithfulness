@@ -63,12 +63,14 @@ CITATIONS = {
 }
 
 TABLE_TITLES = {
+    (2, 1): "Recent graph-based dispatch literature compared with this study",
     (3, 1): "Observation graph node types and roles",
     (3, 2): "Policy conditions used in the experiment",
     (3, 3): "Validation-selected checkpoint indices (zero-based)",
     (3, 4): "Shared training and optimization settings",
-    (3, 5): "Held-out evaluation structure and episode counts",
-    (3, 6): "Telemetry conditions used in held-out evaluation",
+    (3, 5): "Explanation measures and roles",
+    (3, 6): "Held-out evaluation structure and episode counts",
+    (3, 7): "Telemetry conditions used in held-out evaluation",
     (4, 1): "Policy capability on held-out demand",
     (4, 2): "Construct-validity audit of random controls",
     (4, 3): "Clean-telemetry faithfulness controls by training seed",
@@ -77,7 +79,9 @@ TABLE_TITLES = {
     (4, 6): "Action composition and dispatch-stratified DEF diagnostic",
     (4, 7): "Tunnel-triggered and random-loss sensitivity results",
     (4, 8): "Hypothesis outcomes across training seeds",
+    (4, 9): "Freshness-aware explanation audit decisions",
     (5, 1): "Freshness-aware explanation audit framework",
+    (5, 2): "Audit framework inputs and outputs",
 }
 
 FIGURES = [
@@ -98,28 +102,30 @@ FIGURES = [
     ("Figure 4.10", "Tunnel-triggered and random telemetry-loss sensitivity"),
     ("Figure 4.11", "WAMSN-DEF correlation by training seed"),
     ("Figure 5.1", "Cross-seed evidence matrix"),
+    ("Figure 5.2", "Freshness-aware explanation audit workflow"),
 ]
 
 TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
 
 FIGURE_PAGES = {
-    "Figure 3.1": "9", "Figure 3.2": "10", "Figure 3.3": "12",
-    "Figure 3.4": "13", "Figure 3.5": "15",
-    "Figure 4.1": "19", "Figure 4.2": "20", "Figure 4.3": "22",
-    "Figure 4.4": "23", "Figure 4.5": "24",
-    "Figure 4.6": "25", "Figure 4.7": "26", "Figure 4.8": "27",
-    "Figure 4.9": "28", "Figure 4.10": "29", "Figure 4.11": "30",
-    "Figure 5.1": "31",
+    "Figure 3.1": "10", "Figure 3.2": "11", "Figure 3.3": "13",
+    "Figure 3.4": "14", "Figure 3.5": "17",
+    "Figure 4.1": "22", "Figure 4.2": "23", "Figure 4.3": "25",
+    "Figure 4.4": "26", "Figure 4.5": "27",
+    "Figure 4.6": "28", "Figure 4.7": "29", "Figure 4.8": "30",
+    "Figure 4.9": "31", "Figure 4.10": "32", "Figure 4.11": "33",
+    "Figure 5.1": "35", "Figure 5.2": "39",
 }
 
 TABLE_PAGES = {
-    "Table 3.1": "8", "Table 3.2": "10", "Table 3.3": "11",
-    "Table 3.4": "11", "Table 3.5": "16", "Table 3.6": "16",
-    "Table 4.1": "20", "Table 4.2": "21",
-    "Table 4.3": "21", "Table 4.4": "24", "Table 4.5": "26",
-    "Table 4.6": "27", "Table 4.7": "29", "Table 4.8": "30",
-    "Table 5.1": "34",
+    "Table 2.1": "7", "Table 3.1": "9", "Table 3.2": "11",
+    "Table 3.3": "12", "Table 3.4": "12", "Table 3.5": "15",
+    "Table 3.6": "17", "Table 3.7": "18",
+    "Table 4.1": "23", "Table 4.2": "24",
+    "Table 4.3": "24", "Table 4.4": "27", "Table 4.5": "29",
+    "Table 4.6": "30", "Table 4.7": "32", "Table 4.8": "33",
+    "Table 4.9": "34", "Table 5.1": "38", "Table 5.2": "39",
 }
 
 HEADING_PAGES = {
@@ -135,33 +141,37 @@ HEADING_PAGES = {
     "2.5 Faithfulness evaluation and its pitfalls": "6",
     "2.6 Age of Information and telemetry degradation": "7",
     "2.7 Research gap and positioning": "7",
-    "Chapter 3: Methodology": "8", "3.1 Study design": "8",
-    "3.2 SUMO environment and data": "8",
-    "3.3 Observation graph and action space": "8",
-    "3.4 Policy models and training": "9", "3.5 Telemetry degradation": "12",
-    "3.6 Explanation measures": "13",
-    "3.6.1 Decision-level explanation faithfulness": "13",
-    "3.6.2 Stale-node attention": "14", "3.7 Construct-validity audit": "14",
-    "3.8 Evaluation matrix": "15", "3.9 Hypotheses and statistics": "17",
-    "3.10 Reproducibility": "18", "3.11 Ethics and data governance": "18",
-    "Chapter 4: Results": "19",
-    "4.1 Policy capability and training stability": "19",
-    "4.2 Construct-validity audit": "21",
-    "4.3 Evaluator sensitivity and ranking controls": "21",
-    "4.4 Small-graph resolution": "24",
-    "4.5 Telemetry manipulation and stale exposure": "25",
-    "4.6 Exposure-conditioned paired audit": "26",
-    "4.7 Action-stratified diagnostic": "27",
-    "4.8 Random-trigger sensitivity analysis": "28",
-    "4.9 Faithfulness hypotheses": "29", "4.10 Result summary": "30",
-    "Chapter 5: Discussion": "31", "5.1 Answer to the central problem": "31",
-    "5.2 What the stale-exposure result means": "32",
-    "5.3 Dependence on checkpoint and analysis choice": "32",
-    "5.4 Role of the construct-validity audit": "33",
-    "5.5 Degradation-aware training": "33",
-    "5.6 Proposed audit framework": "33",
-    "5.7 Limitations": "34", "5.8 Future work": "35",
-    "Chapter 6: Conclusion": "36",
+    "Chapter 3: Methodology": "9", "3.1 Study design": "9",
+    "3.2 SUMO environment and data": "9",
+    "3.3 Observation graph and action space": "9",
+    "3.4 Policy models and training": "10", "3.5 Telemetry degradation": "13",
+    "3.6 Explanation measures": "14",
+    "3.6.1 Decision-level explanation faithfulness": "14",
+    "3.6.2 Stale-node attention": "16", "3.7 Construct-validity audit": "16",
+    "3.8 Evaluation matrix": "17", "3.9 Hypotheses and statistics": "19",
+    "3.10 Audit decision implementation": "20", "3.11 Reproducibility": "21",
+    "3.12 Ethics and data governance": "21",
+    "Chapter 4: Results": "22",
+    "4.1 Policy capability and training stability": "22",
+    "4.2 Construct-validity audit": "24",
+    "4.3 Evaluator sensitivity and ranking controls": "24",
+    "4.4 Small-graph resolution": "27",
+    "4.5 Telemetry manipulation and stale exposure": "28",
+    "4.6 Exposure-conditioned paired audit": "29",
+    "4.7 Action-stratified diagnostic": "30",
+    "4.8 Random-trigger sensitivity analysis": "31",
+    "4.9 Faithfulness hypotheses": "32", "4.10 Result summary": "33",
+    "4.11 Demonstrative framework decision": "34",
+    "Chapter 5: Discussion": "35", "5.1 Answer to the central problem": "35",
+    "5.2 What the stale-exposure result means": "36",
+    "5.3 Dependence on checkpoint and analysis choice": "36",
+    "5.4 Role of the construct-validity audit": "37",
+    "5.5 Degradation-aware training": "37",
+    "5.6 Proposed audit framework": "38",
+    "5.6.1 Purpose and scope": "38", "5.6.2 Inputs, outputs and use": "39",
+    "5.6.3 Application to this study": "40",
+    "5.7 Limitations": "40", "5.8 Future work": "41",
+    "Chapter 6: Conclusion": "42",
 }
 
 
@@ -557,6 +567,8 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
         widths = [1150, 2550, 2200, 3120]
     elif title.startswith("Table 4.6:"):
         widths = [1700, 800, 800, 1800, 3920]
+    elif title.startswith("Table 4.9:"):
+        widths = [2100, 1300, 1550, 4070]
     elif title.startswith("Table 5.1:"):
         widths = [1900, 2350, 1900, 2870]
     else:

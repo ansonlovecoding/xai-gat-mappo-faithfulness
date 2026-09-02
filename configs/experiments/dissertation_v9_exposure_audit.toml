@@ -72,7 +72,9 @@ controls_summary = "faithfulness_controls/summary.json"
 decision_relevance_ci_floor = 0.0
 minimum_dispatch_decisions = 1
 direction_epsilon = 1e-9
-require_deterministic_capability = true
+# The audited decisions use stochastic policy sampling. Argmax remains a
+# descriptive diagnostic and becomes a gate only for an argmax deployment.
+require_deterministic_capability = false
 require_trigger_robustness = true
 
 [faithfulness_controls]

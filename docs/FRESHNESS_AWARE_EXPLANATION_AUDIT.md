@@ -59,8 +59,8 @@ available evidence for every frozen checkpoint.
 | Action composition | Are no-op and dispatch decisions reported separately? | Both strata exist and the minimum dispatch count is met |
 | Extraction stability | Does the conclusion survive layer/head/rollout choices? | No audited alternative reverses the declared default direction |
 | Checkpoint consistency | Does the conclusion reproduce after independent training? | Dispatch relevance and stale-attention response have the same non-zero direction across seeds |
-| Deterministic capability | Does the audited deployment action rule operate? | Every checkpoint completes at least one held-out argmax pickup |
-| Trigger robustness | Is the result limited to a fixed tunnel trigger? | Tunnel and random triggers agree in direction for attention and DEF |
+| Deployment-action capability | Does the action rule intended for deployment operate? | Require held-out argmax capability only when deployment uses argmax; otherwise retain argmax as a diagnostic |
+| Trigger robustness | Is the result limited to a fixed tunnel trigger? | A direction is supported only when its 95% CI excludes zero; supported tunnel and random directions must agree |
 
 The declared attention extraction rule remains the self-node query row, averaged
 over layers and heads. Alternatives are sensitivity tests, not opportunities to
@@ -70,13 +70,18 @@ select a favorable result after seeing the data.
 
 | State | Meaning | Allowed use |
 |---|---|---|
-| `ELIGIBLE` | Every required check passed within the recorded scope | Attention may be shown with freshness and scope information |
+| `ELIGIBLE` | Every required check passed within the recorded scope | Attention may be shown as an audited candidate explanation with freshness and scope information |
 | `WITHHOLD` | At least one required check failed | Keep attention as an internal model diagnostic |
 | `INCOMPLETE` | Required evidence is missing or unreadable | Collect the missing evidence; no release decision is possible |
 
 `ELIGIBLE` does not mean that attention is a complete causal explanation. It
 means only that the predeclared release checks passed for the audited models,
 data, actions, and telemetry conditions.
+
+An individual check can be `INDETERMINATE` when its evidence is complete but a
+direction is not supported, for example when a trigger-comparison confidence
+interval crosses zero. An indeterminate required check produces `WITHHOLD`, not
+`INCOMPLETE`.
 
 ## 6. Run the audit
 
@@ -131,7 +136,7 @@ The default output directory is
 
 The JSON output records the exact rules used. The default rules are declared in
 the `[explanation_audit]` section of the experiment configuration, including the
-decision-relevance floor and optional deterministic and trigger gates.
+decision-relevance floor and optional deployment-action and trigger gates.
 
 ## 8. Interpreting the current experiment
 
@@ -139,9 +144,11 @@ The completed dissertation experiment produces `WITHHOLD` for both GAT and
 GAT-Outage. Evidence integrity, freshness reporting, action-aware controls, and
 action composition pass. The release decision fails because dispatch-action
 decision relevance is not supported, the attention conclusion changes under
-alternative extraction rules, and the deterministic policies produce no pickups
-in the held-out diagnostic. Additional checkpoint and trigger failures are listed
-separately for each model.
+alternative extraction rules, and the stale-attention response is inconsistent
+across checkpoints. Trigger robustness is indeterminate for both model families
+because at least one confidence interval crosses zero. The held-out argmax
+diagnostic produces no pickups, but it is not a release gate for the sampled
+action rule audited in this experiment.
 
 This result is the intended use of the framework: a valid and reproducible
 experiment can still conclude that an attention map should not be presented as a

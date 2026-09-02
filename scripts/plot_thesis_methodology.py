@@ -515,12 +515,76 @@ def construct_validity_design():
             fontweight="bold")
     save(fig, "construct_validity_action_deletion")
 
+
+def explanation_audit_framework():
+    fig, ax = canvas("Freshness-Aware Explanation Audit", (16, 7.6))
+
+    ax.text(0.055, 0.83, "INPUT EVIDENCE", ha="left", va="center",
+            fontsize=11.5, fontweight="bold", color=GREY)
+    ax.text(0.37, 0.83, "RELEASE CHECK GROUPS", ha="left", va="center",
+            fontsize=11.5, fontweight="bold", color=GREY)
+    ax.text(0.78, 0.83, "AUDIT OUTPUT", ha="left", va="center",
+            fontsize=11.5, fontweight="bold", color=GREY)
+
+    box(ax, 0.045, 0.59, 0.235, 0.17, "Frozen checkpoints",
+        "held-out clean/degraded pairs\nactions, attention and freshness",
+        BLUE, title_size=12.5, body_size=9.7)
+    box(ax, 0.045, 0.34, 0.235, 0.17, "Supporting evidence",
+        "DEF and LOO controls\nseeds, extraction and triggers",
+        ORANGE, title_size=12.5, body_size=9.7)
+
+    ax.add_patch(FancyBboxPatch(
+        (0.35, 0.27), 0.34, 0.49,
+        boxstyle="round,pad=0.018,rounding_size=0.018",
+        linewidth=1.5, edgecolor=BLUE, facecolor="#F7FAFC",
+    ))
+    checks = [
+        "1  Evidence integrity",
+        "2  Freshness shown separately",
+        "3  Action-aware decision relevance",
+        "4  No-op / dispatch composition",
+        "5  Extraction and checkpoint stability",
+        "6  Deployment and trigger checks",
+    ]
+    for index, label in enumerate(checks):
+        y = 0.695 - index * 0.071
+        ax.text(0.385, y, label, ha="left", va="center", fontsize=10.2,
+                color="#202020", fontweight="bold" if index < 3 else "normal")
+
+    box(ax, 0.76, 0.61, 0.19, 0.12, "ELIGIBLE",
+        "may show with freshness\nand audited scope", GREEN,
+        title_size=12.2, body_size=9.2)
+    box(ax, 0.76, 0.43, 0.19, 0.12, "WITHHOLD",
+        "internal diagnostic only", ORANGE,
+        title_size=12.2, body_size=9.2)
+    box(ax, 0.76, 0.25, 0.19, 0.12, "INCOMPLETE",
+        "collect missing evidence", GREY,
+        title_size=12.2, body_size=9.2)
+
+    arrow(ax, (0.28, 0.675), (0.35, 0.61), color=BLUE)
+    arrow(ax, (0.28, 0.425), (0.35, 0.43), color=ORANGE)
+    arrow(ax, (0.69, 0.57), (0.76, 0.67), color=GREEN)
+    arrow(ax, (0.69, 0.51), (0.76, 0.49), color=ORANGE)
+    arrow(ax, (0.69, 0.45), (0.76, 0.31), color=GREY)
+
+    ax.add_patch(FancyBboxPatch(
+        (0.045, 0.075), 0.905, 0.105,
+        boxstyle="round,pad=0.012,rounding_size=0.012",
+        linewidth=1.0, edgecolor="#CAD1D6", facecolor="#FAFBFC",
+    ))
+    ax.text(0.5, 0.128,
+            "Repeat after retraining, checkpoint replacement, telemetry changes or scenario transfer.",
+            ha="center", va="center", fontsize=10.5, color="#202020",
+            fontweight="bold")
+    save(fig, "freshness_aware_explanation_audit")
+
 def main():
     observation_action_graph()
     graph_attention_design()
     model_training_design()
     telemetry_flow()
     construct_validity_design()
+    explanation_audit_framework()
     print(f"methodology figures: {OUT}")
 
 

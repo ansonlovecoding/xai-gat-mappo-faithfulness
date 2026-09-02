@@ -16,7 +16,8 @@ both signs reverse for checkpoints trained with seed
 44 under both training regimes. The measured effects are also small.
 
 The action-stratified results limit how broadly this finding can be interpreted. Chosen
-no-op actions account for 93.0% of eligible decisions, and the combined H1 and
+no-op actions account for 93.0% of scorable decisions with at least one
+available request, and the combined H1 and
 H4 patterns are not reproduced among dispatch actions. Four checkpoints also
 change paired-DEF direction between the combined and dispatch strata. The
 primary statistics describe the sampled action mixture, not a
@@ -83,7 +84,7 @@ effect of random or tunnel-triggered loss.
 The paired probability-DEF effects are small and may have little operational
 importance. The concern is not a large universal decline. Instead, even these
 small changes reverse direction across independently trained checkpoints, while
-raw clean-telemetry DEF is already near its matched control. Together, these
+raw corrected DEF under clean telemetry is already near zero. Together, these
 results do not provide a consistent basis for trusting the explanations, but
 they also do not show large damage from telemetry degradation.
 
@@ -101,13 +102,14 @@ query-row change therefore cannot be assumed to correct near-zero or negative
 DEF. An operator-facing attention map needs a declared and tested rule for
 choosing its query, layer, and heads.
 
-The deterministic diagnostic reveals a related policy limitation. All six GAT
+The deterministic diagnostic reveals a related policy limitation. All six graph-attention
 checkpoints choose no-op in all 18 argmax episode evaluations, although their
 sampled policies outperform the declared lower bounds. This limitation does not
 invalidate the faithfulness calculations for sampled actions, but it means that
 the experiment audits stochastic policy decisions rather than a deployable
-deterministic dispatcher. The audit framework should report action composition
-and deterministic behavior before showing an attention map to an operator.
+deterministic dispatcher. The audit framework should evaluate the action rule
+intended for deployment and report any alternative action rule as a separate
+diagnostic.
 
 ## 5.4 Role of the construct-validity audit
 
@@ -153,10 +155,13 @@ evaluation on independently trained models.
 
 ## 5.6 Proposed audit framework
 
+### 5.6.1 Purpose and scope
+
 To address this risk, the thesis proposes a **freshness-aware explanation audit
 framework**. The framework leaves the trained policy unchanged and does not
 claim to make attention faithful. Instead, it sets rules for deciding when an
-attention map has enough evidence to be shown as a trustworthy explanation.
+attention map has enough evidence to be shown as an audited candidate
+explanation within a stated scope.
 Table 5.1 links each observed risk to the required evidence and decision rule.
 
 | Observed risk | Required check | Evidence | Decision rule |
@@ -167,12 +172,66 @@ Table 5.1 links each observed risk to the required evidence and decision rule.
 | The result may depend on attention extraction | Test the query row, layer, head, and aggregation | Sensitivity audits | Predeclare the extraction rule and report material sensitivity |
 | One checkpoint may not represent another | Audit each checkpoint before release | Per-checkpoint results | Repeat after retraining or replacement |
 | A pattern may not reproduce | Compare independent training runs | Results across seeds | Require a consistent conclusion across runs |
+| The audited action may differ from deployment | Test the intended deployment action rule | Sampled-policy or argmax capability evidence | Require argmax capability only when deployment uses argmax |
+| A tunnel-specific pattern may not transfer | Compare tunnel and random triggers | Paired shifts and 95% confidence intervals | Withhold when supported directions conflict or remain indeterminate |
 
-Apply the checks in order: report freshness and action composition separately;
-run the action-aware audit; predeclare and test the attention extraction rule;
-audit every candidate checkpoint; and require a consistent conclusion across
-independent training runs. If any check fails, the attention map remains an
-internal diagnostic.
+The framework is intended for offline release review before an attention map is
+shown to a dispatcher or other operator. It should be repeated after retraining,
+checkpoint replacement, changes to the telemetry or graph pipeline, transfer to
+a new operating scenario, and during periodic model review. It is not a live
+freshness monitor. A deployed system must still display freshness separately and
+suppress or warn about explanations based on stale inputs.
+
+![Freshness-aware explanation audit workflow](../freshness_aware_explanation_audit.png)
+
+**Figure 5.2.** Saved evidence from frozen checkpoints passes through nine
+release checks, grouped here into six categories. The output controls whether
+attention may be presented as an explanation; it does not alter the model or
+selected action.
+
+### 5.6.2 Inputs, outputs and use
+
+The framework accepts evidence rather than raw attention alone.
+
+| Component | Contents | Role in the audit |
+|---|---|---|
+| Candidate scope | frozen checkpoints, model names, training seeds, and held-out conditions | defines exactly what the decision covers |
+| Freshness evidence | paired clean/degraded records, AoI, stale-node masks, WAMSN, and stale-attention shift | separates data age from attention strength |
+| Faithfulness evidence | type-matched and action-protected DEF, LOO, and dispatch-action results | tests whether highlighted nodes matter to the action |
+| Stability evidence | action strata, extraction alternatives, checkpoint synthesis, deployment-action diagnostic, and trigger comparison | tests whether the conclusion survives relevant choices |
+| Audit output | per-check status, per-checkpoint decision, model decision, failed reasons, and permitted use | supports a traceable explanation-release decision |
+
+The operating procedure is:
+
+1. freeze the candidate checkpoint and evaluation protocol;
+2. generate paired freshness, action-aware faithfulness, action-composition, and
+   sensitivity evidence on held-out demand;
+3. run preflight to establish that the evidence is complete and valid to
+   analyze;
+4. apply every release check to each checkpoint and then compare independent
+   training runs; and
+5. present attention externally only if the result is `ELIGIBLE`, together with
+   its freshness indicator and audited scope.
+
+A preflight `PASS` is not an explanation-release pass. It only confirms that the
+evidence can be analyzed. The release output is `ELIGIBLE`, `WITHHOLD`, or
+`INCOMPLETE`. Individual checks may also be `INDETERMINATE` when the evidence is
+complete but does not support a direction. A failed or indeterminate required
+check produces `WITHHOLD`; missing evidence produces `INCOMPLETE`. In both
+cases, attention must not be presented as the reason for the action.
+
+### 5.6.3 Application to this study
+
+Applying the framework to the completed evidence gives `WITHHOLD` for GAT and
+GAT-Outage and for all six individual checkpoints. This is not a failed
+experiment. The audit has completed and has found that the evidence is
+insufficient for explanation release. In particular, the dispatch-action
+decision-relevance intervals do not exceed the matched-random boundary,
+attention extraction can reverse the stale-attention direction, the
+stale-attention response changes direction across training seeds, and the
+tunnel/random comparison is indeterminate because several confidence intervals
+cross zero. Every argmax diagnostic also produces zero pickups, but this is a
+descriptive limitation rather than a release gate for the sampled action rule.
 
 Sampled dispatch performance provides evidence of task capability, but it
 cannot show that the displayed reason is current or decision-relevant.
@@ -181,6 +240,14 @@ The framework checks whether an explanation has enough evidence to be shown; it
 does not make the model itself more faithful. Improving the model would require
 an explicit explanation objective and independent evaluation, as discussed in
 Section 5.8.
+
+The current study demonstrates the framework's rejection path but does not show
+that a real trained model can reach `ELIGIBLE`. The LOO positive control shows
+that the evaluator can reward a more informative ranking, while software tests
+confirm that complete passing evidence produces an `ELIGIBLE` decision. A future
+faithfulness-aware model is still needed to validate the eligibility path
+empirically. The current thresholds must not be weakened after seeing these
+results simply to obtain a passing model.
 
 ## 5.7 Limitations
 

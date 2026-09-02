@@ -14,6 +14,8 @@ This is an offline release audit for frozen policy checkpoints. It does not retr
 - **WITHHOLD:** Evidence failed at least one required check; keep attention internal.
 - **INCOMPLETE:** Required evidence is missing or unreadable; no release decision is possible.
 
+Individual checks use PASS, FAIL, INDETERMINATE, NOT APPLICABLE, or INCOMPLETE. An indeterminate required check leads to WITHHOLD; it does not mean that evidence is missing.
+
 ## GAT
 
 **Decision:** WITHHOLD
@@ -29,23 +31,22 @@ This is an offline release audit for frozen policy checkpoints. It does not retr
 | Action composition | PASS | Reported 26,278 no-op and 2,020 dispatch decisions separately. |
 | Attention extraction stability | FAIL | At least one layer/head/rollout choice reverses the default direction for seeds: 42, 43, 44. |
 | Checkpoint consistency | FAIL | The conclusion is not consistent across checkpoints for: stale-attention response. |
-| Deterministic capability | FAIL | Argmax evaluation produced zero pickups in every episode for seeds: 42, 43, 44. |
-| Trigger robustness | FAIL | Trigger type changes at least one conclusion for seeds: 42, 43. |
+| Deployment-action capability | NOT APPLICABLE | The audited action rule uses stochastic sampling; argmax results are retained as a descriptive diagnostic. |
+| Trigger robustness | INDETERMINATE | No supported direction reverses between triggers, but at least one interval crosses zero for seeds: 42, 43. |
 
 ### Checkpoint decisions
 
 | Training seed | Decision | Failed gates | Missing gates |
 |---:|---|---|---|
-| 42 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability, trigger robustness | None |
-| 43 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability, trigger robustness | None |
-| 44 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability | None |
+| 42 | WITHHOLD | dispatch decision relevance, extraction direction stable, trigger robustness | None |
+| 43 | WITHHOLD | dispatch decision relevance, extraction direction stable, trigger robustness | None |
+| 44 | WITHHOLD | dispatch decision relevance, extraction direction stable | None |
 
 ### Failed or missing evidence
 - **Decision relevance:** The 95% CI lower bound of dispatch-action margin-DEF must exceed 0 for clean and 60-second outage observations.
 - **Attention extraction stability:** The declared self-row mean over layers and heads must not have its direction reversed by an audited alternative.
 - **Checkpoint consistency:** Every configured training seed must be present and give the same non-zero direction for dispatch decision relevance and stale-attention response.
-- **Deterministic capability:** Every checkpoint must complete at least one pickup in the held-out deterministic diagnostic.
-- **Trigger robustness:** Attention-shift and DEF-shift directions must agree between tunnel and random triggers for every checkpoint.
+- **Trigger robustness:** A direction is supported only when its 95% confidence interval excludes zero; supported tunnel and random directions must agree.
 
 ## GAT-Outage
 
@@ -62,22 +63,22 @@ This is an offline release audit for frozen policy checkpoints. It does not retr
 | Action composition | PASS | Reported 26,307 no-op and 1,945 dispatch decisions separately. |
 | Attention extraction stability | FAIL | At least one layer/head/rollout choice reverses the default direction for seeds: 42, 43, 44. |
 | Checkpoint consistency | FAIL | The conclusion is not consistent across checkpoints for: stale-attention response. |
-| Deterministic capability | FAIL | Argmax evaluation produced zero pickups in every episode for seeds: 42, 43, 44. |
-| Trigger robustness | PASS | Tunnel and random triggers give the same direction for attention and DEF in every checkpoint. |
+| Deployment-action capability | NOT APPLICABLE | The audited action rule uses stochastic sampling; argmax results are retained as a descriptive diagnostic. |
+| Trigger robustness | INDETERMINATE | No supported direction reverses between triggers, but at least one interval crosses zero for seeds: 42, 43. |
 
 ### Checkpoint decisions
 
 | Training seed | Decision | Failed gates | Missing gates |
 |---:|---|---|---|
-| 42 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability | None |
-| 43 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability | None |
-| 44 | WITHHOLD | dispatch decision relevance, extraction direction stable, deterministic capability | None |
+| 42 | WITHHOLD | dispatch decision relevance, extraction direction stable, trigger robustness | None |
+| 43 | WITHHOLD | dispatch decision relevance, extraction direction stable, trigger robustness | None |
+| 44 | WITHHOLD | dispatch decision relevance, extraction direction stable | None |
 
 ### Failed or missing evidence
 - **Decision relevance:** The 95% CI lower bound of dispatch-action margin-DEF must exceed 0 for clean and 60-second outage observations.
 - **Attention extraction stability:** The declared self-row mean over layers and heads must not have its direction reversed by an audited alternative.
 - **Checkpoint consistency:** Every configured training seed must be present and give the same non-zero direction for dispatch decision relevance and stale-attention response.
-- **Deterministic capability:** Every checkpoint must complete at least one pickup in the held-out deterministic diagnostic.
+- **Trigger robustness:** A direction is supported only when its 95% confidence interval excludes zero; supported tunnel and random directions must agree.
 
 ## Operational use
 

@@ -24,12 +24,13 @@ The four research questions are answered as follows:
   random triggering in five of six checkpoints, while individual heads
   can still reverse the direction within one checkpoint.
 - **RQ3: Does the explanation remain reliable as outage duration increases?**
-  The policies show no consistent relationship. H1 is supported in five of six
-  selected checkpoints and H4 in all six, but the direct paired DEF shift is negative
-  for four checkpoints and positive for two. The effect is small and reverses
-  for the checkpoints trained with seed 44. Moreover, 93.0% of eligible
-  decisions are no-op, and the H1/H4 patterns are not reproduced in the
-  dispatch stratum.
+  The evidence is not consistent across analysis levels or action types. H1 is
+  supported in five of six selected checkpoints and H4 in all six, but the
+  combined direct paired DEF shift is negative for four checkpoints and positive
+  for two. The effect is small and reverses for the checkpoints trained with
+  seed 44. Moreover, 93.0% of scorable decisions with at least one available
+  request are no-op, and the H1/H4 patterns are not reproduced in the dispatch
+  stratum.
 - **RQ4: Does degradation-aware training improve explanation reliability?**
   Outage training provides no consistent improvement. GAT-Outage shows the same
   seed-dependent paired direction as GAT.
@@ -48,7 +49,7 @@ because realized exposure and the stale-node population still differ between
 trigger mechanisms.
 
 The performance results also have an important limit. Sampled policies
-outperform the basic lower bounds, but all six GAT checkpoints choose no-op in 18 of 18
+outperform the basic lower bounds, but all six graph-attention checkpoints choose no-op in 18 of 18
 deterministic diagnostic episodes. The study audits explanations for sampled
 stochastic actions; it does not demonstrate a deployable argmax dispatcher.
 
@@ -63,6 +64,18 @@ freshness and action composition separately, uses
 action-aware and type-matched tests, checks the attention extraction rule, audits every candidate
 checkpoint, and requires consistency across independent training runs. Stable
 dispatch output is not an explanation test.
+
+Its demonstrative application gives `WITHHOLD` for GAT, GAT-Outage, and all six
+frozen checkpoints. This means that the audit completed but the attention maps
+did not meet the release conditions. An `ELIGIBLE` model is not required to
+support the present finding: correctly withholding unsupported explanations is
+the purpose of the framework. However, the study validates only the rejection
+path on trained models. A future model with an explicit explanation objective is
+needed to test the eligibility path on held-out evidence.
+
+An `ELIGIBLE` result would permit attention to be shown only as an audited
+candidate explanation within the stated scope, with freshness displayed
+separately. It would not prove a complete causal explanation.
 
 The framework is designed to reduce operational risk, not to remove
 faithfulness decoupling from the model. Attention remains an internal diagnostic

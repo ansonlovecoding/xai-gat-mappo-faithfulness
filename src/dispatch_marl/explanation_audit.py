@@ -16,6 +16,8 @@ from typing import Any, Iterable
 PASS = "PASS"
 FAIL = "FAIL"
 INCOMPLETE = "INCOMPLETE"
+INDETERMINATE = "INDETERMINATE"
+NOT_APPLICABLE = "NOT APPLICABLE"
 ELIGIBLE = "ELIGIBLE"
 WITHHOLD = "WITHHOLD"
 
@@ -58,6 +60,17 @@ def _direction(value: Any, epsilon: float) -> int:
     if not _finite(value) or abs(float(value)) <= epsilon:
         return 0
     return 1 if float(value) > 0 else -1
+
+
+def _interval_direction(low: Any, high: Any) -> int | None:
+    """Return a supported direction, zero for uncertainty, or None if missing."""
+    if not _finite(low) or not _finite(high):
+        return None
+    if float(low) > 0:
+        return 1
+    if float(high) < 0:
+        return -1
+    return 0
 
 
 def _check(
@@ -333,10 +346,10 @@ def _deterministic_check(run_root: Path, payload: dict[str, Any] | None,
     path = run_root / "deterministic_diagnostics.json"
     if not rules.require_deterministic_capability:
         return _check(
-            "deterministic_capability", "Deterministic capability", PASS,
+            "deterministic_capability", "Deployment-action capability", NOT_APPLICABLE,
             "Confirm that the explanation belongs to the action rule intended for deployment.",
-            "This gate is disabled by the audit configuration.",
-            "No deterministic capability gate is required.", path,
+            "The audited action rule uses stochastic sampling; argmax results are retained as a descriptive diagnostic.",
+            "Require argmax capability only when argmax is the intended deployment action rule.", path,
         )
     rows = _model_rows(payload, model_id)
     if not rows:
@@ -351,12 +364,36 @@ def _deterministic_check(run_root: Path, payload: dict[str, Any] | None,
         status = PASS
         evidence = "Every checkpoint completed at least one pickup under held-out argmax evaluation."
     return _check(
-        "deterministic_capability", "Deterministic capability", status,
+        "deterministic_capability", "Deployment-action capability", status,
         "Avoid presenting an explanation for a sampled action rule when deployment uses an unusable argmax policy.",
         evidence,
         "Every checkpoint must complete at least one pickup in the held-out deterministic diagnostic.",
         path,
     )
+
+
+def _trigger_seed_status(rows: list[dict], seed: int) -> str | None:
+    pair = {row.get("condition"): row for row in rows
+            if int(row.get("training_seed", -1)) == seed}
+    if not {"tunnel", "random"} <= set(pair):
+        return None
+    directions = []
+    for stem in ("stale_attention", "paired_probability_def"):
+        directions.append(tuple(
+            _interval_direction(
+                pair[condition].get(f"{stem}_ci_low"),
+                pair[condition].get(f"{stem}_ci_high"),
+            )
+            for condition in ("tunnel", "random")
+        ))
+    if any(None in values for values in directions):
+        return None
+    if any(left != 0 and right != 0 and left != right
+           for left, right in directions):
+        return FAIL
+    if any(left == 0 or right == 0 for left, right in directions):
+        return INDETERMINATE
+    return PASS
 
 
 def _trigger_check(evidence_root: Path, payload: dict[str, Any] | None,
@@ -369,28 +406,46 @@ def _trigger_check(evidence_root: Path, payload: dict[str, Any] | None,
             "This gate is disabled by the audit configuration.",
             "No random-trigger comparison is required.", path,
         )
-    rows = [row for row in (payload or {}).get("comparisons", [])
+    rows = [row for row in (payload or {}).get("rows", [])
             if row.get("model") == model_id]
     expected = set(int(seed) for seed in seeds)
     found = {int(row["training_seed"]) for row in rows}
-    if found != expected:
+    expected_cells = {(seed, condition) for seed in expected
+                      for condition in ("tunnel", "random")}
+    found_cells = {(int(row["training_seed"]), row.get("condition")) for row in rows}
+    if found != expected or not expected_cells <= found_cells:
         status = INCOMPLETE
         evidence = "The tunnel/random trigger comparison is incomplete."
-    elif all(row.get("attention_shift_same_direction") is True
-             and row.get("probability_def_shift_same_direction") is True for row in rows):
-        status = PASS
-        evidence = "Tunnel and random triggers give the same direction for attention and DEF in every checkpoint."
     else:
-        status = FAIL
-        failed = [str(row["training_seed"]) for row in rows
-                  if not (row.get("attention_shift_same_direction") is True
-                          and row.get("probability_def_shift_same_direction") is True)]
-        evidence = f"Trigger type changes at least one conclusion for seeds: {', '.join(failed)}."
+        seed_statuses = {seed: _trigger_seed_status(rows, seed) for seed in sorted(expected)}
+        if any(value is None for value in seed_statuses.values()):
+            status = INCOMPLETE
+            evidence = "A tunnel/random confidence interval is missing or invalid."
+        else:
+            contradictions = [str(seed) for seed, value in seed_statuses.items()
+                              if value == FAIL]
+            uncertain = [str(seed) for seed, value in seed_statuses.items()
+                         if value == INDETERMINATE]
+            if contradictions:
+                status = FAIL
+                evidence = (
+                    "Tunnel and random triggers support opposite directions for seeds: "
+                    f"{', '.join(contradictions)}."
+                )
+            elif uncertain:
+                status = INDETERMINATE
+                evidence = (
+                    "No supported direction reverses between triggers, but at least one interval "
+                    f"crosses zero for seeds: {', '.join(uncertain)}."
+                )
+            else:
+                status = PASS
+                evidence = "Tunnel and random triggers support the same direction for attention and DEF in every checkpoint."
     return _check(
         "trigger_robustness", "Trigger robustness", status,
         "Test whether the result extends beyond the fixed tunnel-trigger mechanism.",
         evidence,
-        "Attention-shift and DEF-shift directions must agree between tunnel and random triggers for every checkpoint.",
+        "A direction is supported only when its 95% confidence interval excludes zero; supported tunnel and random directions must agree.",
         path,
     )
 
@@ -410,7 +465,8 @@ def _checkpoint_evidence(
     output = []
     per_seed_controls = (controls or {}).get("per_training_seed", [])
     aggregation = (controls or {}).get("aggregation_sensitivity", [])
-    trigger_rows = (trigger or {}).get("comparisons", [])
+    trigger_rows = [row for row in (trigger or {}).get("rows", [])
+                    if row.get("model") == model_id]
     deterministic_rows = (deterministic or {}).get("rows", [])
     action_rows = (action_payload or {}).get("per_seed", [])
     for seed in seeds:
@@ -457,14 +513,11 @@ def _checkpoint_evidence(
             else None if diagnostic is None
             else diagnostic.get("all_episodes_zero_pickups") is False
         )
-        trigger_row = next((row for row in trigger_rows
-                            if row.get("model") == model_id
-                            and int(row.get("training_seed", -1)) == seed), None)
+        trigger_status = _trigger_seed_status(trigger_rows, seed)
         trigger_ok = (
             True if not rules.require_trigger_robustness
-            else None if trigger_row is None
-            else trigger_row.get("attention_shift_same_direction") is True
-            and trigger_row.get("probability_def_shift_same_direction") is True
+            else None if trigger_status is None
+            else trigger_status == PASS
         )
         dispatch = next((row for row in action_rows
                          if row.get("model") == model_id
@@ -531,13 +584,13 @@ def audit_model(
     if any(check.status == INCOMPLETE for check in checks):
         decision = INCOMPLETE
         permitted_use = "Do not present attention as an explanation; collect the missing evidence."
-    elif any(check.status == FAIL for check in checks):
+    elif any(check.status in {FAIL, INDETERMINATE} for check in checks):
         decision = WITHHOLD
         permitted_use = "Internal model diagnostic only."
     else:
         decision = ELIGIBLE
         permitted_use = (
-            "Attention may be presented with an explicit freshness indicator and the audited scope. "
+            "Attention may be presented as an audited candidate explanation with an explicit freshness indicator and scope. "
             "Eligibility is evidence of audit completion, not proof of a complete causal explanation."
         )
     return {
@@ -562,6 +615,7 @@ def audit_model(
             rules=rules,
         ),
         "failed_checks": [check.check_id for check in checks if check.status == FAIL],
+        "indeterminate_checks": [check.check_id for check in checks if check.status == INDETERMINATE],
         "incomplete_checks": [check.check_id for check in checks if check.status == INCOMPLETE],
     }
 
@@ -593,7 +647,7 @@ def audit_framework(
     else:
         overall = ELIGIBLE
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "framework": "freshness-aware explanation audit",
         "purpose": (
             "Decide whether graph-attention weights have enough freshness and "
@@ -603,6 +657,13 @@ def audit_framework(
             ELIGIBLE: "All required checks passed within the stated scope.",
             WITHHOLD: "Evidence failed at least one required check; keep attention internal.",
             INCOMPLETE: "Required evidence is missing or unreadable; no release decision is possible.",
+        },
+        "check_status_meaning": {
+            PASS: "The required evidence supports the check.",
+            FAIL: "The required evidence contradicts the release rule.",
+            INDETERMINATE: "The evidence is complete but does not support a direction.",
+            NOT_APPLICABLE: "The check is outside the declared deployment scope.",
+            INCOMPLETE: "Evidence required for the check is missing or unreadable.",
         },
         "rules": asdict(rules),
         "inputs": {

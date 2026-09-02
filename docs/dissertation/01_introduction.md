@@ -81,7 +81,9 @@ The measurable objectives are to:
 - test whether conclusions change across attention layers, heads, rollout, and
   the query row used as the explanation;
 - treat the trained policy, rather than each individual decision, as the unit
-  for judging whether a finding is consistent.
+  for judging whether a finding is consistent; and
+- turn the collected evidence into an explicit `ELIGIBLE`, `WITHHOLD`, or
+  `INCOMPLETE` explanation-release decision.
 
 ## 1.5 Main findings
 
@@ -102,14 +104,14 @@ random-trigger check shows a similar overall pattern, making a tunnel-only
 explanation less plausible without establishing a universal degradation
 effect.
 
-The action audit narrows the conclusion. Among decisions with at least one
+The action audit narrows the conclusion. Among scorable decisions with at least one
 available request, 93.0% select no-op. The main duration and exposure
 associations do not reproduce within the smaller dispatch stratum. Attention
 results also change with the layer, head, aggregation rule, and query row used
 to construct the explanation.
 
 Degradation-aware training does not remove this variation. The sampled policy
-distributions outperform the declared lower bounds, but all six GAT
+distributions outperform the declared lower bounds, but all six graph-attention
 checkpoints choose no-op in the deterministic diagnostic. The study therefore
 audits explanations for sampled stochastic decisions; it does not establish a
 deployable argmax dispatcher. Overall, freshness and faithfulness must be
@@ -117,27 +119,20 @@ checked separately for every policy checkpoint before release.
 
 ## 1.6 Contributions
 
-The dissertation contributes:
+The dissertation makes four main contributions:
 
-- a paired clean/degraded benchmark in which SUMO ground truth is separated
-  from the observation received by the policy;
-- an explicit distinction between a tunnel trigger and an observation-layer
-  outage;
-- an action-aware faithfulness protocol for graphs where request nodes also
-  define available actions, supported by LOO and overlap diagnostics;
-- a sensitivity audit showing how layer, head, rollout, and query-row choices
-  affect the reported attention explanation;
-- evidence across independently trained policies that stale-data exposure is
-  consistent, while attention reallocation and faithfulness effects are not;
-- a random-trigger sensitivity check that tests whether the paired pattern is
-  limited to one fixed tunnel location;
-- an action-stratified diagnostic showing that combined decision statistics do
-  not reliably represent the smaller set of dispatch actions;
-- a freshness-aware explanation audit framework that turns the findings into
-  release checks for telemetry freshness, action-aware faithfulness,
-  attention aggregation, and independent training runs;
-- a reproducible experiment runner, validation-selected checkpoints,
-  preflight checks, machine-readable results, and training-seed synthesis.
+1. a paired clean/degraded benchmark that separates SUMO ground truth from the
+   observation received by the policy and distinguishes the tunnel trigger from
+   the observation-layer outage;
+2. an action-aware, type-matched faithfulness protocol for graphs in which
+   request nodes also define available actions, supported by LOO, overlap, and
+   action-stratified diagnostics;
+3. evidence across independently trained checkpoints, attention-extraction
+   choices, and tunnel and random triggers showing that stale-data exposure is
+   consistent but attention reallocation and faithfulness effects are not; and
+4. a reproducible freshness-aware explanation audit framework that converts
+   the evidence into explicit `ELIGIBLE`, `WITHHOLD`, and `INCOMPLETE` release
+   decisions.
 
 ## 1.7 Dissertation structure
 

@@ -35,7 +35,11 @@ def _write_csv(path: Path, report: dict) -> None:
                 "decision_rule": check["decision_rule"],
             })
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=list(rows[0]),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -58,6 +62,8 @@ def _write_markdown(path: Path, report: dict) -> None:
     ]
     for status, meaning in report["decision_meaning"].items():
         lines.append(f"- **{status}:** {meaning}")
+    lines += ["", "Individual checks use PASS, FAIL, INDETERMINATE, NOT APPLICABLE, or INCOMPLETE. "
+              "An indeterminate required check leads to WITHHOLD; it does not mean that evidence is missing."]
     for model in report["models"]:
         lines += [
             "",
@@ -92,7 +98,8 @@ def _write_markdown(path: Path, report: dict) -> None:
                 f"{failed} | {missing} |"
             )
         lines += ["", "### Failed or missing evidence"]
-        issues = [check for check in model["checks"] if check["status"] != "PASS"]
+        issues = [check for check in model["checks"]
+                  if check["status"] not in {"PASS", "NOT APPLICABLE"}]
         if issues:
             for check in issues:
                 lines.append(f"- **{check['name']}:** {check['decision_rule']}")

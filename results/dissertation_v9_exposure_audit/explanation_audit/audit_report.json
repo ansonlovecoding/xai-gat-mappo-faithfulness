@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "framework": "freshness-aware explanation audit",
   "purpose": "Decide whether graph-attention weights have enough freshness and decision-relevance evidence to be presented as explanations.",
   "decision_meaning": {
@@ -7,11 +7,18 @@
     "WITHHOLD": "Evidence failed at least one required check; keep attention internal.",
     "INCOMPLETE": "Required evidence is missing or unreadable; no release decision is possible."
   },
+  "check_status_meaning": {
+    "PASS": "The required evidence supports the check.",
+    "FAIL": "The required evidence contradicts the release rule.",
+    "INDETERMINATE": "The evidence is complete but does not support a direction.",
+    "NOT APPLICABLE": "The check is outside the declared deployment scope.",
+    "INCOMPLETE": "Evidence required for the check is missing or unreadable."
+  },
   "rules": {
     "decision_relevance_ci_floor": 0.0,
     "minimum_dispatch_decisions": 1,
     "direction_epsilon": 1e-09,
-    "require_deterministic_capability": true,
+    "require_deterministic_capability": false,
     "require_trigger_robustness": true
   },
   "inputs": {
@@ -121,11 +128,11 @@
         },
         {
           "check_id": "deterministic_capability",
-          "name": "Deterministic capability",
-          "status": "FAIL",
-          "purpose": "Avoid presenting an explanation for a sampled action rule when deployment uses an unusable argmax policy.",
-          "evidence": "Argmax evaluation produced zero pickups in every episode for seeds: 42, 43, 44.",
-          "decision_rule": "Every checkpoint must complete at least one pickup in the held-out deterministic diagnostic.",
+          "name": "Deployment-action capability",
+          "status": "NOT APPLICABLE",
+          "purpose": "Confirm that the explanation belongs to the action rule intended for deployment.",
+          "evidence": "The audited action rule uses stochastic sampling; argmax results are retained as a descriptive diagnostic.",
+          "decision_rule": "Require argmax capability only when argmax is the intended deployment action rule.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/runs/dissertation_v9_exposure_audit/deterministic_diagnostics.json"
           ]
@@ -133,10 +140,10 @@
         {
           "check_id": "trigger_robustness",
           "name": "Trigger robustness",
-          "status": "FAIL",
+          "status": "INDETERMINATE",
           "purpose": "Test whether the result extends beyond the fixed tunnel-trigger mechanism.",
-          "evidence": "Trigger type changes at least one conclusion for seeds: 42, 43.",
-          "decision_rule": "Attention-shift and DEF-shift directions must agree between tunnel and random triggers for every checkpoint.",
+          "evidence": "No supported direction reverses between triggers, but at least one interval crosses zero for seeds: 42, 43.",
+          "decision_rule": "A direction is supported only when its 95% confidence interval excludes zero; supported tunnel and random directions must agree.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/results/dissertation_v9_exposure_audit/random_loss_robustness.json"
           ]
@@ -151,13 +158,12 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
+            "deterministic_capability": true,
             "trigger_robustness": false
           },
           "failed_gates": [
             "dispatch_decision_relevance",
             "extraction_direction_stable",
-            "deterministic_capability",
             "trigger_robustness"
           ],
           "missing_gates": []
@@ -170,13 +176,12 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
+            "deterministic_capability": true,
             "trigger_robustness": false
           },
           "failed_gates": [
             "dispatch_decision_relevance",
             "extraction_direction_stable",
-            "deterministic_capability",
             "trigger_robustness"
           ],
           "missing_gates": []
@@ -189,13 +194,12 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
+            "deterministic_capability": true,
             "trigger_robustness": true
           },
           "failed_gates": [
             "dispatch_decision_relevance",
-            "extraction_direction_stable",
-            "deterministic_capability"
+            "extraction_direction_stable"
           ],
           "missing_gates": []
         }
@@ -203,8 +207,9 @@
       "failed_checks": [
         "decision_relevance",
         "extraction_stability",
-        "checkpoint_consistency",
-        "deterministic_capability",
+        "checkpoint_consistency"
+      ],
+      "indeterminate_checks": [
         "trigger_robustness"
       ],
       "incomplete_checks": []
@@ -309,11 +314,11 @@
         },
         {
           "check_id": "deterministic_capability",
-          "name": "Deterministic capability",
-          "status": "FAIL",
-          "purpose": "Avoid presenting an explanation for a sampled action rule when deployment uses an unusable argmax policy.",
-          "evidence": "Argmax evaluation produced zero pickups in every episode for seeds: 42, 43, 44.",
-          "decision_rule": "Every checkpoint must complete at least one pickup in the held-out deterministic diagnostic.",
+          "name": "Deployment-action capability",
+          "status": "NOT APPLICABLE",
+          "purpose": "Confirm that the explanation belongs to the action rule intended for deployment.",
+          "evidence": "The audited action rule uses stochastic sampling; argmax results are retained as a descriptive diagnostic.",
+          "decision_rule": "Require argmax capability only when argmax is the intended deployment action rule.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/runs/dissertation_v9_exposure_audit/deterministic_diagnostics.json"
           ]
@@ -321,10 +326,10 @@
         {
           "check_id": "trigger_robustness",
           "name": "Trigger robustness",
-          "status": "PASS",
+          "status": "INDETERMINATE",
           "purpose": "Test whether the result extends beyond the fixed tunnel-trigger mechanism.",
-          "evidence": "Tunnel and random triggers give the same direction for attention and DEF in every checkpoint.",
-          "decision_rule": "Attention-shift and DEF-shift directions must agree between tunnel and random triggers for every checkpoint.",
+          "evidence": "No supported direction reverses between triggers, but at least one interval crosses zero for seeds: 42, 43.",
+          "decision_rule": "A direction is supported only when its 95% confidence interval excludes zero; supported tunnel and random directions must agree.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/results/dissertation_v9_exposure_audit/random_loss_robustness.json"
           ]
@@ -339,13 +344,13 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
-            "trigger_robustness": true
+            "deterministic_capability": true,
+            "trigger_robustness": false
           },
           "failed_gates": [
             "dispatch_decision_relevance",
             "extraction_direction_stable",
-            "deterministic_capability"
+            "trigger_robustness"
           ],
           "missing_gates": []
         },
@@ -357,13 +362,13 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
-            "trigger_robustness": true
+            "deterministic_capability": true,
+            "trigger_robustness": false
           },
           "failed_gates": [
             "dispatch_decision_relevance",
             "extraction_direction_stable",
-            "deterministic_capability"
+            "trigger_robustness"
           ],
           "missing_gates": []
         },
@@ -375,13 +380,12 @@
             "dispatch_decisions_present": true,
             "dispatch_decision_relevance": false,
             "extraction_direction_stable": false,
-            "deterministic_capability": false,
+            "deterministic_capability": true,
             "trigger_robustness": true
           },
           "failed_gates": [
             "dispatch_decision_relevance",
-            "extraction_direction_stable",
-            "deterministic_capability"
+            "extraction_direction_stable"
           ],
           "missing_gates": []
         }
@@ -389,8 +393,10 @@
       "failed_checks": [
         "decision_relevance",
         "extraction_stability",
-        "checkpoint_consistency",
-        "deterministic_capability"
+        "checkpoint_consistency"
+      ],
+      "indeterminate_checks": [
+        "trigger_robustness"
       ],
       "incomplete_checks": []
     }

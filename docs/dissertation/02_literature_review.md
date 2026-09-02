@@ -59,7 +59,8 @@ The systematic taxonomy by Bekkemoen [31] reaches the same conclusion across a
 larger body of recent XRL studies.
 
 This dissertation concerns a local, post-decision operator question: *which
-visible vehicles or requests supported this dispatch action?* Earlier XRL work
+visible vehicles or requests supported the selected action, whether dispatch or
+no-op?* Earlier XRL work
 offers several ways to answer this question. Greydanus et al. [34] perturb image
 regions to visualize what changes an Atari policy. Madumal et al. [11] use a
 causal model to generate contrastive explanations. Mott et al. [35] introduce
@@ -194,6 +195,22 @@ fleet dispatch; attention is easy to expose but disputed as an explanation;
 GNN faithfulness requires graph-aware perturbations; and stale state matters to
 operational control. Existing work has not brought these topics together as one
 explanation-assurance problem.
+
+Recent graph-based dispatch studies provide the closest task comparison, but
+they answer a different question from this dissertation.
+
+| Study | Setting and method | Main evaluation | Difference from this study |
+|---|---|---|---|
+| BMG-Q [33] | ride-pooling with a local bipartite matching graph | dispatch performance | does not audit graph weights under stale telemetry |
+| CoopRide [37] | cooperative MARL across city grids | city-scale dispatch performance | does not test node-level explanation faithfulness |
+| DualG-MARL [38] | state and task graphs for ride-sharing scheduling | scheduling performance | does not pair clean and degraded observations or audit freshness |
+| This dissertation | local GAT-MAPPO taxi/request graph | explanation assurance | tests paired telemetry degradation, action-aware faithfulness, and release conditions |
+
+These methods are not treated as performance baselines because their tasks,
+action spaces, and data-generation procedures differ. They are benchmark
+literature for positioning the contribution: recent work improves relational
+dispatch, whereas this dissertation tests whether an exposed attention channel
+has enough evidence to be presented as an explanation.
 
 Within the graph- and RL-explainability studies reviewed in Sections 2.2-2.5,
 no evaluation protocol was identified that combines all of the following:

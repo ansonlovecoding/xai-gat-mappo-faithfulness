@@ -284,6 +284,17 @@ type-matched baseline described in Section 3.7. DEF provides comparative
 perturbation evidence; even a positive value does not prove that attention is
 a complete causal explanation.
 
+The study uses related measures for different questions. They should not be
+read as interchangeable estimates.
+
+| Measure | Decisions and score | Role in the study |
+|---|---|---|
+| Probability DEF | all scorable sampled actions; probability scale | primary H1-H4 and paired clean/degraded analysis |
+| Logit-margin DEF | all scorable sampled actions; selected-action margin | construct-validity and ranking diagnostics when probability is saturated |
+| Dispatch self-row margin-DEF | sampled dispatch actions only; declared self-row explanation | release check for decision relevance under clean and 60-second outage conditions |
+| WAMSN | stale-exposed decisions; AoI-weighted attention | freshness-exposure indicator and H3 manipulation check |
+| Paired attention and DEF shifts | degraded observation minus its clean twin | direct within-decision response to the observation-layer intervention |
+
 ### 3.6.2 Stale-node attention
 
 WAMSN measures attention attached to stale vehicle information:
@@ -425,6 +436,10 @@ The confirmatory hypotheses are:
 - **H5:** compared with clean training, degradation-aware training reduces the
   decline in DEF associated with longer outages and higher WAMSN.
 
+H3 is interpreted as a stale-exposure manipulation check because WAMSN includes
+normalized AoI by definition. It confirms that longer outages create more
+AoI-weighted exposure; it is not independent evidence that AoI changes DEF.
+
 H1 and H3 use episode-block permutation trend tests and cluster bootstrap
 confidence intervals. H2 uses paired cell-level sign flips relative to each
 evaluation seed's clean condition. H4 calculates Spearman correlation within
@@ -450,8 +465,9 @@ training seed as one trained-policy replicate. With only three seeds per model,
 the dissertation reports the range and number of supporting seeds and does not
 claim a cross-seed population p-value.
 
-An exploratory action-stratified audit separates eligible decisions into
-`no-op` and `dispatch`. Decisions with no available request are excluded because
+An exploratory action-stratified audit separates scorable decisions with at
+least one available request into `no-op` and `dispatch`. Decisions with no
+available request are excluded because
 no-op is then forced rather than chosen. Within each stratum, records are still
 averaged by episode before permutation tests or bootstrap intervals are formed.
 This diagnostic tests whether the combined statistics describe both actions or
@@ -487,17 +503,80 @@ before bootstrap confidence intervals are calculated. Attention-aggregation
 sensitivity is reported per training seed and only for decisions where at
 least one stale vehicle node is visible.
 
-## 3.10 Reproducibility
+## 3.10 Audit decision implementation
+
+The experiment pipeline produces measurements; a separate release-audit stage
+turns those measurements into a decision about whether attention may be shown
+as an explanation. The stage reads saved evidence and leaves the policy,
+selected action, SUMO state, and observations unchanged.
+
+Its inputs are the frozen-checkpoint preflight reports, condition summaries,
+action-stratified results, training-seed synthesis, deterministic diagnostics,
+faithfulness controls, and tunnel-versus-random trigger comparison. These
+artifacts jointly cover telemetry freshness, decision relevance, action
+composition, attention extraction, checkpoint replication, and the action rule
+intended for deployment.
+
+The implementation applies nine checks:
+
+1. evidence integrity;
+2. separate freshness reporting;
+3. type-matched and action-protected controls;
+4. dispatch-action decision relevance;
+5. no-op and dispatch composition;
+6. attention-extraction stability;
+7. consistency across independently trained checkpoints;
+8. capability of the action rule intended for deployment; and
+9. robustness to tunnel and random loss triggers.
+
+Decision relevance passes only when the 95% confidence-interval lower bound of
+self-row dispatch margin-DEF is greater than zero under both clean and 60-second
+outage evaluation. A positive value means that the attention ranking is more
+informative than its type-matched random control. Extraction stability fails if
+an audited layer, head, maximum, or rollout rule reverses the direction produced
+by the declared self-row mean. Trigger robustness uses confidence intervals: a
+direction is supported only when its 95% interval excludes zero, and supported
+tunnel and random-trigger directions must agree. An interval that crosses zero
+is `INDETERMINATE`, not evidence of a reversal. The remaining rules test
+evidence availability, action coverage, checkpoint agreement, and the action
+rule declared for deployment.
+
+The present audit concerns actions sampled from the policy distribution. The
+argmax evaluation is therefore retained as a descriptive limitation rather
+than a mandatory release gate. If an argmax policy were intended for
+deployment, its held-out capability check would become mandatory. The current
+action-composition gate confirms that both action strata and dispatch evidence
+are present; it does not claim that a sparse dispatch stratum would be
+representative.
+
+The output has three states. `ELIGIBLE` means that every required check passed
+within the stated scope. `WITHHOLD` means that at least one check failed and
+attention must remain an internal diagnostic. `INCOMPLETE` means that required
+evidence is missing, so no release decision can be made. Eligibility is not
+proof of a complete causal explanation; it only permits presentation with an
+explicit freshness indicator and audit scope as an audited candidate
+explanation.
+
+The release rules are a post-study synthesis of the risks identified by the
+experiment. Their application to the present results is therefore demonstrative
+and is not an additional confirmatory test of H1-H5. For future candidate
+models, the rules and thresholds must be fixed before held-out evaluation.
+
+## 3.11 Reproducibility
 
 The experiment runner records the configuration, commands, seeds, checkpoint
 hashes, source revision, and preflight reports in versioned run directories.
 Compact outputs include the summary, performance context, deterministic
 diagnostic, action-stratified audit, and training-seed synthesis tables. The
 training-seed synthesis makes consistency across trained policies explicit.
-Reproduction commands, file locations, and expected outputs
-are documented in `docs/REPRODUCE_EXPERIMENTS.md`.
+Reproduction commands, file locations, and expected outputs are documented in
+`docs/REPRODUCE_EXPERIMENTS.md`. The complete frozen-checkpoint workflow is
+available as a single `framework` stage. It produces a machine-readable JSON
+decision, a CSV check table, and a reader-facing Markdown report. The detailed
+input and output contract is documented in
+`docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`.
 
-## 3.11 Ethics and data governance
+## 3.12 Ethics and data governance
 
 The experiment uses a simulated taxi fleet, generated demand, and an
 OpenStreetMap-derived road network. It contains no human participants,

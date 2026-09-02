@@ -60,7 +60,7 @@ separate from whether the exposed weights faithfully explain GAT decisions.
 episodes. Horizontal lines show the cross-seed mean.
 
 The deterministic diagnostic changes the capability interpretation. All six
-selected GAT checkpoints choose no-op throughout three held-out episodes,
+selected graph-attention checkpoints choose no-op throughout three held-out episodes,
 giving 0 pickups in 18 of 18 checkpoint-episodes. Their common mean reward is
 -46.58 and final pending-request wait is 905.9 seconds. The stochastic results
 show only that the policy distributions assign enough probability to dispatch
@@ -328,7 +328,7 @@ association after Holm correction; the direct paired effect remains mixed.
 |---|---:|---:|---|
 | H1: outage duration increases, DEF decreases | 2/3 | 3/3 | strong but not universal |
 | H2: faithfulness declines faster than performance | 1/3 | 3/3 | model-dependent; exploratory |
-| H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | consistently supported |
+| H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | supported as a stale-exposure manipulation check |
 | H4: higher WAMSN is associated with lower DEF | 3/3 | 3/3 | consistently supported within episodes |
 | H5: degradation-aware training reduces the adverse DEF relationships | n/a | 0/3 | not supported |
 
@@ -346,3 +346,36 @@ Longer outages increase stale exposure, while greater WAMSN accompanies lower
 within-episode DEF. Yet seed reversals, no-op dominance, dispatch failures, and
 random-trigger exceptions mean that raw attention cannot provide a reliable
 indication of data freshness or explanation faithfulness.
+
+## 4.11 Demonstrative framework decision
+
+The completed evidence was passed through the operational audit described in
+Section 3.10. Table 4.9 separates successful evidence collection from failed
+explanation-release checks.
+
+| Audit check | GAT | GAT-Outage | Key evidence |
+|---|---:|---:|---|
+| Evidence integrity | PASS | PASS | 3/3 checkpoint preflights passed for each model |
+| Freshness reported separately | PASS | PASS | 10,832 and 10,885 stale-exposed records reported |
+| Action-aware controls | PASS | PASS | type matching, chosen-action protection, and LOO present |
+| Dispatch decision relevance | FAIL | FAIL | clean/60 s CIs: GAT [-0.00367, -0.00252] / [-0.00371, -0.00252]; GAT-Outage [-0.00765, -0.00594] / [-0.00752, -0.00578] |
+| No-op and dispatch composition | PASS | PASS | 26,278/2,020 and 26,307/1,945 no-op/dispatch records |
+| Attention-extraction stability | FAIL | FAIL | an alternative reverses the default direction in every seed |
+| Checkpoint consistency | FAIL | FAIL | stale-attention direction is positive, positive, then negative across seeds |
+| Deployment-action capability | N/A | N/A | stochastic sampling is the audited action rule; argmax is descriptive |
+| Tunnel/random trigger robustness | INDET. | INDET. | no supported reversal, but at least one 95% interval crosses zero |
+| Final decision | WITHHOLD | WITHHOLD | decision relevance, extraction stability, and checkpoint consistency fail |
+
+`INDET.` denotes `INDETERMINATE`: the available evidence neither passes nor
+fails the check.
+
+Both models pass the checks that establish whether the evidence is complete and
+properly separated. Dispatch self-row margin-DEF is below the matched-random
+boundary under both clean and 60-second conditions, and the extraction and
+checkpoint checks also fail. Trigger robustness remains indeterminate because
+some confidence intervals cross zero. The argmax diagnostic remains an
+important policy limitation but is not a release gate for the sampled action
+rule audited here. The result is `WITHHOLD` for all six frozen checkpoints, so
+their attention maps remain internal diagnostics. This table is a demonstrative
+application of the post-study release rules, not a new hypothesis test or
+independent evidence for the main conclusion.

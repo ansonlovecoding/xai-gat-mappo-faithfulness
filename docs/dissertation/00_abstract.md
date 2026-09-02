@@ -19,20 +19,21 @@ leave-one-out rankings, attention extraction choices, action type, and random
 telemetry-loss triggers.
 
 The results do not validate raw attention as a reliable explanation. Clean
-DEF remains close to its matched control and varies across checkpoints. Longer
+corrected DEF remains near zero and varies across checkpoints. Longer
 outages increase stale-data exposure, but paired attention and DEF shifts
 reverse direction for one training seed. The main associations are dominated
 by no-op decisions and do not reproduce for dispatch actions.
-Checkpoint-dependent differences remain under random triggering and
-degradation-aware training. These results do not reliably show whether
+The seed-dependent pattern persists under random triggering and in both
+training regimes. These results do not reliably show whether
 attention reflects fresh information or decision relevance.
 
 To address this problem, the dissertation proposes a freshness-aware
 explanation audit framework to decide when attention may be presented as an
-explanation. The framework reports telemetry freshness and action
+audited candidate explanation. The framework reports telemetry freshness and action
 composition separately, applies action-aware and type-matched faithfulness
 tests, checks sensitivity to the attention extraction rule, and requires
 consistent evidence across checkpoints and training seeds. If the evidence is
-inconsistent, attention remains an internal diagnostic rather than a
-trustworthy explanation. The framework governs when explanations may be
-released; it does not repair faithfulness inside the model.
+inconsistent, attention remains an internal diagnostic rather than an
+operator-facing explanation. The framework governs when explanations may be
+released; it does not repair faithfulness inside the model. Its demonstrative
+application returns `WITHHOLD` for both model families and all six checkpoints.

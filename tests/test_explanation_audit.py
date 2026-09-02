@@ -4,7 +4,9 @@ from pathlib import Path
 from dispatch_marl.explanation_audit import (
     AuditRules,
     ELIGIBLE,
+    INDETERMINATE,
     INCOMPLETE,
+    NOT_APPLICABLE,
     WITHHOLD,
     audit_model,
 )
@@ -91,12 +93,19 @@ def _bundle(tmp_path: Path, *, relevance_lower: float = 0.1,
             for field in ("attention_control_def_m", "self_row_request_def_m")
         ],
     })
-    _write(evidence_root / "random_loss_robustness.json", {"comparisons": [
-        {"model": MODEL, "training_seed": seed,
-         "attention_shift_same_direction": True,
-         "probability_def_shift_same_direction": True}
-        for seed in SEEDS
-    ]})
+    trigger_rows = []
+    for seed in SEEDS:
+        for condition in ("tunnel", "random"):
+            trigger_rows.append({
+                "model": MODEL,
+                "training_seed": seed,
+                "condition": condition,
+                "stale_attention_ci_low": 0.01,
+                "stale_attention_ci_high": 0.03,
+                "paired_probability_def_ci_low": -0.03,
+                "paired_probability_def_ci_high": -0.01,
+            })
+    _write(evidence_root / "random_loss_robustness.json", {"rows": trigger_rows})
     return run_root, evidence_root, controls_path
 
 
@@ -141,3 +150,43 @@ def test_missing_required_evidence_is_incomplete(tmp_path: Path) -> None:
     )
     assert report["decision"] == INCOMPLETE
     assert "action_aware_controls" in report["incomplete_checks"]
+
+
+def test_uncertain_trigger_direction_withholds_without_calling_it_a_failure(
+    tmp_path: Path,
+) -> None:
+    run_root, evidence_root, controls_path = _bundle(tmp_path)
+    path = evidence_root / "random_loss_robustness.json"
+    payload = json.loads(path.read_text())
+    payload["rows"][0]["paired_probability_def_ci_high"] = 0.01
+    _write(path, payload)
+    report = audit_model(
+        run_root=run_root,
+        evidence_root=evidence_root,
+        controls_path=controls_path,
+        model_id=MODEL,
+        model_name="GAT",
+        seeds=SEEDS,
+        rules=AuditRules(),
+    )
+    trigger = next(check for check in report["checks"]
+                   if check["check_id"] == "trigger_robustness")
+    assert trigger["status"] == INDETERMINATE
+    assert report["decision"] == WITHHOLD
+
+
+def test_argmax_gate_can_be_not_applicable_for_sampled_action_rule(tmp_path: Path) -> None:
+    run_root, evidence_root, controls_path = _bundle(tmp_path)
+    report = audit_model(
+        run_root=run_root,
+        evidence_root=evidence_root,
+        controls_path=controls_path,
+        model_id=MODEL,
+        model_name="GAT",
+        seeds=SEEDS,
+        rules=AuditRules(require_deterministic_capability=False),
+    )
+    capability = next(check for check in report["checks"]
+                      if check["check_id"] == "deterministic_capability")
+    assert capability["status"] == NOT_APPLICABLE
+    assert report["decision"] == ELIGIBLE
