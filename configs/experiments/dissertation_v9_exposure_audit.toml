@@ -59,7 +59,7 @@ demand_split = "test"
 [random_loss_robustness]
 outage_duration_s = 30.0
 dropout_rate = 0.00194
-episodes_per_cell_seed = 6
+episodes_per_cell_seed = 3
 seeds = [42, 43, 44, 45, 46, 47, 48, 49]
 demand_split = "test"
 
