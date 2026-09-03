@@ -39,7 +39,8 @@ of every real city.
 
 ## 3.3 Observation graph and action space
 
-Each idle taxi receives a self-centered graph containing:
+Each idle taxi receives a self-centered graph. Table 3.1 summarizes its node
+types, features, and roles.
 
 | Node type | Main features | Role |
 |---|---|---|
@@ -55,7 +56,8 @@ The discrete action space contains no-op plus one action for each visible
 passenger request. This one-to-one relationship is important: deleting a
 passenger-request node also removes the associated action, whereas deleting a
 peer-taxi node only hides information about that taxi. Section 3.7 explains
-how the faithfulness audit controls this asymmetry.
+how the faithfulness audit controls this asymmetry. Figure 3.1 shows the local
+graph and the request-to-action mapping.
 
 ![Local observation graph with peer taxis, requests and request-to-action mapping](../observation_graph_action_mapping.png)
 
@@ -115,6 +117,8 @@ separate request-action sensitivity comparison between the fixed self row and
 the selected request row. This comparison is not used to redefine the primary
 metric after seeing the result.
 
+Figure 3.2 summarizes the policy path and the read-only audit channel.
+
 ![Simplified graph-attention design](../simplified_graph_attention_design.png)
 
 **Figure 3.2.** The policy and audit share the same two-layer attention encoder.
@@ -122,7 +126,7 @@ The default audit reduces the self-node attention row to node importance
 without modifying the actor, critic, or selected action; the selected-request
 row is evaluated separately as a sensitivity check.
 
-Three policy conditions are included:
+Table 3.2 lists the three policy conditions included in the experiment.
 
 | Model | Policy | Training observations | Purpose |
 |---|---|---|---|
@@ -139,7 +143,8 @@ pickup count improves. The implementation records zero-based epoch indices, so
 index 39 denotes the checkpoint saved after 40 training epochs. Selection uses
 eight stochastic validation episodes with seed 2026 and mean pickups as the
 primary criterion; mean reward and the earlier checkpoint index break ties. The
-test split is not read during selection. The selected checkpoint indices are:
+test split is not read during selection. Table 3.3 reports the selected
+checkpoint index for each training run.
 
 | Model | seed 42 | seed 43 | seed 44 |
 |---|---:|---:|---:|
@@ -147,7 +152,7 @@ test split is not read during selection. The selected checkpoint indices are:
 | GAT | 39 | 39 | 30 |
 | GAT-Outage | 49 | 40 | 40 |
 
-The shared optimization settings are shown below.
+Table 3.4 reports the shared optimization settings.
 
 | Setting | Value |
 |---|---:|
@@ -187,6 +192,9 @@ r_t = 10 N_pickup,t + 0.5 N_dispatch,t - 0.001 mean_wait_t
 The reward trains dispatch behavior. It contains no term that rewards a
 faithful, stable, or human-readable attention map.
 
+Figure 3.3 shows how training, validation selection, and held-out evaluation
+remain separated.
+
 ![Model conditions and training process](../model_design_training_process.png)
 
 **Figure 3.3.** Common training and validation-based checkpoint selection for
@@ -218,6 +226,8 @@ valid update and is included in each GAT observation. WAMSN uses normalized AoI
 as a staleness weight. For this reason, an
 increase in WAMSN with outage duration partly verifies that the manipulation
 created longer stale exposure; it is not by itself proof that AoI changed DEF.
+Figure 3.4 illustrates this separation between physical state and policy
+observation.
 
 ![Telemetry degradation data flow](../telemetry_degradation_data_flow.png)
 
@@ -285,7 +295,7 @@ perturbation evidence; even a positive value does not prove that attention is
 a complete causal explanation.
 
 The study uses related measures for different questions. They should not be
-read as interchangeable estimates.
+read as interchangeable estimates. Table 3.5 states the role of each measure.
 
 | Measure | Decisions and score | Role in the study |
 |---|---|---|
@@ -333,6 +343,8 @@ The corrected protocol uses three controls:
 - **clamp logging:** counterfactual action-margin clamps are counted so that
   action deletion can be detected.
 
+Figure 3.5 illustrates why these controls are required.
+
 ![Construct-validity controls for action-linked request nodes](../construct_validity_action_deletion.png)
 
 **Figure 3.5.** Request-node occlusion can remove its action, while peer-taxi
@@ -366,8 +378,8 @@ clean capability evaluation therefore contains 216 episode evaluations:
 3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 3 episodes
 ```
 
-The complete evaluation structure is summarized below. An episode evaluation is
-one complete rollout of one frozen checkpoint under one telemetry condition.
+Table 3.6 summarizes the complete evaluation structure. An episode evaluation
+is one complete rollout of one frozen checkpoint under one telemetry condition.
 
 | Evaluation | Model families | Total frozen checkpoints | Telemetry cases | Episodes/cell | Total |
 |---|---:|---:|---:|---:|---:|
@@ -382,7 +394,7 @@ GAT and GAT-Outage receive the full faithfulness sweep:
 3 training seeds x 5 conditions x 8 evaluation seeds x 6 episodes
 ```
 
-The five conditions and their roles are:
+Table 3.7 lists the five telemetry conditions and their roles.
 
 | Telemetry condition | Observation-layer treatment | GAT-Outage relation | Evaluation purpose |
 |---|---|---|---|
@@ -445,6 +457,16 @@ confidence intervals. H2 uses paired cell-level sign flips relative to each
 evaluation seed's clean condition. H4 calculates Spearman correlation within
 each episode before a sign-flip test. Holm correction is applied to H1-H4
 within each trained policy.
+
+H5 uses a matched-seed directional comparison rather than a cross-seed
+significance test. For training seed `s`, H5 is supported only if the
+GAT-Outage checkpoint has both an H1 duration-DEF correlation and an H4
+WAMSN-DEF correlation closer to zero than the clean-trained GAT checkpoint with
+the same seed. In other words, both adverse negative relationships must be
+weaker after degradation-aware training. If either relationship is equally or
+more negative, that seed does not support H5. The result is reported as the
+number of supporting matched seeds out of three; no population p-value is
+claimed from these three comparisons.
 
 The exposure-conditioned paired follow-up directly subtracts clean-twin DEF
 from degraded DEF for the same decision. Negative values mean lower measured

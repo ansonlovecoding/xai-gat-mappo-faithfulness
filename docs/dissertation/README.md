@@ -1,24 +1,30 @@
-# Dissertation draft
+# MSc Dissertation
 
-Working MSc dissertation titled *When Explanations Outlive Their Data:
-Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under Telemetry
-Degradation*.
+This directory contains the chapter sources for *When Explanations Outlive
+Their Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch
+under Telemetry Degradation*.
 
-Primary quantitative claims in Chapters 3-6 are sourced from the validated
-`results/dissertation_v9_exposure_audit/` outputs. The supporting construct-validity audit remains
-under `results/story_freeze_v1/audit/`. If prose and machine-readable output
-disagree, the v9 JSON/CSV output takes priority for the final experiment.
+The dissertation is prepared for the MSc in Artificial Intelligence at De
+Montfort University Dubai. Its quantitative claims are based on the validated
+outputs under `results/dissertation_v9_exposure_audit/`. The supporting
+construct-validity audit is stored under `results/story_freeze_v1/audit/`.
 
-| File | Chapter | Status |
+| File | Content | Status |
 |---|---|---|
-| `00_abstract.md` | Abstract | updated with v9 results |
-| `01_introduction.md` | 1. Introduction | updated with v9 framing |
-| `02_literature_review.md` | 2. Literature review | draft, citation check pending |
-| `03_methodology.md` | 3. Methodology | updated with v9 protocol |
-| `04_results.md` | 4. Results | updated with completed v9 results |
-| `05_discussion.md` | 5. Discussion | updated with bounded claims |
-| `06_conclusion.md` | 6. Conclusion | updated with bounded claims |
+| `00_abstract.md` | Abstract | final source |
+| `01_introduction.md` | Introduction | final source |
+| `02_literature_review.md` | Literature review | references checked |
+| `03_methodology.md` | Methodology | final protocol |
+| `04_results.md` | Results | synchronized with validated outputs |
+| `05_discussion.md` | Discussion | bounded interpretation |
+| `06_conclusion.md` | Conclusion | final source |
+| `references.md` | Harvard-style references | all entries cited |
 
-Reproduction instructions are in `docs/REPRODUCE_EXPERIMENTS.md`. The primary
-summary files are `summary.csv`, `performance_context.csv`, and
-`training_seed_synthesis.csv` under `results/dissertation_v9_exposure_audit/`.
+The generated submission files are:
+
+- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.docx`
+- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.pdf`
+
+The code accompanies the dissertation submission. Reproduction instructions
+are in `docs/REPRODUCE_EXPERIMENTS.md`; the explanation-audit input and output
+contract is in `docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`.

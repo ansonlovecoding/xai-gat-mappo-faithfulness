@@ -197,7 +197,8 @@ operational control. Existing work has not brought these topics together as one
 explanation-assurance problem.
 
 Recent graph-based dispatch studies provide the closest task comparison, but
-they answer a different question from this dissertation.
+they answer a different question from this dissertation. Table 2.1 summarizes
+their relationship to the present study.
 
 | Study | Setting and method | Main evaluation | Difference from this study |
 |---|---|---|---|

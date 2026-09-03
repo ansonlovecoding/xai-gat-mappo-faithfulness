@@ -4,8 +4,10 @@ from __future__ import annotations
 import argparse
 import re
 from copy import deepcopy
+from html import escape
 from pathlib import Path
 
+from lxml import etree
 from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
@@ -20,6 +22,9 @@ from docx.text.paragraph import Paragraph
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASE = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis.docx"
 DEFAULT_OUTPUT = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.docx"
+MATHML_TO_OMML = Path(
+    "/Applications/Microsoft Word.app/Contents/Resources/mathml2omml.xsl"
+)
 
 CITATIONS = {
     1: "Lin et al., 2018",
@@ -111,21 +116,21 @@ TABLES = [(f"Table {chapter}.{number}", title)
 FIGURE_PAGES = {
     "Figure 3.1": "10", "Figure 3.2": "11", "Figure 3.3": "13",
     "Figure 3.4": "14", "Figure 3.5": "17",
-    "Figure 4.1": "22", "Figure 4.2": "23", "Figure 4.3": "25",
-    "Figure 4.4": "26", "Figure 4.5": "27",
-    "Figure 4.6": "28", "Figure 4.7": "29", "Figure 4.8": "30",
-    "Figure 4.9": "31", "Figure 4.10": "32", "Figure 4.11": "33",
-    "Figure 5.1": "35", "Figure 5.2": "39",
+    "Figure 4.1": "23", "Figure 4.2": "24", "Figure 4.3": "26",
+    "Figure 4.4": "27", "Figure 4.5": "28",
+    "Figure 4.6": "29", "Figure 4.7": "30", "Figure 4.8": "31",
+    "Figure 4.9": "32", "Figure 4.10": "34", "Figure 4.11": "35",
+    "Figure 5.1": "37", "Figure 5.2": "41",
 }
 
 TABLE_PAGES = {
     "Table 2.1": "7", "Table 3.1": "9", "Table 3.2": "11",
     "Table 3.3": "12", "Table 3.4": "12", "Table 3.5": "15",
     "Table 3.6": "17", "Table 3.7": "18",
-    "Table 4.1": "23", "Table 4.2": "24",
-    "Table 4.3": "24", "Table 4.4": "27", "Table 4.5": "29",
-    "Table 4.6": "30", "Table 4.7": "32", "Table 4.8": "33",
-    "Table 4.9": "34", "Table 5.1": "38", "Table 5.2": "39",
+    "Table 4.1": "24", "Table 4.2": "25",
+    "Table 4.3": "25", "Table 4.4": "28", "Table 4.5": "30",
+    "Table 4.6": "31", "Table 4.7": "34", "Table 4.8": "35",
+    "Table 4.9": "36", "Table 5.1": "40", "Table 5.2": "41",
 }
 
 HEADING_PAGES = {
@@ -150,28 +155,28 @@ HEADING_PAGES = {
     "3.6.2 Stale-node attention": "16", "3.7 Construct-validity audit": "16",
     "3.8 Evaluation matrix": "17", "3.9 Hypotheses and statistics": "19",
     "3.10 Audit decision implementation": "20", "3.11 Reproducibility": "21",
-    "3.12 Ethics and data governance": "21",
-    "Chapter 4: Results": "22",
-    "4.1 Policy capability and training stability": "22",
-    "4.2 Construct-validity audit": "24",
-    "4.3 Evaluator sensitivity and ranking controls": "24",
-    "4.4 Small-graph resolution": "27",
-    "4.5 Telemetry manipulation and stale exposure": "28",
-    "4.6 Exposure-conditioned paired audit": "29",
-    "4.7 Action-stratified diagnostic": "30",
-    "4.8 Random-trigger sensitivity analysis": "31",
-    "4.9 Faithfulness hypotheses": "32", "4.10 Result summary": "33",
-    "4.11 Demonstrative framework decision": "34",
-    "Chapter 5: Discussion": "35", "5.1 Answer to the central problem": "35",
-    "5.2 What the stale-exposure result means": "36",
-    "5.3 Dependence on checkpoint and analysis choice": "36",
-    "5.4 Role of the construct-validity audit": "37",
-    "5.5 Degradation-aware training": "37",
-    "5.6 Proposed audit framework": "38",
-    "5.6.1 Purpose and scope": "38", "5.6.2 Inputs, outputs and use": "39",
-    "5.6.3 Application to this study": "40",
-    "5.7 Limitations": "40", "5.8 Future work": "41",
-    "Chapter 6: Conclusion": "42",
+    "3.12 Ethics and data governance": "22",
+    "Chapter 4: Results": "23",
+    "4.1 Policy capability and training stability": "23",
+    "4.2 Construct-validity audit": "25",
+    "4.3 Evaluator sensitivity and ranking controls": "25",
+    "4.4 Small-graph resolution": "28",
+    "4.5 Telemetry manipulation and stale exposure": "29",
+    "4.6 Exposure-conditioned paired audit": "30",
+    "4.7 Action-stratified diagnostic": "31",
+    "4.8 Random-trigger sensitivity analysis": "32",
+    "4.9 Faithfulness hypotheses": "35", "4.10 Result summary": "36",
+    "4.11 Demonstrative framework decision": "36",
+    "Chapter 5: Discussion": "37", "5.1 Answer to the central problem": "37",
+    "5.2 What the stale-exposure result means": "38",
+    "5.3 Dependence on checkpoint and analysis choice": "38",
+    "5.4 Role of the construct-validity audit": "39",
+    "5.5 Degradation-aware training": "39",
+    "5.6 Proposed audit framework": "40",
+    "5.6.1 Purpose and scope": "40", "5.6.2 Inputs, outputs and use": "41",
+    "5.6.3 Application to this study": "42",
+    "5.7 Limitations": "42", "5.8 Future work": "43",
+    "Chapter 6: Conclusion": "44",
 }
 
 
@@ -274,6 +279,180 @@ def set_table_borders(table) -> None:
         border.set(qn("w:val"), style)
         border.set(qn("w:sz"), size)
         border.set(qn("w:color"), colour)
+
+
+def remove_table_borders(table) -> None:
+    tbl_pr = table._tbl.tblPr
+    borders = tbl_pr.find(qn("w:tblBorders"))
+    if borders is None:
+        borders = OxmlElement("w:tblBorders")
+        tbl_pr.append(borders)
+    for side in ("top", "bottom", "left", "right", "insideH", "insideV"):
+        border = borders.find(qn(f"w:{side}"))
+        if border is None:
+            border = OxmlElement(f"w:{side}")
+            borders.append(border)
+        border.set(qn("w:val"), "nil")
+
+
+def _mathml_tag(name: str, content: str) -> str:
+    return f"<{name}>{content}</{name}>"
+
+
+def _mi(value: str) -> str:
+    return _mathml_tag("mi", escape(value))
+
+
+def _mn(value: str | int) -> str:
+    return _mathml_tag("mn", escape(str(value)))
+
+
+def _mo(value: str) -> str:
+    return _mathml_tag("mo", escape(value))
+
+
+def _mtext(value: str) -> str:
+    return _mathml_tag("mtext", escape(value))
+
+
+def _mrow(*parts: str) -> str:
+    return _mathml_tag("mrow", "".join(parts))
+
+
+def _sub(base: str, subscript: str) -> str:
+    return _mathml_tag("msub", base + subscript)
+
+
+def _sup(base: str, superscript: str) -> str:
+    return _mathml_tag("msup", base + superscript)
+
+
+def _subsup(base: str, subscript: str, superscript: str) -> str:
+    return _mathml_tag("msubsup", base + subscript + superscript)
+
+
+def _frac(numerator: str, denominator: str) -> str:
+    return _mathml_tag("mfrac", numerator + denominator)
+
+
+def _sqrt(value: str) -> str:
+    return _mathml_tag("msqrt", value)
+
+
+def _call(name: str, *arguments: str) -> str:
+    joined = []
+    for index, argument in enumerate(arguments):
+        if index:
+            joined.append(_mo(","))
+        joined.append(argument)
+    return _mrow(_mtext(name), _mo("("), *joined, _mo(")"))
+
+
+def _matrix(*rows: str) -> str:
+    body = "".join(
+        _mathml_tag("mtr", _mathml_tag("mtd", row)) for row in rows
+    )
+    return f'<mtable columnalign="left">{body}</mtable>'
+
+
+def _mathml(body: str) -> str:
+    return (
+        '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
+        + body
+        + "</math>"
+    )
+
+
+def equation_spec(code: str) -> tuple[str, str] | None:
+    """Map methodology formula blocks to numbered native Word equations."""
+    comma_h = _mrow(_mi("Q"), _mo(","), _mi("h"))
+    h_i_l = _subsup(_mi("h"), _mi("i"), _mi("l"))
+    h_j_l = _subsup(_mi("h"), _mi("j"), _mi("l"))
+    q_i = _sub(_mi("q"), _mi("i"))
+    k_j = _sub(_mi("k"), _mi("j"))
+    v_j = _sub(_mi("v"), _mi("j"))
+    alpha = _subsup(
+        _mi("α"), _mrow(_mi("i"), _mi("j")),
+        _mrow(_mi("l"), _mo(","), _mi("h")),
+    )
+
+    if code.startswith("q_i ="):
+        rows = (
+            _mrow(q_i, _mo("="), _sub(_mi("W"), comma_h), _call("LayerNorm", h_i_l)),
+            _mrow(k_j, _mo("="), _sub(_mi("W"), _mrow(_mi("K"), _mo(","), _mi("h"))), _call("LayerNorm", h_j_l)),
+            _mrow(v_j, _mo("="), _sub(_mi("W"), _mrow(_mi("V"), _mo(","), _mi("h"))), _call("LayerNorm", h_j_l)),
+            _mrow(
+                _subsup(_mi("s"), _mrow(_mi("i"), _mi("j")), _mrow(_mi("l"), _mo(","), _mi("h"))),
+                _mo("="),
+                _frac(_mrow(q_i, k_j), _sqrt(_sub(_mi("d"), _mtext("head")))),
+            ),
+            _mrow(alpha, _mo("="), _sub(_mtext("softmax"), _mi("j")), _mo("("), _subsup(_mi("s"), _mrow(_mi("i"), _mi("j")), _mrow(_mi("l"), _mo(","), _mi("h"))), _mo(")")),
+            _mrow(
+                _sub(_mi("z"), _mi("i")), _mo("="),
+                _sub(_mtext("concat"), _mi("h")), _mo("("),
+                _sub(_mi("Σ"), _mi("j")), _mo("("), alpha, _mo("×"), v_j,
+                _mo(")"), _mo(")"),
+            ),
+            _mrow(_sub(_mi("u"), _mi("i")), _mo("="), h_i_l, _mo("+"), _sub(_mi("W"), _mi("O")), _sub(_mi("z"), _mi("i"))),
+            _mrow(_subsup(_mi("h"), _mi("i"), _mrow(_mi("l"), _mo("+"), _mn(1))), _mo("="), _sub(_mi("u"), _mi("i")), _mo("+"), _call("FFN", _call("LayerNorm", _sub(_mi("u"), _mi("i"))))),
+        )
+        return "(3.1)", _mathml(_matrix(*rows))
+
+    if code.startswith("alpha_j ="):
+        mean = _frac(
+            _mrow(
+                _sub(_mi("Σ"), _mrow(_mi("l"), _mo(","), _mi("h"))),
+                _mo("("),
+                _subsup(_mi("α"), _mrow(_mn(0), _mi("j")), _mrow(_mi("l"), _mo(","), _mi("h"))),
+                _mo(")"),
+            ),
+            _mrow(_mi("L"), _mi("H")),
+        )
+        return "(3.2)", _mathml(_mrow(_sub(_mi("α"), _mi("j")), _mo("="), _call("normalize", mean)))
+
+    if code.startswith("r_t ="):
+        formula = _mrow(
+            _sub(_mi("r"), _mi("t")), _mo("="), _mn(10), _sub(_mi("N"), _mrow(_mtext("pickup"), _mo(","), _mi("t"))),
+            _mo("+"), _mn("0.5"), _sub(_mi("N"), _mrow(_mtext("dispatch"), _mo(","), _mi("t"))),
+            _mo("-"), _mn("0.001"), _sub(_mtext("mean_wait"), _mi("t")),
+        )
+        return "(3.3)", _mathml(formula)
+
+    if code.startswith("Comp(R_k)"):
+        r_k = _sub(_mi("R"), _mi("k"))
+        b_k_b = _subsup(_mi("B"), _mi("k"), _mi("b"))
+        score = lambda graph: _call("s", graph, _mi("a"))
+        rows = (
+            _mrow(_call("Comp", r_k), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("without"), r_k))),
+            _mrow(_call("Suff", r_k), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("keeping only"), r_k))),
+            _mrow(_sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(")"), _mo("="), _call("Comp", r_k), _mo("-"), _sub(_mtext("mean"), _mi("b")), _call("Comp", b_k_b)),
+            _mrow(_sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(")"), _mo("="), _sub(_mtext("mean"), _mi("b")), _call("Suff", b_k_b), _mo("-"), _call("Suff", r_k)),
+            _mrow(_mtext("DEF"), _mo("="), _sub(_mtext("mean"), _mi("k")), _frac(_mn(1), _mn(2)), _mo("["), _sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(")"), _mo("+"), _sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(")"), _mo("]")),
+        )
+        return "(3.4)", _mathml(_matrix(*rows))
+
+    if code.startswith("WAMSN ="):
+        numerator = _mrow(
+            _sub(_mi("Σ"), _mi("i")), _mo("("),
+            _sub(_mtext("attention"), _mi("i")), _mo("×"),
+            _sub(_mtext("normalized_AoI"), _mi("i")), _mo(")"),
+        )
+        denominator = _mrow(
+            _sub(_mi("Σ"), _mi("i")), _mo("("),
+            _sub(_mtext("attention"), _mi("i")), _mo(")"),
+        )
+        return "(3.5)", _mathml(_mrow(_mtext("WAMSN"), _mo("="), _frac(_mrow(numerator), _mrow(denominator))))
+
+    count_specs = {
+        "3 models x": ("(3.6)", "3 x 3 x 8 x 3 = 216"),
+        "3 training seeds x 5 conditions": ("(3.7)", "2 x 3 x 5 x 8 x 6 = 1,440"),
+        "2 models x 3 training seeds": ("(3.8)", "2 x 3 x 2 x 8 x 3 = 288"),
+    }
+    for prefix, (number, expression) in count_specs.items():
+        if code.startswith(prefix):
+            parts = expression.replace(" x ", " × ").split(" = ")
+            return number, _mathml(_mrow(_mtext(parts[0]), _mo("="), _mn(parts[1])))
+    return None
 
 
 def prevent_row_split(row) -> None:
@@ -399,9 +578,9 @@ def ensure_list_style(doc: Document, name: str, *, bullet: bool):
     if language is None:
         language = OxmlElement("w:lang")
         run_properties.append(language)
-    language.set(qn("w:val"), "en-GB")
-    language.set(qn("w:eastAsia"), "en-GB")
-    language.set(qn("w:bidi"), "en-GB")
+    language.set(qn("w:val"), "en-US")
+    language.set(qn("w:eastAsia"), "en-US")
+    language.set(qn("w:bidi"), "en-US")
     style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
     style.paragraph_format.left_indent = Inches(0.5)
     style.paragraph_format.first_line_indent = Inches(-0.25)
@@ -609,6 +788,46 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     return caption_paragraph
 
 
+def add_equation_before(doc: Document, anchor, code: str) -> bool:
+    spec = equation_spec(code)
+    if spec is None:
+        return False
+    if not MATHML_TO_OMML.exists():
+        raise FileNotFoundError(
+            "Microsoft Word MathML-to-OMML stylesheet was not found: "
+            f"{MATHML_TO_OMML}"
+        )
+
+    number, mathml = spec
+    transform = etree.XSLT(etree.parse(str(MATHML_TO_OMML)))
+    omml = transform(etree.fromstring(mathml.encode("utf-8"))).getroot()
+
+    table = doc.add_table(rows=1, cols=3)
+    table.style = None
+    set_table_geometry(table, [650, 7720, 650])
+    remove_table_borders(table)
+    row = table.rows[0]
+    prevent_row_split(row)
+    for cell in row.cells:
+        set_cell_margins(cell, top=30, start=0, bottom=30, end=0)
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        cell.paragraphs[0].paragraph_format.space_after = Pt(0)
+        cell.paragraphs[0].paragraph_format.keep_together = True
+
+    equation_paragraph = row.cells[1].paragraphs[0]
+    equation_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    equation_paragraph._p.append(deepcopy(omml))
+
+    number_paragraph = row.cells[2].paragraphs[0]
+    number_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    number_run = number_paragraph.add_run(number)
+    number_run.font.name = "Times New Roman"
+    number_run.font.size = Pt(11)
+
+    move_before(table._tbl, anchor)
+    return True
+
+
 def parse_table(lines: list[str]) -> list[list[str]]:
     parsed = [[cell.strip() for cell in line.strip().strip("|").split("|")]
               for line in lines]
@@ -763,14 +982,15 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                 )
                 paragraph.paragraph_format.space_after = Pt(2 if next_is_same_list else 6)
             elif block_type == "code":
-                paragraph = add_paragraph_before(doc, anchor, payload)
-                paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                paragraph.paragraph_format.left_indent = Inches(0.35)
-                paragraph.paragraph_format.right_indent = Inches(0.35)
-                paragraph.paragraph_format.keep_together = True
-                for run in paragraph.runs:
-                    run.font.name = "Courier New"
-                    run.font.size = Pt(9)
+                if not add_equation_before(doc, anchor, payload):
+                    paragraph = add_paragraph_before(doc, anchor, payload)
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    paragraph.paragraph_format.left_indent = Inches(0.35)
+                    paragraph.paragraph_format.right_indent = Inches(0.35)
+                    paragraph.paragraph_format.keep_together = True
+                    for run in paragraph.runs:
+                        run.font.name = "Courier New"
+                        run.font.size = Pt(9)
             elif block_type == "image":
                 alt_text, image_path = payload
                 add_image_before(doc, anchor, image_path, alt_text)
@@ -883,6 +1103,10 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
             target=bookmark_name("figure", number),
         )
 
+    list_tables_heading = next(
+        p for p in doc.paragraphs if p.text == "LIST OF TABLES"
+    )
+    list_tables_heading.paragraph_format.page_break_before = True
     _, list_abbr = clear_between(doc, "LIST OF TABLES", "LIST OF ABBREVIATIONS")
     for number, title in TABLES:
         add_front_entry(
@@ -1010,6 +1234,7 @@ def replace_abstract(doc: Document) -> None:
 def update_front_text(doc: Document) -> None:
     replacements = {
         "Supervisor: Farhan S. Ujager": "Supervisor: Farhan S. Ujager",
+        "Master of Science (MSc)": "MSc in Artificial Intelligence",
         "August 2026": "September 2026",
         "No publication is claimed in this dissertation draft.":
             "No publication is claimed in this dissertation.",

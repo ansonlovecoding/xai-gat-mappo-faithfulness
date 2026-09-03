@@ -31,7 +31,8 @@ expected top-k overlap reaches about
 positive but varies substantially in strength. These checks do not show that
 the evaluator is perfect and attention fails. They show that, within the
 evaluator's measured but limited resolution, raw attention lacks reproducible
-evidence of explanation faithfulness.
+evidence of explanation faithfulness. Figure 5.1 summarizes this cross-seed
+evidence path.
 
 ![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
 
@@ -145,7 +146,8 @@ Training with 30-second outages does not solve the explanation problem.
 GAT-Outage shows the same seed-dependent attention and paired DEF directions
 as GAT. It strengthens the H1 and H4 associations, but does not make the direct
 degraded-minus-clean response consistent across independently trained
-policies.
+policies. Under the matched-seed H5 rule, both adverse correlations would need
+to move closer to zero. Neither does so for any of the three seeds.
 
 These findings apply only to the tested form of robustness training. The reward
 contains no term for explanation stability or faithfulness, so task-reward
@@ -180,7 +182,8 @@ shown to a dispatcher or other operator. It should be repeated after retraining,
 checkpoint replacement, changes to the telemetry or graph pipeline, transfer to
 a new operating scenario, and during periodic model review. It is not a live
 freshness monitor. A deployed system must still display freshness separately and
-suppress or warn about explanations based on stale inputs.
+suppress or warn about explanations based on stale inputs. Figure 5.2 shows the
+corresponding offline audit workflow.
 
 ![Freshness-aware explanation audit workflow](../freshness_aware_explanation_audit.png)
 
@@ -191,7 +194,8 @@ selected action.
 
 ### 5.6.2 Inputs, outputs and use
 
-The framework accepts evidence rather than raw attention alone.
+The framework accepts evidence rather than raw attention alone. Table 5.2
+summarizes its inputs and outputs.
 
 | Component | Contents | Role in the audit |
 |---|---|---|

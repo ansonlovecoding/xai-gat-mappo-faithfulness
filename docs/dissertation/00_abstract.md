@@ -2,38 +2,34 @@
 
 Graph-attention multi-agent reinforcement learning can expose attention
 weights as candidate explanations of fleet-dispatch decisions. However, an
-attention map may remain visible after the vehicle telemetry behind it becomes
+attention map may remain visible after its supporting vehicle telemetry becomes
 stale. This dissertation asks whether raw graph-attention weights can be
 trusted as explanations under clean and degraded telemetry.
 
 The experiment simulates 20 taxis in SUMO. Tunnel entry triggers an
 observation-layer outage that freezes an affected taxi's last valid position
 and speed for 10, 20, 30, or 60 seconds while SUMO retains the current traffic
-state. This creates paired clean and degraded observations for the same
+state. This produces paired clean and degraded observations for the same
 decision. GAT policies trained on clean data or with 30-second outages are
-evaluated across three independent training seeds.
-Decision-level explanation faithfulness (DEF) compares attention-ranked nodes
-with type-matched, action-protected random controls. WAMSN separately measures
-the attention assigned to stale vehicle information. Additional checks cover
-leave-one-out rankings, attention extraction choices, action type, and random
-telemetry-loss triggers.
+evaluated across three independent training seeds. Decision-level explanation
+faithfulness (DEF) compares attention-ranked nodes with type-matched,
+action-protected random controls. WAMSN separately measures attention assigned
+to stale vehicle information. Further checks cover leave-one-out rankings,
+attention extraction, action type, and random telemetry-loss triggers.
 
 The results do not validate raw attention as a reliable explanation. Clean
-corrected DEF remains near zero and varies across checkpoints. Longer
-outages increase stale-data exposure, but paired attention and DEF shifts
-reverse direction for one training seed. The main associations are dominated
-by no-op decisions and do not reproduce for dispatch actions.
-The seed-dependent pattern persists under random triggering and in both
-training regimes. These results do not reliably show whether
-attention reflects fresh information or decision relevance.
+corrected DEF remains near zero and varies across checkpoints. Longer outages
+increase stale-data exposure, but paired attention and DEF shifts reverse
+direction for one training seed. The main associations are dominated by no-op
+decisions and do not reproduce for dispatch actions. The seed-dependent pattern
+also appears under random triggering and in both training regimes. Therefore,
+the tested attention weights do not provide consistent evidence of freshness
+or decision relevance.
 
-To address this problem, the dissertation proposes a freshness-aware
-explanation audit framework to decide when attention may be presented as an
-audited candidate explanation. The framework reports telemetry freshness and action
-composition separately, applies action-aware and type-matched faithfulness
-tests, checks sensitivity to the attention extraction rule, and requires
-consistent evidence across checkpoints and training seeds. If the evidence is
-inconsistent, attention remains an internal diagnostic rather than an
-operator-facing explanation. The framework governs when explanations may be
-released; it does not repair faithfulness inside the model. Its demonstrative
-application returns `WITHHOLD` for both model families and all six checkpoints.
+The dissertation proposes a freshness-aware explanation audit framework that
+reports freshness and action composition separately, applies action-aware
+faithfulness tests, checks the attention extraction rule, and requires
+consistent evidence across checkpoints. Attention remains an internal
+diagnostic when these checks fail. The framework governs explanation release;
+it does not repair the model. Its demonstrative application returns `WITHHOLD`
+for both model families and all six checkpoints.

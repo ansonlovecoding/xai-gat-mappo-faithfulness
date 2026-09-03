@@ -11,6 +11,8 @@ indices 49, 40, and 40 for seeds 42, 43, and 44. These are zero-based indices;
 for example, index 39 is the checkpoint saved after 40 training epochs. The
 selected index is reported separately for each trained policy.
 
+Figure 4.1 shows the training and checkpoint-selection diagnostics.
+
 ![GAT training and checkpoint-selection diagnostics](../figures/v9_gat_training_diagnostics.png)
 
 **Figure 4.1.** GAT training metrics use a ten-epoch moving mean. Stars mark
@@ -54,6 +56,8 @@ ranges overlap. The experiment finds no task-performance advantage for graph
 attention. This limits how broadly the audit can be generalized but remains
 separate from whether the exposed weights faithfully explain GAT decisions.
 
+Figure 4.2 shows the held-out pickup count for each selected policy.
+
 ![Clean-telemetry performance by training seed](../figures/v9_clean_performance_by_training_seed.png)
 
 **Figure 4.2.** Each point is one selected policy evaluated over 24 held-out
@@ -71,7 +75,8 @@ dispatcher.
 
 Removing a request node can remove an available action, while removing a peer
 taxi only hides information. A uniform random occlusion therefore compares
-different types of change.
+different types of change. Table 4.2 quantifies the resulting control-baseline
+artifact.
 
 | Control baseline used to calculate DEF | Mean margin-DEF | 95% CI | Interpretation |
 |---|---:|---:|---|
@@ -129,6 +134,8 @@ individual heads, layer maxima, and rollout, every checkpoint contains both a
 positive and a negative stale-attention shift. The widest ranges are -0.0109
 to +0.0063 for GAT seed 44 and -0.0097 to +0.0064 for GAT-Outage seed 44.
 
+Figure 4.4 shows the sensitivity to the attention reduction rule.
+
 ![Attention aggregation sensitivity](../figures/v9_attention_aggregation_sensitivity.png)
 
 **Figure 4.4.** Stale-attention shift multiplied by 1,000. Selecting a layer,
@@ -141,6 +148,8 @@ for GAT and +0.0025 for GAT-Outage because it averages these different policy
 responses. The largest absolute 60-second minus clean query-row change is
 `0.000264`, so the two conditions again remain close without being duplicates.
 
+Figure 4.5 compares the declared self row with the selected request row.
+
 ![Attention query-row sensitivity](../figures/v9_action_query_row_sensitivity.png)
 
 **Figure 4.5.** Top: clean request-action DEF from the declared self row and
@@ -151,7 +160,8 @@ improvement across checkpoints or conditions.
 
 ## 4.4 Small-graph resolution
 
-The scored graphs usually contain the maximum number of visible nodes.
+The scored graphs usually contain the maximum number of visible nodes, as
+summarized in Table 4.4.
 
 | Model | Node count | Mean | Median | 5th percentile | 95th percentile |
 |---|---|---:|---:|---:|---:|
@@ -172,6 +182,8 @@ threshold. This pattern suggests that the ranking agreement has more contrast
 at `k=1`; it does not establish that LOO is ground truth or that the top-ranked
 attention node is a causal explanation.
 
+Figure 4.6 shows how the expected overlap grows with `k`.
+
 ![Top-k overlap diagnostic](../figures/v9_def_overlap_diagnostic.png)
 
 **Figure 4.6.** Large expected overlap between the explanation and its matched
@@ -189,7 +201,7 @@ exceeds the pre-declared coverage gates.
 Conditional WAMSN rises from 0.0275-0.0289 at 10 seconds to 0.0804-0.0900 at
 60 seconds. H3 is supported for all six selected checkpoints. Because WAMSN contains
 normalized AoI, this verifies increasing stale exposure; it does not show that
-AoI causes lower faithfulness.
+AoI causes lower faithfulness. Figure 4.7 displays the duration sweep.
 
 ![WAMSN, probability DEF and pickups by outage duration](../figures/v9_decoupling_by_outage_duration.png)
 
@@ -202,7 +214,7 @@ main research outcome.
 The paired audit compares each degraded observation with its exact clean twin
 at the same simulation step. Positive attention shift means more attention is
 assigned to nodes marked stale. Negative DEF shift means lower measured
-faithfulness under degradation.
+faithfulness under degradation. Table 4.5 reports the paired estimates.
 
 | Model | Seed | Attention shift x 1,000 [95% CI] | Paired probability-DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|
@@ -212,6 +224,8 @@ faithfulness under degradation.
 | GAT-Outage | 42 | +3.975 [+3.8, +4.1] | -0.253 [-0.323, -0.193] |
 | GAT-Outage | 43 | +0.959 [+0.9, +1.0] | -0.114 [-0.343, +0.061] |
 | GAT-Outage | 44 | -3.038 [-3.1, -2.9] | +0.172 [+0.135, +0.212] |
+
+Figure 4.8 shows the paired attention and DEF shifts by checkpoint.
 
 ![Paired attention and faithfulness shifts](../figures/v9_paired_attention_and_faithfulness_shift.png)
 
@@ -237,7 +251,8 @@ close to zero and would make such ratios unstable.
 The combined faithfulness audit is dominated by chosen no-op actions. Across
 all six checkpoints, 56,550 records contain at least one valid request. Of
 these, 52,585 (93.0%) select no-op and 3,965 (7.0%) dispatch a request.
-Decisions with no valid request are excluded from these percentages.
+Decisions with no valid request are excluded from these percentages. Table 4.6
+reports the action composition and dispatch-only diagnostic.
 
 | Checkpoint | No-op (%) | Dispatch (%) | Mean selected dispatch probability | Paired dispatch DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|---:|
@@ -247,6 +262,8 @@ Decisions with no valid request are excluded from these percentages.
 | GAT-Outage, seed 42 | 91.4 | 8.6 | 0.0228 | +0.088 [+0.047, +0.131] |
 | GAT-Outage, seed 43 | 94.6 | 5.4 | 0.0127 | -4.403 [-8.368, -1.285] |
 | GAT-Outage, seed 44 | 92.8 | 7.2 | 0.0181 | -0.044 [-0.092, +0.004] |
+
+Figure 4.9 visualizes the imbalance and the paired dispatch estimates.
 
 ![Action-stratified faithfulness diagnostic](../figures/v9_action_stratified_faithfulness.png)
 
@@ -278,7 +295,7 @@ so realized exposure remains dependent on the trajectory induced by each
 policy. Random-to-tunnel exposure-rate ratios range from 0.44 to 0.98, with a
 median of 0.78. The comparison therefore focuses on the direction of paired
 effects within stale-exposed decisions rather than treating the two conditions
-as perfectly exposure matched.
+as perfectly exposure matched. Table 4.7 reports the trigger comparison.
 
 This sensitivity analysis is a separate 24-episode evaluation. Its repeated
 30-second tunnel estimates therefore differ slightly from the 48-episode main
@@ -292,6 +309,8 @@ sweep in Table 4.5; no checkpoint is retrained or reselected.
 | GAT-Outage, seed 42 | 0.967 / 0.713 | +4.279 / +5.453 | -0.205 / -0.093 |
 | GAT-Outage, seed 43 | 0.584 / 0.480 | +0.958 / +0.444 | -0.088 / -0.014 |
 | GAT-Outage, seed 44 | 0.712 / 0.648 | -3.063 / -4.296 | +0.091 / +0.518 |
+
+Figure 4.10 shows the tunnel and random-trigger sensitivity results.
 
 ![Random telemetry-loss robustness check](../figures/v9_random_loss_robustness.png)
 
@@ -317,7 +336,8 @@ The event-aware audit uses every decision with visible stale exposure rather
 than a periodic sample. H1 is supported for two of three GAT checkpoints and
 all three GAT-Outage checkpoints. H4 is supported for all six: within-episode
 WAMSN-DEF correlations range from -0.199 to -0.084 for GAT and from -0.423 to
--0.212 for GAT-Outage. H3 remains consistently supported.
+-0.212 for GAT-Outage. H3 remains consistently supported. Figure 4.11 shows the
+per-checkpoint correlations, while Table 4.8 summarizes all hypothesis outcomes.
 
 ![Within-episode WAMSN-DEF correlation by training seed](../figures/v9_h4_correlation_by_training_seed.png)
 
@@ -331,6 +351,13 @@ association after Holm correction; the direct paired effect remains mixed.
 | H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | supported as a stale-exposure manipulation check |
 | H4: higher WAMSN is associated with lower DEF | 3/3 | 3/3 | consistently supported within episodes |
 | H5: degradation-aware training reduces the adverse DEF relationships | n/a | 0/3 | not supported |
+
+For H5, every matched GAT-Outage checkpoint has more negative H1 and H4
+correlations than its clean-trained GAT counterpart. The H1 comparisons for
+seeds 42, 43, and 44 are -0.164 versus -0.069, -0.141 versus -0.058, and -0.025
+versus -0.017. The corresponding H4 comparisons are -0.423 versus -0.092,
+-0.411 versus -0.084, and -0.212 versus -0.199. None meets the requirement that
+both relationships become weaker, giving 0/3 support for H5.
 
 H1 and H4 are association tests within one trained policy and primarily
 describe no-op decisions in this action-imbalanced sample. They do not by
