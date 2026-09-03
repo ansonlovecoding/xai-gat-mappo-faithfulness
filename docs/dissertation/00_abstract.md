@@ -1,20 +1,23 @@
 # Abstract
 
-Graph-attention multi-agent reinforcement learning can expose attention
-weights as candidate explanations of fleet-dispatch decisions. However, an
+Graph-attention multi-agent reinforcement learning (MARL) can expose attention
+weights as explanations of fleet-dispatch decisions. However, an
 attention map may remain visible after its supporting vehicle telemetry becomes
 stale. This dissertation asks whether raw graph-attention weights can be
 trusted as explanations under clean and degraded telemetry.
 
-The experiment simulates 20 taxis in SUMO. Tunnel entry triggers an
+The experiment simulates 20 taxis in Simulation of Urban Mobility (SUMO).
+Tunnel entry triggers an
 observation-layer outage that freezes an affected taxi's last valid position
 and speed for 10, 20, 30, or 60 seconds while SUMO retains the current traffic
 state. This produces paired clean and degraded observations for the same
-decision. GAT policies trained on clean data or with 30-second outages are
+decision. Graph-attention network (GAT) policies trained on clean data or with
+30-second outages are
 evaluated across three independent training seeds. Decision-level explanation
 faithfulness (DEF) compares attention-ranked nodes with type-matched,
-action-protected random controls. WAMSN separately measures attention assigned
-to stale vehicle information. Further checks cover leave-one-out rankings,
+action-protected random controls. Weighted attention mass on stale nodes
+(WAMSN) separately measures attention assigned to stale vehicle information.
+Further checks cover leave-one-out rankings,
 attention extraction, action type, and random telemetry-loss triggers.
 
 The results do not validate raw attention as a reliable explanation. Clean

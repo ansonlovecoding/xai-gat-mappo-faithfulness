@@ -12,28 +12,32 @@ that attention cannot be assumed trustworthy by default.
 
 The four research questions are answered as follows:
 
-- **RQ1: Is attention faithful under clean telemetry?** The six checkpoints do
-  not show a consistent result. Raw-attention DEF ranges from -0.0009 to
-  +0.0031 across checkpoints.
+- **RQ1: Under clean telemetry, do raw graph-attention weights identify
+  decision-relevant nodes more reliably than type-matched random controls?**
+  Not consistently. Raw-attention DEF ranges from -0.0009 to +0.0031 across
+  the six checkpoints.
   LOO produces a larger positive result for all six checkpoints, while taxi-only
   attention-LOO rank correlation ranges from +0.088 to +0.699.
-- **RQ2: Does attention move toward stale vehicle nodes?** Not consistently.
-  Under the predefined aggregation method, attention shifts toward stale nodes
+- **RQ2: Does tunnel-triggered telemetry degradation change the attention
+  assigned to stale vehicle nodes relative to the paired clean observation?**
+  Yes, but not in a consistent direction. Attention shifts toward stale nodes
   for checkpoints trained with seeds 42 and 43 and away from them for seed 44
-  under both training regimes. The same attention-shift direction appears under
-  random triggering in five of six checkpoints, while individual heads
-  can still reverse the direction within one checkpoint.
-- **RQ3: Does the explanation remain reliable as outage duration increases?**
-  The evidence is not consistent across analysis levels or action types. H1 is
-  supported in five of six selected checkpoints and H4 in all six, but the
+  under both training regimes. The same direction appears under random
+  triggering in five of six checkpoints, while individual heads can still
+  reverse it within one checkpoint.
+- **RQ3: As outage duration increases, are changes in stale-node attention and
+  decision-level faithfulness consistent across independently trained
+  checkpoints?** No. Paired stale-node attention changes direction with the
+  trained checkpoint. H1 is supported in five of six selected checkpoints and H4 in all six, but the
   combined direct paired DEF shift is negative for four checkpoints and positive
   for two. The effect is small and reverses for the checkpoints trained with
   seed 44. Moreover, 93.0% of scorable decisions with at least one available
   request are no-op, and the H1/H4 patterns are not reproduced in the dispatch
   stratum.
-- **RQ4: Does degradation-aware training improve explanation reliability?**
-  Outage training provides no consistent improvement. GAT-Outage shows the same
-  seed-dependent paired direction as GAT.
+- **RQ4: Does degradation-aware training produce more consistent attention and
+  faithfulness responses under telemetry degradation than clean training?** No.
+  GAT-Outage shows the same seed-dependent paired direction as GAT and provides
+  no consistent improvement.
 
 This interpretation depends on the construct-validity audit. Deleting a
 request can also delete an action, while deleting a peer taxi only hides
@@ -80,3 +84,9 @@ separately. It would not prove a complete causal explanation.
 The framework is designed to reduce operational risk, not to remove
 faithfulness decoupling from the model. Attention remains an internal diagnostic
 unless the full audit provides consistent evidence.
+
+All six objectives were completed: the paired benchmark and audit pipeline were
+implemented, the four research questions were evaluated, and the collected
+evidence produced a `WITHHOLD` decision for every tested checkpoint. Completion
+refers to execution of the planned study, not support for every hypothesis or
+achievement of an `ELIGIBLE` result.

@@ -284,14 +284,14 @@ def evidence_summary_figure() -> None:
         ax.text(x + width / 2, 0.815, title, ha="center", va="center",
                 fontsize=9.2, fontweight="bold")
     rows = [
-        ("RQ1", "Clean DEF", "Near type-matched random baseline", "Not validated", "#A33A3A"),
-        ("RQ2", "Paired attention shift",
+        ("RQ1", "Clean decision relevance", "Near type-matched random baseline", "Not validated", "#A33A3A"),
+        ("RQ2", "Paired stale-node attention",
          f"Positive in {positive_shift}/{total} trained policies",
          "Mixed by seed", "#B06C00"),
-        ("RQ3", "Paired DEF shift",
-         f"Negative in {negative_paired_def}/{total} trained policies",
-         "Mixed by seed", "#B06C00"),
-        ("RQ4", "Degradation training", "No consistent mitigation", "Not supported", "#A33A3A"),
+        ("RQ3", "Duration and paired DEF",
+         f"Paired decline in {negative_paired_def}/{total} policies",
+         "Not consistent", "#B06C00"),
+        ("RQ4", "Training comparison", "No consistent improvement", "Not supported", "#A33A3A"),
     ]
     for index, (rq, measure, result, verdict, color) in enumerate(rows):
         y = 0.61 - index * 0.135
@@ -307,7 +307,7 @@ def evidence_summary_figure() -> None:
     ax.text(0.5, 0.94, "Cross-seed evidence matrix",
             ha="center", va="center", fontsize=15, fontweight="bold")
     ax.text(0.5, 0.055,
-            "Conclusion: attention and paired faithfulness responses are not consistent across trained policies.",
+            "Conclusion: raw attention does not provide consistent decision-relevance or degradation responses.",
             ha="center", va="center", fontsize=9.0, fontweight="bold")
     fig.tight_layout()
     _save(fig, "evidence_path_summary")

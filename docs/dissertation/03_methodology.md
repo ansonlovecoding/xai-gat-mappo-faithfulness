@@ -13,6 +13,11 @@ three stages: training, validation-based checkpoint selection, and held-out
 evaluation. Faithfulness sweeps are run only after the selected checkpoints are
 frozen.
 
+The six objectives are implemented through the paired observation benchmark,
+clean faithfulness controls, telemetry-degradation sweep, cross-checkpoint
+consistency analyses, matched training comparison, and final
+explanation-release audit.
+
 ## 3.2 SUMO environment and data
 
 The road network is an OpenStreetMap extract of the Central Park area in
@@ -26,7 +31,8 @@ policy is fitted on training demand. Candidate checkpoints are compared on
 validation demand. The final reported runs use held-out test demand. This
 separation prevents test results from influencing model selection.
 
-SUMO is a simulator rather than a neutral source of observed data [22]. Its
+SUMO is a microscopic traffic simulator [22], not a source of directly observed
+traffic data. Its
 outputs depend on the chosen road network, generated demand, routes, vehicle
 behavior parameters, tunnel locations, and random seeds. The experiment is
 therefore not described as free from bias. Instead, it uses these assumptions
@@ -71,7 +77,7 @@ to dispatch actions, which motivates the construct-validity controls.
 The main policy uses per-node-type feature projections followed by two graph
 attention layers with four heads. The actor scores no-op and the visible
 requests. The critic estimates value for MAPPO training with centralized
-training and decentralized execution. The GAT implementation returns its
+training and decentralized execution (CTDE). The GAT implementation returns its
 attention tensors directly so they can be audited without changing the trained
 network.
 
@@ -126,7 +132,8 @@ The default audit reduces the self-node attention row to node importance
 without modifying the actor, critic, or selected action; the selected-request
 row is evaluated separately as a sensitivity check.
 
-Table 3.2 lists the three policy conditions included in the experiment.
+Table 3.2 lists the three policy conditions included in the experiment. The
+non-graph baseline uses a multilayer perceptron (MLP).
 
 | Model | Policy | Training observations | Purpose |
 |---|---|---|---|
@@ -359,8 +366,8 @@ First, a leave-one-out (LOO) control masks each valid node separately and ranks
 nodes by the resulting selected-action margin loss. The selected request is
 protected. This control is expected to strengthen comprehensiveness because it
 is built from the same single-node perturbation, but it is not an independent
-proof that the combined DEF is optimal. Second, Gradient x Input ranks each
-node by the L2 norm of the selected-action logit gradient multiplied by its raw
+proof that the combined DEF is optimal. Second, Gradient x Input (GxI) ranks
+each node by the L2 norm of the selected-action logit gradient multiplied by its raw
 features. It is a post-hoc comparator that does not use attention weights.
 Third, the audit reports valid taxi/request counts and the exact expected
 top-k overlap with a type-matched random subset. Taxi-only Spearman correlation
@@ -447,6 +454,14 @@ The confirmatory hypotheses are:
 - **H4:** decisions with greater WAMSN have lower DEF within an episode.
 - **H5:** compared with clean training, degradation-aware training reduces the
   decline in DEF associated with longer outages and higher WAMSN.
+
+The evidence is mapped to the research questions as follows. RQ1 uses clean
+DEF against the type-matched random baseline, with LOO and ranking controls.
+RQ2 uses paired clean/degraded stale-attention measurements. RQ3 combines the
+duration and exposure hypotheses (H1, H3, and H4) with paired DEF, action
+strata, attention-extraction sensitivity, and consistency across checkpoints.
+RQ4 uses the matched-seed H5 comparison between GAT and GAT-Outage. This mapping
+keeps each research question tied to an observable result.
 
 H3 is interpreted as a stale-exposure manipulation check because WAMSN includes
 normalized AoI by definition. It confirms that longer outages create more

@@ -4,7 +4,7 @@
 
 Fleet dispatch is relational. A taxi's useful action depends on nearby
 vehicles, open passenger requests, road conditions, and competition for the
-same demand. Graph neural networks represent these relationships directly,
+same demand. Graph neural networks (GNNs) represent these relationships directly,
 and graph attention networks (GATs) add learned weights over neighboring
 nodes [6], [7]. Because the weights are easy to display, they are often read as
 an explanation of which vehicles or requests influenced a decision.
@@ -32,10 +32,10 @@ focuses on explanation reliability rather than increasing the number
 of pickups. It tests whether raw graph-attention weights provide reliable
 evidence about a decision under clean and degraded telemetry.
 
-This dissertation uses **faithfulness decoupling** to describe the risk that an
-explanation remains available and visually plausible after its supporting data
-have become stale, without a reliable link between the displayed weights and
-the evidence that changes the decision. One possible pattern is declining
+This dissertation uses *faithfulness decoupling* to describe a situation in
+which an explanation still appears credible after its supporting data have
+become stale, even though the displayed attention weights may not reliably
+identify the evidence that influenced the decision. One possible pattern is declining
 faithfulness while dispatch performance remains stable. The core question is
 whether attention provides reliable evidence under the tested conditions.
 
@@ -48,96 +48,117 @@ decisions when vehicle telemetry becomes stale?**
 
 Four operational questions provide the evidence needed to answer it:
 
-1. **RQ1:** Is graph attention a faithful explanation under clean telemetry?
-2. **RQ2:** When tunnel-triggered outages occur, does attention move toward
-   stale vehicle nodes?
-3. **RQ3:** As outage duration increases, does the relationship between
-   attention, stale-data exposure, and decision relevance remain reliable?
-4. **RQ4:** Does training the policy under telemetry degradation make the
-   explanation response more reliable?
+1. **RQ1:** Under clean telemetry, do raw graph-attention weights identify
+   decision-relevant nodes more reliably than type-matched random controls?
+2. **RQ2:** Does tunnel-triggered telemetry degradation change the attention
+   assigned to stale vehicle nodes relative to the paired clean observation?
+3. **RQ3:** As outage duration increases, are changes in stale-node attention
+   and decision-level faithfulness consistent across independently trained
+   checkpoints?
+4. **RQ4:** Does degradation-aware training produce more consistent attention
+   and faithfulness responses under telemetry degradation than clean training?
 
-The construct-validity audit supports RQ1-RQ3. It is not a separate primary
-problem. Its purpose is to check that the faithfulness metric measures hidden
-information rather than the accidental deletion of an available action.
+The construct-validity audit supports the interpretation of all four research
+questions. It is not a separate primary problem. Its purpose is to check that
+the faithfulness evaluator measures the effect of removing information rather
+than the accidental removal of an available action.
 
 ## 1.4 Objectives
 
 The measurable objectives are to:
 
-- build a reproducible SUMO fleet-dispatch benchmark with training, validation,
-  and held-out test demand;
-- train clean and degradation-aware policies across three independent seeds;
-- trigger signal loss from tunnel entry while applying the resulting freeze at
-  the observation boundary;
-- compare clean telemetry with fixed observation-layer outages of 10, 20, 30,
-  and 60 seconds;
-- test whether the paired result remains similar when telemetry loss is
-  triggered randomly rather than by one fixed tunnel location;
-- measure explanation faithfulness with action-aware, type-matched
-  counterfactual controls;
-- check whether the faithfulness evaluator is sensitive to an LOO perturbation
-  ranking and quantify the resolution lost through top-k overlap;
-- measure how much attention is assigned to stale vehicle information;
-- test whether conclusions change across attention layers, heads, rollout, and
-  the query row used as the explanation;
-- treat the trained policy, rather than each individual decision, as the unit
-  for judging whether a finding is consistent; and
-- turn the collected evidence into an explicit `ELIGIBLE`, `WITHHOLD`, or
-  `INCOMPLETE` explanation-release decision.
+1. develop a reproducible Simulation of Urban Mobility (SUMO)
+   fleet-dispatch benchmark that creates paired clean and degraded observations
+   from the same simulated state and uses held-out test demand;
+2. evaluate whether raw graph-attention weights identify
+   decision-relevant nodes under clean telemetry using action-protected,
+   type-matched controls and a leave-one-out (LOO) positive control;
+3. quantify the paired change in attention assigned to stale vehicle
+   nodes under tunnel-triggered outages and test its sensitivity to randomly
+   triggered telemetry loss;
+4. assess whether stale-node attention and decision-level faithfulness
+   responses are consistent across outage durations, independently trained
+   checkpoints, action strata, and attention-extraction choices;
+5. compare matched clean-trained and degradation-aware policies to
+   determine whether degradation-aware training improves the consistency of
+   attention and faithfulness responses;
+6. implement and apply a freshness-aware explanation audit framework
+   that converts the collected evidence into an `ELIGIBLE`, `WITHHOLD`, or
+   `INCOMPLETE` explanation-release decision.
 
 ## 1.5 Main findings
 
-Overall, **this study does not validate raw attention weights as reliable
-explanations**.
+Overall, **this study does not validate raw graph-attention weights as reliable
+explanations of fleet-dispatch decisions**. Figure 1.1 summarizes the central
+finding: an attention explanation can remain available after the policy begins
+receiving stale vehicle information, but its availability does not show that it
+reliably identifies the evidence behind the decision.
 
-Under clean telemetry, type-matched DEF remains close to its random control and
-varies across the six checkpoints. A leave-one-out perturbation ranking gives a
-larger positive DEF in every checkpoint, showing that the evaluator can respond
-to a decision-relevant ranking even though raw attention does not provide a
-stable result.
+![Summary of stale data and the explanation-release decision](../figures/v9_main_findings_summary.png)
 
-Longer outages increase AoI-weighted stale exposure for every checkpoint. The
-paired response is less consistent: checkpoints trained with seeds 42 and 43
-assign more attention to stale nodes on average, while those trained with seed
-44 assign less. Paired DEF also changes direction across checkpoints. A
-random-trigger check shows a similar overall pattern, making a tunnel-only
-explanation less plausible without establishing a universal degradation
-effect.
+**Figure 1.1.** Main finding. A tunnel-triggered outage leaves the policy with a
+stale observation. Attention remains available, but the audit withholds it
+because freshness and faithfulness are not both established.
 
-The action audit narrows the conclusion. Among scorable decisions with at least one
-available request, 93.0% select no-op. The main duration and exposure
-associations do not reproduce within the smaller dispatch stratum. Attention
-results also change with the layer, head, aggregation rule, and query row used
-to construct the explanation.
+Under clean telemetry, raw attention performs close to its type-matched random
+control and varies across the six trained policies. In contrast, the
+leave-one-out control produces a clearer faithfulness response. This shows that
+the evaluator can detect decision-relevant information, but raw attention does
+not consistently provide it.
 
-Degradation-aware training does not remove this variation. The sampled policy
-distributions outperform the declared lower bounds, but all six graph-attention
-checkpoints choose no-op in the deterministic diagnostic. The study therefore
-audits explanations for sampled stochastic decisions; it does not establish a
-deployable argmax dispatcher. Overall, freshness and faithfulness must be
-checked separately for every policy checkpoint before release.
+Longer outages consistently increase exposure to stale vehicle information.
+However, the resulting changes in attention and faithfulness differ across
+trained policies. Some policies assign more attention to stale nodes, while
+others assign less. The study therefore does not find a single, consistent
+attention response to telemetry degradation.
+
+The findings also depend on how attention is extracted and on whether the
+selected action is dispatch or no-op. Most scorable decisions are no-op, and
+the smaller dispatch-only results do not reproduce the main associations
+consistently. Degradation-aware training does not remove this variation.
+
+The practical conclusion is that data freshness and explanation faithfulness
+must be checked separately for each trained policy. In the present experiment,
+the policy may still produce an action, but its raw attention weights should be
+withheld as an explanation.
 
 ## 1.6 Contributions
 
 The dissertation makes four main contributions:
 
-1. a paired clean/degraded benchmark that separates SUMO ground truth from the
-   observation received by the policy and distinguishes the tunnel trigger from
-   the observation-layer outage;
-2. an action-aware, type-matched faithfulness protocol for graphs in which
-   request nodes also define available actions, supported by LOO, overlap, and
-   action-stratified diagnostics;
-3. evidence across independently trained checkpoints, attention-extraction
-   choices, and tunnel and random triggers showing that stale-data exposure is
-   consistent but attention reallocation and faithfulness effects are not; and
-4. a reproducible freshness-aware explanation audit framework that converts
-   the evidence into explicit `ELIGIBLE`, `WITHHOLD`, and `INCOMPLETE` release
-   decisions.
+1. a reproducible paired clean/degraded benchmark that creates two observations
+   from the same SUMO state, separates physical ground truth from policy input,
+   and distinguishes the tunnel trigger from the observation-layer outage;
+2. an action-aware, type-matched evaluation protocol that reduces the deletion
+   bias caused by request nodes representing both information and available
+   actions, checked through LOO, overlap, and action-stratified diagnostics;
+3. evidence across independently trained checkpoints showing that stale-data
+   exposure increases consistently with outage duration, while direct paired
+   attention and DEF shifts vary across checkpoints and attention-extraction
+   choices, with the pattern also tested under random telemetry loss;
+4. an implemented freshness-aware explanation audit framework that combines
+   freshness, faithfulness, action composition, extraction sensitivity, and
+   checkpoint-consistency evidence to return an `ELIGIBLE`, `WITHHOLD`, or
+   `INCOMPLETE` explanation-release decision.
 
 ## 1.7 Dissertation structure
 
-Chapter 2 reviews MARL dispatch, graph attention, explanation faithfulness,
-and AoI. Chapter 3 describes the simulator, models, degradation layer,
-metrics, and statistical design. Chapter 4 reports the results. Chapter 5
-discusses what can and cannot be concluded. Chapter 6 closes with the practical
-implications for trustworthy fleet-dispatch explanations.
+**Chapter 1: Introduction.** Defines the research problem, research questions,
+objectives, main findings, and contributions.
+
+**Chapter 2: Literature Review.** Reviews MARL fleet dispatch, graph attention,
+explanation faithfulness, graph explainability, and telemetry freshness.
+
+**Chapter 3: Methodology.** Describes the SUMO environment, policy models,
+observation-layer degradation, faithfulness measures, evaluation design, and
+audit rules.
+
+**Chapter 4: Results.** Reports policy capability, construct-validity checks,
+faithfulness results, stale-data exposure, sensitivity analyses, and audit
+decisions.
+
+**Chapter 5: Discussion.** Interprets the findings, explains their limitations,
+and presents the freshness-aware explanation audit framework.
+
+**Chapter 6: Conclusion.** Answers the research questions and summarizes the
+practical implications for trustworthy fleet-dispatch explanations.

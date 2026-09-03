@@ -65,6 +65,10 @@ CITATIONS = {
     36: "Yuan et al., 2021",
     37: "Wang et al., 2025",
     38: "Sha et al., 2026",
+    39: "Yates et al., 2021",
+    40: "Bouteiller et al., 2021",
+    41: "Liotet et al., 2022",
+    42: "Tabassi, 2023",
 }
 
 TABLE_TITLES = {
@@ -90,6 +94,7 @@ TABLE_TITLES = {
 }
 
 FIGURES = [
+    ("Figure 1.1", "Stale data and the explanation-release decision"),
     ("Figure 3.1", "Local observation graph and request-to-action mapping"),
     ("Figure 3.2", "Graph-attention policy and audit channel"),
     ("Figure 3.3", "Training, selection and held-out evaluation"),
@@ -114,69 +119,71 @@ TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
 
 FIGURE_PAGES = {
-    "Figure 3.1": "10", "Figure 3.2": "11", "Figure 3.3": "13",
-    "Figure 3.4": "14", "Figure 3.5": "17",
-    "Figure 4.1": "23", "Figure 4.2": "24", "Figure 4.3": "26",
-    "Figure 4.4": "27", "Figure 4.5": "28",
-    "Figure 4.6": "29", "Figure 4.7": "30", "Figure 4.8": "31",
-    "Figure 4.9": "32", "Figure 4.10": "34", "Figure 4.11": "35",
-    "Figure 5.1": "37", "Figure 5.2": "41",
+    "Figure 1.1": "3",
+    "Figure 3.1": "11", "Figure 3.2": "12", "Figure 3.3": "14",
+    "Figure 3.4": "15", "Figure 3.5": "18",
+    "Figure 4.1": "24", "Figure 4.2": "25", "Figure 4.3": "27",
+    "Figure 4.4": "28", "Figure 4.5": "29",
+    "Figure 4.6": "30", "Figure 4.7": "31", "Figure 4.8": "32",
+    "Figure 4.9": "33", "Figure 4.10": "35", "Figure 4.11": "36",
+    "Figure 5.1": "39", "Figure 5.2": "43",
 }
 
 TABLE_PAGES = {
-    "Table 2.1": "7", "Table 3.1": "9", "Table 3.2": "11",
-    "Table 3.3": "12", "Table 3.4": "12", "Table 3.5": "15",
-    "Table 3.6": "17", "Table 3.7": "18",
-    "Table 4.1": "24", "Table 4.2": "25",
-    "Table 4.3": "25", "Table 4.4": "28", "Table 4.5": "30",
-    "Table 4.6": "31", "Table 4.7": "34", "Table 4.8": "35",
-    "Table 4.9": "36", "Table 5.1": "40", "Table 5.2": "41",
+    "Table 2.1": "9", "Table 3.1": "10", "Table 3.2": "13",
+    "Table 3.3": "13", "Table 3.4": "13", "Table 3.5": "16",
+    "Table 3.6": "19", "Table 3.7": "19",
+    "Table 4.1": "25", "Table 4.2": "26",
+    "Table 4.3": "26", "Table 4.4": "29", "Table 4.5": "31",
+    "Table 4.6": "32", "Table 4.7": "35", "Table 4.8": "36",
+    "Table 4.9": "37", "Table 5.1": "42", "Table 5.2": "43",
 }
 
 HEADING_PAGES = {
     "Chapter 1: Introduction": "1", "1.1 Context": "1",
     "1.2 Problem statement": "1", "1.3 Research questions": "1",
     "1.4 Objectives": "2", "1.5 Main findings": "2",
-    "1.6 Contributions": "3", "1.7 Dissertation structure": "3",
-    "Chapter 2: Literature Review": "4",
-    "2.1 Reinforcement learning for fleet dispatch": "4",
-    "2.2 Explainability in reinforcement learning": "4",
-    "2.3 Is attention an explanation?": "5",
-    "2.4 Explaining graph neural networks": "6",
-    "2.5 Faithfulness evaluation and its pitfalls": "6",
-    "2.6 Age of Information and telemetry degradation": "7",
-    "2.7 Research gap and positioning": "7",
-    "Chapter 3: Methodology": "9", "3.1 Study design": "9",
-    "3.2 SUMO environment and data": "9",
-    "3.3 Observation graph and action space": "9",
-    "3.4 Policy models and training": "10", "3.5 Telemetry degradation": "13",
-    "3.6 Explanation measures": "14",
-    "3.6.1 Decision-level explanation faithfulness": "14",
-    "3.6.2 Stale-node attention": "16", "3.7 Construct-validity audit": "16",
-    "3.8 Evaluation matrix": "17", "3.9 Hypotheses and statistics": "19",
-    "3.10 Audit decision implementation": "20", "3.11 Reproducibility": "21",
-    "3.12 Ethics and data governance": "22",
-    "Chapter 4: Results": "23",
-    "4.1 Policy capability and training stability": "23",
-    "4.2 Construct-validity audit": "25",
-    "4.3 Evaluator sensitivity and ranking controls": "25",
-    "4.4 Small-graph resolution": "28",
-    "4.5 Telemetry manipulation and stale exposure": "29",
-    "4.6 Exposure-conditioned paired audit": "30",
-    "4.7 Action-stratified diagnostic": "31",
-    "4.8 Random-trigger sensitivity analysis": "32",
-    "4.9 Faithfulness hypotheses": "35", "4.10 Result summary": "36",
-    "4.11 Demonstrative framework decision": "36",
-    "Chapter 5: Discussion": "37", "5.1 Answer to the central problem": "37",
-    "5.2 What the stale-exposure result means": "38",
-    "5.3 Dependence on checkpoint and analysis choice": "38",
-    "5.4 Role of the construct-validity audit": "39",
-    "5.5 Degradation-aware training": "39",
-    "5.6 Proposed audit framework": "40",
-    "5.6.1 Purpose and scope": "40", "5.6.2 Inputs, outputs and use": "41",
-    "5.6.3 Application to this study": "42",
-    "5.7 Limitations": "42", "5.8 Future work": "43",
-    "Chapter 6: Conclusion": "44",
+    "1.6 Contributions": "3", "1.7 Dissertation structure": "4",
+    "Chapter 2: Literature Review": "5",
+    "2.1 Reinforcement learning for fleet dispatch": "5",
+    "2.2 Explainability in reinforcement learning": "5",
+    "2.3 Is attention an explanation?": "6",
+    "2.4 Explaining graph neural networks": "7",
+    "2.5 Faithfulness evaluation and its pitfalls": "7",
+    "2.6 Age of Information and telemetry degradation": "8",
+    "2.7 From explanation evaluation to explanation assurance": "8",
+    "2.8 Research gap and positioning": "8",
+    "Chapter 3: Methodology": "10", "3.1 Study design": "10",
+    "3.2 SUMO environment and data": "10",
+    "3.3 Observation graph and action space": "10",
+    "3.4 Policy models and training": "11", "3.5 Telemetry degradation": "14",
+    "3.6 Explanation measures": "15",
+    "3.6.1 Decision-level explanation faithfulness": "15",
+    "3.6.2 Stale-node attention": "17", "3.7 Construct-validity audit": "17",
+    "3.8 Evaluation matrix": "18", "3.9 Hypotheses and statistics": "20",
+    "3.10 Audit decision implementation": "21", "3.11 Reproducibility": "22",
+    "3.12 Ethics and data governance": "23",
+    "Chapter 4: Results": "24",
+    "4.1 Policy capability and training stability": "24",
+    "4.2 Construct-validity audit": "26",
+    "4.3 Evaluator sensitivity and ranking controls": "26",
+    "4.4 Small-graph resolution": "29",
+    "4.5 Telemetry manipulation and stale exposure": "30",
+    "4.6 Exposure-conditioned paired audit": "31",
+    "4.7 Action-stratified diagnostic": "32",
+    "4.8 Random-trigger sensitivity analysis": "33",
+    "4.9 Faithfulness hypotheses": "36", "4.10 Result summary": "37",
+    "4.11 Demonstrative framework decision": "37",
+    "Chapter 5: Discussion": "39", "5.1 Answer to the central problem": "39",
+    "5.2 What the stale-exposure result means": "40",
+    "5.3 Dependence on checkpoint and analysis choice": "40",
+    "5.4 Role of the construct-validity audit": "41",
+    "5.5 Degradation-aware training": "41",
+    "5.6 Proposed audit framework": "42",
+    "5.6.1 Purpose and scope": "42", "5.6.2 Inputs, outputs and use": "43",
+    "5.6.3 Application to this study": "44",
+    "5.7 Limitations": "44", "5.8 Future work": "45",
+    "Chapter 6: Conclusion": "46",
 }
 
 
@@ -738,7 +745,9 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
     total = 9020
-    if title.startswith("Table 3.2:"):
+    if title.startswith("Table 2.1:"):
+        widths = [1500, 2500, 1800, 3220]
+    elif title.startswith("Table 3.2:"):
         widths = [1200, 1650, 2650, 3520]
     elif title.startswith("Table 3.5:"):
         widths = [2350, 1100, 1500, 1250, 1600, 1220]
@@ -1139,7 +1148,6 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
         ["RL", "Reinforcement Learning"],
         ["SUMO", "Simulation of Urban Mobility"],
         ["WAMSN", "Weighted Attention Mass on Stale Nodes"],
-        ["XAI", "Explainable Artificial Intelligence"],
         ["XRL", "Explainable Reinforcement Learning"],
     ]
     table = doc.add_table(rows=len(abbreviation_rows), cols=2)
@@ -1277,7 +1285,7 @@ def style_references_and_appendices(doc: Document) -> None:
             paragraph.paragraph_format.left_indent = Inches(0.5)
             paragraph.paragraph_format.first_line_indent = Inches(-0.5)
             paragraph.paragraph_format.line_spacing = 1.0
-            paragraph.paragraph_format.space_after = Pt(6)
+            paragraph.paragraph_format.space_after = Pt(2)
         if appendices and paragraph.text.strip():
             paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
         if paragraph.text == "Appendix B: Supporting Artefacts":
@@ -1311,7 +1319,7 @@ def replace_references(doc: Document) -> None:
         paragraph.paragraph_format.left_indent = Inches(0.5)
         paragraph.paragraph_format.first_line_indent = Inches(-0.5)
         paragraph.paragraph_format.line_spacing = 1.0
-        paragraph.paragraph_format.space_after = Pt(6)
+        paragraph.paragraph_format.space_after = Pt(2)
 
 
 def enable_field_updates(doc: Document) -> None:

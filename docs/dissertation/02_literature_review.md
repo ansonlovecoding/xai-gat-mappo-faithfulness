@@ -14,13 +14,14 @@ time. A decision for one taxi changes the demand available to others, so a
 collection of independent single-agent policies can create competition or
 duplicated assignments. Lin et al. [1] model city-scale fleet management as a
 cooperative multi-agent reinforcement-learning (MARL) problem. Qin, Zhu and Ye
-[2] show that reinforcement learning is used for matching, repositioning,
+[2] show that reinforcement learning (RL) is used for matching, repositioning,
 pricing, and route decisions, often under changing supply and demand.
 
 MARL offers several ways to represent coordination. MADDPG learns decentralized
 actors with centralized critics [3]. QMIX factorizes a team value into agent
-values while preserving a monotonic relation to the joint action [4]. MAPPO
-uses the more familiar PPO objective with centralized training and
+values while preserving a monotonic relation to the joint action [4].
+Multi-Agent Proximal Policy Optimization (MAPPO) uses the more familiar
+Proximal Policy Optimization (PPO) objective with centralized training and
 decentralized execution; its empirical stability makes it a practical baseline
 for cooperative tasks [5]. This dissertation adopts MAPPO because the research
 focus is the explanation attached to each taxi's local decision, not a new MARL
@@ -42,9 +43,9 @@ Recent dispatch methods continue to use relational structure. BMG-Q represents
 ride-pooling dispatch through a local bipartite matching graph [33]; CoopRide
 studies cooperation across city grids [37]; and DualG-MARL combines
 vehicle-state and task graphs [38]. These studies evaluate dispatch or
-scheduling quality rather than whether graph weights remain valid explanations
-when vehicle telemetry becomes stale. They provide useful task benchmarks, but
-not direct faithfulness benchmarks.
+scheduling quality rather than whether their learned graph or attention weights
+can be presented as faithful explanations when vehicle telemetry becomes stale.
+They provide useful task benchmarks, but not direct faithfulness benchmarks.
 
 ## 2.2 Explainability in reinforcement learning
 
@@ -77,9 +78,10 @@ preference for the attention map.
 
 ## 2.3 Is attention an explanation?
 
-The modern debate began with Jain and Wallace [12], who found that attention
-weights could be weakly correlated with other importance measures and that very
-different attention distributions could produce similar predictions.
+A widely cited challenge to attention-based explanations was presented by Jain
+and Wallace [12]. They found that attention weights could be weakly correlated
+with other importance measures and that very different attention distributions
+could produce similar predictions.
 Wiegreffe and Pinter [13] argued that this does not justify rejecting all
 attention explanations and proposed more careful tests. Serrano and Smith [14]
 likewise showed that removing high-attention items can affect outputs, but that
@@ -94,7 +96,7 @@ several different goals that should be evaluated separately.
 
 Jacovi and Goldberg [17] separate *plausibility*, which concerns whether an
 explanation looks reasonable to a person, from *faithfulness*, which concerns
-whether it reflects the model's actual reasoning process. This dissertation
+whether it reflects the model behavior that produced the output. This dissertation
 follows that distinction. It treats the attention weights as a candidate
 explanation and measures their decision relevance rather than accepting them
 simply because they are part of the actor.
@@ -175,37 +177,67 @@ visible instead of treating every near-zero DEF as decisive evidence.
 ## 2.6 Age of Information and telemetry degradation
 
 Age of Information (AoI) measures the time since the newest received update
-was generated [21]. It is widely used to study communication freshness and the
-effect of delayed state on estimation or control. The explanation question is
+was generated [21]. It is widely used to study communication freshness,
+including the relationship between update age, estimation, and control [39].
+The explanation question is
 different. A dispatch action and its attention map may remain available even
 when a vehicle reading has stopped updating. The operator can see a strong
 weight without knowing that its source is old.
 
+Delayed-observation reinforcement learning studies how an agent can continue to
+act when observations or actions arrive late. Bouteiller et al. [40] model
+random action and observation delays and propose a delay-correcting actor-critic
+method. Liotet et al. [41] learn a delayed policy from demonstrations produced
+without delay. Both studies focus on maintaining decision performance under
+delay. They do not test whether an explanation remains faithful when the policy
+receives stale telemetry.
+
 This dissertation uses AoI only as a node-level freshness descriptor and as
-the weight inside WAMSN. The experiment manipulates the duration of an
+the weight inside weighted attention mass on stale nodes (WAMSN). The
+experiment manipulates the duration of an
 observation-layer outage triggered by tunnel entry, not AoI itself. It therefore
 makes no causal claim that a larger AoI value lowers faithfulness. The analysis
 instead asks whether stale exposure and attention-based explanation behavior
 provide consistent evidence under controlled outages.
 
-## 2.7 Research gap and positioning
+## 2.7 From explanation evaluation to explanation assurance
+
+An explanation test becomes an assurance process when its result is used to
+decide whether an explanation should be shown to a user. The NIST AI Risk
+Management Framework treats testing, validation, documentation, and monitoring
+as parts of managing the risks of AI systems [42]. It provides general risk
+management guidance rather than a test for attention explanations.
+
+This dissertation applies that general assurance principle to a narrower
+question: whether an attention map has enough supporting evidence to be
+presented for a fleet-dispatch decision. The resulting framework checks the
+data status, the validity of the faithfulness test, and consistency across
+independently trained policies. It then returns one of three decisions:
+*ELIGIBLE*, *WITHHOLD*, or *INCOMPLETE*. These labels and their decision rules
+are proposed in this dissertation; they are not prescribed by the NIST
+framework.
+
+## 2.8 Research gap and positioning
 
 The literature supports four points: relational RL is appropriate for
 fleet dispatch; attention is easy to expose but disputed as an explanation;
 GNN faithfulness requires graph-aware perturbations; and stale state matters to
-operational control. Existing work has not brought these topics together as one
-explanation-assurance problem.
+operational control. Within the literature reviewed in this chapter, no study
+was identified that treats these topics as one explanation-assurance problem.
+This is a focused narrative review used to position the experiment; it is not a
+systematic or exhaustive literature search.
 
 Recent graph-based dispatch studies provide the closest task comparison, but
-they answer a different question from this dissertation. Table 2.1 summarizes
-their relationship to the present study.
+they answer a different question from this dissertation. Hu, Feng and Li [33]
+evaluate BMG-Q, Wang et al. [37] evaluate CoopRide, and Sha et al. [38] evaluate
+DualG-MARL. Table 2.1 summarizes how their aims differ from the present study.
 
-| Study | Setting and method | Main evaluation | Difference from this study |
+| Study | Data and graph design | Main purpose | Unaddressed assurance question |
 |---|---|---|---|
-| BMG-Q [33] | ride-pooling with a local bipartite matching graph | dispatch performance | does not audit graph weights under stale telemetry |
-| CoopRide [37] | cooperative MARL across city grids | city-scale dispatch performance | does not test node-level explanation faithfulness |
-| DualG-MARL [38] | state and task graphs for ride-sharing scheduling | scheduling performance | does not pair clean and degraded observations or audit freshness |
-| This dissertation | local GAT-MAPPO taxi/request graph | explanation assurance | tests paired telemetry degradation, action-aware faithfulness, and release conditions |
+| BMG-Q (2025) | ride-pooling with a local bipartite matching graph | dispatch quality and scalability | Are graph weights faithful under stale telemetry? |
+| CoopRide (2025) | cooperative MARL across city grids and real order data | city-scale dispatch quality | Are node-level explanations faithful? |
+| DualG-MARL (2026) | vehicle-state and task graphs with real order data | ride-sharing scheduling quality | Do explanations remain supported under paired telemetry degradation? |
+| This dissertation | local GAT-MAPPO taxi/request graphs in controlled SUMO runs | explanation assurance | Tests paired degradation, action-aware faithfulness, and release conditions. |
 
 These methods are not treated as performance baselines because their tasks,
 action spaces, and data-generation procedures differ. They are benchmark
@@ -213,8 +245,9 @@ literature for positioning the contribution: recent work improves relational
 dispatch, whereas this dissertation tests whether an exposed attention channel
 has enough evidence to be presented as an explanation.
 
-Within the graph- and RL-explainability studies reviewed in Sections 2.2-2.5,
-no evaluation protocol was identified that combines all of the following:
+Within the graph- and RL-explainability and delayed-observation studies reviewed
+in Sections 2.2-2.6, no evaluation protocol was identified that combines all of
+the following:
 
 - a graph-attention MARL action explained at decision level;
 - paired clean and stale versions of the same operational observation;
@@ -224,7 +257,7 @@ no evaluation protocol was identified that combines all of the following:
 
 This thesis contributes an audit protocol and an empirical test rather than a
 new dispatch algorithm. SUMO supplies a controlled simulated state [22]. The
-GAT-MAPPO policy supplies a realistic attention channel. The research contribution
+GAT-MAPPO policy supplies an auditable attention channel. The research contribution
 is to test whether that channel gives a reproducible freshness-aware and
 decision-relevant explanation, and to state clearly when the evidence cannot
 support that claim.

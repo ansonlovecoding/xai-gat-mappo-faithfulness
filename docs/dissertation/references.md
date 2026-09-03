@@ -8,6 +8,8 @@ Amara, K. et al. (2022) 'GraphFramEx: Towards systematic evaluation of explainab
 
 Bekkemoen, Y. (2024) 'Explainable reinforcement learning (XRL): A systematic literature review and taxonomy', *Machine Learning*, vol. 113, no. 1, pp. 355-441. Available at: https://doi.org/10.1007/s10994-023-06479-7.
 
+Bouteiller, Y., Ramstedt, S., Beltrame, G., Pal, C.J. and Binas, J. (2021) 'Reinforcement learning with random delays', in *Proceedings of the 9th International Conference on Learning Representations*. Available at: https://openreview.net/forum?id=QFYnKlBJYR.
+
 DeYoung, J. et al. (2020) 'ERASER: A benchmark to evaluate rationalized NLP models', in *Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics*, pp. 4443-4458. Available at: https://doi.org/10.18653/v1/2020.acl-main.408.
 
 Greydanus, S. et al. (2018) 'Visualizing and understanding Atari agents', in *Proceedings of the 35th International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 80, pp. 1792-1801. Available at: https://proceedings.mlr.press/v80/greydanus18a.html.
@@ -27,6 +29,8 @@ Jain, S. and Wallace, B.C. (2019) 'Attention is not explanation', in *Proceeding
 Kaul, S., Yates, R. and Gruteser, M. (2012) 'Real-time status: How often should one update?', in *Proceedings of IEEE INFOCOM*, pp. 2731-2735. Available at: https://doi.org/10.1109/INFCOM.2012.6195689.
 
 Lin, K. et al. (2018) 'Efficient large-scale fleet management via multi-agent deep reinforcement learning', in *Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, pp. 1774-1783. Available at: https://doi.org/10.1145/3219819.3219993.
+
+Liotet, P., Maran, D., Bisi, L. and Restelli, M. (2022) 'Delayed reinforcement learning by imitation', in *Proceedings of the 39th International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 162, pp. 13528-13556. Available at: https://proceedings.mlr.press/v162/liotet22a.html.
 
 Lipton, Z.C. (2018) 'The mythos of model interpretability', *Queue*, vol. 16, no. 3, pp. 31-57. Available at: https://doi.org/10.1145/3236386.3241340.
 
@@ -58,6 +62,8 @@ Serrano, S. and Smith, N.A. (2019) 'Is attention interpretable?', in *Proceeding
 
 Sha, J. et al. (2026) 'A multi-agent reinforcement learning scheduling algorithm integrating state graph and task graph structural modeling for ride-sharing dispatching', *Scientific Reports*, vol. 16, article 5461. Available at: https://doi.org/10.1038/s41598-026-35004-8.
 
+Tabassi, E. (2023) *Artificial Intelligence Risk Management Framework (AI RMF 1.0)*. NIST AI 100-1. Gaithersburg, MD: National Institute of Standards and Technology. Available at: https://doi.org/10.6028/NIST.AI.100-1.
+
 Vaswani, A. et al. (2017) 'Attention is all you need', *Advances in Neural Information Processing Systems*, vol. 30, pp. 5998-6008. Available at: https://proceedings.neurips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html.
 
 Velickovic, P. et al. (2018) 'Graph attention networks', in *Proceedings of the International Conference on Learning Representations*. Available at: https://openreview.net/forum?id=rJXMpikCZ.
@@ -65,6 +71,8 @@ Velickovic, P. et al. (2018) 'Graph attention networks', in *Proceedings of the 
 Wang, J. et al. (2025) 'CoopRide: Cooperate all grids in city-scale ride-hailing dispatching with multi-agent reinforcement learning', in *Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining*, vol. 1, pp. 1457-1468. Available at: https://doi.org/10.1145/3690624.3709205.
 
 Wiegreffe, S. and Pinter, Y. (2019) 'Attention is not not explanation', in *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing*, pp. 11-20. Available at: https://doi.org/10.18653/v1/D19-1002.
+
+Yates, R.D. et al. (2021) 'Age of information: An introduction and survey', *IEEE Journal on Selected Areas in Communications*, vol. 39, no. 5, pp. 1183-1210. Available at: https://doi.org/10.1109/JSAC.2021.3065072.
 
 Ying, R. et al. (2019) 'GNNExplainer: Generating explanations for graph neural networks', *Advances in Neural Information Processing Systems*, vol. 32, pp. 9240-9251. Available at: https://proceedings.neurips.cc/paper/2019/hash/d80b7040b773199015de6d3b4293c8ff-Abstract.html.
 

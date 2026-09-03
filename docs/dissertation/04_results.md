@@ -3,6 +3,8 @@
 The automated preflight audit passed 100 checks covering provenance and protocol
 requirements. Results are reported by training seed because decisions and
 episodes from one checkpoint do not constitute independent model replications.
+Unless stated otherwise, uncertainty is reported as a 95% confidence interval
+(CI).
 
 ## 4.1 Policy capability and training stability
 
@@ -369,9 +371,20 @@ close to zero and the relative-rate formulation is unstable.
 
 ## 4.10 Result summary
 
-Longer outages increase stale exposure, while greater WAMSN accompanies lower
-within-episode DEF. Yet seed reversals, no-op dominance, dispatch failures, and
-random-trigger exceptions mean that raw attention cannot provide a reliable
+The results answer the research questions as follows:
+
+- **RQ1:** under clean telemetry, raw attention does not consistently identify
+  decision-relevant nodes better than the type-matched random baseline;
+- **RQ2:** tunnel-triggered degradation changes stale-node attention, but the
+  direction of the paired change depends on the trained checkpoint;
+- **RQ3:** longer outages consistently increase stale exposure and usually
+  accompany lower within-policy DEF, but paired attention and DEF changes are
+  not consistent across checkpoints, action strata, or extraction choices; and
+- **RQ4:** degradation-aware training does not produce a more consistent
+  explanation response than clean training.
+
+Seed reversals, no-op dominance, dispatch-stratum failures, and extraction
+sensitivity therefore mean that raw attention cannot provide a reliable
 indication of data freshness or explanation faithfulness.
 
 ## 4.11 Demonstrative framework decision

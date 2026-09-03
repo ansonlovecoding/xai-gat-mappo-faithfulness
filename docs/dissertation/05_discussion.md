@@ -37,8 +37,9 @@ evidence path.
 ![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
 
 **Figure 5.1.** Cross-seed results for the four research questions. The matrix
-keeps clean faithfulness, paired attention response, paired DEF response, and
-the effect of degradation-aware training as separate findings.
+separates clean decision relevance, paired stale-node attention, consistency
+across duration and paired faithfulness tests, and the effect of
+degradation-aware training.
 
 ## 5.2 What the stale-exposure result means
 
@@ -159,11 +160,11 @@ evaluation on independently trained models.
 
 ### 5.6.1 Purpose and scope
 
-To address this risk, the thesis proposes a **freshness-aware explanation audit
-framework**. The framework leaves the trained policy unchanged and does not
-claim to make attention faithful. Instead, it sets rules for deciding when an
-attention map has enough evidence to be shown as an audited candidate
-explanation within a stated scope.
+To address this risk, the thesis develops and applies a **freshness-aware
+explanation audit framework**. The framework leaves the trained policy unchanged
+and does not claim to make attention faithful. Instead, it sets rules for
+deciding when an attention map has enough evidence to be shown as an audited
+candidate explanation within a stated scope.
 Table 5.1 links each observed risk to the required evidence and decision rule.
 
 | Observed risk | Required check | Evidence | Decision rule |
