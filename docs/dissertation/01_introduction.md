@@ -55,8 +55,9 @@ Four operational questions provide the evidence needed to answer it:
 3. **RQ3:** As outage duration increases, are changes in stale-node attention
    and decision-level faithfulness consistent across independently trained
    checkpoints?
-4. **RQ4:** Does degradation-aware training produce more consistent attention
-   and faithfulness responses under telemetry degradation than clean training?
+4. **RQ4:** In the tested configurations, does degradation-aware training
+   produce more consistent attention and faithfulness responses under telemetry
+   degradation than clean training?
 
 The construct-validity audit supports the interpretation of all four research
 questions. It is not a separate primary problem. Its purpose is to check that
@@ -78,10 +79,10 @@ The measurable objectives are to:
    triggered telemetry loss;
 4. assess whether stale-node attention and decision-level faithfulness
    responses are consistent across outage durations, independently trained
-   checkpoints, action strata, and attention-extraction choices;
-5. compare matched clean-trained and degradation-aware policies to
-   determine whether degradation-aware training improves the consistency of
-   attention and faithfulness responses;
+   checkpoints, action groups, and attention-extraction choices;
+5. compare the matched clean-trained and degradation-aware configurations to
+   assess whether the tested degradation-aware configuration gives more
+   consistent attention and faithfulness responses;
 6. implement and apply a freshness-aware explanation audit framework
    that converts the collected evidence into an `ELIGIBLE`, `WITHHOLD`, or
    `INCOMPLETE` explanation-release decision.
@@ -131,7 +132,7 @@ The dissertation makes four main contributions:
    and distinguishes the tunnel trigger from the observation-layer outage;
 2. an action-aware, type-matched evaluation protocol that reduces the deletion
    bias caused by request nodes representing both information and available
-   actions, checked through LOO, overlap, and action-stratified diagnostics;
+   actions, checked through LOO, overlap, and action-type diagnostics;
 3. evidence across independently trained checkpoints showing that stale-data
    exposure increases consistently with outage duration, while direct paired
    attention and DEF shifts vary across checkpoints and attention-extraction

@@ -2,26 +2,30 @@
 
 ## 5.1 Answer to the central problem
 
-The central problem is whether a complete graph-attention map can be trusted
-when some of its vehicle data are stale. The results show that **separate
-validation is required**. Raw attention alone provides no reliable evidence of
-freshness or decision relevance.
+The central problem is whether a graph-attention map can still be trusted when
+some of its vehicle data are stale. The experiment gives a two-part answer.
+First, the map remains available after tunnel-triggered loss freezes vehicle
+features at the observation boundary. Second, its displayed weights do not
+provide consistent evidence of either data freshness or decision relevance.
+The explanation can therefore outlive the data that support it, but its
+continued availability should not be treated as proof that it is reliable.
 
-This conclusion is based on several results, not one p-value. Longer outages increase stale-data
-exposure, and the combined within-policy tests associate that exposure with
-lower DEF in all six checkpoints. The direct clean-twin comparison is less
-uniform: attention reallocation and paired DEF shift have the expected signs
-in their point estimates for checkpoints trained with seeds 42 and 43, but
-both signs reverse for checkpoints trained with seed
-44 under both training regimes. The measured effects are also small.
+Three levels of evidence support this conclusion. **Exposure evidence** shows
+that longer outages increase the amount of attention attached to stale vehicle
+data. **Association evidence** shows that greater stale exposure is linked to
+lower DEF within all six checkpoints. **Direct paired evidence**, which compares
+clean and degraded observations of the same decision, is less consistent. The
+attention and DEF changes have the expected directions for checkpoints trained
+with seeds 42 and 43, but both directions reverse for seed 44 under both
+training regimes. The direct effects are also small. The association result
+therefore does not establish one general effect caused by telemetry degradation.
 
-The action-stratified results limit how broadly this finding can be interpreted. Chosen
-no-op actions account for 93.0% of scorable decisions with at least one
-available request, and the combined H1 and
-H4 patterns are not reproduced among dispatch actions. Four checkpoints also
-change paired-DEF direction between the combined and dispatch strata. The
-primary statistics describe the sampled action mixture, not a
-universal explanation response for both dispatch and no-op decisions.
+The analysis by action type further limits the conclusion. Chosen no-op actions
+account for 93.0% of scorable decisions with at least one available request,
+and the combined H1 and H4 patterns are not reproduced among dispatch actions.
+Four checkpoints also change paired-DEF direction between the combined and
+dispatch groups. The primary statistics describe the observed mix of sampled
+actions, not a universal response for both dispatch and no-op decisions.
 
 The supporting controls make the interpretation stronger and narrower. The
 LOO-ranked control produces a positive DEF for every checkpoint, so the
@@ -37,9 +41,8 @@ evidence path.
 ![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
 
 **Figure 5.1.** Cross-seed results for the four research questions. The matrix
-separates clean decision relevance, paired stale-node attention, consistency
-across duration and paired faithfulness tests, and the effect of
-degradation-aware training.
+separates clean decision relevance, paired stale-node attention, duration and
+faithfulness evidence, and the training comparison.
 
 ## 5.2 What the stale-exposure result means
 
@@ -54,7 +57,7 @@ exposure within most frozen policies. The paired audit asks a stricter
 question: does replacing the current observation with its degraded twin
 change attention and DEF at the same decision? That result changes sign across
 checkpoints trained with different seeds. Exposure, within-policy association,
-and paired intervention answer different questions and should be reported
+and direct paired change answer different questions and should be reported
 separately.
 
 ## 5.3 Dependence on checkpoint and analysis choice
@@ -68,8 +71,9 @@ shared pattern across the two model conditions suggests sensitivity to the
 trained checkpoint, not a stable response created by outage-aware training.
 The between-checkpoint range is larger than the observed difference between
 the two training-condition means. With only three training seeds, this is a
-descriptive comparison of selected checkpoints, not a variance decomposition
-or evidence that the seed value itself causes the response.
+descriptive comparison of selected checkpoints. It is not a formal estimate of
+the sources of variation, and it does not show that the seed value itself
+causes the response.
 
 The random-trigger sensitivity analysis checks whether this pattern is only an
 artifact of the fixed tunnel location. The same attention-shift direction
@@ -77,7 +81,7 @@ appears in five of six checkpoints, and the same probability-DEF direction in
 four of six. The
 seed-42 positive attention pattern and seed-44 negative pattern appear under
 both triggers and both training regimes. This makes a tunnel-only explanation
-less plausible, but it is not a complete location control. A fixed trigger
+less likely, but it is not a complete location control. A fixed trigger
 probability produces different realized exposure rates after each policy
 changes taxi trajectories, and the identity of the stale taxis also changes.
 The result supports checkpoint dependence but cannot establish one general
@@ -101,15 +105,15 @@ Query-row choice is similarly checkpoint-dependent. The selected request row
 improves request-action DEF by about 0.0064 for GAT seed 43 and 0.0073 for
 GAT-Outage seed 43, but changes little for the other four checkpoints. One
 query-row change therefore cannot be assumed to correct near-zero or negative
-DEF. An operator-facing attention map needs a declared and tested rule for
+DEF. An attention map shown to an operator needs a declared and tested rule for
 choosing its query, layer, and heads.
 
 The deterministic diagnostic reveals a related policy limitation. All six graph-attention
 checkpoints choose no-op in all 18 argmax episode evaluations, although their
 sampled policies outperform the declared lower bounds. This limitation does not
 invalidate the faithfulness calculations for sampled actions, but it means that
-the experiment audits stochastic policy decisions rather than a deployable
-deterministic dispatcher. The audit framework should evaluate the action rule
+the experiment audits decisions sampled from the policy distribution rather
+than a deployable deterministic dispatcher. The audit framework should evaluate the action rule
 intended for deployment and report any alternative action rule as a separate
 diagnostic.
 
@@ -141,20 +145,24 @@ advantage over that baseline at `k=3`. This is consistent with reduced
 resolution as larger subsets overlap, not proof that the top attention node is
 the model's true reason or that every three-node display is random.
 
-## 5.5 Degradation-aware training
+## 5.5 Why outage training did not solve the problem
 
-Training with 30-second outages does not solve the explanation problem.
+The tested configuration trained with 30-second outages does not solve the
+explanation problem.
 GAT-Outage shows the same seed-dependent attention and paired DEF directions
 as GAT. It strengthens the H1 and H4 associations, but does not make the direct
 degraded-minus-clean response consistent across independently trained
 policies. Under the matched-seed H5 rule, both adverse correlations would need
 to move closer to zero. Neither does so for any of the three seeds.
 
-These findings apply only to the tested form of robustness training. The reward
-contains no term for explanation stability or faithfulness, so task-reward
-optimization alone is not designed to align attention with a human explanation.
-A future intervention would need an explicit explanation objective and
-evaluation on independently trained models.
+These findings apply only to the tested form of robustness training. The
+comparison cannot show that the degraded training observations caused the
+difference because the two configurations have different optimization
+horizons. The reward also contains no term for explanation stability or
+faithfulness, so task-reward optimization alone is not designed to align
+attention with a human explanation. A future intervention would need a common
+training budget, independently trained models, and an explicit explanation
+objective.
 
 ## 5.6 Proposed audit framework
 
@@ -171,7 +179,7 @@ Table 5.1 links each observed risk to the required evidence and decision rule.
 |---|---|---|---|
 | Attention may be attached to stale data | Report freshness separately | AoI and WAMSN | Never infer freshness from attention strength |
 | Attention may not identify decision-relevant nodes | Use action-aware, type-matched tests | DEF, margin-DEF, and LOO | Do not claim a reason without evidence of decision relevance |
-| Combined results may be dominated by no-op | Report no-op and dispatch strata | Action counts and stratified DEF | Do not generalize a combined result across action types |
+| Combined results may be dominated by no-op | Report no-op and dispatch groups | Action counts and action-specific DEF | Do not generalize a combined result across action types |
 | The result may depend on attention extraction | Test the query row, layer, head, and aggregation | Sensitivity audits | Predeclare the extraction rule and report material sensitivity |
 | One checkpoint may not represent another | Audit each checkpoint before release | Per-checkpoint results | Repeat after retraining or replacement |
 | A pattern may not reproduce | Compare independent training runs | Results across seeds | Require a consistent conclusion across runs |
@@ -203,7 +211,7 @@ summarizes its inputs and outputs.
 | Candidate scope | frozen checkpoints, model names, training seeds, and held-out conditions | defines exactly what the decision covers |
 | Freshness evidence | paired clean/degraded records, AoI, stale-node masks, WAMSN, and stale-attention shift | separates data age from attention strength |
 | Faithfulness evidence | type-matched and action-protected DEF, LOO, and dispatch-action results | tests whether highlighted nodes matter to the action |
-| Stability evidence | action strata, extraction alternatives, checkpoint synthesis, deployment-action diagnostic, and trigger comparison | tests whether the conclusion survives relevant choices |
+| Stability evidence | action groups, extraction alternatives, checkpoint synthesis, deployment-action diagnostic, and trigger comparison | tests whether the conclusion survives relevant choices |
 | Audit output | per-check status, per-checkpoint decision, model decision, failed reasons, and permitted use | supports a traceable explanation-release decision |
 
 The operating procedure is:
@@ -214,7 +222,7 @@ The operating procedure is:
 3. run preflight to establish that the evidence is complete and valid to
    analyze;
 4. apply every release check to each checkpoint and then compare independent
-   training runs; and
+   training runs;
 5. present attention externally only if the result is `ELIGIBLE`, together with
    its freshness indicator and audited scope.
 
@@ -261,11 +269,16 @@ exposure remains scenario-dependent, although the event-aware audit scores
 every observed stale-exposed decision. It evaluates three independent training
 seeds per model. Three seeds reveal variation but cannot estimate the wider
 distribution of training outcomes. The selected policies
-pass the training stability gates and their stochastic evaluations outperform
+pass the training stability gates and their sampled-action evaluations outperform
 random and greedy lower bounds. However, every selected GAT checkpoint
-collapses to no-op under the small deterministic check. The study therefore
+selects no-op throughout the small deterministic check. The study therefore
 cannot establish deterministic deployment capability or isolate the
 contribution of graph edges to sampled capability.
+
+Clean GAT and GAT-Outage also use different maximum training budgets and
+learning-rate decay horizons, selected from validation-only stability
+diagnostics. Their matched-seed comparison describes the two fitted
+configurations but cannot isolate the effect of degraded training observations.
 
 The local graph is small. Type matching makes random top-k sets overlap heavily
 with the explanation, which compresses DEF. LOO is based on the same

@@ -16,7 +16,7 @@
   },
   "rules": {
     "decision_relevance_ci_floor": 0.0,
-    "minimum_dispatch_decisions": 1,
+    "minimum_dispatch_decisions": 20,
     "direction_epsilon": 1e-09,
     "require_deterministic_capability": false,
     "require_trigger_robustness": true
@@ -98,7 +98,7 @@
           "status": "PASS",
           "purpose": "Stop a no-op majority from hiding the result for actual dispatch actions.",
           "evidence": "Reported 26,278 no-op and 2,020 dispatch decisions separately.",
-          "decision_rule": "Both strata must be reported and dispatch must contain at least 1 decisions.",
+          "decision_rule": "Both strata must be reported and dispatch must contain at least 20 decisions.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/runs/dissertation_v9_exposure_audit/action_stratified.json"
           ]
@@ -284,7 +284,7 @@
           "status": "PASS",
           "purpose": "Stop a no-op majority from hiding the result for actual dispatch actions.",
           "evidence": "Reported 26,307 no-op and 1,945 dispatch decisions separately.",
-          "decision_rule": "Both strata must be reported and dispatch must contain at least 1 decisions.",
+          "decision_rule": "Both strata must be reported and dispatch must contain at least 20 decisions.",
           "sources": [
             "/Users/hongweilin/Documents/workspace/DMU/Final Dissertation/code/runs/dissertation_v9_exposure_audit/action_stratified.json"
           ]

@@ -1,14 +1,18 @@
 # 6. Conclusion
 
-This dissertation examined a practical assurance problem: a graph-attention
-map can remain visible and appear complete after some vehicle telemetry has
-become stale. Attention strength alone does not tell an operator whether its
-source is current or whether the highlighted node affected the action.
+This dissertation asked whether graph-attention explanations can be trusted
+after their supporting vehicle telemetry becomes stale. The results give a
+clear answer: **the attention map remains available, but this experiment does
+not validate its raw weights as reliable explanations under clean or degraded
+telemetry**. Attention strength alone does not show whether its source is
+current or whether the highlighted node influenced the selected action.
 
-The results lead to a clear conclusion: **this experiment does not validate raw
-graph-attention weights as reliable explanations under clean or degraded
-telemetry**. This is not a claim that every attention map is wrong. It means
-that attention cannot be assumed trustworthy by default.
+This is the faithfulness decoupling identified in the title. Under the tested
+observation-layer outages, an explanation can outlive its data because the map
+continues to be produced after some vehicle features have been frozen. The
+study does not claim that degradation always lowers a single faithfulness
+metric. It shows that the continued presence of an explanation is not matched
+by consistent evidence that the explanation is current and decision-relevant.
 
 The four research questions are answered as follows:
 
@@ -33,11 +37,13 @@ The four research questions are answered as follows:
   for two. The effect is small and reverses for the checkpoints trained with
   seed 44. Moreover, 93.0% of scorable decisions with at least one available
   request are no-op, and the H1/H4 patterns are not reproduced in the dispatch
-  stratum.
-- **RQ4: Does degradation-aware training produce more consistent attention and
-  faithfulness responses under telemetry degradation than clean training?** No.
-  GAT-Outage shows the same seed-dependent paired direction as GAT and provides
-  no consistent improvement.
+  group.
+- **RQ4: In the tested configurations, does degradation-aware training produce
+  more consistent attention and faithfulness responses under telemetry
+  degradation than clean training?** No. GAT-Outage shows the same
+  seed-dependent paired direction as GAT and provides no consistent improvement.
+  Because the configurations use different training budgets, this comparison
+  does not isolate degraded training observations as the cause.
 
 This interpretation depends on the construct-validity audit. Deleting a
 request can also delete an action, while deleting a peer taxi only hides
@@ -54,14 +60,17 @@ trigger mechanisms.
 
 The performance results also have an important limit. Sampled policies
 outperform the basic lower bounds, but all six graph-attention checkpoints choose no-op in 18 of 18
-deterministic diagnostic episodes. The study audits explanations for sampled
-stochastic actions; it does not demonstrate a deployable argmax dispatcher.
+deterministic diagnostic episodes. The study audits explanations for actions
+drawn from the policy distribution; it does not demonstrate a deployable argmax
+dispatcher.
 
-In this thesis, **faithfulness decoupling** refers to the gap between a
-visible explanation and valid supporting evidence. An attention map can
-outlive the freshness of its inputs without giving a stable indication of
-decision relevance. The gap does not require DEF to decline monotonically with
-outage duration.
+Taken together, the research questions separate three findings. Stale-data
+exposure rises with outage duration. Higher exposure is associated with lower
+DEF within the tested checkpoints. However, the direct paired effect of
+degradation is small and changes direction across checkpoints. These results
+do not contradict one another: exposure, association, and direct paired change
+answer different questions. They show why freshness and faithfulness must be
+reported separately.
 
 The freshness-aware explanation audit framework addresses this gap. It reports
 freshness and action composition separately, uses
@@ -90,3 +99,11 @@ implemented, the four research questions were evaluated, and the collected
 evidence produced a `WITHHOLD` decision for every tested checkpoint. Completion
 refers to execution of the planned study, not support for every hypothesis or
 achievement of an `ELIGIBLE` result.
+
+In summary, under telemetry degradation in graph-attention MARL fleet dispatch,
+an explanation can remain visible after part of its supporting observation has
+become stale. Because the displayed attention does not provide consistent
+evidence of freshness or decision relevance, it should not be released as an
+explanation without a separate audit. The contribution of this study is an
+evidence-based way to make that release decision, not a claim that raw
+attention is inherently trustworthy or that degradation always reduces DEF.

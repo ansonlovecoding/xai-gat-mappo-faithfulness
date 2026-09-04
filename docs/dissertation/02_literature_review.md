@@ -17,9 +17,10 @@ cooperative multi-agent reinforcement-learning (MARL) problem. Qin, Zhu and Ye
 [2] show that reinforcement learning (RL) is used for matching, repositioning,
 pricing, and route decisions, often under changing supply and demand.
 
-MARL offers several ways to represent coordination. MADDPG learns decentralized
-actors with centralized critics [3]. QMIX factorizes a team value into agent
-values while preserving a monotonic relation to the joint action [4].
+MARL offers several ways to represent coordination. Multi-Agent Deep
+Deterministic Policy Gradient (MADDPG) learns decentralized actors with
+centralized critics [3]. QMIX factorizes a team value into agent values while
+preserving a monotonic relation to the joint action [4].
 Multi-Agent Proximal Policy Optimization (MAPPO) uses the more familiar
 Proximal Policy Optimization (PPO) objective with centralized training and
 decentralized execution; its empirical stability makes it a practical baseline
@@ -39,10 +40,11 @@ easy to visualize, which makes them tempting to present as reasons for an
 action. Ease of display, however, is not evidence that the weights identify the
 information that caused the decision.
 
-Recent dispatch methods continue to use relational structure. BMG-Q represents
-ride-pooling dispatch through a local bipartite matching graph [33]; CoopRide
-studies cooperation across city grids [37]; and DualG-MARL combines
-vehicle-state and task graphs [38]. These studies evaluate dispatch or
+Recent dispatch methods continue to use relational structure. Hu, Feng and Li
+[33] propose Localized Bipartite Match Graph Attention Q-learning (BMG-Q), which
+uses a local bipartite graph for ride-pooling dispatch. CoopRide studies
+cooperation across city grids [37], while DualG-MARL combines vehicle-state and
+task graphs [38]. These studies evaluate dispatch or
 scheduling quality rather than whether their learned graph or attention weights
 can be presented as faithful explanations when vehicle telemetry becomes stale.
 They provide useful task benchmarks, but not direct faithfulness benchmarks.
@@ -137,7 +139,7 @@ context only. Deleting them creates different interventions. This action-linked
 graph structure motivates the
 construct-validity audit in Section 3.7.
 
-## 2.5 Faithfulness evaluation and its pitfalls
+## 2.5 Evaluating faithfulness: methods and pitfalls
 
 Comprehensiveness and sufficiency are common perturbation measures. In the
 ERASER benchmark, comprehensiveness asks how much a prediction weakens when the
@@ -252,7 +254,7 @@ the following:
 - a graph-attention MARL action explained at decision level;
 - paired clean and stale versions of the same operational observation;
 - explicit measurement of attention placed on stale telemetry;
-- a control for graph nodes that also remove available actions; and
+- a control for graph nodes that also remove available actions;
 - replication across independently trained checkpoints.
 
 This thesis contributes an audit protocol and an empirical test rather than a

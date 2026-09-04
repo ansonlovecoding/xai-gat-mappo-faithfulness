@@ -70,7 +70,7 @@ evidence_root = "results/dissertation_v9_exposure_audit"
 output_root = "results/dissertation_v9_exposure_audit/explanation_audit"
 controls_summary = "faithfulness_controls/summary.json"
 decision_relevance_ci_floor = 0.0
-minimum_dispatch_decisions = 1
+minimum_dispatch_decisions = 20
 direction_epsilon = 1e-9
 # The audited decisions use stochastic policy sampling. Argmax remains a
 # descriptive diagnostic and becomes a gate only for an argmax deployment.

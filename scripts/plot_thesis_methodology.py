@@ -129,13 +129,17 @@ def observation_action_graph():
     fig, ax = canvas("Local Observation Graph for One Idle Taxi", (16, 8.2))
 
     nodes = {
-        "self": (0.31, 0.49),
-        "taxi 1": (0.13, 0.72),
-        "taxi 2": (0.10, 0.43),
-        "taxi 3": (0.18, 0.18),
-        "request 1": (0.52, 0.72),
-        "request 2": (0.58, 0.47),
-        "request 3": (0.50, 0.19),
+        "self": (0.32, 0.49),
+        "taxi 1": (0.14, 0.78),
+        "taxi 2": (0.08, 0.63),
+        "taxi 3": (0.07, 0.43),
+        "taxi 4": (0.12, 0.24),
+        "taxi 5": (0.24, 0.13),
+        "request 1": (0.48, 0.80),
+        "request 2": (0.58, 0.67),
+        "request 3": (0.61, 0.49),
+        "request 4": (0.57, 0.30),
+        "request 5": (0.47, 0.16),
     }
 
     # Valid nodes are fully connected. The darker arrows highlight the
@@ -148,66 +152,77 @@ def observation_action_graph():
 
     attention_widths = {
         "taxi 1": 1.2,
-        "taxi 2": 3.6,
-        "taxi 3": 1.8,
+        "taxi 2": 1.7,
+        "taxi 3": 3.6,
+        "taxi 4": 1.4,
+        "taxi 5": 2.0,
         "request 1": 2.8,
         "request 2": 1.4,
         "request 3": 2.2,
+        "request 4": 1.1,
+        "request 5": 2.5,
     }
     for name, width in attention_widths.items():
         ax.add_patch(FancyArrowPatch(
             nodes[name], nodes["self"], arrowstyle="-|>", mutation_scale=14,
             linewidth=width, color="#343A40", alpha=0.82,
-            shrinkA=28, shrinkB=31, zorder=2,
+            shrinkA=23, shrinkB=28, zorder=2,
         ))
 
-    def graph_node(name, label, colour, size=3000):
+    def graph_node(name, label, colour, size=2200):
         x, y = nodes[name]
         ax.scatter([x], [y], s=size, color=colour, edgecolor="white",
                    linewidth=2.5, zorder=4)
-        ax.text(x, y, label, ha="center", va="center", fontsize=10.5,
+        ax.text(x, y, label, ha="center", va="center", fontsize=9.0,
                 color="white", fontweight="bold", zorder=5,
                 linespacing=1.15)
 
-    graph_node("self", "SELF\nT0", BLUE, size=3900)
-    for index in range(1, 4):
+    graph_node("self", "SELF\nT0", BLUE, size=3300)
+    for index in range(1, 6):
         graph_node(f"taxi {index}", f"PEER\nT{index}", GREEN)
-    for index in range(1, 4):
+    for index in range(1, 6):
         graph_node(f"request {index}", f"REQ\nR{index}", ORANGE)
 
-    stale_x, stale_y = nodes["taxi 2"]
-    ax.scatter([stale_x], [stale_y], s=3800, facecolors="none",
+    stale_x, stale_y = nodes["taxi 3"]
+    ax.scatter([stale_x], [stale_y], s=2900, facecolors="none",
                edgecolors="#B02A37", linewidth=3.0, zorder=6)
-    ax.text(stale_x - 0.005, stale_y - 0.095, "stale: AoI = 30 s",
+    ax.text(stale_x - 0.005, stale_y - 0.085, "stale: AoI = 30 s",
             ha="center", va="top", fontsize=10, color="#B02A37",
             fontweight="bold")
 
-    ax.text(0.12, 0.84, "Peer-taxi context", ha="center", fontsize=12,
+    ax.text(0.13, 0.87, "Peer-taxi context", ha="center", fontsize=12,
             color=GREEN, fontweight="bold")
-    ax.text(0.52, 0.84, "Passenger requests", ha="center", fontsize=12,
+    ax.text(0.53, 0.87, "Passenger requests", ha="center", fontsize=12,
             color=ORANGE, fontweight="bold")
-    ax.text(0.31, 0.60, "attention into\nthe acting taxi",
+    ax.text(0.32, 0.61, "attention into\nthe acting taxi",
             ha="center", va="center", fontsize=9.5, color="#202020",
             fontweight="bold", zorder=7)
 
-    box(ax, 0.76, 0.25, 0.21, 0.53, "Actor action set",
+    box(ax, 0.76, 0.18, 0.21, 0.64, "Actor action set",
         "action 0   no-op\naction 1   serve R1\n"
-        "action 2   serve R2\naction 3   serve R3",
-        BLUE, body_size=10.5)
-    action_y = {"request 1": 0.47, "request 2": 0.43, "request 3": 0.39}
+        "action 2   serve R2\naction 3   serve R3\n"
+        "action 4   serve R4\naction 5   serve R5",
+        BLUE, body_size=9.7)
+    action_y = {
+        "request 1": 0.57,
+        "request 2": 0.52,
+        "request 3": 0.47,
+        "request 4": 0.42,
+        "request 5": 0.37,
+    }
     for name, target_y in action_y.items():
         ax.add_patch(FancyArrowPatch(
             nodes[name], (0.76, target_y), arrowstyle="-|>",
             mutation_scale=14, linewidth=1.8, color=ORANGE,
-            linestyle="--", shrinkA=28, shrinkB=4, zorder=3,
+            linestyle="--", shrinkA=23, shrinkB=4, zorder=3,
             connectionstyle="arc3,rad=0.05",
         ))
 
-    ax.text(0.34, 0.075,
+    ax.text(0.34, 0.055,
             "Valid nodes are fully connected; padded nodes are masked.  "
             "Line width shows relative attention into the self taxi.",
             ha="center", va="center", fontsize=10.5, color="#303030")
-    ax.text(0.865, 0.14,
+    ax.text(0.865, 0.105,
             "A request node defines an action.\nA peer taxi only supplies context.",
             ha="center", va="center", fontsize=10.5, color="#202020",
             fontweight="bold")
@@ -243,7 +258,7 @@ def model_training_design():
             fontsize=11.5, fontweight="bold", color=GREY)
 
     pipeline = [
-        (0.145, "Train all three", "40 / 50 / 50 epochs\nseeds 42, 43, 44\nsave every 10 epochs", BLUE),
+        (0.145, "Train all three", "GAT 40 | MLP 50 | Outage 50\nvalidation-derived budgets\nseeds 42, 43, 44", BLUE),
         (0.38, "Validate and select",
          "validation demand\npickups first; reward tie-break", GREEN),
         (0.615, "Freeze", "one checkpoint\nper model and seed", GREY),

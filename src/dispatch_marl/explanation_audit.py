@@ -27,7 +27,7 @@ class AuditRules:
     """Predeclared rules used to convert evidence into an audit decision."""
 
     decision_relevance_ci_floor: float = 0.0
-    minimum_dispatch_decisions: int = 1
+    minimum_dispatch_decisions: int = 20
     direction_epsilon: float = 1e-9
     require_deterministic_capability: bool = True
     require_trigger_robustness: bool = True

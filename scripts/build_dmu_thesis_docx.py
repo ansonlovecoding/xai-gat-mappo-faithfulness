@@ -76,16 +76,18 @@ TABLE_TITLES = {
     (3, 1): "Observation graph node types and roles",
     (3, 2): "Policy conditions used in the experiment",
     (3, 3): "Validation-selected checkpoint indices (zero-based)",
-    (3, 4): "Shared training and optimization settings",
-    (3, 5): "Explanation measures and roles",
-    (3, 6): "Held-out evaluation structure and episode counts",
-    (3, 7): "Telemetry conditions used in held-out evaluation",
+    (3, 4): "Training and optimization settings",
+    (3, 5): "Checkpoint-acceptance criteria",
+    (3, 6): "Explanation measures and roles",
+    (3, 7): "Held-out evaluation structure and episode counts",
+    (3, 8): "Telemetry conditions used in held-out evaluation",
+    (3, 9): "Hypothesis map and analysis roles",
     (4, 1): "Policy capability on held-out demand",
     (4, 2): "Construct-validity audit of random controls",
     (4, 3): "Clean-telemetry faithfulness controls by training seed",
     (4, 4): "Valid node-count distribution in scored graphs",
     (4, 5): "Exposure-conditioned paired attention and DEF shifts",
-    (4, 6): "Action composition and dispatch-stratified DEF diagnostic",
+    (4, 6): "Action composition and dispatch-only DEF",
     (4, 7): "Tunnel-triggered and random-loss sensitivity results",
     (4, 8): "Hypothesis outcomes across training seeds",
     (4, 9): "Freshness-aware explanation audit decisions",
@@ -100,7 +102,7 @@ FIGURES = [
     ("Figure 3.3", "Training, selection and held-out evaluation"),
     ("Figure 3.4", "Tunnel-triggered observation-layer telemetry degradation"),
     ("Figure 3.5", "Construct-validity controls for action-linked request nodes"),
-    ("Figure 4.1", "GAT training and checkpoint-selection diagnostics"),
+    ("Figure 4.1", "GAT and GAT-Outage training and checkpoint-selection diagnostics"),
     ("Figure 4.2", "Clean-telemetry pickups by training seed"),
     ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
     ("Figure 4.4", "Attention aggregation sensitivity"),
@@ -108,9 +110,9 @@ FIGURES = [
     ("Figure 4.6", "Top-k overlap and DEF resolution"),
     ("Figure 4.7", "Outage-duration sweep by policy and training seed"),
     ("Figure 4.8", "Paired attention and faithfulness shift by training seed"),
-    ("Figure 4.9", "Action-stratified faithfulness diagnostic"),
+    ("Figure 4.9", "Faithfulness analysis by action type"),
     ("Figure 4.10", "Tunnel-triggered and random telemetry-loss sensitivity"),
-    ("Figure 4.11", "WAMSN-DEF correlation by training seed"),
+    ("Figure 4.11", "WAMSN-DEF relationship and H4 result"),
     ("Figure 5.1", "Cross-seed evidence matrix"),
     ("Figure 5.2", "Freshness-aware explanation audit workflow"),
 ]
@@ -120,23 +122,24 @@ TABLES = [(f"Table {chapter}.{number}", title)
 
 FIGURE_PAGES = {
     "Figure 1.1": "3",
-    "Figure 3.1": "11", "Figure 3.2": "12", "Figure 3.3": "14",
-    "Figure 3.4": "15", "Figure 3.5": "18",
-    "Figure 4.1": "24", "Figure 4.2": "25", "Figure 4.3": "27",
-    "Figure 4.4": "28", "Figure 4.5": "29",
-    "Figure 4.6": "30", "Figure 4.7": "31", "Figure 4.8": "32",
-    "Figure 4.9": "33", "Figure 4.10": "35", "Figure 4.11": "36",
-    "Figure 5.1": "39", "Figure 5.2": "43",
+    "Figure 3.1": "11", "Figure 3.2": "13", "Figure 3.3": "15",
+    "Figure 3.4": "16", "Figure 3.5": "18",
+    "Figure 4.1": "25", "Figure 4.2": "26", "Figure 4.3": "28",
+    "Figure 4.4": "29", "Figure 4.5": "30",
+    "Figure 4.6": "31", "Figure 4.7": "32", "Figure 4.8": "33",
+    "Figure 4.9": "34", "Figure 4.10": "36", "Figure 4.11": "37",
+    "Figure 5.1": "40", "Figure 5.2": "44",
 }
 
 TABLE_PAGES = {
-    "Table 2.1": "9", "Table 3.1": "10", "Table 3.2": "13",
-    "Table 3.3": "13", "Table 3.4": "13", "Table 3.5": "16",
-    "Table 3.6": "19", "Table 3.7": "19",
-    "Table 4.1": "25", "Table 4.2": "26",
-    "Table 4.3": "26", "Table 4.4": "29", "Table 4.5": "31",
-    "Table 4.6": "32", "Table 4.7": "35", "Table 4.8": "36",
-    "Table 4.9": "37", "Table 5.1": "42", "Table 5.2": "43",
+    "Table 2.1": "9", "Table 3.1": "11", "Table 3.2": "13",
+    "Table 3.3": "13", "Table 3.4": "14", "Table 3.5": "14",
+    "Table 3.6": "17", "Table 3.7": "19", "Table 3.8": "19",
+    "Table 3.9": "21",
+    "Table 4.1": "26", "Table 4.2": "27",
+    "Table 4.3": "27", "Table 4.4": "30", "Table 4.5": "32",
+    "Table 4.6": "33", "Table 4.7": "36", "Table 4.8": "37",
+    "Table 4.9": "38", "Table 5.1": "43", "Table 5.2": "44",
 }
 
 HEADING_PAGES = {
@@ -149,41 +152,44 @@ HEADING_PAGES = {
     "2.2 Explainability in reinforcement learning": "5",
     "2.3 Is attention an explanation?": "6",
     "2.4 Explaining graph neural networks": "7",
-    "2.5 Faithfulness evaluation and its pitfalls": "7",
+    "2.5 Evaluating faithfulness: methods and pitfalls": "7",
     "2.6 Age of Information and telemetry degradation": "8",
     "2.7 From explanation evaluation to explanation assurance": "8",
     "2.8 Research gap and positioning": "8",
     "Chapter 3: Methodology": "10", "3.1 Study design": "10",
     "3.2 SUMO environment and data": "10",
     "3.3 Observation graph and action space": "10",
-    "3.4 Policy models and training": "11", "3.5 Telemetry degradation": "14",
-    "3.6 Explanation measures": "15",
-    "3.6.1 Decision-level explanation faithfulness": "15",
-    "3.6.2 Stale-node attention": "17", "3.7 Construct-validity audit": "17",
-    "3.8 Evaluation matrix": "18", "3.9 Hypotheses and statistics": "20",
-    "3.10 Audit decision implementation": "21", "3.11 Reproducibility": "22",
-    "3.12 Ethics and data governance": "23",
-    "Chapter 4: Results": "24",
-    "4.1 Policy capability and training stability": "24",
-    "4.2 Construct-validity audit": "26",
-    "4.3 Evaluator sensitivity and ranking controls": "26",
-    "4.4 Small-graph resolution": "29",
-    "4.5 Telemetry manipulation and stale exposure": "30",
-    "4.6 Exposure-conditioned paired audit": "31",
-    "4.7 Action-stratified diagnostic": "32",
-    "4.8 Random-trigger sensitivity analysis": "33",
-    "4.9 Faithfulness hypotheses": "36", "4.10 Result summary": "37",
-    "4.11 Demonstrative framework decision": "37",
-    "Chapter 5: Discussion": "39", "5.1 Answer to the central problem": "39",
-    "5.2 What the stale-exposure result means": "40",
-    "5.3 Dependence on checkpoint and analysis choice": "40",
-    "5.4 Role of the construct-validity audit": "41",
-    "5.5 Degradation-aware training": "41",
-    "5.6 Proposed audit framework": "42",
-    "5.6.1 Purpose and scope": "42", "5.6.2 Inputs, outputs and use": "43",
-    "5.6.3 Application to this study": "44",
-    "5.7 Limitations": "44", "5.8 Future work": "45",
-    "Chapter 6: Conclusion": "46",
+    "3.4 Policy models and training": "11", "3.5 Telemetry degradation": "15",
+    "3.6 Explanation measures": "16",
+    "3.6.1 Decision-level explanation faithfulness": "16",
+    "3.6.2 Stale-node attention": "17", "3.7 Construct-validity audit": "18",
+    "3.8 Evaluation design": "19", "3.8.1 Primary evaluation": "19",
+    "3.8.2 Supporting analyses": "21",
+    "3.9 Hypotheses and statistical analysis": "21",
+    "3.9.1 Statistical procedure": "22", "3.9.2 Interpretation limits": "22",
+    "3.10 Audit decision implementation": "22", "3.11 Reproducibility": "23",
+    "3.12 Ethics and data governance": "24",
+    "Chapter 4: Results": "25",
+    "4.1 Policy capability and training stability": "25",
+    "4.2 Construct-validity audit": "27",
+    "4.3 Evaluator sensitivity and ranking controls": "27",
+    "4.4 Small-graph resolution": "30",
+    "4.5 Telemetry manipulation and stale exposure": "31",
+    "4.6 Exposure-conditioned paired audit": "32",
+    "4.7 Analysis by action type": "33",
+    "4.8 Random-trigger sensitivity analysis": "34",
+    "4.9 Faithfulness hypotheses": "37", "4.10 Result summary": "38",
+    "4.11 Demonstrative framework decision": "38",
+    "Chapter 5: Discussion": "40", "5.1 Answer to the central problem": "40",
+    "5.2 What the stale-exposure result means": "41",
+    "5.3 Dependence on checkpoint and analysis choice": "41",
+    "5.4 Role of the construct-validity audit": "42",
+    "5.5 Why outage training did not solve the problem": "42",
+    "5.6 Proposed audit framework": "43",
+    "5.6.1 Purpose and scope": "43", "5.6.2 Inputs, outputs and use": "44",
+    "5.6.3 Application to this study": "45",
+    "5.7 Limitations": "45", "5.8 Future work": "46",
+    "Chapter 6: Conclusion": "47",
 }
 
 
@@ -425,18 +431,34 @@ def equation_spec(code: str) -> tuple[str, str] | None:
         )
         return "(3.3)", _mathml(formula)
 
-    if code.startswith("Comp(R_k)"):
+    if code.startswith("r_train,i,t ="):
+        formula = _mrow(
+            _subsup(
+                _mi("r"),
+                _mrow(_mi("i"), _mo(","), _mi("t")),
+                _mtext("train"),
+            ),
+            _mo("="),
+            _sub(_mi("r"), _mi("t")),
+            _mo("+"),
+            _mn("1.0"),
+            _sub(_mi("I"), _mtext("successful dispatch by i at t")),
+        )
+        return "(3.4)", _mathml(formula)
+
+    if code.startswith("Comp(R_k; a)"):
         r_k = _sub(_mi("R"), _mi("k"))
         b_k_b = _subsup(_mi("B"), _mi("k"), _mi("b"))
+        action = _mi("a")
         score = lambda graph: _call("s", graph, _mi("a"))
         rows = (
-            _mrow(_call("Comp", r_k), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("without"), r_k))),
-            _mrow(_call("Suff", r_k), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("keeping only"), r_k))),
-            _mrow(_sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(")"), _mo("="), _call("Comp", r_k), _mo("-"), _sub(_mtext("mean"), _mi("b")), _call("Comp", b_k_b)),
-            _mrow(_sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(")"), _mo("="), _sub(_mtext("mean"), _mi("b")), _call("Suff", b_k_b), _mo("-"), _call("Suff", r_k)),
-            _mrow(_mtext("DEF"), _mo("="), _sub(_mtext("mean"), _mi("k")), _frac(_mn(1), _mn(2)), _mo("["), _sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(")"), _mo("+"), _sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(")"), _mo("]")),
+            _mrow(_call("Comp", r_k, action), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("∖"), r_k))),
+            _mrow(_call("Suff", r_k, action), _mo("="), score(_mi("G")), _mo("-"), score(_mrow(_mi("G"), _mo("["), r_k, _mo("]")))),
+            _mrow(_sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(";"), action, _mo(")"), _mo("="), _call("Comp", r_k, action), _mo("-"), _sub(_mtext("mean"), _mi("b")), _call("Comp", b_k_b, action)),
+            _mrow(_sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(";"), action, _mo(")"), _mo("="), _sub(_mtext("mean"), _mi("b")), _call("Suff", b_k_b, action), _mo("-"), _call("Suff", r_k, action)),
+            _mrow(_call("DEF", action), _mo("="), _sub(_mtext("mean"), _mi("k")), _frac(_mn(1), _mn(2)), _mo("["), _sub(_mi("g"), _mtext("comp")), _mo("("), _mi("k"), _mo(";"), action, _mo(")"), _mo("+"), _sub(_mi("g"), _mtext("suff")), _mo("("), _mi("k"), _mo(";"), action, _mo(")"), _mo("]")),
         )
-        return "(3.4)", _mathml(_matrix(*rows))
+        return "(3.5)", _mathml(_matrix(*rows))
 
     if code.startswith("WAMSN ="):
         numerator = _mrow(
@@ -448,12 +470,12 @@ def equation_spec(code: str) -> tuple[str, str] | None:
             _sub(_mi("Σ"), _mi("i")), _mo("("),
             _sub(_mtext("attention"), _mi("i")), _mo(")"),
         )
-        return "(3.5)", _mathml(_mrow(_mtext("WAMSN"), _mo("="), _frac(_mrow(numerator), _mrow(denominator))))
+        return "(3.6)", _mathml(_mrow(_mtext("WAMSN"), _mo("="), _frac(_mrow(numerator), _mrow(denominator))))
 
     count_specs = {
-        "3 models x": ("(3.6)", "3 x 3 x 8 x 3 = 216"),
-        "3 training seeds x 5 conditions": ("(3.7)", "2 x 3 x 5 x 8 x 6 = 1,440"),
-        "2 models x 3 training seeds": ("(3.8)", "2 x 3 x 2 x 8 x 3 = 288"),
+        "3 models x": ("(3.7)", "3 x 3 x 8 x 3 = 216"),
+        "2 models x 3 training seeds x 5 conditions": ("(3.8)", "2 x 3 x 5 x 8 x 6 = 1,440"),
+        "2 models x 3 training seeds x 2 conditions": ("(3.9)", "2 x 3 x 2 x 8 x 3 = 288"),
     }
     for prefix, (number, expression) in count_specs.items():
         if code.startswith(prefix):
@@ -750,11 +772,17 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     elif title.startswith("Table 3.2:"):
         widths = [1200, 1650, 2650, 3520]
     elif title.startswith("Table 3.5:"):
-        widths = [2350, 1100, 1500, 1250, 1600, 1220]
+        widths = [5900, 3120]
     elif title.startswith("Table 3.6:"):
-        widths = [1150, 2550, 2200, 3120]
+        widths = [2100, 2850, 4070]
+    elif title.startswith("Table 3.7:"):
+        widths = [2800, 1000, 1400, 1100, 1500, 1220]
+    elif title.startswith("Table 3.8:"):
+        widths = [1100, 2500, 2000, 3420]
+    elif title.startswith("Table 3.9:"):
+        widths = [1100, 2900, 3000, 2020]
     elif title.startswith("Table 4.6:"):
-        widths = [1700, 800, 800, 1800, 3920]
+        widths = [1700, 950, 950, 1850, 3570]
     elif title.startswith("Table 4.9:"):
         widths = [2100, 1300, 1550, 4070]
     elif title.startswith("Table 5.1:"):
@@ -779,12 +807,16 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
             paragraph.paragraph_format.space_after = Pt(0)
             paragraph.paragraph_format.line_spacing = 1.0
             paragraph.paragraph_format.widow_control = True
-            paragraph.alignment = (WD_ALIGN_PARAGRAPH.CENTER
-                                   if column_index > 0 and len(value) < 25
-                                   else WD_ALIGN_PARAGRAPH.LEFT)
+            center_value = column_index > 0 and (
+                title.startswith("Table 4.6:") or len(value) < 25
+            )
+            paragraph.alignment = (
+                WD_ALIGN_PARAGRAPH.CENTER
+                if center_value else WD_ALIGN_PARAGRAPH.LEFT
+            )
             run = paragraph.add_run(convert_citations(value))
             run.font.name = "Times New Roman"
-            run.font.size = Pt(10)
+            run.font.size = Pt(9 if title.startswith("Table 3.9:") else 10)
             if row_index == 0:
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
@@ -851,7 +883,8 @@ def add_image_before(doc: Document, anchor, source: Path, alt_text: str):
     paragraph.paragraph_format.space_before = Pt(6)
     paragraph.paragraph_format.space_after = Pt(2)
     run = paragraph.add_run()
-    run.add_picture(str(source), width=Inches(6.15))
+    width = 5.1 if source.name == "v9_gat_training_diagnostics.png" else 6.15
+    run.add_picture(str(source), width=Inches(width))
     drawing = run._r.find(qn("w:drawing"))
     if drawing is not None:
         doc_pr = drawing.find(".//" + qn("wp:docPr"))
@@ -989,6 +1022,8 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                     block_index + 1 < len(blocks)
                     and blocks[block_index + 1][0] == block_type
                 )
+                if current_chapter == 5 and block_type == "number" and next_is_same_list:
+                    paragraph.paragraph_format.keep_with_next = True
                 paragraph.paragraph_format.space_after = Pt(2 if next_is_same_list else 6)
             elif block_type == "code":
                 if not add_equation_before(doc, anchor, payload):
@@ -1134,6 +1169,7 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
     abbreviation_rows = [
         ["Abbreviation", "Full form"],
         ["AoI", "Age of Information"],
+        ["BMG-Q", "Localized Bipartite Match Graph Attention Q-learning"],
         ["CI", "Confidence Interval"],
         ["CTDE", "Centralized Training with Decentralized Execution"],
         ["DEF", "Decision-level Explanation Faithfulness"],
@@ -1141,6 +1177,7 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
         ["GNN", "Graph Neural Network"],
         ["GxI", "Gradient x Input"],
         ["LOO", "Leave-One-Out"],
+        ["MADDPG", "Multi-Agent Deep Deterministic Policy Gradient"],
         ["MAPPO", "Multi-Agent Proximal Policy Optimization"],
         ["MARL", "Multi-Agent Reinforcement Learning"],
         ["MLP", "Multilayer Perceptron"],

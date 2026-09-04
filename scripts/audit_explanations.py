@@ -149,7 +149,7 @@ def main() -> int:
     )
     rules = AuditRules(
         decision_relevance_ci_floor=float(audit_cfg.get("decision_relevance_ci_floor", 0.0)),
-        minimum_dispatch_decisions=int(audit_cfg.get("minimum_dispatch_decisions", 1)),
+        minimum_dispatch_decisions=int(audit_cfg.get("minimum_dispatch_decisions", 20)),
         direction_epsilon=float(audit_cfg.get("direction_epsilon", 1e-9)),
         require_deterministic_capability=bool(
             audit_cfg.get("require_deterministic_capability", True)

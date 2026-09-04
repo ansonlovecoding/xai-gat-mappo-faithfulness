@@ -4,11 +4,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import tarfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch
 
 
@@ -125,8 +125,8 @@ def checkpoint_selection_figure() -> None:
 
 
 def training_diagnostics_figure() -> None:
-    """GAT optimisation diagnostics required by the strategy-capability audit."""
-    fig, axes = plt.subplots(2, 3, figsize=(8.0, 5.3), sharex=True)
+    """Training diagnostics for both graph-attention policies."""
+    fig, axes = plt.subplots(4, 3, figsize=(8.0, 7.8), sharex=True)
     metrics = (
         ("reward", "Reward", True),
         ("pickups", "Training pickups", True),
@@ -135,58 +135,73 @@ def training_diagnostics_figure() -> None:
         ("approx_kl", "Approx. KL", True),
         ("clipfrac", "Clip fraction", True),
     )
+    models = (("B2_gat", "GAT"), ("H5_gat_degraded", "GAT-Outage"))
 
-    for seed, style in SEED_STYLES.items():
-        run_dir = TRAINING_RUNS / "training" / "B2_gat" / f"seed_{seed}"
-        records = [json.loads(line) for line in
-                   (run_dir / "train_log.jsonl").read_text().splitlines() if line]
-        epochs = np.array([row["epoch"] for row in records])
-        for ax, (field, _, smooth) in zip(axes.flat, metrics):
-            if field == "validation":
-                selection = json.loads(
-                    (run_dir / "checkpoint_selection.json").read_text()
-                )
-                candidates = sorted(
-                    (item for item in selection["candidates"]
-                     if item["checkpoint"].startswith("ckpt_epoch_")),
-                    key=lambda item: item["epoch"],
-                )
+    for model_index, (model, model_label) in enumerate(models):
+        model_axes = list(axes[model_index * 2:(model_index + 1) * 2].flat)
+        for seed, style in SEED_STYLES.items():
+            run_dir = TRAINING_RUNS / "training" / model / f"seed_{seed}"
+            records = [
+                json.loads(line)
+                for line in (run_dir / "train_log.jsonl").read_text().splitlines()
+                if line
+            ]
+            epochs = np.array([row["epoch"] for row in records])
+            for ax, (field, _, smooth) in zip(model_axes, metrics):
+                if field == "validation":
+                    selection = json.loads(
+                        (run_dir / "checkpoint_selection.json").read_text()
+                    )
+                    candidates = sorted(
+                        (item for item in selection["candidates"]
+                         if item["checkpoint"].startswith("ckpt_epoch_")),
+                        key=lambda item: item["epoch"],
+                    )
+                    ax.plot(
+                        [item["epoch"] for item in candidates],
+                        [item["mean_pickups"] for item in candidates],
+                        marker=style["marker"], linestyle=style["linestyle"],
+                        color=style["color"], linewidth=1.1, markersize=2.8,
+                        alpha=0.8, label=f"seed {seed}",
+                    )
+                    selected = selection["selected"]
+                    ax.scatter(
+                        selected["epoch"], selected["mean_pickups"],
+                        marker="*", s=75, color=style["color"],
+                        edgecolor="#202020", linewidth=0.5, zorder=4,
+                    )
+                    continue
+                values = np.array([row[field] for row in records], dtype=float)
+                if smooth and values.size >= 10:
+                    values = np.convolve(values, np.ones(10) / 10, mode="valid")
+                    x = epochs[9:]
+                else:
+                    x = epochs
                 ax.plot(
-                    [item["epoch"] for item in candidates],
-                    [item["mean_pickups"] for item in candidates],
-                    marker=style["marker"], linestyle=style["linestyle"],
-                    color=style["color"], linewidth=1.2, markersize=3,
-                    alpha=0.8, label=f"seed {seed}",
+                    x, values, linestyle=style["linestyle"],
+                    color=style["color"], linewidth=1.2,
+                    alpha=0.9, label=f"seed {seed}",
                 )
-                selected = selection["selected"]
-                ax.scatter(selected["epoch"], selected["mean_pickups"],
-                           marker="*", s=95, color=style["color"],
-                           edgecolor="#202020", linewidth=0.5, zorder=4)
-                continue
-            values = np.array([row[field] for row in records], dtype=float)
-            if smooth and values.size >= 10:
-                kernel = np.ones(10) / 10
-                values = np.convolve(values, kernel, mode="valid")
-                x = epochs[9:]
-            else:
-                x = epochs
-            ax.plot(x, values, linestyle=style["linestyle"],
-                    color=style["color"], linewidth=1.35,
-                    alpha=0.9, label=f"seed {seed}")
 
-    for ax, (_, title, _) in zip(axes.flat, metrics):
-        ax.set_title(title)
-        ax.grid(color="#D8D8D8", linewidth=0.6)
-        ax.spines[["top", "right"]].set_visible(False)
-    for ax in axes[1]:
-        ax.set_xlabel("Training epoch")
-    axes[0, 2].legend(frameon=False, fontsize=7.5)
+        for ax, (_, title, _) in zip(model_axes, metrics):
+            ax.set_title(title, fontsize=9.5)
+            ax.grid(color="#D8D8D8", linewidth=0.55)
+            ax.spines[["top", "right"]].set_visible(False)
+        for ax in axes[model_index * 2 + 1]:
+            ax.set_xlabel("Training epoch", fontsize=8.5)
+        axes[model_index * 2, 0].text(
+            -0.24, -0.08, model_label, transform=axes[model_index * 2, 0].transAxes,
+            rotation=90, va="center", ha="center", fontsize=10,
+            fontweight="bold", color="#202020",
+        )
+
+    axes[0, 2].legend(frameon=False, fontsize=7.0, loc="best")
     fig.suptitle(
-        "GAT training and checkpoint-selection diagnostics\n"
+        "GAT and GAT-Outage training diagnostics\n"
         "Training metrics use a 10-epoch moving mean; stars mark selected checkpoints",
         fontsize=11,
     )
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.tight_layout(rect=(0.055, 0, 1, 0.94), h_pad=1.0, w_pad=0.9)
     _save(fig, "gat_training_diagnostics")
 
 
@@ -359,41 +374,160 @@ def shift_figure() -> None:
     _save(fig, "paired_attention_and_faithfulness_shift")
 
 
+def _average_ranks(values: np.ndarray) -> np.ndarray:
+    """Return zero-based average ranks, including tied values."""
+    order = np.argsort(values, kind="mergesort")
+    sorted_values = values[order]
+    ranks = np.empty(len(values), dtype=float)
+    start = 0
+    while start < len(values):
+        stop = start + 1
+        while stop < len(values) and sorted_values[stop] == sorted_values[start]:
+            stop += 1
+        ranks[order[start:stop]] = 0.5 * (start + stop - 1)
+        start = stop
+    return ranks
+
+
+def _h4_episode_data(model: str, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """Recreate H4 episode blocks and descriptive WAMSN groups."""
+    archive_path = (
+        ANALYSIS / "release" / "audit_records" /
+        f"{model}_seed_{seed}_cells.tar.gz"
+    )
+    blocks: dict[tuple[str, int], tuple[list[float], list[float]]] = {}
+    with tarfile.open(archive_path, "r:gz") as archive:
+        for member in archive.getmembers():
+            if "/outage_duration_" not in member.name:
+                continue
+            handle = archive.extractfile(member)
+            if handle is None:
+                continue
+            payload = json.load(handle)
+            for record in payload["faith_records"]:
+                if int(record["valid_reservations"]) <= 0:
+                    continue
+                wamsn = float(record["wamsn"])
+                probability_def = float(record["def"])
+                if not np.isfinite(wamsn) or not np.isfinite(probability_def):
+                    continue
+                key = (member.name, int(record["episode"]))
+                x_values, y_values = blocks.setdefault(key, ([], []))
+                x_values.append(wamsn)
+                y_values.append(probability_def)
+
+    correlations: list[float] = []
+    grouped_def_ranks: list[list[float]] = []
+    for x_values, y_values in blocks.values():
+        x = np.asarray(x_values, dtype=float)
+        y = np.asarray(y_values, dtype=float)
+        if len(x) < 8 or np.allclose(x, x[0]):
+            continue
+        x_rank = _average_ranks(x)
+        y_rank = _average_ranks(y)
+        x_centered = x_rank - x_rank.mean()
+        y_centered = y_rank - y_rank.mean()
+        denominator = np.sqrt(
+            np.sum(x_centered ** 2) * np.sum(y_centered ** 2)
+        )
+        correlations.append(
+            0.0 if denominator == 0
+            else float(np.sum(x_centered * y_centered) / denominator)
+        )
+
+        order = np.argsort(x_rank, kind="mergesort")
+        groups = np.array_split(order, 4)
+        scale = max(len(y_rank) - 1, 1)
+        grouped_def_ranks.append([
+            float(np.mean(y_rank[group]) / scale * 100.0) for group in groups
+        ])
+    return np.asarray(correlations), np.asarray(grouped_def_ranks)
+
+
 def consistency_figure() -> None:
     payload = json.loads((RUNS / "training_seed_synthesis.json").read_text())
     rows = payload["per_seed"]
-    fig, ax = plt.subplots(figsize=(6.8, 3.8))
-    for index, model in enumerate(COLORS):
-        selected = sorted((row for row in rows if row["model"] == model),
-                          key=lambda row: row["training_seed"])
-        offsets = np.linspace(-0.10, 0.10, len(selected))
-        for offset, row in zip(offsets, selected):
-            supported = bool(row["H4_supported"])
-            style = SEED_STYLES[int(row["training_seed"])]
-            ax.scatter(index + offset, row["H4_within_episode_rho"], s=70,
-                       marker=style["marker"],
-                       facecolor=style["color"] if supported else "white",
-                       edgecolor=style["color"], linewidth=1.8, zorder=3)
-            ax.annotate(str(row["training_seed"]),
-                        (index + offset, row["H4_within_episode_rho"]),
-                        xytext=(0, 7), textcoords="offset points",
-                        ha="center", fontsize=8)
-    ax.axhline(0, color="#202020", linewidth=1)
-    ax.set_xticks(range(len(COLORS)), [LABELS[model] for model in COLORS])
-    ax.set_ylabel("Within-episode Spearman rho (WAMSN vs DEF)")
-    ax.set_title("Within-episode WAMSN-DEF correlation by trained policy")
-    legend = [
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="#555555",
-               markeredgecolor="#555555", markersize=7,
-               label="H4 supported after Holm correction"),
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="white",
-               markeredgecolor="#555555", markersize=7,
-               label="H4 not supported"),
+    fig, (trend_ax, result_ax) = plt.subplots(
+        1, 2, figsize=(8.0, 4.15), gridspec_kw={"width_ratios": [1.0, 1.25]}
+    )
+    episode_data: dict[tuple[str, int], tuple[np.ndarray, np.ndarray]] = {}
+
+    group_x = np.arange(4)
+    for model in COLORS:
+        model_groups = []
+        for seed in SEED_STYLES:
+            data = _h4_episode_data(model, seed)
+            episode_data[model, seed] = data
+            model_groups.append(data[1])
+        grouped = np.concatenate(model_groups, axis=0)
+        center = np.mean(grouped, axis=0)
+        lower, upper = np.percentile(grouped, [25, 75], axis=0)
+        trend_ax.plot(
+            group_x, center, marker="o", linewidth=2.0,
+            color=COLORS[model], label=LABELS[model],
+        )
+        trend_ax.fill_between(
+            group_x, lower, upper, color=COLORS[model], alpha=0.13,
+            linewidth=0,
+        )
+    trend_ax.set_xticks(group_x, ["Q1\nlow", "Q2", "Q3", "Q4\nhigh"])
+    trend_ax.set_xlabel("WAMSN group within each episode")
+    trend_ax.set_ylabel("Mean within-episode DEF rank (%)")
+    trend_ax.set_title("(a) DEF rank across WAMSN groups")
+    trend_ax.legend(frameon=False, fontsize=8, loc="best")
+    trend_ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
+    trend_ax.spines[["top", "right"]].set_visible(False)
+
+    ordered_rows = [
+        row for model in COLORS for row in sorted(
+            (candidate for candidate in rows if candidate["model"] == model),
+            key=lambda candidate: candidate["training_seed"],
+        )
     ]
-    ax.legend(handles=legend, frameon=False, fontsize=7.8, loc="lower left")
-    ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
+    y_positions = np.arange(len(ordered_rows) - 1, -1, -1)
+    for y_position, row in zip(y_positions, ordered_rows):
+        model = row["model"]
+        seed = int(row["training_seed"])
+        correlations = episode_data[model, seed][0]
+        rng = np.random.default_rng(
+            41100 + seed + 1000 * list(COLORS).index(model)
+        )
+        sampled = rng.choice(
+            correlations, size=(2000, len(correlations)), replace=True
+        ).mean(axis=1)
+        low, high = np.percentile(sampled, [2.5, 97.5])
+        value = float(row["H4_within_episode_rho"])
+        style = SEED_STYLES[seed]
+        supported = bool(row["H4_supported"])
+        result_ax.errorbar(
+            value, y_position,
+            xerr=[[value - low], [high - value]],
+            fmt=style["marker"], markersize=7, capsize=3,
+            color=style["color"], markerfacecolor=(
+                style["color"] if supported else "white"
+            ), markeredgewidth=1.4, zorder=3,
+        )
+        result_ax.text(
+            0.045, y_position,
+            "SUPPORTED" if supported else "NOT SUPPORTED",
+            va="center", ha="left", fontsize=7.5, fontweight="bold",
+            color="#2F6B3C" if supported else "#9B2C2C",
+        )
+    result_ax.axvline(0, color="#202020", linewidth=1)
+    result_ax.axhline(2.5, color="#A8A8A8", linewidth=0.8)
+    result_ax.set_yticks(
+        y_positions,
+        [f"{LABELS[row['model']]} {row['training_seed']}" for row in ordered_rows],
+    )
+    result_ax.set_xlim(-0.55, 0.23)
+    result_ax.set_xlabel("Mean within-episode Spearman rho")
+    result_ax.set_title("(b) H4 result: 6/6 supported")
+    result_ax.grid(axis="x", color="#D8D8D8", linewidth=0.7)
+    result_ax.spines[["top", "right", "left"]].set_visible(False)
+    result_ax.tick_params(axis="y", length=0)
+
+    fig.suptitle("WAMSN-DEF relationship and H4 decision", fontsize=11)
+    fig.tight_layout(rect=(0, 0, 1, 0.94), w_pad=1.5)
     _save(fig, "h4_correlation_by_training_seed")
 
 
@@ -530,7 +664,7 @@ def action_stratified_figure() -> None:
                 ha="center", va="top", fontsize=9, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
-    fig.suptitle("Action-stratified faithfulness diagnostic", y=0.995)
+    fig.suptitle("Faithfulness analysis by action type", y=0.995)
     fig.tight_layout(rect=(0, 0.035, 1, 0.985))
     _save(fig, "action_stratified_faithfulness")
 

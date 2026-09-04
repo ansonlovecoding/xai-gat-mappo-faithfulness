@@ -150,7 +150,7 @@ Important fixed settings are:
 |---|---|
 | Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
 | Training seeds | 42, 43, 44 |
-| Checkpoint selection | stochastic validation pickups |
+| Checkpoint selection | sampled-action validation pickups |
 | Validation seed and episodes | 2026, eight episodes |
 | Evaluation seeds | 42-49 |
 | Clean capability episodes per seed | three |
@@ -160,6 +160,12 @@ Important fixed settings are:
 | Faithfulness sampling | every 16 decisions plus every stale-exposed decision |
 | Random control | five type-matched subsets |
 | Random-loss sensitivity | 30-second freeze; trigger probability 0.0023 |
+
+The model-specific training budgets were fixed from validation-only stability
+diagnostics before held-out evaluation. Clean GAT and GAT-Outage consequently
+have different training and learning-rate-decay horizons. Their H5 comparison
+describes the two fitted configurations and does not isolate the effect of
+degraded training observations alone.
 
 ## 4. Run the complete experiment
 

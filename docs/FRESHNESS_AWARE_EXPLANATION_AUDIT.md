@@ -56,7 +56,7 @@ available evidence for every frozen checkpoint.
 | Freshness visibility | Is stale-data exposure reported independently of attention? | Stale-exposed conditions contain AoI-derived and stale-attention measurements |
 | Action-aware controls | Does the comparison avoid request-deletion bias? | Type matching, chosen-action protection, raw attention, and LOO are present |
 | Decision relevance | Does attention beat a matched random ranking for dispatch actions? | The 95% CI lower bound of self-row dispatch margin-DEF exceeds the configured floor |
-| Action composition | Are no-op and dispatch decisions reported separately? | Both strata exist and the minimum dispatch count is met |
+| Action composition | Are no-op and dispatch decisions reported separately? | Both strata exist and at least 20 dispatch decisions are present at model and checkpoint levels |
 | Extraction stability | Does the conclusion survive layer/head/rollout choices? | No audited alternative reverses the declared default direction |
 | Checkpoint consistency | Does the conclusion reproduce after independent training? | Dispatch relevance and stale-attention response have the same non-zero direction across seeds |
 | Deployment-action capability | Does the action rule intended for deployment operate? | Require held-out argmax capability only when deployment uses argmax; otherwise retain argmax as a diagnostic |

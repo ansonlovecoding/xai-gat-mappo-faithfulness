@@ -1,7 +1,8 @@
 # 4. Results
 
 The automated preflight audit passed 100 checks covering provenance and protocol
-requirements. Results are reported by training seed because decisions and
+requirements, and all six GAT checkpoint sweeps passed the inclusion gates
+defined in Section 3.8. Results are reported by training seed because decisions and
 episodes from one checkpoint do not constitute independent model replications.
 Unless stated otherwise, uncertainty is reported as a 95% confidence interval
 (CI).
@@ -15,12 +16,12 @@ selected index is reported separately for each trained policy.
 
 Figure 4.1 shows the training and checkpoint-selection diagnostics.
 
-![GAT training and checkpoint-selection diagnostics](../figures/v9_gat_training_diagnostics.png)
+![GAT and GAT-Outage training and checkpoint-selection diagnostics](../figures/v9_gat_training_diagnostics.png)
 
-**Figure 4.1.** GAT training metrics use a ten-epoch moving mean. Stars mark
-validation-selected checkpoints. Reward and pickups still vary between
-epochs, but entropy remains above the collapse threshold and PPO clipping is
-limited.
+**Figure 4.1.** Training diagnostics for GAT (upper panels) and GAT-Outage
+(lower panels). Curves use a ten-epoch moving mean; stars mark
+validation-selected checkpoints. Entropy remains above the collapse threshold,
+and PPO clipping is limited.
 
 All nine training runs pass the declared stability gates. The following values
 describe the final ten training epochs, not the held-out evaluation in Table
@@ -28,7 +29,7 @@ describe the final ten training epochs, not the held-out evaluation in Table
 validation retention is 100%, 100%, and 92.6%. The corresponding
 GAT-Outage values are 12.4, 14.1, and 13.8 pickups, with validation retention
 of 100%, 93.9%, and 96.5%. Training metrics still fluctuate across epochs, but
-no selected checkpoint is a zero-pickup policy under stochastic validation.
+no selected checkpoint is a zero-pickup policy under sampled-action validation.
 Deterministic argmax results are reported separately below.
 
 Table 4.1 places the selected policies above two lower bounds evaluated on the
@@ -46,10 +47,10 @@ audited policies perform above random and greedy lower bounds.
 The legal-random baseline has 24 independent episode clusters. Greedy nearest
 is deterministic, so its effective sample is the three demand variants rather
 than 24 repeated seed-episode records. GAT's seed means are 13.71, 9.42, and
-11.79. Every selected policy exceeds both lower bounds under stochastic action
-sampling. These results confirm capability for the sampled policy distributions
-only; the role of graph attention and the usability of the argmax policy remain
-untested.
+11.79. Every selected policy exceeds both lower bounds when actions are sampled
+from its probability distribution. These results confirm capability for the
+sampled policy distributions only; the role of graph attention and the
+usability of the argmax policy remain untested.
 
 The audit requires each checkpoint's sampled policy distribution to exceed the
 declared lower bounds, not GAT to outperform MLP. That condition is met. MLP has
@@ -68,7 +69,7 @@ episodes. Horizontal lines show the cross-seed mean.
 The deterministic diagnostic changes the capability interpretation. All six
 selected graph-attention checkpoints choose no-op throughout three held-out episodes,
 giving 0 pickups in 18 of 18 checkpoint-episodes. Their common mean reward is
--46.58 and final pending-request wait is 905.9 seconds. The stochastic results
+-46.58 and final pending-request wait is 905.9 seconds. The sampled-action results
 show only that the policy distributions assign enough probability to dispatch
 actions to produce pickups when sampled; they do not establish a stable argmax
 dispatcher.
@@ -241,14 +242,14 @@ selected checkpoints have a positive attention shift and four have a negative
 mean DEF shift. Only the DEF decrease for checkpoints trained with seed 42 is
 separated from zero in both models; both seed-43 intervals include zero, while
 both checkpoints trained with seed 44 show a small increase.
-The effects are numerically small and directionally heterogeneous. This is not
+The effects are numerically small and vary in direction. This is not
 evidence for a universal claim that telemetry degradation moves attention
 toward stale nodes or always lowers faithfulness. The largest absolute paired
 probability-DEF shift is `0.0000839`, equivalent to 0.00839 probability
 percentage points. Relative percentages are not reported because clean DEF is
 close to zero and would make such ratios unstable.
 
-## 4.7 Action-stratified diagnostic
+## 4.7 Analysis by action type
 
 The combined faithfulness audit is dominated by chosen no-op actions. Across
 all six checkpoints, 56,550 records contain at least one valid request. Of
@@ -256,7 +257,7 @@ these, 52,585 (93.0%) select no-op and 3,965 (7.0%) dispatch a request.
 Decisions with no valid request are excluded from these percentages. Table 4.6
 reports the action composition and dispatch-only diagnostic.
 
-| Checkpoint | No-op (%) | Dispatch (%) | Mean selected dispatch probability | Paired dispatch DEF shift x 10,000 [95% CI] |
+| Checkpoint | No-op (%) | Dispatch (%) | Mean dispatch-action probability | Paired DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|---:|
 | GAT, seed 42 | 96.6 | 3.4 | 0.0085 | 0.000 [0.000, 0.000] |
 | GAT, seed 43 | 88.4 | 11.6 | 0.0368 | -20.358 [-32.488, -8.371] |
@@ -267,7 +268,7 @@ reports the action composition and dispatch-only diagnostic.
 
 Figure 4.9 visualizes the imbalance and the paired dispatch estimates.
 
-![Action-stratified faithfulness diagnostic](../figures/v9_action_stratified_faithfulness.png)
+![Faithfulness analysis by action type](../figures/v9_action_stratified_faithfulness.png)
 
 **Figure 4.9.** (a) Absolute no-op and dispatch counts; labels give the dispatch
 share. (b) Mean probability assigned to the sampled action on a logarithmic
@@ -276,8 +277,8 @@ Enlarged view around zero; arrows mark intervals that extend beyond the panel.
 Error bars are 95% episode-block bootstrap
 intervals.
 
-The no-op stratum closely follows the combined result because it accounts for
-most records. The same H1 trend does not appear in the dispatch stratum for any
+The no-op group closely follows the combined result because it accounts for
+most records. The same H1 trend does not appear in the dispatch group for any
 checkpoint (`p` = 0.44-1.00), and the dispatch results show no consistent H4
 evidence. The
 paired dispatch DEF shift is negative in four checkpoints, positive in one,
@@ -338,13 +339,19 @@ The event-aware audit uses every decision with visible stale exposure rather
 than a periodic sample. H1 is supported for two of three GAT checkpoints and
 all three GAT-Outage checkpoints. H4 is supported for all six: within-episode
 WAMSN-DEF correlations range from -0.199 to -0.084 for GAT and from -0.423 to
--0.212 for GAT-Outage. H3 remains consistently supported. Figure 4.11 shows the
-per-checkpoint correlations, while Table 4.8 summarizes all hypothesis outcomes.
+-0.212 for GAT-Outage. H3 remains consistently supported. Figure 4.11 shows
+both the within-episode WAMSN-DEF pattern and the per-checkpoint H4 results,
+while Table 4.8 summarizes all hypothesis outcomes.
 
-![Within-episode WAMSN-DEF correlation by training seed](../figures/v9_h4_correlation_by_training_seed.png)
+![Within-episode WAMSN-DEF relationship and H4 results](../figures/v9_h4_correlation_by_training_seed.png)
 
-**Figure 4.11.** All checkpoints have a negative within-episode WAMSN-DEF
-association after Holm correction; the direct paired effect remains mixed.
+**Figure 4.11.** Panel (a) divides each usable episode into four equal-count
+WAMSN groups and plots the corresponding mean DEF rank. Q4 is lower than Q1
+for both models, although the intermediate groups are not monotonic. Lines
+summarize episode blocks within each model, and shaded bands show their
+interquartile range. Panel (b) reports mean rho and a 95% episode-block
+bootstrap interval. Every checkpoint supports the fourth hypothesis after Holm
+correction.
 
 | Hypothesis | GAT seeds supporting | GAT-Outage seeds supporting | Verdict |
 |---|---:|---:|---|
@@ -352,7 +359,7 @@ association after Holm correction; the direct paired effect remains mixed.
 | H2: faithfulness declines faster than performance | 1/3 | 3/3 | model-dependent; exploratory |
 | H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | supported as a stale-exposure manipulation check |
 | H4: higher WAMSN is associated with lower DEF | 3/3 | 3/3 | consistently supported within episodes |
-| H5: degradation-aware training reduces the adverse DEF relationships | n/a | 0/3 | not supported |
+| H5: GAT-Outage has weaker adverse DEF relationships than GAT | n/a | 0/3 | not supported in the tested configurations |
 
 For H5, every matched GAT-Outage checkpoint has more negative H1 and H4
 correlations than its clean-trained GAT counterpart. The H1 comparisons for
@@ -360,6 +367,10 @@ seeds 42, 43, and 44 are -0.164 versus -0.069, -0.141 versus -0.058, and -0.025
 versus -0.017. The corresponding H4 comparisons are -0.423 versus -0.092,
 -0.411 versus -0.084, and -0.212 versus -0.199. None meets the requirement that
 both relationships become weaker, giving 0/3 support for H5.
+
+This comparison does not isolate degraded training observations as the cause
+because GAT and GAT-Outage use different maximum training budgets and
+learning-rate decay horizons.
 
 H1 and H4 are association tests within one trained policy and primarily
 describe no-op decisions in this action-imbalanced sample. They do not by
@@ -379,11 +390,11 @@ The results answer the research questions as follows:
   direction of the paired change depends on the trained checkpoint;
 - **RQ3:** longer outages consistently increase stale exposure and usually
   accompany lower within-policy DEF, but paired attention and DEF changes are
-  not consistent across checkpoints, action strata, or extraction choices; and
-- **RQ4:** degradation-aware training does not produce a more consistent
-  explanation response than clean training.
+  not consistent across checkpoints, action groups, or extraction choices; and
+- **RQ4:** the tested degradation-aware configuration does not produce a more
+  consistent explanation response than the clean-trained configuration.
 
-Seed reversals, no-op dominance, dispatch-stratum failures, and extraction
+Seed reversals, no-op dominance, failures in the dispatch-only results, and extraction
 sensitivity therefore mean that raw attention cannot provide a reliable
 indication of data freshness or explanation faithfulness.
 
@@ -402,7 +413,7 @@ explanation-release checks.
 | No-op and dispatch composition | PASS | PASS | 26,278/2,020 and 26,307/1,945 no-op/dispatch records |
 | Attention-extraction stability | FAIL | FAIL | an alternative reverses the default direction in every seed |
 | Checkpoint consistency | FAIL | FAIL | stale-attention direction is positive, positive, then negative across seeds |
-| Deployment-action capability | N/A | N/A | stochastic sampling is the audited action rule; argmax is descriptive |
+| Deployment-action capability | N/A | N/A | sampling from the policy distribution is the audited action rule; argmax is descriptive |
 | Tunnel/random trigger robustness | INDET. | INDET. | no supported reversal, but at least one 95% interval crosses zero |
 | Final decision | WITHHOLD | WITHHOLD | decision relevance, extraction stability, and checkpoint consistency fail |
 

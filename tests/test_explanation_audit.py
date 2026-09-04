@@ -56,10 +56,10 @@ def _bundle(tmp_path: Path, *, relevance_lower: float = 0.1,
     _write(run_root / "action_stratified.json", {
         "rows": [
             {"model": MODEL, "stratum": "no_op", "total_records": 20},
-            {"model": MODEL, "stratum": "dispatch", "total_records": 5},
+            {"model": MODEL, "stratum": "dispatch", "total_records": 40},
         ],
         "per_seed": [
-            {"model": MODEL, "training_seed": seed, "stratum": "dispatch", "n_records": 5}
+            {"model": MODEL, "training_seed": seed, "stratum": "dispatch", "n_records": 20}
             for seed in SEEDS
         ],
     })
