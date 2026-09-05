@@ -274,57 +274,81 @@ def decoupling_figure() -> None:
 
 
 def evidence_summary_figure() -> None:
-    synthesis = json.loads((RUNS / "training_seed_synthesis.json").read_text())
-    aggregate = synthesis["rows"]
-    total = sum(int(row["training_seeds"]) for row in aggregate)
-    positive_shift = sum(
-        int(row["positive_stale_attention_shift_seeds"]) for row in aggregate
-    )
-    negative_paired_def = sum(
-        int(row["negative_paired_probability_def_delta_seeds"])
-        for row in aggregate
-    )
-    h1_supported = sum(int(row["H1_supported_seeds"]) for row in aggregate)
-    fig, ax = plt.subplots(figsize=(8.0, 4.2))
+    """Explain what each evidence source means without repeating result tables."""
+    fig, ax = plt.subplots(figsize=(8.0, 4.7))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
-    columns = [(0.02, 0.10, "Question"), (0.13, 0.25, "Measure"),
-               (0.39, 0.38, "Cross-seed result"), (0.78, 0.20, "Verdict")]
+    columns = [
+        (0.015, 0.17, "Evidence"),
+        (0.195, 0.31, "What it shows"),
+        (0.515, 0.29, "Interpretation limit"),
+        (0.815, 0.17, "Audit response"),
+    ]
     for x, width, title in columns:
-        ax.add_patch(FancyBboxPatch((x, 0.76), width, 0.11,
+        ax.add_patch(FancyBboxPatch((x, 0.79), width, 0.10,
                                    boxstyle="round,pad=0.005,rounding_size=0.008",
                                    facecolor="#E7E9EB", edgecolor="#666666",
                                    linewidth=0.8))
-        ax.text(x + width / 2, 0.815, title, ha="center", va="center",
-                fontsize=9.2, fontweight="bold")
+        ax.text(x + width / 2, 0.84, title, ha="center", va="center",
+                fontsize=8.8, fontweight="bold")
     rows = [
-        ("RQ1", "Clean decision relevance", "Near type-matched random baseline", "Not validated", "#A33A3A"),
-        ("RQ2", "Paired stale-node attention",
-         f"Positive in {positive_shift}/{total} trained policies",
-         "Mixed by seed", "#B06C00"),
-        ("RQ3", "Duration and paired DEF",
-         f"Paired decline in {negative_paired_def}/{total} policies",
-         "Not consistent", "#B06C00"),
-        ("RQ4", "Training comparison", "No consistent improvement", "Not supported", "#A33A3A"),
+        (
+            "Clean baseline",
+            "Raw attention shows little advantage\nover matched-random subsets",
+            "This does not mean that\nevery attention map is wrong",
+            "Test decision\nrelevance",
+            "#A33A3A",
+        ),
+        (
+            "Stale exposure",
+            "More attention is attached\nto old vehicle data",
+            "This does not show that AoI\ncauses lower faithfulness",
+            "Show freshness\nseparately",
+            "#176B87",
+        ),
+        (
+            "Within-policy\nassociation",
+            "Greater stale exposure tends\nto accompany lower DEF",
+            "Association is not causation\nor dispatch-only evidence",
+            "Check both\naction groups",
+            "#6B5B95",
+        ),
+        (
+            "Direct paired\nchange",
+            "The effect varies across\ntrained checkpoints",
+            "There is no single response\nto telemetry degradation",
+            "Audit every\ncheckpoint",
+            "#B06C00",
+        ),
     ]
-    for index, (rq, measure, result, verdict, color) in enumerate(rows):
-        y = 0.61 - index * 0.135
-        values = (rq, measure, result, verdict)
+    for index, (*values, color) in enumerate(rows):
+        y = 0.64 - index * 0.145
         for (x, width, _), value in zip(columns, values):
-            ax.add_patch(FancyBboxPatch((x, y), width, 0.105,
+            ax.add_patch(FancyBboxPatch((x, y), width, 0.12,
                                        boxstyle="round,pad=0.004,rounding_size=0.006",
                                        facecolor="#F7F8F9", edgecolor=color,
                                        linewidth=0.9))
-            ax.text(x + width / 2, y + 0.0525, value, ha="center", va="center",
-                    fontsize=8.0, color="#202020",
-                    fontweight="bold" if x in (0.02, 0.78) else "normal")
-    ax.text(0.5, 0.94, "Cross-seed evidence matrix",
-            ha="center", va="center", fontsize=15, fontweight="bold")
-    ax.text(0.5, 0.055,
-            "Conclusion: raw attention does not provide consistent decision-relevance or degradation responses.",
-            ha="center", va="center", fontsize=9.0, fontweight="bold")
-    fig.tight_layout()
+            ax.text(
+                x + width / 2, y + 0.06, value,
+                ha="center", va="center", fontsize=7.7, color="#202020",
+                fontweight="bold" if x in (0.015, 0.815) else "normal",
+                linespacing=1.25,
+            )
+    ax.text(0.5, 0.95, "How to interpret the evidence",
+            ha="center", va="center", fontsize=14, fontweight="bold")
+    ax.add_patch(FancyBboxPatch(
+        (0.24, 0.012), 0.52, 0.075,
+        boxstyle="round,pad=0.006,rounding_size=0.008",
+        facecolor="#FFF4E6", edgecolor="#C75000", linewidth=1.0,
+    ))
+    ax.text(
+        0.5, 0.049,
+        "Current decision: WITHHOLD raw attention as an explanation",
+        ha="center", va="center", fontsize=8.6, fontweight="bold",
+        color="#8A3500",
+    )
+    fig.tight_layout(pad=0.6)
     _save(fig, "evidence_path_summary")
 
 

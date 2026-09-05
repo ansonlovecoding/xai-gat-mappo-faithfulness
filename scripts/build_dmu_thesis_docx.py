@@ -113,7 +113,7 @@ FIGURES = [
     ("Figure 4.9", "Faithfulness analysis by action type"),
     ("Figure 4.10", "Tunnel-triggered and random telemetry-loss sensitivity"),
     ("Figure 4.11", "WAMSN-DEF relationship and H4 result"),
-    ("Figure 5.1", "Cross-seed evidence matrix"),
+    ("Figure 5.1", "Evidence interpretation summary"),
     ("Figure 5.2", "Freshness-aware explanation audit workflow"),
 ]
 
@@ -128,7 +128,7 @@ FIGURE_PAGES = {
     "Figure 4.4": "29", "Figure 4.5": "30",
     "Figure 4.6": "31", "Figure 4.7": "32", "Figure 4.8": "33",
     "Figure 4.9": "34", "Figure 4.10": "36", "Figure 4.11": "37",
-    "Figure 5.1": "40", "Figure 5.2": "44",
+    "Figure 5.1": "41", "Figure 5.2": "43",
 }
 
 TABLE_PAGES = {
@@ -181,13 +181,13 @@ HEADING_PAGES = {
     "4.9 Faithfulness hypotheses": "37", "4.10 Result summary": "38",
     "4.11 Demonstrative framework decision": "38",
     "Chapter 5: Discussion": "40", "5.1 Answer to the central problem": "40",
-    "5.2 What the stale-exposure result means": "41",
-    "5.3 Dependence on checkpoint and analysis choice": "41",
-    "5.4 Role of the construct-validity audit": "42",
+    "5.2 How to read the evidence": "40",
+    "5.3 Why the result is not consistent": "41",
+    "5.4 Why the construct-validity controls matter": "42",
     "5.5 Why outage training did not solve the problem": "42",
-    "5.6 Proposed audit framework": "43",
-    "5.6.1 Purpose and scope": "43", "5.6.2 Inputs, outputs and use": "44",
-    "5.6.3 Application to this study": "45",
+    "5.6 Proposed audit framework": "42",
+    "5.6.1 Purpose and scope": "42", "5.6.2 Inputs, outputs and use": "44",
+    "5.6.3 Application to this study": "44",
     "5.7 Limitations": "45", "5.8 Future work": "46",
     "Chapter 6: Conclusion": "47",
 }
@@ -820,7 +820,8 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
             if row_index == 0:
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
-    if len(rows) <= 4:
+    keep_complete = title.startswith(("Table 4.3:", "Table 4.5:", "Table 4.6:"))
+    if len(rows) <= 4 or keep_complete:
         for row in table.rows[:-1]:
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
@@ -1278,7 +1279,11 @@ def replace_abstract(doc: Document) -> None:
 
 def update_front_text(doc: Document) -> None:
     replacements = {
-        "Supervisor: Farhan S. Ujager": "Supervisor: Farhan S. Ujager",
+        "Supervisor: Farhan S. Ujager": "Supervisor: Dr Farhan S. Ujager",
+        "submitted in partial fulfilment of the requirements for the award of the degree of":
+            "submitted in partial fulfillment of the requirements for the award of the degree of",
+        "I declare that this dissertation is my own original work carried out under the supervision of Farhan S. Ujager and that all sources and references have been acknowledged appropriately. This dissertation has not been submitted previously for academic credit at De Montfort University, Dubai, or any other institution.":
+            "I declare that this dissertation is my own original work carried out under the supervision of Dr Farhan S. Ujager and that all sources and references have been acknowledged appropriately. This dissertation has not been submitted previously for academic credit at De Montfort University, Dubai, or any other institution.",
         "Master of Science (MSc)": "MSc in Artificial Intelligence",
         "August 2026": "September 2026",
         "No publication is claimed in this dissertation draft.":
@@ -1329,10 +1334,12 @@ def style_references_and_appendices(doc: Document) -> None:
             paragraph.text = "Appendix B: Supporting Artifacts"
         if paragraph.text.startswith("The complete reproduction procedure"):
             paragraph.text = (
-                "The complete reproduction procedure is provided in "
-                "docs/REPRODUCE_EXPERIMENTS.md. Compact citable outputs are "
-                "stored in the version-controlled results directory identified "
-                "in that guide."
+                "The complete procedure is provided in docs/REPRODUCE_EXPERIMENTS.md. "
+                "The guide identifies the required environment, fixed configurations, "
+                "commands, validation checks, and expected outputs. The final audit "
+                "uses configs/experiments/dissertation_v9_exposure_audit.toml, and its "
+                "version-controlled results are stored under "
+                "results/dissertation_v9_exposure_audit/."
             )
         if paragraph.text.startswith("The project repository contains"):
             paragraph.text = (

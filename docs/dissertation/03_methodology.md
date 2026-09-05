@@ -532,13 +532,14 @@ decisions with at least one visible stale vehicle node.
 ## 3.9 Hypotheses and statistical analysis
 
 Table 3.9 provides one map of the five hypotheses, their analyses, and their
-roles. H1, H3, and H4 were predeclared as primary tests; H2 was predeclared as
-exploratory; and H5 is a matched-seed descriptive comparison.
+roles. H1, H3, and H4 were predeclared as primary tests. H2 is a supporting
+exploratory diagnostic rather than a test of the main research claim, and H5
+is a matched-seed descriptive comparison.
 
 | Hypothesis | Question | Analysis | Role |
 |---|---|---|---|
 | H1 | DEF across outage durations | episode-block probability-DEF trend | primary |
-| H2 | Faithfulness versus capability decline | paired clean-relative change | exploratory |
+| H2 | Faithfulness versus capability decline | paired clean-relative change | supporting exploratory diagnostic |
 | H3 | WAMSN across outage durations | episode-block WAMSN trend | primary check |
 | H4 | Within-episode WAMSN-DEF link | Spearman correlation and sign-flip test | primary |
 | H5 | Weaker relationships for GAT-Outage | matched-seed correlation comparison | descriptive |

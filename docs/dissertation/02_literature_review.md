@@ -153,7 +153,8 @@ which inputs support a prediction [18]. Their usefulness depends on whether the
 perturbed samples remain meaningful for the model and task.
 
 Perturbation is not automatically valid. Removing input features may create
-samples unlike the data seen during training. ROAR addresses this issue by
+samples unlike the data seen during training. The Remove and Retrain (ROAR)
+benchmark addresses this issue by
 removing features and retraining the model, showing why a simple deletion test
 can confound attribution quality with distribution shift [28]. Adebayo et al.
 [27] provide a different sanity check: an explanation should respond when model

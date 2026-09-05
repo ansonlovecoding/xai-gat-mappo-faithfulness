@@ -356,7 +356,7 @@ correction.
 | Hypothesis | GAT seeds supporting | GAT-Outage seeds supporting | Verdict |
 |---|---:|---:|---|
 | H1: outage duration increases, DEF decreases | 2/3 | 3/3 | strong but not universal |
-| H2: faithfulness declines faster than performance | 1/3 | 3/3 | model-dependent; exploratory |
+| H2: faithfulness declines faster than performance | 1/3 | 3/3 | model-dependent supporting diagnostic |
 | H3: outage duration increases, WAMSN increases | 3/3 | 3/3 | supported as a stale-exposure manipulation check |
 | H4: higher WAMSN is associated with lower DEF | 3/3 | 3/3 | consistently supported within episodes |
 | H5: GAT-Outage has weaker adverse DEF relationships than GAT | n/a | 0/3 | not supported in the tested configurations |
@@ -377,8 +377,9 @@ describe no-op decisions in this action-imbalanced sample. They do not by
 themselves establish that AoI causes lower faithfulness or that the same
 relationship holds for dispatch actions. The paired clean-twin
 audit supplies the more direct intervention contrast, and its sign still
-changes with training seed. H2 is treated as exploratory because clean DEF is
-close to zero and the relative-rate formulation is unstable.
+changes with training seed. H2 is retained only as a supporting exploratory
+diagnostic because clean DEF is close to zero and the relative-rate formulation
+is unstable. It is not part of the main explanation-assurance claim.
 
 ## 4.10 Result summary
 

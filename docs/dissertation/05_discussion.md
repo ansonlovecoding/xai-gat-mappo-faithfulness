@@ -3,166 +3,125 @@
 ## 5.1 Answer to the central problem
 
 The central problem is whether a graph-attention map can still be trusted when
-some of its vehicle data are stale. The experiment gives a two-part answer.
-First, the map remains available after tunnel-triggered loss freezes vehicle
-features at the observation boundary. Second, its displayed weights do not
-provide consistent evidence of either data freshness or decision relevance.
-The explanation can therefore outlive the data that support it, but its
-continued availability should not be treated as proof that it is reliable.
+some of its vehicle data are stale. The answer is clear: the map remains
+available, but its displayed weights do not provide consistent evidence that
+the highlighted information is current or that it influenced the selected
+action. The explanation can therefore outlive the data that support it.
 
-Three levels of evidence support this conclusion. **Exposure evidence** shows
-that longer outages increase the amount of attention attached to stale vehicle
-data. **Association evidence** shows that greater stale exposure is linked to
-lower DEF within all six checkpoints. **Direct paired evidence**, which compares
-clean and degraded observations of the same decision, is less consistent. The
-attention and DEF changes have the expected directions for checkpoints trained
-with seeds 42 and 43, but both directions reverse for seed 44 under both
-training regimes. The direct effects are also small. The association result
-therefore does not establish one general effect caused by telemetry degradation.
+This finding is about explanation reliability, not dispatch performance. A
+policy can still select an action while the evidence shown as its explanation
+is stale or weakly related to that action. Stable task output therefore cannot
+be used to validate the attention map.
 
-The analysis by action type further limits the conclusion. Chosen no-op actions
-account for 93.0% of scorable decisions with at least one available request,
-and the combined H1 and H4 patterns are not reproduced among dispatch actions.
-Four checkpoints also change paired-DEF direction between the combined and
-dispatch groups. The primary statistics describe the observed mix of sampled
-actions, not a universal response for both dispatch and no-op decisions.
+The practical result is a release decision. Raw attention should remain an
+internal diagnostic unless separate tests establish both freshness and
+decision relevance. In this study, those tests do not provide sufficiently
+consistent evidence, so every tested checkpoint receives `WITHHOLD`.
 
-The supporting controls make the interpretation stronger and narrower. The
-LOO-ranked control produces a positive DEF for every checkpoint, so the
-evaluator has some sensitivity to a perturbation-based ranking. However,
-expected top-k overlap reaches about
-60% at `k=3`, which limits resolution. Taxi-only attention-LOO correlation is
-positive but varies substantially in strength. These checks do not show that
-the evaluator is perfect and attention fails. They show that, within the
-evaluator's measured but limited resolution, raw attention lacks reproducible
-evidence of explanation faithfulness. Figure 5.1 summarizes this cross-seed
-evidence path.
+## 5.2 How to read the evidence
 
-![Cross-seed evidence matrix](../figures/v9_evidence_path_summary.png)
+The experiment provides four related but different forms of evidence.
 
-**Figure 5.1.** Cross-seed results for the four research questions. The matrix
-separates clean decision relevance, paired stale-node attention, duration and
-faithfulness evidence, and the training comparison.
+**Clean baseline.** Under clean telemetry, raw attention performs close to its
+type-matched random control, while the LOO positive control gives a clearer
+response. This means that the evaluator can detect a more informative ranking,
+but raw attention does not provide that evidence consistently.
 
-## 5.2 What the stale-exposure result means
+**Stale-data exposure.** WAMSN rises as the outage becomes longer. This shows
+that more displayed attention is attached to old vehicle information. It does
+not show that data age causes faithfulness to decline because AoI is part of the
+WAMSN definition.
 
-WAMSN rises with outage duration for every GAT and GAT-Outage checkpoint. It is
-useful as an operational exposure indicator: it shows when an attention map
-contains more weight attached to old vehicle readings.
+**Within-policy association.** The association is supported for all six
+checkpoints: within the tested policies, decisions with greater stale exposure
+tend to have lower DEF. This is useful warning evidence, but it does not show
+that telemetry degradation caused the lower DEF or that the same pattern holds
+for dispatch actions alone.
 
-WAMSN is not evidence that AoI causes lower faithfulness. The metric itself
-weights attention by normalized AoI, so part of the increase follows directly
-from the manipulation. H1 and H4 show that DEF tends to be lower at greater
-exposure within most frozen policies. The paired audit asks a stricter
-question: does replacing the current observation with its degraded twin
-change attention and DEF at the same decision? That result changes sign across
-checkpoints trained with different seeds. Exposure, within-policy association,
-and direct paired change answer different questions and should be reported
-separately.
+**Direct paired change.** The clean/degraded pairs compare the same decision
+before and after the observation-layer change. Their attention and DEF changes
+are small and vary in direction across independently trained checkpoints. This
+is the more direct test of degradation, and it does not support one universal
+response.
 
-## 5.3 Dependence on checkpoint and analysis choice
+![Evidence interpretation summary](../figures/v9_evidence_path_summary.png)
 
-The primary aggregation gives positive stale-attention shifts for checkpoints
-trained with seeds 42 and 43 and negative shifts for checkpoints trained with
-seed 44. The values are small: approximately
--0.0035 to +0.0041 of total attention mass. Paired probability-DEF shifts are
-also small and reproduce the same direction in both training regimes. This
-shared pattern across the two model conditions suggests sensitivity to the
-trained checkpoint, not a stable response created by outage-aware training.
-The between-checkpoint range is larger than the observed difference between
-the two training-condition means. With only three training seeds, this is a
-descriptive comparison of selected checkpoints. It is not a formal estimate of
-the sources of variation, and it does not show that the seed value itself
-causes the response.
+**Figure 5.1.** How the four forms of evidence should be interpreted. Each form
+answers a different question and leads to a separate audit requirement.
 
-The random-trigger sensitivity analysis checks whether this pattern is only an
-artifact of the fixed tunnel location. The same attention-shift direction
-appears in five of six checkpoints, and the same probability-DEF direction in
-four of six. The
-seed-42 positive attention pattern and seed-44 negative pattern appear under
-both triggers and both training regimes. This makes a tunnel-only explanation
-less likely, but it is not a complete location control. A fixed trigger
-probability produces different realized exposure rates after each policy
-changes taxi trajectories, and the identity of the stale taxis also changes.
-The result supports checkpoint dependence but cannot establish one general
-effect of random or tunnel-triggered loss.
+The association and paired results are not contradictory. The first describes
+which decisions tend to have lower DEF within a trained policy. The second asks
+whether replacing a clean observation with its degraded twin changes DEF for
+the same decision. Keeping these questions separate prevents an association
+from being presented as a causal effect.
 
-The paired probability-DEF effects are small and may have little operational
-importance. The concern is not a large universal decline. Instead, even these
-small changes reverse direction across independently trained checkpoints, while
-raw corrected DEF under clean telemetry is already near zero. Together, these
-results do not provide a consistent basis for trusting the explanations, but
-they also do not show large damage from telemetry degradation.
+## 5.3 Why the result is not consistent
 
-The aggregation audit identifies a second problem. Individual heads can reverse
-the sign within the same checkpoint. The six checkpoint ranges extend from
--0.0109 to +0.0089 across the tested reductions. Selecting another head or
-layer after seeing the data could change the verbal conclusion. The
-declared mean remains the primary result, but the sensitivity analysis shows
-that it is not a unique explanation produced by the network.
+**Checkpoint dependence.** Independently trained checkpoints do not respond in
+the same direction. The pattern appears under both tunnel and random triggers,
+which reduces concern that it is produced only by the chosen tunnel. However,
+the random trigger does not create identical stale-node populations and cannot
+rule out scenario effects. The result therefore supports checkpoint dependence,
+not a general effect of telemetry loss.
 
-Query-row choice is similarly checkpoint-dependent. The selected request row
-improves request-action DEF by about 0.0064 for GAT seed 43 and 0.0073 for
-GAT-Outage seed 43, but changes little for the other four checkpoints. One
-query-row change therefore cannot be assumed to correct near-zero or negative
-DEF. An attention map shown to an operator needs a declared and tested rule for
-choosing its query, layer, and heads.
+**Action composition.** No-op accounts for 93.0% of scorable decisions that
+contain an available request. The duration and stale-exposure associations are
+not reproduced in the smaller dispatch group. The overall result therefore
+describes the observed action mix and should not be presented as a general
+result for dispatch decisions.
 
-The deterministic diagnostic reveals a related policy limitation. All six graph-attention
-checkpoints choose no-op in all 18 argmax episode evaluations, although their
-sampled policies outperform the declared lower bounds. This limitation does not
-invalidate the faithfulness calculations for sampled actions, but it means that
-the experiment audits decisions sampled from the policy distribution rather
-than a deployable deterministic dispatcher. The audit framework should evaluate the action rule
-intended for deployment and report any alternative action rule as a separate
-diagnostic.
+**Attention extraction.** Different heads, layers, aggregations, or query rows
+can change the direction or strength of the result. The network does not supply
+one self-evident attention map. Any map shown to an operator therefore needs a
+predeclared extraction rule that has been tested for stability.
 
-## 5.4 Role of the construct-validity audit
+**Action rule.** The main audit samples actions from the learned policy, matching
+the training procedure. In the smaller deterministic diagnostic, the selected
+checkpoints choose only no-op. This does not invalidate the sampled-action
+faithfulness results, but it means that the study does not demonstrate a
+deployable deterministic dispatcher. The audit must always evaluate the action
+rule intended for deployment.
 
-The construct-validity audit supports the primary experiment. Request nodes
-are both information and actions; peer taxis are context only. Uniform random
-deletion therefore creates a large action-removal artifact. Type matching and
-chosen-request protection make the comparison fairer.
+## 5.4 Why the construct-validity controls matter
 
-The LOO control checks a different question: can DEF respond when nodes are
-ranked by their own single-node margin loss? Its consistently positive result
-shows limited sensitivity, mainly for comprehensiveness. It is a positive
-control, not ground truth for the combined comprehensiveness-sufficiency score.
-Gradient x Input changes
-sign across checkpoints and is not automatically a stronger explanation in
-this task.
+A passenger-request node represents both information and an available action.
+Removing it can therefore remove the action being explained. A peer-taxi node
+is different: removing it hides vehicle information but leaves the action space
+unchanged. A uniform random baseline would mix these two effects and could make
+an explanation appear stronger simply because an action disappeared.
 
-Together, these checks change the conclusion from a simple “attention is near
-random” statement to a more defensible one. Raw attention remains below the
-LOO control in all six checkpoints and has positive taxi-only agreement with
-LOO, but both DEF and rank agreement vary by trained policy. The aggregation
-and query-row audits add further sensitivity. This provides some evidence of
-decision relevance, but not enough to treat attention as reliable by default.
+The type-matched, action-protected baseline makes the comparison fairer. It
+compares request nodes with request nodes and taxi nodes with taxi nodes, while
+protecting the selected request action. A positive DEF can then be interpreted
+as an advantage over comparable random information rather than an advantage
+created by deleting the chosen action.
 
-The top-k diagnostic further limits this interpretation. Attention-LOO overlap
-is above the expected matched-random overlap at `k=1`, but it offers no clear
-advantage over that baseline at `k=3`. This is consistent with reduced
-resolution as larger subsets overlap, not proof that the top attention node is
-the model's true reason or that every three-node display is random.
+LOO serves as a positive control. It ranks each node by the output change caused
+by removing that node, and it produces a clearer DEF response than raw attention
+for every checkpoint. This shows that the evaluator can respond to a more
+informative perturbation ranking. LOO is not a ground-truth explanation, and it
+does not prove that the evaluator captures every form of decision relevance.
+
+The overlap check adds one final limit. In a small graph, explanation and random
+top-k sets increasingly share the same nodes as `k` grows. This reduces the
+resolution of DEF. The controls therefore support a careful conclusion: raw
+attention lacks reproducible evidence of faithfulness within the resolution of
+the present evaluator. They do not show that every attention map is wrong.
 
 ## 5.5 Why outage training did not solve the problem
 
 The tested configuration trained with 30-second outages does not solve the
-explanation problem.
-GAT-Outage shows the same seed-dependent attention and paired DEF directions
-as GAT. It strengthens the H1 and H4 associations, but does not make the direct
-degraded-minus-clean response consistent across independently trained
-policies. Under the matched-seed H5 rule, both adverse correlations would need
-to move closer to zero. Neither does so for any of the three seeds.
+explanation problem. GAT-Outage does not make the direct clean/degraded response
+more consistent across independently trained policies. Training with stale
+observations may improve robustness for other purposes, but the present results
+do not show that it makes raw attention a more reliable explanation.
 
-These findings apply only to the tested form of robustness training. The
-comparison cannot show that the degraded training observations caused the
-difference because the two configurations have different optimization
-horizons. The reward also contains no term for explanation stability or
-faithfulness, so task-reward optimization alone is not designed to align
-attention with a human explanation. A future intervention would need a common
-training budget, independently trained models, and an explicit explanation
-objective.
+This is not a general rejection of degradation-aware training. The two tested
+configurations have different optimization horizons, so the comparison does not
+isolate the effect of degraded training observations. More importantly, the
+reward contains no term for explanation stability or faithfulness. A future
+test of model improvement would require a common training budget, independent
+training runs, and an explicit explanation objective.
 
 ## 5.6 Proposed audit framework
 
