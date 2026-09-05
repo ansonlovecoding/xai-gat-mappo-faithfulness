@@ -42,8 +42,7 @@ class DegradationConfig:
     # How degraded telemetry is corrupted:
     #   "freeze" (default; proposal §7.2): serve the last valid
     #            (position, velocity) snapshot to ALL observers.
-    #   "noise":  legacy Gaussian jitter on the true state (pre-freeze
-    #             results in results/legacy_sumo120_seed42_v1 used this).
+    #   "noise":  legacy Gaussian jitter retained for sensitivity checks.
     corruption: Literal["freeze", "noise"] = "freeze"
     # Severity knob: duration of the observation-layer outage after a trigger.
     # 0 = only the trigger observation is degraded.

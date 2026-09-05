@@ -1,9 +1,8 @@
 """Build SUMO scenarios for Yubei District tunnel areas.
 
 Each area is a small bounding box around a part of Chongqing Yubei District
-that contains tunnels. Tunnels become the natural telemetry-degradation zones
-for the GAT-MAPPO dispatch experiments — agents inside a tunnel edge lose
-GPS / V2X signal.
+that contains tunnels. Entering a configured tunnel edge triggers the
+observation-layer telemetry outage used by the dispatch experiments.
 
 Pipeline per area:
   1. Download OSM data for the bbox via osmGet.py (Overpass API)
@@ -17,8 +16,7 @@ Run from project root:
   python scripts/build_yubei.py --all
   python scripts/build_yubei.py --all --force        # re-fetch OSM + rebuild
 
-Verify each scenario visually after build:
-  python scripts/smoke_test.py is NOT wired for these — use sumo-gui directly:
+Verify each scenario visually after building it:
     sumo-gui -c scenarios/yubei/central_park/central_park.sumocfg
 """
 from __future__ import annotations
@@ -74,9 +72,8 @@ class Area:
     n_trips: int = 300
 
 
-# Bounding boxes are FIRST-PASS APPROXIMATIONS — verify each one on
-# https://www.openstreetmap.org/ before relying on numbers in the
-# dissertation. Each box should:
+# Bounding boxes define the scenario extraction areas. Verify each one against
+# https://www.openstreetmap.org/ before regenerating scenario files. Each box should:
 #   - cover the named area roughly 3-5 km on a side
 #   - include at least one named tunnel (check OSM for `tunnel=yes` ways)
 # If `tunnels.json` reports `n_tunnel_edges = 0`, the bbox missed.
@@ -174,7 +171,7 @@ def _extract_tunnel_edges(net_file: Path) -> tuple[list[str], list[dict]]:
     tree = ET.parse(net_file)
     root = tree.getroot()
 
-    # Pre-index connections so we can look up by 'from' / 'to' edge in O(1).
+    # Pre-index connections for O(1) lookup by source or destination edge.
     conn_from: dict[str, int] = {}
     conn_to: dict[str, int] = {}
     for conn in root.findall("connection"):

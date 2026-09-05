@@ -1,10 +1,8 @@
-"""Minimal multi-head Graph Attention Network layer, from scratch.
+"""Multi-head graph-attention layer with explicit attention outputs.
 
-We deliberately avoid `torch-geometric` here — installation is fragile
-(it wants specific torch/CUDA combinations), and for the dissertation we
-need first-class control over the attention weights (they're the *coupled*
-explanation channel). Hand-rolled scaled-dot-product attention with a
-padding mask gives us both.
+The implementation uses scaled dot-product attention and a padding mask. It
+returns the attention tensor required by the faithfulness audit without adding
+a `torch-geometric` dependency.
 
 Input assumption: the observation graph is *fully connected* among valid
 nodes. Padded positions are excluded via mask.

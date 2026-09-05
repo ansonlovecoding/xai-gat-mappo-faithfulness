@@ -1,6 +1,6 @@
 """Evaluate legal-random and nearest-request baselines on a dissertation matrix.
 
-The runner mirrors the held-out protocol in ``dissertation_v4.toml``: the same
+The runner mirrors the held-out protocol in ``dissertation_v8.toml``: the same
 area, test-demand split, evaluation seeds, episodes per seed, and demand-file
 rotation. Results are written to a new immutable JSON file with per-episode
 records, aggregate confidence intervals, and runtime provenance.
@@ -125,7 +125,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path,
-        default=PROJECT_ROOT / "configs/experiments/dissertation_v4.toml",
+        default=PROJECT_ROOT / "configs/experiments/dissertation_v8.toml",
     )
     parser.add_argument(
         "--policies", nargs="+", choices=sorted(POLICIES),
@@ -133,7 +133,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--output", type=Path,
-        default=PROJECT_ROOT / "results/dissertation_revision_v1/matched_baselines.json",
+        default=PROJECT_ROOT /
+        "runs/dissertation_v9_exposure_audit/matched_baselines.json",
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
@@ -205,7 +206,7 @@ def main() -> int:
     ]
     payload = {
         "schema_version": 1,
-        "experiment": "dissertation_revision_v1_matched_baselines",
+        "experiment": "dissertation_matched_baselines",
         "protocol": {
             "source_config": str(args.config.relative_to(PROJECT_ROOT)),
             "area": area,

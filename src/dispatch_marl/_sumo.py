@@ -8,8 +8,7 @@ Two responsibilities:
    back to `traci` if libsumo isn't available.
 
 Every module inside this package that needs a `traci`-shaped API should
-`from ._sumo import traci` — do not `import traci` directly, otherwise
-you bypass the libsumo speedup.
+Import `traci` from this module so that libsumo acceleration remains active.
 
 `USING_LIBSUMO` is exposed so callers can branch on backend when the two
 differ semantically (only real difference at time of writing: libsumo has

@@ -7,8 +7,8 @@ Steps:
   4. Feed the sampled actions back into the env to close the loop
   5. Run for a few RL steps and confirm attention weights are valid softmax
 
-Fresh init means the policy is bad — we are NOT measuring pickup counts here,
-we're verifying the tensor plumbing.
+The randomly initialized policy is used only to verify tensor shapes, numerical
+validity, and environment integration. Pickup performance is not evaluated.
 """
 from __future__ import annotations
 

@@ -331,8 +331,10 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("root", type=Path,
-                        nargs="?", default=PROJECT_ROOT / "runs/dissertation_v4")
+    parser.add_argument(
+        "root", type=Path, nargs="?",
+        default=PROJECT_ROOT / "runs/dissertation_v9_exposure_audit",
+    )
     parser.add_argument(
         "--performance-root", type=Path, default=None,
         help="experiment root containing frozen clean evaluations; defaults "

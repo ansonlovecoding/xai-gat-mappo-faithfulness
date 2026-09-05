@@ -1,18 +1,14 @@
-"""B1 baseline: MAPPO + plain MLP (no graph structure).
+"""MAPPO baseline with a plain MLP encoder and no graph structure.
 
-Proposal §7.5's B1 — identical observation, action space, reward, and MAPPO
-trainer as the GAT policy (B2), but the encoder is a flat MLP over the
-concatenated obs vector. The point of the baseline: isolate how much of
-B2's performance comes from the *graph attention* inductive bias rather
-than from MAPPO + reward shaping.
+It uses the same observation, action space, reward, and trainer as the GAT
+policy, but encodes the flattened observation with an MLP.
 
 Interface-compatible with `DispatchGATPolicy` everywhere the training and
 evaluation loops touch it (`forward` → logits/value, `get_action_and_value`
 → action/log_prob/entropy/value). Deliberately NOT compatible with the
 faithfulness pipeline: an MLP has no attention channel, so there is no
-coupled explanation to score. `forward()` returns no "attention" key —
-any attempt to run DEF/WAMSN against B1 fails loudly rather than
-silently producing nonsense.
+attention explanation to score. `forward()` therefore returns no `attention`
+key.
 
 Design notes:
 

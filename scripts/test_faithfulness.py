@@ -8,8 +8,8 @@ Steps:
      FaithfulnessEvaluator.evaluate_decision().
   4. Check shapes, ranges, and no NaN on the returned DecisionFaithfulness.
 
-Fresh init = policy is bad. We are NOT measuring "does DEF go up over
-training" here; we're only verifying the evaluator plumbing.
+The randomly initialized policy is used only to verify the evaluator's
+interfaces, output ranges, and numerical validity.
 """
 from __future__ import annotations
 

@@ -19,7 +19,7 @@ top of the coupled attention channel already exposed by `DispatchGATPolicy`:
 
 ## Design notes
 
-- **Node indexing.** In our per-agent heterogeneous graph the ordering is:
+- **Node indexing.** The per-agent heterogeneous graph uses this ordering:
   node 0 = self, nodes 1..K_n = neighbour taxis, nodes K_n+1..N-1 =
   candidate reservations. `self` is never ablated — removing it would
   destroy the decision context.
@@ -35,7 +35,7 @@ top of the coupled attention channel already exposed by `DispatchGATPolicy`:
 
 - **Batching.** The default implementation does one policy forward per
   counterfactual (~36 forwards per decision at default settings). On the
-  hardware sizes we're using this is comfortable (< 100 ms per decision on
+  tested hardware this remains practical (< 100 ms per decision on
   MPS). Optimising to batched counterfactuals is straightforward if a
   large sweep needs the speedup.
 """
@@ -602,7 +602,7 @@ class FaithfulnessEvaluator:
         By default the explanation being scored is the coupled channel (the
         GAT attention row). Pass `importance_row` — any (N,) non-negative
         per-node importance — to score a different explanation over the
-        same decision, e.g. the decoupled explainer head. Top-k selection
+        same decision, for example a separate importance method. Top-k selection
         AND WAMSN then use that row; `attention_row` in the result stays
         the raw attention (so drift remains well-defined either way).
         """

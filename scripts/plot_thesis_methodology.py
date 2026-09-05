@@ -1,4 +1,4 @@
-"""Create concise methodology diagrams that match the dissertation v4 code."""
+"""Create methodology diagrams for the current dissertation implementation."""
 from __future__ import annotations
 
 from pathlib import Path

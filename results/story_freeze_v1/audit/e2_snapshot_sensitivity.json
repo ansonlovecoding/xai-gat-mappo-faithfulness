@@ -1,6 +1,0 @@
-{
-  "description": "H5' checkpoint-selection sensitivity: clean margin-DEF per snapshot (2 episodes, test demand)",
-  "per_epoch_def_m": {"0": -0.733, "17_best": -0.785, "50": -0.010,
-                       "100": 0.0, "150": 0.0, "200": 0.0, "250": 0.0, "299": 0.0},
-  "note": "best ckpt (epoch 17) is faithfulness-indistinguishable from the UNTRAINED net (epoch 0); post-collapse snapshots are degenerate (all-noop, saturated). The H5-rejection reflects an early-training policy, supporting the 'training-procedure failure, not idea failure' caveat."
-}

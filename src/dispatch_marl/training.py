@@ -1,8 +1,4 @@
-"""MAPPO training utilities for the dispatch env.
-
-Kept intentionally as one module rather than a package until it needs to
-grow — most of the logic here is orchestration glue that reads better in
-one file.
+"""MAPPO rollout collection, advantage estimation, and optimization utilities.
 
 Components:
 
@@ -15,19 +11,17 @@ Components:
     buffer, with mini-batching, clipped surrogate loss, value loss, and
     entropy bonus.
 
-Design notes worth citing later in the thesis:
+Design decisions:
 
-  * We use a **shared policy** across taxis (parameter sharing MAPPO). Homogeneous
-    fleet, minimal parameter budget, and every collected agent-step contributes
-    to the same gradient — critical for sample efficiency on the ~2 k
-    agent-steps a 1200-second episode yields.
+  * All taxis share one policy. Every collected agent step therefore contributes
+    to the same gradient, which improves sample efficiency.
   * Team task reward is shared, while the taxi whose dispatch succeeds receives
     an additional difference-credit bonus during training. This distinguishes
     its action from another taxi's no-op without changing reported team reward.
-    When a taxi is mid-ride (not in ``env.agents``), it accrues no records — a
-    simplification of the underlying SMDP that we may revisit if needed.
+    A taxi records no decisions while it is serving a passenger and is absent
+    from ``env.agents``.
   * **GAE per agent trajectory**: each taxi's trajectory is a contiguous
-    sequence of records (in the order it was seen); we treat episode end as
+    sequence of records in observation order; episode end is treated as
     terminal (V_{T+1} = 0).
 """
 from __future__ import annotations

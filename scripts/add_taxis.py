@@ -14,18 +14,16 @@ Then rewrites `<area>.sumocfg` to:
     dispatch — the GAT-MAPPO policy is responsible for calling
     `traci.vehicle.dispatchTaxi(taxi_id, [reservation_id])` itself
 
-This decoupling matters for the dissertation: the env exposes the raw
-reservation pool, the policy chooses the matching, and we can compare against
-SUMO's built-in greedy / greedyShared baselines later by overriding the
-dispatch algorithm at runtime.
+The environment exposes the reservation pool and the policy chooses the
+dispatch action. SUMO's built-in dispatch can still be enabled at runtime for
+scenario inspection.
 
 Run from project root:
     python scripts/add_taxis.py --area central_park
     python scripts/add_taxis.py --all
     python scripts/add_taxis.py --all --taxis 30 --rides 80 --end-time 1800
 
-Quick visual check (overrides traci dispatch with built-in greedy so you can
-see taxis actually serve rides without writing a controller):
+Visual check using SUMO's built-in greedy dispatcher:
     sumo-gui -c scenarios/yubei/central_park/central_park.sumocfg \\
              --device.taxi.dispatch-algorithm greedy
 """

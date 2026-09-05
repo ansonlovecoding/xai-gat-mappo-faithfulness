@@ -52,6 +52,7 @@ same SUMO state supports paired comparison and never selects an action.
 | `runs/dissertation_v8/` | Stable training checkpoints and clean evaluation artifacts |
 | `runs/dissertation_v9_exposure_audit/` | Raw final audit runs |
 | `results/dissertation_v9_exposure_audit/` | Validated summaries and release-audit decision |
+| `results/supporting_audits/` | Capability lower bounds and construct-validity evidence |
 | `docs/dissertation/` | Dissertation chapter sources |
 | `docs/figures/` | Thesis figures generated from experiment outputs |
 

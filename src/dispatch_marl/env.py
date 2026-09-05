@@ -54,10 +54,7 @@ RES_FEAT_DIM = 5
 # Normalisation constants used by the observation builder. Set explicitly here
 # so the policy and any future faithfulness code can import them.
 VELOCITY_MAX_MS = 30.0
-# Matches the proposal's severity ladder (§7.2): the "Extreme" level is a
-# 60 s maximum AoI, so 60 s staleness normalises to 1.0. (Was 300 before
-# the freeze-mechanism rework; results produced under 300 live in
-# results/legacy_sumo120_seed42_v1 and are not comparable on WAMSN scale.)
+# A 60 s stale observation maps to 1.0 for the reported outage-duration range.
 AOI_MAX_S = 60.0
 
 
@@ -112,7 +109,7 @@ class DispatchEnv(ParallelEnv):
             f"taxi_{i}" for i in range(self.config.n_taxis)
         ]
         self.agents: list[str] = []
-        # Per-agent cache of the reservation-ID ordering we showed at obs time,
+        # Per-agent cache of the reservation-ID ordering presented at observation time,
         # so an action index in {1..K} can be translated back to a concrete
         # reservation ID at step time.
         self._pending_res_map: dict[str, list[str]] = {}
@@ -207,7 +204,7 @@ class DispatchEnv(ParallelEnv):
                 self._sumo_started = False
 
         if not reloaded:
-            # Fresh SUMO subprocess with a UNIQUE label so we can never
+            # Fresh SUMO subprocess with a unique label to prevent
             # collide with a stale "default" entry left by a prior fatal.
             self._label_counter += 1
             self._sumo_label = f"env_{id(self):x}_{self._label_counter}"
@@ -261,7 +258,7 @@ class DispatchEnv(ParallelEnv):
             live_idle = set()
             live_res_ids = set()
 
-        pickups_dispatched: list[str] = []  # reservation IDs we assigned
+        pickups_dispatched: list[str] = []  # assigned reservation IDs
         successful_dispatch_agents: set[str] = set()
         for agent, action in actions.items():
             if action == 0 or agent not in live_idle:
@@ -281,7 +278,7 @@ class DispatchEnv(ParallelEnv):
                 continue
 
         # 2. Advance the simulation by step_length_s SUMO seconds. Accumulate
-        #    delivered riders (persons that arrived at destination) as we go.
+        #    delivered riders (persons that arrived at destination).
         pickups_delta = 0
         target = self._sim_time + self.config.step_length_s
         while self._sim_time < target and self._sim_time < self._end_time:

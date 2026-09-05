@@ -1,9 +1,7 @@
-"""Evaluate a trained GAT-MAPPO checkpoint against the baseline table.
+"""Evaluate a trained GAT-MAPPO or MLP checkpoint.
 
 Runs one or more evaluation episodes with the checkpointed policy and
-reports pickups + reward + wait-time — the same metrics
-`scripts/run_baselines.py` produces — so the numbers slot straight into a
-comparison table.
+reports pickups, reward, and wait time in a structured JSON result.
 
 Deterministic by default (argmax over action logits). Pass --stochastic to
 sample instead, which matches training-time behaviour.
@@ -111,7 +109,7 @@ def _run_episode(
     step = 0
     last_wait = 0.0
     faith_records: list[dict] = []
-    # A global counter over decisions is what we sub-sample against, so the
+    # A global decision counter controls sub-sampling, so the
     # cadence is consistent regardless of how many agents act on a given step.
     decision_counter = 0
     exposed_decision_counter = 0

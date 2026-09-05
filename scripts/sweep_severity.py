@@ -1,4 +1,4 @@
-"""Severity sweep: the dataset the dissertation's story is tested on.
+"""Evaluate a frozen policy across telemetry-outage conditions.
 
 Primary (and default only) axis — **outage-duration ladder**:
 tunnel-entry-triggered signal loss with freeze corruption and fixed
@@ -6,14 +6,12 @@ observation-layer windows of {10, 20, 30, 60} s. The empirical AoI is
 reported as a description of stale exposure, not as a causal dose.
 The clean condition (level 0) is the shared reference point.
 
-Appendix axis (opt-in, `--with-dropout-axis`): matched-structure
-random_dropout at the same outage ladder — same staleness depth, no
-spatial correlation. Kept out of the main text per the simplified
-three-act story.
+Optional axis (`--with-dropout-axis`): random dropout at the same outage
+durations, providing a trigger-location sensitivity comparison.
 
 Episodes run on the held-out **test** demand split by default
-(`demand_manifest.json`; disable with `--demand-split none` for legacy
-comparison). Per cell we record policy metrics, empirical degradation
+(`demand_manifest.json`; disable with `--demand-split none`). Each cell records
+policy metrics, empirical degradation
 rate and AoI, aggregate DEF/WAMSN/drift, and raw per-decision records.
 
 Downstream: `scripts/analyze_hypotheses.py <sweep-dir>`.
@@ -112,7 +110,7 @@ def main() -> int:
                              "'type_matched' draws subsets with the SAME "
                              "taxi/reservation composition as the top-k set and "
                              "is the reportable metric (see "
-                             "results/story_freeze_v1/audit/type_matched_control.json)")
+                             "results/supporting_audits/type_matched_control.json)")
     parser.add_argument("--exclusion-variant", action=argparse.BooleanOptionalAction,
                         default=True,
                         help="ALSO compute the construct-validity DEF variant "

@@ -18,10 +18,7 @@ Critic head takes a masked mean of all node embeddings → linear → scalar V.
 
 Coupled explanation: `forward()` returns `attention` — the per-layer, per-head
 softmax weights from every GATLayer. Same tensor is used by the policy to
-decide AND by the faithfulness pipeline to explain. This is precisely the
-"coupled" regime the dissertation will contrast against a decoupled head.
-The decoupled head is deliberately NOT added yet — we'll design it after
-faithfulness metrics are picked.
+select actions and by the faithfulness pipeline as the candidate explanation.
 
 The MAPPO trainer will call:
     policy.get_action_and_value(obs, action=None) → action, log_prob, entropy, value, aux
@@ -69,13 +66,6 @@ class PolicyConfig:
     # produces a single team V that is broadcast to every agent. This matches
     # the proposal's §7.7 CTDE description: at training time the critic sees
     # the joint state, at execution time only the actor is used.
-    #
-    # The default was flipped to True after an A/B run (seed 42, 150 epochs,
-    # central_park): CTDE lifted mean pickups from 4.07 → 4.81 (+18 %) and
-    # the best rolling-mean-of-10 from 8.00 to 8.80. More importantly, it
-    # mitigated the late-run entropy collapse that killed the decentralised
-    # baseline after ~epoch 100. See results/ab_centralised_critic_v1_seed42/
-    # for the full comparison.
     #
     # During PPO update, transition ids keep every joint state intact and the
     # critic pools agents within that transition only. This matches rollout
@@ -132,7 +122,7 @@ class DispatchGATPolicy(nn.Module):
         # Critic head. Used in both decentralised (per-agent V from that
         # agent's own node-bank pool) and centralised (team V from a joint
         # pool across all agents' node banks) modes — the difference is
-        # what we feed it, not the head itself.
+        # The modes differ in the supplied input rather than the head.
         self.critic_head = nn.Sequential(
             nn.Linear(d, d),
             nn.GELU(),
@@ -280,7 +270,8 @@ class DispatchGATPolicy(nn.Module):
         critic_group: torch.Tensor | None = None,
     ) -> dict[str, Any]:
         """PPO/MAPPO-style hook. If `action` is provided (during PPO update)
-        we compute log_prob and entropy at that action; otherwise we sample.
+        log_prob and entropy are evaluated for that action; otherwise an action
+        is sampled.
         """
         out = self.forward(obs, critic_group=critic_group)
         dist = torch.distributions.Categorical(logits=out["logits"])

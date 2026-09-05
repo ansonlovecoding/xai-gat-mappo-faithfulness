@@ -80,8 +80,10 @@ def _evaluation_is_compatible(path: Path, checkpoint: Path, evaluation_seed: int
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path,
-                        default=PROJECT_ROOT / "configs/experiments/dissertation_v4.toml")
+    parser.add_argument(
+        "--config", type=Path, required=True,
+        help="fixed protocol (use v8 for training and v9 for auditing)",
+    )
     parser.add_argument("--stage", choices=["train", "select", "evaluate", "diagnose",
                                             "sweep", "robustness", "preflight",
                                             "analyze", "summarize", "controls",

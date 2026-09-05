@@ -1,10 +1,8 @@
 """Structured vs random telemetry degradation ablation.
 
 Runs the same checkpoint under three conditions on identical seeds and prints
-one comparison table. This is the dissertation's flagship ablation (README
-§5, project_dissertation memory): does a policy behave (and does its
-explanation stay faithful) *differently* under physically-grounded
-degradation than under matched-rate random noise?
+one comparison table. The comparison separates tunnel-triggered telemetry loss
+from a matched-rate random trigger.
 
 Conditions:
 
@@ -18,8 +16,7 @@ Conditions:
 
 Reported per condition: pickups, reward, mean_wait, empirical degradation
 rate, DEF (mean ± std, plus p05/p50/p95), WAMSN (mean ± std). All from the
-same `--faithfulness`-enabled machinery in `eval_policy.py` — this script is
-just an orchestrator that runs it three times.
+same `--faithfulness` evaluation machinery used by `eval_policy.py`.
 
 Usage:
   python scripts/eval_degradation_ablation.py <ckpt>
@@ -224,9 +221,8 @@ def main() -> int:
                      "attention channel")
     area = args.area or ckpt["env_config"]["area"]
 
-    # One evaluator shared across conditions — its RNG is reseeded per
-    # __init__, so we're consistent. Sub-samples the same set of decisions
-    # per RL step regardless of condition.
+    # One evaluator is shared across conditions. Its seeded schedule samples
+    # the same decision positions in every condition.
     faith_cfg = FaithfulnessConfig(
         top_k_values=tuple(args.faithfulness_top_k),
         n_random_baselines=args.faithfulness_random_baselines,
@@ -242,10 +238,7 @@ def main() -> int:
           f"every={args.faithfulness_every}")
     print()
 
-    # --- Run tunnel_triggered first, to measure the empirical rate ---
-    # (Ordering off → tunnel → random would be more natural to read, but
-    # random_dropout needs the tunnel rate as input. Off is trivially fast
-    # so we run it last for the print-order.)
+    # Measure the tunnel rate before configuring the matched random condition.
     print("[1/3] tunnel_triggered → measuring empirical rate…")
     tunnel = _run_condition(
         policy, device, area, args.seed, args.episodes,
@@ -292,10 +285,7 @@ def main() -> int:
             f"{_fmt_faith(f, 'drift_mean', '.4f'):>7}"
         )
 
-    # --- Ablation-specific commentary ---
-    # The dissertation's claim rests on the *difference* between tunnel and
-    # random_dropout at matched rate. Surface those deltas immediately so
-    # the reader/user doesn't need to eyeball columns.
+    # Report the matched-rate differences directly after the condition table.
     print()
     print("structured vs random (tunnel_triggered − random_dropout, at matched rate):")
     if tunnel["faithfulness"].get("def_mean") is not None and \

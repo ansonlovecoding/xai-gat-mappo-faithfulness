@@ -1,6 +1,6 @@
 """Run perturbation positive controls for the dissertation faithfulness audit.
 
-For selected B2/D30 checkpoints, this runner compares coupled GAT attention
+For selected GAT and GAT-Outage checkpoints, this runner compares attention
 with a leave-one-out (LOO) ranking under clean and 60 s tunnel-triggered
 telemetry conditions. The LOO ranking protects the chosen request node, so
 the control measures information removal rather than action deletion.
@@ -165,12 +165,14 @@ def main() -> int:
         help="score request-action decisions only, comparing the fixed self "
              "row with the selected request's attention row",
     )
-    parser.add_argument("--out", type=Path,
-                        default=PROJECT_ROOT / "runs" / "dissertation_revision_v1"
-                        / "faithfulness_controls")
+    parser.add_argument(
+        "--out", type=Path,
+        default=PROJECT_ROOT / "runs" / "dissertation_v9_exposure_audit"
+        / "faithfulness_controls",
+    )
     parser.add_argument(
         "--checkpoint-root", type=Path,
-        default=PROJECT_ROOT / "runs" / "dissertation_v4" / "training",
+        default=PROJECT_ROOT / "runs" / "dissertation_v8" / "training",
         help="training directory containing MODEL/seed_N/ckpt_selected.pt",
     )
     args = parser.parse_args()

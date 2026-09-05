@@ -1,8 +1,7 @@
-"""Train the GAT-MAPPO policy on a Yubei dispatch scenario.
+"""Train a MAPPO dispatch policy on a Yubei SUMO scenario.
 
-Simplest possible working training loop — one env, one rollout per epoch, PPO
-update, then repeat. Not vectorised across envs (TraCI is single-connection
-per process); we can add subprocess parallelism later.
+The loop collects one rollout per epoch and then performs a PPO update. It uses
+one environment because TraCI provides one connection per process.
 
 Logs to stdout as a table AND appends a JSONL row per epoch under
 ``runs/mappo/<area>_<timestamp>/train_log.jsonl``. Model checkpoints saved at
@@ -91,7 +90,7 @@ def _sample_faithfulness(
         return {"n_scored": 0, "n_total": 0}
 
     # Random subset without replacement — keeps eval cheap and lets us
-    # bootstrap CIs later if needed.
+    # support later bootstrap confidence intervals.
     idx = rng.choice(len(buffer), size=n, replace=False)
 
     def_scores: list[float] = []

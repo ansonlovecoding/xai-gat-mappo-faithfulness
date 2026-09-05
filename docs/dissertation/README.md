@@ -6,8 +6,8 @@ under Telemetry Degradation*.
 
 The dissertation is prepared for the MSc in Artificial Intelligence at De
 Montfort University Dubai. Its quantitative claims are based on the validated
-outputs under `results/dissertation_v9_exposure_audit/`. The supporting
-construct-validity audit is stored under `results/story_freeze_v1/audit/`.
+outputs under `results/dissertation_v9_exposure_audit/`. Supporting capability
+and construct-validity audits are stored under `results/supporting_audits/`.
 
 | File | Content | Status |
 |---|---|---|

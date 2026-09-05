@@ -195,7 +195,7 @@ HEADING_PAGES = {
 
 def paragraph_text(element) -> str:
     # Word may repeat text in proofing or field XML; Paragraph.text reflects
-    # the single string shown to the reader.
+    # the single displayed string.
     return Paragraph(element, None).text.strip()
 
 

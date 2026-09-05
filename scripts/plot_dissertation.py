@@ -13,11 +13,11 @@ from matplotlib.patches import FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNS = ROOT / "runs" / "dissertation_v4"
-TRAINING_RUNS = RUNS
+RUNS = ROOT / "runs" / "dissertation_v9_exposure_audit"
+TRAINING_RUNS = ROOT / "runs" / "dissertation_v8"
 ANALYSIS = ROOT / "results" / "dissertation_v9_exposure_audit"
 OUT = ROOT / "docs" / "figures"
-PREFIX = "v4"
+PREFIX = "v9"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
 LABELS = {
     "B1_mlp": "MLP",
@@ -79,49 +79,6 @@ def performance_figure() -> None:
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     _save(fig, "clean_performance_by_training_seed")
-
-
-def checkpoint_selection_figure() -> None:
-    models = list(LABELS)
-    annotation_offsets = {
-        "B1_mlp": {42: (4, -12), 43: (4, -12), 44: (-43, 7)},
-        "B2_gat": {42: (4, -13), 43: (4, -12), 44: (4, 6)},
-        "H5_gat_degraded": {42: (4, -12), 43: (4, -12), 44: (4, 7)},
-    }
-    fig, axes = plt.subplots(1, 3, figsize=(8.0, 3.5), sharex=True, sharey=True)
-    for ax, model in zip(axes, models):
-        for seed in SEED_STYLES:
-            path = (TRAINING_RUNS / "training" / model / f"seed_{seed}"
-                    / "checkpoint_selection.json")
-            payload = json.loads(path.read_text(encoding="utf-8"))
-            candidates = [item for item in payload["candidates"]
-                          if item["checkpoint"].startswith("ckpt_epoch_")]
-            candidates.sort(key=lambda item: item["epoch"])
-            style = SEED_STYLES[seed]
-            ax.plot([item["epoch"] for item in candidates],
-                    [item["mean_pickups"] for item in candidates],
-                    marker=style["marker"], linestyle=style["linestyle"],
-                    color=style["color"], alpha=0.62,
-                    markersize=3.5, linewidth=1.2, label=f"seed {seed}")
-            selected = payload["selected"]
-            ax.scatter(selected["epoch"], selected["mean_pickups"],
-                       marker="*", s=135, facecolor=style["color"],
-                       edgecolor="#202020", linewidth=0.7, zorder=5)
-            ax.annotate(f"{seed}: e{selected['epoch']}",
-                        (selected["epoch"], selected["mean_pickups"]),
-                        xytext=annotation_offsets[model][seed],
-                        textcoords="offset points", fontsize=7.2,
-                        color="#202020")
-        ax.set_title(LABELS[model])
-        ax.grid(color="#D8D8D8", linewidth=0.7)
-        ax.spines[["top", "right"]].set_visible(False)
-    axes[0].set_ylabel("Mean validation pickups")
-    for ax in axes:
-        ax.set_xlabel("Checkpoint epoch")
-    axes[-1].legend(frameon=False, fontsize=8, ncol=1)
-    fig.suptitle("Validation checkpoint selection")
-    fig.tight_layout()
-    _save(fig, "checkpoint_selection_by_model_and_seed")
 
 
 def training_diagnostics_figure() -> None:
@@ -829,7 +786,6 @@ def main() -> None:
     OUT = args.out
     PREFIX = args.prefix
     performance_figure()
-    checkpoint_selection_figure()
     training_diagnostics_figure()
     decoupling_figure()
     shift_figure()

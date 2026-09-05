@@ -1,4 +1,4 @@
-"""Aggregate the B2/D30 faithfulness-control runs at episode-block level."""
+"""Aggregate GAT and GAT-Outage controls at episode-block level."""
 from __future__ import annotations
 
 import argparse
@@ -13,14 +13,14 @@ from matplotlib.colors import TwoSlopeNorm
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUTS = [
-    ROOT / "runs/dissertation_revision_v1/faithfulness_controls/B2_full",
-    ROOT / "runs/dissertation_revision_v1/faithfulness_controls/D30_full",
-    ROOT / "runs/dissertation_revision_v1/faithfulness_controls/B2_action_row",
-    ROOT / "runs/dissertation_revision_v1/faithfulness_controls/D30_action_row",
+    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full",
+    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full",
+    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row",
+    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row",
 ]
-DEFAULT_OUT = ROOT / "results/dissertation_revision_v1/faithfulness_controls"
+DEFAULT_OUT = ROOT / "results/dissertation_v9_exposure_audit/faithfulness_controls"
 FIG_DIR = ROOT / "docs/figures"
-FIG_PREFIX = "v4"
+FIG_PREFIX = "v9"
 MODEL_LABEL = {"B2_gat": "B2", "H5_gat_degraded": "D30"}
 MODEL_DISPLAY = {"B2": "GAT", "D30": "GAT-Outage"}
 RANKER_LABEL = {

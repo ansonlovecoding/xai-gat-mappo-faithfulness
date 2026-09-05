@@ -73,9 +73,9 @@ configs/experiments/dissertation_v9_exposure_audit.toml
 Compact citable summaries, analyses, manifests, and selection records are
 committed under `results/dissertation_v9_exposure_audit/`.
 
-The older `results/story_freeze_v1/` directory is retained only for the
-supporting construct-validity audit and historical comparison. It is not the
-source of the final H1-H5 verdicts.
+Two compact supporting audits are stored under `results/supporting_audits/`.
+They provide the lower-bound comparison and the construct-validity result used
+in Chapter 4, but they are not the source of the final H1-H5 verdicts.
 
 ## 1. What the experiment does
 
@@ -270,15 +270,7 @@ H5_gat_degraded
 Only GAT (`B2_gat`) and GAT-Outage (`H5_gat_degraded`) have faithfulness
 sweeps. MLP (`B1_mlp`) supplies performance context.
 
-## 6. Run the revision audits
-
-The archived v4 audit remains available for historical verification:
-
-```bash
-.venv/bin/python scripts/audit_dissertation_v4.py
-```
-
-It is not the source of the final v9 hypothesis verdicts.
+## 6. Run the additional controls
 
 Run the legal-random and greedy-nearest lower bounds on the same held-out
 protocol:
@@ -288,8 +280,8 @@ protocol:
 ```
 
 Run the additional faithfulness diagnostics. Start with the two-cell smoke
-test, then run the complete B2 and D30 matrices. Cell files make these commands
-resumable.
+test, then run the complete GAT and GAT-Outage matrices. Cell files make these
+commands resumable.
 
 ```bash
 .venv/bin/python scripts/run_faithfulness_controls.py --smoke \
@@ -357,19 +349,8 @@ runs/dissertation_v8/
   evaluations/
     <model>/seed_<training-seed>/
       eval_seed_<evaluation-seed>.json
-  sweeps/
-    B2_gat/seed_<training-seed>/
-    H5_gat_degraded/seed_<training-seed>/
-      manifest.json
-      cells/
-      preflight.json
-      analysis.json
-  summary.json
-  summary.csv
   performance_context.json
   performance_context.csv
-  training_seed_synthesis.json
-  training_seed_synthesis.csv
 
 results/dissertation_v9_exposure_audit/explanation_audit/
   audit_report.json
@@ -395,6 +376,10 @@ runs/dissertation_v9_exposure_audit/
   deterministic_diagnostics.csv
   training_seed_synthesis.json
   training_seed_synthesis.csv
+
+results/supporting_audits/
+  matched_baselines.json
+  type_matched_control.json
 ```
 
 Do not delete `cells/` if another reader needs to audit or recompute the
@@ -431,7 +416,7 @@ After all analyses exist:
 .venv/bin/python scripts/run_dissertation_experiments.py \
   --config configs/experiments/dissertation_v9_exposure_audit.toml \
   --stage summarize
-.venv/bin/python scripts/plot_dissertation_v4.py \
+.venv/bin/python scripts/plot_dissertation.py \
   --root runs/dissertation_v9_exposure_audit \
   --training-root runs/dissertation_v8 \
   --analysis-root results/dissertation_v9_exposure_audit \
@@ -477,21 +462,23 @@ The conclusion is therefore not that AoI causes lower faithfulness. Longer
 outages consistently increase stale-data exposure, while attention
 reallocation and its relationship with DEF depend on the trained policy.
 
-## 11. Supporting legacy audit
+## 11. Supporting audits
 
-The older archive remains useful for understanding why the final protocol uses
+The retained construct-validity result explains why the final protocol uses
 type-matched random occlusions:
 
 ```text
-results/story_freeze_v1/audit/type_matched_control.json
-results/story_freeze_v1/audit/capability_spectrum_clean.json
-results/story_freeze_v1/audit/compare_typematched_clean.json
-results/story_freeze_v1/audit/compare_typematched_tunnel.json
+results/supporting_audits/type_matched_control.json
 ```
 
-These files document the construct-validity problem: deleting a request node
+This file documents the construct-validity problem: deleting a request node
 can also delete an action, while deleting a taxi node only removes information.
-They should not be substituted for the v9 H1-H5 analysis.
+It should not be substituted for the v9 H1-H5 analysis. The capability lower
+bounds reported in Table 4.1 are preserved separately at:
+
+```text
+results/supporting_audits/matched_baselines.json
+```
 
 ## 12. Troubleshooting
 
