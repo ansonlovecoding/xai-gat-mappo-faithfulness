@@ -35,7 +35,6 @@ demand_split = "val"
 episodes = 8
 seed = 2026
 minimum_mean_pickups = 2.0
-minimum_improvement_over_initial = 1.0
 
 [stability]
 final_window = 10

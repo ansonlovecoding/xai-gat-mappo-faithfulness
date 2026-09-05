@@ -856,6 +856,8 @@ def main() -> int:
                         help="sample actions instead of argmax")
     parser.add_argument("--degradation", default="off",
                         choices=["off", "tunnel_triggered", "random_dropout"])
+    parser.add_argument("--outage-duration", type=float, default=0.0,
+                        help="observation freeze duration in seconds after signal loss")
     parser.add_argument("--dropout-rate", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default=None)
@@ -911,7 +913,11 @@ def main() -> int:
     env_cfg = DispatchEnvConfig(
         area=area,
         seed=args.seed,
-        degradation=DegradationConfig(mode=args.degradation, dropout_rate=args.dropout_rate),
+        degradation=DegradationConfig(
+            mode=args.degradation,
+            dropout_rate=args.dropout_rate,
+            outage_duration_s=args.outage_duration,
+        ),
         emit_clean_obs=args.drift,
     )
     env = DispatchEnv(env_cfg)
@@ -1061,6 +1067,7 @@ def main() -> int:
         "epoch": ckpt.get("epoch"),
         "area": area,
         "degradation": args.degradation,
+        "outage_duration_s": args.outage_duration,
         "stochastic": args.stochastic,
         "seed": args.seed,
         "episodes": len(results),

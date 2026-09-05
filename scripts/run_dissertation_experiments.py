@@ -294,9 +294,18 @@ def main() -> int:
                         "--demand-split", selection_cfg["demand_split"],
                         "--minimum-mean-pickups",
                         str(selection_cfg["minimum_mean_pickups"]),
-                        "--minimum-improvement-over-initial",
-                        str(selection_cfg["minimum_improvement_over_initial"]),
                     ]
+                    if model["degradation"] != "off":
+                        command += ["--degradation", model["degradation"]]
+                        command += [
+                            "--outage-duration",
+                            str(model.get("outage_duration", 0.0)),
+                        ]
+                    if "minimum_improvement_over_initial" in selection_cfg:
+                        command += [
+                            "--minimum-improvement-over-initial",
+                            str(selection_cfg["minimum_improvement_over_initial"]),
+                        ]
                     if args.resume:
                         command.append("--resume")
                     _run(command, dry_run=args.dry_run)

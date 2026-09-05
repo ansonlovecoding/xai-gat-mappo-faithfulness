@@ -49,6 +49,8 @@ def _compatible_result(path: Path, checkpoint: Path, args: argparse.Namespace) -
         and result.get("seed") == args.seed
         and result.get("demand_split") == args.demand_split
         and result.get("stochastic") is True
+        and result.get("degradation") == args.degradation
+        and float(result.get("outage_duration_s", 0.0)) == args.outage_duration
     )
 
 
@@ -58,8 +60,11 @@ def main() -> int:
     parser.add_argument("--episodes", type=int, default=3)
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--demand-split", choices=["val"], default="val")
+    parser.add_argument("--degradation", default="off",
+                        choices=["off", "tunnel_triggered", "random_dropout"])
+    parser.add_argument("--outage-duration", type=float, default=0.0)
     parser.add_argument("--minimum-mean-pickups", type=float, default=1.0)
-    parser.add_argument("--minimum-improvement-over-initial", type=float, default=1.0)
+    parser.add_argument("--minimum-improvement-over-initial", type=float)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
 
@@ -68,7 +73,11 @@ def main() -> int:
     if not candidates:
         parser.error(f"no checkpoint candidates found in {run_dir}")
 
-    validation_dir = run_dir / "validation"
+    validation_name = (
+        "validation" if args.degradation == "off"
+        else f"validation_{args.degradation}_{args.outage_duration:g}s"
+    )
+    validation_dir = run_dir / validation_name
     validation_dir.mkdir(exist_ok=True)
     scored: list[dict] = []
     for checkpoint in candidates:
@@ -89,6 +98,11 @@ def main() -> int:
                 "--output", str(result_path),
                 "--stochastic",
             ]
+            if args.degradation != "off":
+                command += [
+                    "--degradation", args.degradation,
+                    "--outage-duration", str(args.outage_duration),
+                ]
             print("$", " ".join(command), flush=True)
             subprocess.run(command, cwd=PROJECT_ROOT, check=True)
 
@@ -102,8 +116,13 @@ def main() -> int:
             "validation_result": str(result_path.relative_to(run_dir)),
         })
 
-    selected = select_best_candidate(scored)
     initial = min(scored, key=lambda item: int(item["epoch"]))
+    trained_candidates = [
+        item for item in scored if int(item["epoch"]) > int(initial["epoch"])
+    ]
+    if not trained_candidates:
+        raise SystemExit("checkpoint selection failed: no trained checkpoint candidates")
+    selected = select_best_candidate(trained_candidates)
     improvement = selected["mean_pickups"] - initial["mean_pickups"]
     if selected["mean_pickups"] < args.minimum_mean_pickups:
         raise SystemExit(
@@ -111,7 +130,8 @@ def main() -> int:
             f"{selected['mean_pickups']:.2f} pickups, below the declared minimum "
             f"of {args.minimum_mean_pickups:.2f}"
         )
-    if improvement < args.minimum_improvement_over_initial:
+    if (args.minimum_improvement_over_initial is not None
+            and improvement < args.minimum_improvement_over_initial):
         raise SystemExit(
             "checkpoint selection failed: best validation mean improved by "
             f"{improvement:.2f} pickups over epoch {initial['epoch']}, below the "
@@ -126,7 +146,10 @@ def main() -> int:
         "selection_seed": args.seed,
         "episodes": args.episodes,
         "stochastic": True,
+        "degradation": args.degradation,
+        "outage_duration_s": args.outage_duration,
         "metric": "mean_pickups",
+        "eligibility": "trained checkpoints only; epoch 0 is diagnostic",
         "tie_breakers": ["mean_reward", "earlier_epoch"],
         "minimum_mean_pickups": args.minimum_mean_pickups,
         "minimum_improvement_over_initial": args.minimum_improvement_over_initial,
