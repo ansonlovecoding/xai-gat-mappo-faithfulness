@@ -136,13 +136,17 @@ def _run_condition(
         all_faith.extend(faith_records)
     env.close()
 
-    pickups = np.array([e["total_pickups"] for e in per_episode])
+    completed_journeys = np.array([
+        e["completed_passenger_journeys"] for e in per_episode
+    ])
     rewards = np.array([e["total_reward"] for e in per_episode])
     waits = np.array([e["final_mean_pending_wait_s"] for e in per_episode])
     deg_rates = np.array([e["empirical_degradation_rate"] for e in per_episode])
     faith_summary = _summarise_faithfulness(all_faith)
 
     out = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
         "condition": degradation_mode,
         "configured_dropout_rate": dropout_rate if degradation_mode == "random_dropout" else None,
         "corruption": corruption,
@@ -150,8 +154,15 @@ def _run_condition(
         "position_noise_m": position_noise_m,
         "demand_files": demand_files,
         "empirical_degradation_rate": float(deg_rates.mean()),
-        "mean_pickups": float(pickups.mean()),
-        "std_pickups": float(pickups.std()),
+        "mean_completed_passenger_journeys": float(
+            completed_journeys.mean()
+        ),
+        "std_completed_passenger_journeys": float(
+            completed_journeys.std()
+        ),
+        # Protocol-v1 compatibility aliases.
+        "mean_pickups": float(completed_journeys.mean()),
+        "std_pickups": float(completed_journeys.std()),
         "mean_reward": float(rewards.mean()),
         "mean_wait_s": float(waits.mean()),
         "faithfulness": faith_summary,

@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from scripts.analyze_hypotheses import action_stratum_masks, decisions_frame
 from scripts.summarize_dissertation_experiment import (
     summarize_deterministic_diagnostics,
@@ -82,6 +84,52 @@ def test_action_strata_exclude_forced_no_op_and_split_eligible_actions() -> None
     assert masks["all"].tolist() == [False, True, True]
     assert masks["no_op"].tolist() == [False, True, False]
     assert masks["dispatch"].tolist() == [False, False, True]
+
+
+def test_revised_frame_uses_hybrid_primary_def_and_keeps_standard_sensitivity() -> None:
+    cells = [{
+        "cell": {"axis": "clean", "level": 0.0, "seed": 42},
+        "faith_records": [
+            {
+                "record_schema_version": 2,
+                "action": 0, "pi_full": 0.8,
+                "def": 0.1, "def_m": 0.2,
+                "primary_def": 0.11, "primary_def_m": 0.21,
+                "wamsn": 0.0, "valid_reservations": 2,
+            },
+            {
+                "record_schema_version": 2,
+                "action": 1, "pi_full": 0.2,
+                "def": 0.3, "def_m": 0.4,
+                "def_excl": 0.5, "def_m_excl": 0.6,
+                "primary_def": 0.5, "primary_def_m": 0.6,
+                "wamsn": 0.0, "valid_reservations": 2,
+            },
+        ],
+    }]
+
+    frame = decisions_frame(cells)
+
+    assert frame["def"].tolist() == pytest.approx([0.11, 0.5])
+    assert frame["def_standard"].tolist() == pytest.approx([0.1, 0.3])
+    assert frame["def_m"].tolist() == pytest.approx([0.21, 0.6])
+
+
+def test_revised_frame_rejects_mixed_precision_schemas() -> None:
+    base = {
+        "action": 0, "pi_full": 0.8, "def": 0.1, "def_m": 0.2,
+        "wamsn": 0.0, "valid_reservations": 2,
+    }
+    cells = [{
+        "cell": {"axis": "clean", "level": 0.0, "seed": 42},
+        "faith_records": [
+            dict(base),
+            {**base, "record_schema_version": 2, "primary_def": 0.1},
+        ],
+    }]
+
+    with pytest.raises(ValueError, match="mixed faithfulness record schemas"):
+        decisions_frame(cells)
 
 
 def test_deterministic_diagnostic_counts_zero_pickup_episodes(tmp_path) -> None:

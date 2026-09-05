@@ -174,6 +174,8 @@ def main() -> int:
     input_inventory = file_inventory(inputs, PROJECT_ROOT)
     runtime = runtime_provenance(PROJECT_ROOT)
     specification = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
         "kind": "severity_sweep",
         "checkpoint": checkpoint_ref,
         "checkpoint_sha256": checkpoint_sha256,

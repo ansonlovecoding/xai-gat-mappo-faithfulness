@@ -98,7 +98,7 @@ def main() -> int:
     args = parser.parse_args()
 
     config = tomllib.loads(args.config.read_text())
-    if config.get("schema_version") != 1:
+    if config.get("schema_version") not in (1, 2):
         parser.error("unsupported experiment-config schema")
 
     output_root = PROJECT_ROOT / config["output_root"]

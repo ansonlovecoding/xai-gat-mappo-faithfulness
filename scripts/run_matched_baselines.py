@@ -47,25 +47,24 @@ def run_episode(env: DispatchEnv, policy, *, episode: int,
     obs, _ = env.reset(options={"taxi_route_file": demand_variant})
     policy.reset()
     total_reward = 0.0
-    total_pickups = 0
+    total_completed_journeys = 0
     mean_wait = 0.0
     steps = 0
 
     while not env.done:
         actions = policy.act(obs) if obs else {}
-        obs, rewards, _, _, infos = env.step(actions)
-        if rewards:
-            total_reward += float(next(iter(rewards.values())))
-        if infos:
-            info = next(iter(infos.values()))
-            total_pickups += int(info.get("pickups_delta", 0))
-            mean_wait = float(info.get("mean_wait_time", mean_wait))
+        obs, _, _, _, _ = env.step(actions)
+        metrics = env.last_step_metrics
+        total_reward += metrics.team_reward
+        total_completed_journeys += metrics.completed_passenger_journeys
+        mean_wait = metrics.mean_pending_wait_s
         steps += 1
 
     return {
         "episode": episode,
         "demand_variant": demand_variant,
-        "total_pickups": total_pickups,
+        "completed_passenger_journeys": total_completed_journeys,
+        "total_pickups": total_completed_journeys,
         "total_reward": total_reward,
         "final_mean_pending_wait_s": mean_wait,
         "rl_steps": steps,
@@ -111,8 +110,11 @@ def summarise(records: list[dict], *, policy_name: str, seed: int) -> dict:
         cluster_unit = "evaluation seed x episode"
     return {
         "cluster_unit": cluster_unit,
-        "pickups": cluster_bootstrap_mean_ci(
-            [row["total_pickups"] for row in records], clusters, seed=seed),
+        "completed_passenger_journeys": cluster_bootstrap_mean_ci(
+            [row["completed_passenger_journeys"] for row in records],
+            clusters,
+            seed=seed,
+        ),
         "reward": cluster_bootstrap_mean_ci(
             [row["total_reward"] for row in records], clusters, seed=seed + 1),
         "final_mean_pending_wait_s": cluster_bootstrap_mean_ci(

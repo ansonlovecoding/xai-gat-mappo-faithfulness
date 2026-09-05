@@ -105,7 +105,7 @@ def _run_episode(
         seed_everything(action_seed)
     obs_dict, _ = env.reset(options=reset_options)
     total_reward = 0.0
-    total_pickups = 0
+    total_completed_journeys = 0
     step = 0
     last_wait = 0.0
     faith_records: list[dict] = []
@@ -238,8 +238,8 @@ def _run_episode(
                                 agreement = len(set(attn_top) & set(loo_top)) / k
                                 overlap_values.append(expected_overlap)
                                 agreement_values.append(agreement)
-                                overlap_by_k[str(k)] = round(expected_overlap, 4)
-                                agreement_by_k[str(k)] = round(agreement, 4)
+                                overlap_by_k[str(k)] = float(expected_overlap)
+                                agreement_by_k[str(k)] = float(agreement)
                             attention_def = (
                                 result.def_m_excl if result.excl_evaluated
                                 else result.def_margin
@@ -280,38 +280,30 @@ def _run_episode(
                                 else grad_x_input.g_suff_m
                             )
                             control_fields = {
-                                "attention_control_def_m": round(attention_def, 4),
-                                "attention_control_g_comp_m": round(
-                                    attention_g_comp, 4
-                                ),
-                                "attention_control_g_suff_m": round(
-                                    attention_g_suff, 4
-                                ),
-                                "loo_oracle_def_m": round(oracle_def, 4),
-                                "loo_oracle_g_comp_m": round(oracle_g_comp, 4),
-                                "loo_oracle_g_suff_m": round(oracle_g_suff, 4),
-                                "grad_x_input_def_m": round(grad_x_input_def, 4),
-                                "grad_x_input_g_comp_m": round(
-                                    grad_x_input_g_comp, 4
-                                ),
-                                "grad_x_input_g_suff_m": round(
-                                    grad_x_input_g_suff, 4
-                                ),
-                                "loo_control_gap_m": round(
-                                    oracle_def - attention_def, 4
+                                "attention_control_def_m": float(attention_def),
+                                "attention_control_g_comp_m": float(attention_g_comp),
+                                "attention_control_g_suff_m": float(attention_g_suff),
+                                "loo_oracle_def_m": float(oracle_def),
+                                "loo_oracle_g_comp_m": float(oracle_g_comp),
+                                "loo_oracle_g_suff_m": float(oracle_g_suff),
+                                "grad_x_input_def_m": float(grad_x_input_def),
+                                "grad_x_input_g_comp_m": float(grad_x_input_g_comp),
+                                "grad_x_input_g_suff_m": float(grad_x_input_g_suff),
+                                "loo_control_gap_m": float(
+                                    oracle_def - attention_def
                                 ),
                                 "loo_positive_nodes": int(
                                     (loo.importance_row[loo.candidates] > 0).sum()
                                 ),
                                 "taxi_attention_loo_spearman": (
-                                    round(taxi_rho, 4)
+                                    float(taxi_rho)
                                     if np.isfinite(taxi_rho) else None
                                 ),
-                                "attention_loo_topk_agreement": round(
-                                    float(np.mean(agreement_values)), 4
+                                "attention_loo_topk_agreement": float(
+                                    np.mean(agreement_values)
                                 ) if agreement_values else None,
-                                "expected_random_topk_overlap": round(
-                                    float(np.mean(overlap_values)), 4
+                                "expected_random_topk_overlap": float(
+                                    np.mean(overlap_values)
                                 ) if overlap_values else None,
                                 "attention_loo_topk_agreement_by_k": agreement_by_k,
                                 "expected_random_topk_overlap_by_k": overlap_by_k,
@@ -341,12 +333,40 @@ def _run_episode(
                             )
                             control_fields.update({
                                 "action_query_node": action_query_node,
-                                "self_row_request_def_m": round(self_def, 4),
-                                "action_row_request_def_m": round(action_def, 4),
-                                "action_row_request_gap_m": round(
-                                    action_def - self_def, 4
+                                "self_row_request_def_m": float(self_def),
+                                "action_row_request_def_m": float(action_def),
+                                "action_row_request_gap_m": float(
+                                    action_def - self_def
                                 ),
                             })
+                        primary_available = (
+                            result.action == 0 or result.excl_evaluated
+                        )
+                        primary_variant = (
+                            "standard_type_matched_no_op"
+                            if result.action == 0
+                            else "chosen_action_protected_dispatch"
+                        )
+                        primary_def = (
+                            result.def_score if result.action == 0
+                            else result.def_excl if result.excl_evaluated
+                            else None
+                        )
+                        primary_def_m = (
+                            result.def_margin if result.action == 0
+                            else result.def_m_excl if result.excl_evaluated
+                            else None
+                        )
+                        primary_g_comp = (
+                            result.g_comp if result.action == 0
+                            else result.g_comp_excl if result.excl_evaluated
+                            else None
+                        )
+                        primary_g_suff = (
+                            result.g_suff if result.action == 0
+                            else result.g_suff_excl if result.excl_evaluated
+                            else None
+                        )
                         drift = None
                         top3_churn = None
                         stale_attention_clean = None
@@ -388,7 +408,7 @@ def _run_episode(
                                     clean_single, aggregations
                                 )
                                 aggregation_shifts = {
-                                    name: round(
+                                    name: float(
                                         compute_stale_attention_mass(
                                             degraded_rows[name],
                                             result.stale_vehicle_mask,
@@ -396,13 +416,12 @@ def _run_episode(
                                         - compute_stale_attention_mass(
                                             clean_rows[name],
                                             result.stale_vehicle_mask,
-                                        ),
-                                        6,
+                                        )
                                     )
                                     for name in degraded_rows
                                 }
                         faith_records.append({
-                            **({"drift": round(drift, 4)} if drift is not None else {}),
+                            **({"drift": float(drift)} if drift is not None else {}),
                             "episode": episode_index,
                             "rl_step": step,
                             "agent": a,
@@ -414,71 +433,120 @@ def _run_episode(
                             ),
                             "stale_exposed_precheck": stale_exposed,
                             "action": result.action,
-                            "pi_full": round(result.pi_full, 4),
-                            "def": round(result.def_score, 4),
-                            "def_m": round(result.def_margin, 4),
-                            "m_full": round(result.m_full, 4),
-                            "g_comp": round(result.g_comp, 4),
-                            "g_suff": round(result.g_suff, 4),
-                            "comp": round(result.comp, 4),
-                            "suff": round(result.suff, 4),
-                            "wamsn": round(result.wamsn, 4),
+                            "primary_metric_variant": primary_variant,
+                            "primary_metric_available": primary_available,
+                            "primary_def": primary_def,
+                            "primary_def_m": primary_def_m,
+                            "primary_g_comp": primary_g_comp,
+                            "primary_g_suff": primary_g_suff,
+                            "record_schema_version": 2,
+                            "pi_full": float(result.pi_full),
+                            "def": float(result.def_score),
+                            "def_m": float(result.def_margin),
+                            "m_full": float(result.m_full),
+                            "g_comp": float(result.g_comp),
+                            "g_suff": float(result.g_suff),
+                            "comp": float(result.comp),
+                            "suff": float(result.suff),
+                            "wamsn": float(result.wamsn),
                             "valid_reservations": n_valid_res,
                             "valid_taxis": n_valid_taxi,
                             "valid_non_self_nodes": n_valid_taxi + n_valid_res,
                             "n_k_evaluated": len(result.per_k),
-                            "clamp_topk": round(result.clamp_topk_frac, 4),
-                            "clamp_rand": round(result.clamp_rand_frac, 4),
+                            "clamp_topk": float(result.clamp_topk_frac),
+                            "clamp_rand": float(result.clamp_rand_frac),
                             "n_stale_veh": result.n_stale_vehicle,
-                            "max_aoi_s": round(result.max_aoi_s, 1),
+                            "max_aoi_s": float(result.max_aoi_s),
                             "stale_in_top3": result.stale_in_top3,
-                            "stale_attention_share": round(
-                                result.stale_attention_share, 4
+                            "stale_attention_share": float(
+                                result.stale_attention_share
                             ),
-                            "stale_attention_mass": round(
-                                result.stale_attention_mass, 4
+                            "stale_attention_mass": float(
+                                result.stale_attention_mass
                             ),
                             **({
-                                "stale_attention_share_clean_twin": round(
-                                    stale_attention_clean, 4
+                                "stale_attention_share_clean_twin": float(
+                                    stale_attention_clean
                                 ),
-                                "stale_attention_shift": round(
+                                "stale_attention_shift": float(
                                     result.stale_attention_mass
-                                    - stale_attention_mass_clean, 4
+                                    - stale_attention_mass_clean
                                 ),
                             } if stale_attention_clean is not None else {}),
-                            **({"def_excl": round(result.def_excl, 4),
-                                "def_m_excl": round(result.def_m_excl, 4)}
+                            **({"def_excl": float(result.def_excl),
+                                "def_m_excl": float(result.def_m_excl)}
                                if result.excl_evaluated else {}),
                             **({
-                                "def_clean_twin": round(
-                                    clean_twin_result.def_score, 4
+                                "def_clean_twin": float(
+                                    clean_twin_result.def_score
                                 ),
-                                "def_m_clean_twin": round(
-                                    clean_twin_result.def_margin, 4
+                                "def_m_clean_twin": float(
+                                    clean_twin_result.def_margin
                                 ),
-                                "paired_def_delta": round(
+                                "paired_def_delta": float(
                                     result.def_score
-                                    - clean_twin_result.def_score, 4
+                                    - clean_twin_result.def_score
                                 ),
-                                "paired_def_m_delta": round(
+                                "paired_def_m_delta": float(
                                     result.def_margin
-                                    - clean_twin_result.def_margin, 4
+                                    - clean_twin_result.def_margin
+                                ),
+                                "primary_def_clean_twin": (
+                                    clean_twin_result.def_score
+                                    if result.action == 0
+                                    else clean_twin_result.def_excl
+                                    if clean_twin_result.excl_evaluated
+                                    else None
+                                ),
+                                "primary_def_m_clean_twin": (
+                                    clean_twin_result.def_margin
+                                    if result.action == 0
+                                    else clean_twin_result.def_m_excl
+                                    if clean_twin_result.excl_evaluated
+                                    else None
+                                ),
+                                "paired_primary_def_delta": (
+                                    float(
+                                        primary_def
+                                        - (
+                                            clean_twin_result.def_score
+                                            if result.action == 0
+                                            else clean_twin_result.def_excl
+                                        )
+                                    )
+                                    if primary_available and (
+                                        result.action == 0
+                                        or clean_twin_result.excl_evaluated
+                                    ) else None
+                                ),
+                                "paired_primary_def_m_delta": (
+                                    float(
+                                        primary_def_m
+                                        - (
+                                            clean_twin_result.def_margin
+                                            if result.action == 0
+                                            else clean_twin_result.def_m_excl
+                                        )
+                                    )
+                                    if primary_available and (
+                                        result.action == 0
+                                        or clean_twin_result.excl_evaluated
+                                    ) else None
                                 ),
                                 **({
-                                    "def_excl_clean_twin": round(
-                                        clean_twin_result.def_excl, 4
+                                    "def_excl_clean_twin": float(
+                                        clean_twin_result.def_excl
                                     ),
-                                    "def_m_excl_clean_twin": round(
-                                        clean_twin_result.def_m_excl, 4
+                                    "def_m_excl_clean_twin": float(
+                                        clean_twin_result.def_m_excl
                                     ),
-                                    "paired_def_excl_delta": round(
+                                    "paired_def_excl_delta": float(
                                         result.def_excl
-                                        - clean_twin_result.def_excl, 4
+                                        - clean_twin_result.def_excl
                                     ),
-                                    "paired_def_m_excl_delta": round(
+                                    "paired_def_m_excl_delta": float(
                                         result.def_m_excl
-                                        - clean_twin_result.def_m_excl, 4
+                                        - clean_twin_result.def_m_excl
                                     ),
                                 } if result.excl_evaluated
                                 and clean_twin_result.excl_evaluated else {}),
@@ -493,22 +561,22 @@ def _run_episode(
         else:
             actions = {}
 
-        obs_dict, rewards, _, _, infos = env.step(actions)
-        if rewards:
-            total_reward += next(iter(rewards.values()))
-        if infos:
-            info = next(iter(infos.values()))
-            total_pickups += int(info.get("pickups_delta", 0))
-            last_wait = float(info.get("mean_wait_time", last_wait))
+        obs_dict, _, _, _, _ = env.step(actions)
+        metrics = env.last_step_metrics
+        total_reward += metrics.team_reward
+        total_completed_journeys += metrics.completed_passenger_journeys
+        last_wait = metrics.mean_pending_wait_s
         step += 1
 
     summary = {
-        "total_pickups": total_pickups,
-        "total_reward": round(total_reward, 3),
-        "final_mean_pending_wait_s": round(last_wait, 1),
+        "completed_passenger_journeys": total_completed_journeys,
+        # Protocol-v1 compatibility alias.
+        "total_pickups": total_completed_journeys,
+        "total_reward": float(total_reward),
+        "final_mean_pending_wait_s": float(last_wait),
         "rl_steps": step,
         "empirical_degradation_rate": (
-            round(n_degraded_obs / n_total_obs, 4) if n_total_obs > 0 else 0.0
+            float(n_degraded_obs / n_total_obs) if n_total_obs > 0 else 0.0
         ),
         "decisions_seen": decision_counter,
         "stale_exposed_decisions_seen": n_stale_exposed_seen,
@@ -529,8 +597,13 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         return {"n_decisions_total": 0, "n_decisions_scored": 0}
 
     non_trivial = [r for r in records if r["valid_reservations"] > 0]
+    scorable = [
+        r for r in non_trivial
+        if r.get("primary_metric_available", True)
+        and r.get("primary_def", r.get("def")) is not None
+    ]
     n_total = len(records)
-    n_scored = len(non_trivial)
+    n_scored = len(scorable)
 
     if n_scored == 0:
         return {
@@ -539,9 +612,15 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
             "note": "all decisions had 0 valid reservations (no-op-only regime)",
         }
 
-    def_scores = np.array([r["def"] for r in non_trivial])
-    g_comps = np.array([r["g_comp"] for r in non_trivial])
-    g_suffs = np.array([r["g_suff"] for r in non_trivial])
+    def_scores = np.array([
+        r.get("primary_def", r["def"]) for r in scorable
+    ])
+    g_comps = np.array([
+        r.get("primary_g_comp", r["g_comp"]) for r in scorable
+    ])
+    g_suffs = np.array([
+        r.get("primary_g_suff", r["g_suff"]) for r in scorable
+    ])
     wamsns = np.array([r["wamsn"] for r in records])  # WAMSN uses all records
     out = {
         "n_decisions_total": n_total,
@@ -557,7 +636,10 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         "wamsn_std": float(wamsns.std()),
     }
     # Logit-margin DEF (absent in records from pre-margin checkpoints/runs).
-    def_ms = np.array([r["def_m"] for r in non_trivial if "def_m" in r])
+    def_ms = np.array([
+        r.get("primary_def_m", r.get("def_m")) for r in scorable
+        if r.get("primary_def_m", r.get("def_m")) is not None
+    ])
     if def_ms.size > 0:
         out["def_m_mean"] = float(def_ms.mean())
         out["def_m_std"] = float(def_ms.std())
@@ -725,17 +807,21 @@ def _summarise_faithfulness(records: list[dict]) -> dict:
         out["stale_in_top3_rate"] = float(np.mean(
             [bool(r.get("stale_in_top3")) for r in records]))
     paired = [
-        r for r in non_trivial
-        if r.get("stale_exposed_precheck") and "paired_def_delta" in r
+        r for r in scorable
+        if r.get("stale_exposed_precheck")
+        and r.get("paired_primary_def_delta", r.get("paired_def_delta"))
+        is not None
     ]
     if paired:
         out.update({
             "n_stale_exposed_paired_decisions": len(paired),
             "paired_def_delta_mean": float(np.mean([
-                r["paired_def_delta"] for r in paired
+                r.get("paired_primary_def_delta", r["paired_def_delta"])
+                for r in paired
             ])),
             "paired_def_m_delta_mean": float(np.mean([
-                r["paired_def_m_delta"] for r in paired
+                r.get("paired_primary_def_m_delta", r["paired_def_m_delta"])
+                for r in paired
             ])),
         })
         paired_excl = [r for r in paired if "paired_def_m_excl_delta" in r]
@@ -907,12 +993,17 @@ def main() -> int:
     env.close()
 
     # Aggregate policy metrics.
-    pickups = np.array([r["total_pickups"] for r in results])
+    completed_journeys = np.array([
+        r["completed_passenger_journeys"] for r in results
+    ])
     rewards = np.array([r["total_reward"] for r in results])
     waits = np.array([r["final_mean_pending_wait_s"] for r in results])
     print()
     print(f"mean over {len(results)} episodes:")
-    print(f"  pickups:   {pickups.mean():.2f} ± {pickups.std():.2f}")
+    print(
+        "  completed passenger journeys: "
+        f"{completed_journeys.mean():.2f} ± {completed_journeys.std():.2f}"
+    )
     print(f"  reward:    {rewards.mean():+.2f} ± {rewards.std():.2f}")
     print(f"  mean_wait: {waits.mean():.1f}s")
 
@@ -964,6 +1055,8 @@ def main() -> int:
     summary_path = args.output or args.checkpoint.with_suffix(".eval.json")
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary: dict = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
         "checkpoint": str(args.checkpoint),
         "epoch": ckpt.get("epoch"),
         "area": area,
@@ -974,8 +1067,11 @@ def main() -> int:
         "demand_split": args.demand_split,
         "demand_files": demand_files,
         "per_episode": results,
-        "mean_pickups": float(pickups.mean()),
-        "std_pickups": float(pickups.std()),
+        "mean_completed_passenger_journeys": float(completed_journeys.mean()),
+        "std_completed_passenger_journeys": float(completed_journeys.std()),
+        # Protocol-v1 compatibility aliases.
+        "mean_pickups": float(completed_journeys.mean()),
+        "std_pickups": float(completed_journeys.std()),
         "mean_reward": float(rewards.mean()),
         "std_reward": float(rewards.std()),
         "checkpoint_sha256": sha256_file(args.checkpoint),

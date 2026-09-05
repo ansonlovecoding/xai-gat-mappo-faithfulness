@@ -43,12 +43,20 @@ def summarize(root: Path) -> list[dict]:
                         and float(cell["cell"]["level"]) == level]
             records = [record for cell in selected
                        for record in cell.get("faith_records", [])]
-            scored = [record for record in records
-                      if record.get("valid_reservations", 0) > 0]
+            scored = [
+                record for record in records
+                if record.get("valid_reservations", 0) > 0
+                and record.get("primary_metric_available", True)
+                and record.get("primary_def", record.get("def")) is not None
+            ]
             exposed = [record for record in records
                        if record.get("n_stale_veh", 0) > 0]
-            paired_exposed = [record for record in exposed
-                              if "paired_def_delta" in record]
+            paired_exposed = [
+                record for record in exposed
+                if record.get(
+                    "paired_primary_def_delta", record.get("paired_def_delta")
+                ) is not None
+            ]
             rows.append({
                 "model": model_id,
                 "training_seed": training_seed,
@@ -62,7 +70,11 @@ def summarize(root: Path) -> list[dict]:
                 "faithfulness_records": len(records),
                 "stale_exposed_records": len(exposed),
                 "paired_stale_exposed_records": len(paired_exposed),
-                "mean_type_matched_def": _mean([
+                "mean_primary_type_matched_def": _mean([
+                    float(record.get("primary_def", record["def"]))
+                    for record in scored
+                ]),
+                "mean_standard_type_matched_def_sensitivity": _mean([
                     float(record["def"]) for record in scored
                 ]),
                 "mean_action_protected_def_m": _mean([
@@ -89,12 +101,20 @@ def summarize(root: Path) -> list[dict]:
                 "mean_wamsn_when_exposed_secondary": _mean([
                     float(record.get("wamsn", float("nan"))) for record in exposed
                 ]),
-                "mean_paired_type_matched_def_delta": _mean([
-                    float(record.get("paired_def_delta", float("nan")))
+                "mean_paired_primary_type_matched_def_delta": _mean([
+                    float(record.get(
+                        "paired_primary_def_delta", record.get(
+                            "paired_def_delta", float("nan")
+                        )
+                    ))
                     for record in paired_exposed
                 ]),
-                "mean_paired_type_matched_def_m_delta": _mean([
-                    float(record.get("paired_def_m_delta", float("nan")))
+                "mean_paired_primary_type_matched_def_m_delta": _mean([
+                    float(record.get(
+                        "paired_primary_def_m_delta", record.get(
+                            "paired_def_m_delta", float("nan")
+                        )
+                    ))
                     for record in paired_exposed
                 ]),
             })
@@ -115,7 +135,11 @@ def summarize_performance(root: Path) -> list[dict]:
             "training_seed": int(training_dir.name.removeprefix("seed_")),
             "evaluation_seeds": len(evaluations),
             "episodes": sum(int(item["episodes"]) for item in evaluations),
-            "mean_pickups": _mean([float(item["mean_pickups"]) for item in evaluations]),
+            "mean_completed_passenger_journeys": _mean([
+                float(item.get(
+                    "mean_completed_passenger_journeys", item["mean_pickups"]
+                )) for item in evaluations
+            ]),
             "mean_reward": _mean([float(item["mean_reward"]) for item in evaluations]),
         })
     if not rows:

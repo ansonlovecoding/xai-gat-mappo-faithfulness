@@ -165,7 +165,7 @@ def training_diagnostics_figure() -> None:
 def decoupling_figure() -> None:
     rows = _csv(RUNS / "summary.csv")
     fig, axes = plt.subplots(3, 2, figsize=(8.0, 7.8), sharex="col")
-    def_values = [float(row["mean_type_matched_def"]) for row in rows
+    def_values = [float(row["mean_primary_type_matched_def"]) for row in rows
                   if row["model"] in COLORS]
     def_limit = max(abs(value) for value in def_values) * 1.15
     for column, model in enumerate(COLORS):
@@ -190,8 +190,9 @@ def decoupling_figure() -> None:
             )
             axes[1, column].plot(
                 [0.0, *[float(row["level_s"]) for row in seed_rows]],
-                [float(clean["mean_type_matched_def"]),
-                 *[float(row["mean_type_matched_def"]) for row in seed_rows]],
+                [float(clean["mean_primary_type_matched_def"]),
+                 *[float(row["mean_primary_type_matched_def"])
+                   for row in seed_rows]],
                 marker=SEED_STYLES[seed]["marker"],
                 linestyle=SEED_STYLES[seed]["linestyle"],
                 color=SEED_STYLES[seed]["color"],
@@ -389,7 +390,7 @@ def _h4_episode_data(model: str, seed: int) -> tuple[np.ndarray, np.ndarray]:
                 if int(record["valid_reservations"]) <= 0:
                     continue
                 wamsn = float(record["wamsn"])
-                probability_def = float(record["def"])
+                probability_def = float(record.get("primary_def", record["def"]))
                 if not np.isfinite(wamsn) or not np.isfinite(probability_def):
                     continue
                 key = (member.name, int(record["episode"]))

@@ -149,7 +149,9 @@ def validate_sweep(sweep_dir: Path, *, require_clean_git: bool = True) -> Valida
                     f"{name} did not score every stale-exposed decision"
                 )
             if cell_exposed and not all(
-                "paired_def_delta" in record for record in cell_exposed
+                record.get(
+                    "paired_primary_def_delta", record.get("paired_def_delta")
+                ) is not None for record in cell_exposed
             ):
                 report.errors.append(
                     f"{name} is missing paired clean-twin DEF values"

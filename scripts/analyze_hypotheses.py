@@ -33,6 +33,11 @@ from pathlib import Path
 import numpy as np
 
 
+def _numeric(value) -> float:
+    """Convert an optional JSON number to float without hiding missing data."""
+    return float(value) if value is not None else float("nan")
+
+
 # --------------------------------------------------------------- statistics
 
 
@@ -128,9 +133,20 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
     axis, level, seed, episode = [], [], [], []
     action, pi_full = [], []
-    def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
+    def_, def_m, standard_def, standard_def_m = [], [], [], []
+    wamsn, drift, valid_res = [], [], []
     stale_count, stale_share, stale_shift = [], [], []
     paired_def, paired_def_m, paired_def_excl, paired_def_m_excl = [], [], [], []
+    record_versions = {
+        int(r.get("record_schema_version", 1))
+        for c in cells for r in c.get("faith_records", [])
+    }
+    if len(record_versions) > 1:
+        raise ValueError(
+            "mixed faithfulness record schemas are not valid statistical input: "
+            f"{sorted(record_versions)}"
+        )
+
     for c in cells:
         meta = c["cell"]
         for r in c.get("faith_records", []):
@@ -140,18 +156,24 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             episode.append(r.get("episode", 0))
             action.append(r["action"])
             pi_full.append(r.get("pi_full", np.nan))
-            def_.append(r["def"])
-            def_m.append(r.get("def_m", np.nan))  # absent in pre-margin sweeps
+            standard_def.append(_numeric(r["def"]))
+            standard_def_m.append(_numeric(r.get("def_m")))
+            def_.append(_numeric(r.get("primary_def", r["def"])))
+            def_m.append(_numeric(r.get("primary_def_m", r.get("def_m"))))
             wamsn.append(r["wamsn"])
             drift.append(r.get("drift", np.nan))
             valid_res.append(r["valid_reservations"])
             stale_count.append(r.get("n_stale_veh", 0))
             stale_share.append(r.get("stale_attention_share", np.nan))
             stale_shift.append(r.get("stale_attention_shift", np.nan))
-            paired_def.append(r.get("paired_def_delta", np.nan))
-            paired_def_m.append(r.get("paired_def_m_delta", np.nan))
-            paired_def_excl.append(r.get("paired_def_excl_delta", np.nan))
-            paired_def_m_excl.append(r.get("paired_def_m_excl_delta", np.nan))
+            paired_def.append(_numeric(
+                r.get("paired_primary_def_delta", r.get("paired_def_delta"))
+            ))
+            paired_def_m.append(_numeric(
+                r.get("paired_primary_def_m_delta", r.get("paired_def_m_delta"))
+            ))
+            paired_def_excl.append(_numeric(r.get("paired_def_excl_delta")))
+            paired_def_m_excl.append(_numeric(r.get("paired_def_m_excl_delta")))
     return {
         "axis": np.array(axis),
         "level": np.array(level, dtype=np.float64),
@@ -161,6 +183,8 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "pi_full": np.array(pi_full, dtype=np.float64),
         "def": np.array(def_, dtype=np.float64),
         "def_m": np.array(def_m, dtype=np.float64),
+        "def_standard": np.array(standard_def, dtype=np.float64),
+        "def_m_standard": np.array(standard_def_m, dtype=np.float64),
         "wamsn": np.array(wamsn, dtype=np.float64),
         "drift": np.array(drift, dtype=np.float64),
         "valid_res": np.array(valid_res, dtype=np.int64),
@@ -653,7 +677,8 @@ def main() -> int:
                  if c["cell"]["axis"] == ax and c["cell"]["level"] == lv]
         deg = float(np.mean([c["empirical_degradation_rate"] for c in group]))
         pk = float(np.mean([c["mean_pickups"] for c in group]))
-        m = (frame["axis"] == ax) & (frame["level"] == lv) & (frame["valid_res"] > 0)
+        m = ((frame["axis"] == ax) & (frame["level"] == lv)
+             & (frame["valid_res"] > 0) & np.isfinite(frame["def"]))
         defs = frame["def"][m]
         lo, hi = bootstrap_ci(defs, args.n_bootstrap, rng)
         m_all = (frame["axis"] == ax) & (frame["level"] == lv)
@@ -666,8 +691,16 @@ def main() -> int:
     print()
 
     # ---- hypothesis tests
-    results: dict = {"manifest": {"checkpoint": manifest["checkpoint"],
-                                  "git_rev": manifest.get("git_rev")}}
+    results: dict = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
+        "primary_faithfulness_metric": (
+            "standard type-matched DEF for no-op; chosen-action-protected "
+            "type-matched DEF for dispatch"
+        ),
+        "manifest": {"checkpoint": manifest["checkpoint"],
+                     "git_rev": manifest.get("git_rev")},
+    }
     has_margin = bool(np.isfinite(frame["def_m"]).any())
     # Axes are discovered from the sweep itself (old sweeps: dropout_rate /
     # tunnel_noise; ladder sweeps: outage_duration / dropout_outage_duration).

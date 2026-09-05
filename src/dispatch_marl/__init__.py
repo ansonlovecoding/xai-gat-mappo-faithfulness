@@ -1,6 +1,6 @@
 """Multi-agent RL environment for fleet dispatch under telemetry degradation."""
 from .degradation import DegradationConfig
-from .env import DispatchEnv, DispatchEnvConfig
+from .env import DispatchEnv, DispatchEnvConfig, StepMetrics
 from .faithfulness import (
     DecisionFaithfulness,
     FaithfulnessConfig,
@@ -34,6 +34,7 @@ from .training import (
 __all__ = [
     "DispatchEnv",
     "DispatchEnvConfig",
+    "StepMetrics",
     "DegradationConfig",
     "Scenario",
     "load_scenario",

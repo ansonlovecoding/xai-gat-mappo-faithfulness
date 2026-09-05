@@ -84,13 +84,13 @@ def main() -> int:
         near_0 = torch.isclose(row_sums, torch.zeros_like(row_sums), atol=1e-6)
         assert (near_1 | near_0).all(), f"bad attention row sums: {row_sums.min():.4f}..{row_sums.max():.4f}"
 
-        obs, rewards, _, _, infos = env.step(actions)
-        r = next(iter(rewards.values())) if rewards else 0.0
-        info = next(iter(infos.values())) if infos else {}
+        obs, _, _, _, _ = env.step(actions)
+        metrics = env.last_step_metrics
         print(
             f"  rl_step {rl_step}  sim_t={env.sim_time:6.0f}s  "
             f"agents={len(agents):2d}  actions[0..3]={actions_np[:3].tolist()}  "
-            f"r={r:+.2f}  pickups+={info.get('pickups_delta', 0)}"
+            f"r={metrics.team_reward:+.2f}  completed+="
+            f"{metrics.completed_passenger_journeys}"
         )
 
     env.close()
