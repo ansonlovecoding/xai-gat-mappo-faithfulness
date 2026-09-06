@@ -72,12 +72,19 @@ def spearman_permutation_p(
     n_permutations: int, rng: np.random.Generator,
 ) -> tuple[float, float]:
     """(rho, one-sided permutation p) for H0: no monotone association."""
-    rho = spearman(x, y)
-    y_perm = y.copy()
+    ranked_x = _rank(x)
+    ranked_y = _rank(y)
+    ranked_x -= ranked_x.mean()
+    ranked_y -= ranked_y.mean()
+    denominator = np.sqrt((ranked_x**2).sum() * (ranked_y**2).sum())
+    if denominator == 0:
+        return 0.0, 1.0
+    rho = float((ranked_x * ranked_y).sum() / denominator)
+    y_perm = ranked_y.copy()
     count = 0
     for _ in range(n_permutations):
         rng.shuffle(y_perm)
-        r = spearman(x, y_perm)
+        r = float((ranked_x * y_perm).sum() / denominator)
         if alternative == "less" and r <= rho:
             count += 1
         elif alternative == "greater" and r >= rho:
