@@ -260,7 +260,7 @@ def model_training_design():
     pipeline = [
         (0.145, "Train all three", "GAT 40 | MLP 50 | Outage 50\nvalidation-derived budgets\nseeds 42, 43, 44", BLUE),
         (0.38, "Validate and select",
-         "validation demand\npickups first; reward tie-break", GREEN),
+         "validation demand\ncompleted journeys first; reward tie-break", GREEN),
         (0.615, "Freeze", "one checkpoint\nper model and seed", GREY),
         (0.85, "Open held-out test", "evaluate once\nno reselection", ORANGE),
     ]
@@ -275,7 +275,7 @@ def model_training_design():
     ax.text(0.5, 0.285, "HELD-OUT EVALUATION SCOPE", ha="center", va="center",
             fontsize=11.5, fontweight="bold", color=ORANGE)
     box(ax, 0.16, 0.105, 0.32, 0.13, "Clean-telemetry capability",
-        "MLP, GAT and GAT-Outage\nper checkpoint: 8 seeds x 3 episodes = 24", BLUE,
+        "MLP, GAT and GAT-Outage\nper checkpoint: 8 seeds x 6 episodes = 48", BLUE,
         title_size=12.1, body_size=9.2)
     box(ax, 0.55, 0.105, 0.35, 0.13, "Faithfulness audit",
         "GAT and GAT-Outage; frozen checkpoints\nclean + 10, 20, 30 and 60 s outages", ORANGE,

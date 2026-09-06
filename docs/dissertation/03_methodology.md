@@ -157,12 +157,10 @@ Each model is trained in three independently initialized runs using seeds 42,
 comparison.
 
 The maximum training budgets were fixed from validation-only stability
-diagnostics before the held-out evaluation. Clean GAT uses 40 epochs because
-longer development runs showed late policy drift. MLP uses 50 epochs because it
-learned too slowly under the lower GAT learning rate, while a 60-epoch probe
-failed the 80% final-validation-retention gate. GAT-Outage uses 50 epochs
-because its seed-43 validation result was still improving at epoch 40 and
-retained 93.9% of its selected validation completed-journey count at epoch 50.
+diagnostics before the held-out evaluation. Clean GAT uses 40 epochs to limit
+late policy drift. MLP and GAT-Outage use 50 epochs because their earlier
+development runs needed the longer budget to meet the stability checks. The
+same fixed budgets are used for all three seeds within each model condition.
 
 These choices improve stability but mean that GAT and GAT-Outage do not have
 identical optimization horizons: their learning rates decay over 40 and 50
@@ -185,9 +183,9 @@ run.
 
 | Model | seed 42 | seed 43 | seed 44 |
 |---|---:|---:|---:|
-| MLP | 20 | 40 | 34 |
-| GAT | 39 | 39 | 30 |
-| GAT-Outage | 49 | 40 | 40 |
+| MLP | 45 | 30 | 38 |
+| GAT | 30 | 20 | 39 |
+| GAT-Outage | 10 | 40 | 9 |
 
 Table 3.4 reports the training and optimization settings.
 
