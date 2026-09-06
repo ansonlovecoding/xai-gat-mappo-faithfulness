@@ -13,7 +13,7 @@ import torch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from dispatch_marl.checkpoint_selection import select_best_candidate  # noqa: E402
+from dispatch_marl.checkpoint_selection import select_trained_candidate  # noqa: E402
 from dispatch_marl.provenance import atomic_write_json, sha256_file  # noqa: E402
 
 
@@ -116,13 +116,10 @@ def main() -> int:
             "validation_result": str(result_path.relative_to(run_dir)),
         })
 
-    initial = min(scored, key=lambda item: int(item["epoch"]))
-    trained_candidates = [
-        item for item in scored if int(item["epoch"]) > int(initial["epoch"])
-    ]
-    if not trained_candidates:
-        raise SystemExit("checkpoint selection failed: no trained checkpoint candidates")
-    selected = select_best_candidate(trained_candidates)
+    try:
+        initial, selected = select_trained_candidate(scored)
+    except ValueError as exc:
+        raise SystemExit(f"checkpoint selection failed: {exc}") from exc
     improvement = selected["mean_pickups"] - initial["mean_pickups"]
     if selected["mean_pickups"] < args.minimum_mean_pickups:
         raise SystemExit(

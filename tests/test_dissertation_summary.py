@@ -132,6 +132,33 @@ def test_revised_frame_rejects_mixed_precision_schemas() -> None:
         decisions_frame(cells)
 
 
+def test_small_faithfulness_values_survive_json_round_trip() -> None:
+    value = 0.000049
+    paired_delta = -0.000051
+    cells = [{
+        "cell": {"axis": "outage_duration", "level": 30.0, "seed": 42},
+        "faith_records": [{
+            "record_schema_version": 2,
+            "action": 1,
+            "pi_full": 0.2,
+            "def": value,
+            "def_m": value,
+            "primary_def": value,
+            "primary_def_m": value,
+            "paired_primary_def_delta": paired_delta,
+            "paired_primary_def_m_delta": paired_delta,
+            "wamsn": 0.01,
+            "valid_reservations": 2,
+        }],
+    }]
+
+    restored = json.loads(json.dumps(cells))
+    frame = decisions_frame(restored)
+
+    assert frame["def"][0] == value
+    assert frame["paired_def_delta"][0] == paired_delta
+
+
 def test_deterministic_diagnostic_counts_zero_pickup_episodes(tmp_path) -> None:
     output = tmp_path / "deterministic_diagnostics" / "B2_gat" / "seed_42.json"
     output.parent.mkdir(parents=True)

@@ -162,7 +162,7 @@ longer development runs showed late policy drift. MLP uses 50 epochs because it
 learned too slowly under the lower GAT learning rate, while a 60-epoch probe
 failed the 80% final-validation-retention gate. GAT-Outage uses 50 epochs
 because its seed-43 validation result was still improving at epoch 40 and
-retained 93.9% of its selected validation pickup count at epoch 50.
+retained 93.9% of its selected validation completed-journey count at epoch 50.
 
 These choices improve stability but mean that GAT and GAT-Outage do not have
 identical optimization horizons: their learning rates decay over 40 and 50
@@ -170,14 +170,18 @@ epochs, respectively. H5 therefore compares the two fitted training
 configurations descriptively. It does not isolate the effect of degraded
 training observations from the difference in training budget.
 
-Candidate checkpoints include snapshots saved at zero-based indices 0, 10, 20,
-30, and so on, the final snapshot, and a rolling-best snapshot updated when the
-ten-epoch mean pickup count improves. Because the implementation records
-zero-based indices, index 39 denotes the checkpoint saved after 40 training
-epochs. Selection uses eight sampled-action validation episodes with seed 2026 and mean pickups as the
-primary criterion; mean reward and the earlier checkpoint index break ties. The
-test split is not read during selection. Table 3.3 reports the selected
-checkpoint index for each training run.
+Candidate checkpoints include periodic trained snapshots, the final snapshot,
+and a rolling-best snapshot that may come from any trained epoch. The epoch-0
+snapshot is evaluated only as an initialization diagnostic and cannot be
+selected as the final model. Because the implementation records zero-based
+indices, index 39 denotes the checkpoint saved after 40 training epochs.
+Selection uses eight sampled-action validation episodes with seed 2026 and the
+mean number of completed passenger journeys as the primary criterion; mean
+reward and the earlier checkpoint index break ties. MLP and GAT are selected
+under clean validation observations. GAT-Outage is selected under its 30-second
+tunnel-triggered training condition. The test split is not read during
+selection. Table 3.3 reports the selected checkpoint index for each training
+run.
 
 | Model | seed 42 | seed 43 | seed 44 |
 |---|---:|---:|---:|
@@ -210,23 +214,24 @@ Table 3.4 reports the training and optimization settings.
 | MLP hidden width / layers | 176 / 3 |
 
 Table 3.5 separates checkpoint acceptance from the optimizer settings. Final
-validation retention is the final checkpoint's mean validation pickups divided
-by the selected checkpoint's mean validation pickups. The stability window
+validation retention is the final checkpoint's mean validation completed
+journeys divided by the selected checkpoint's mean validation completed
+journeys. The stability window
 defines where the training measures are calculated; the remaining four gates
 must pass before a training run is accepted for evaluation.
 
 | Checkpoint-acceptance setting | Required value |
 |---|---:|
 | Stability window | Final 10 training epochs |
-| Minimum final-window mean pickups | 5.0 |
-| Maximum consecutive zero-pickup epochs | 4 |
-| Minimum selected validation pickups | 5.0 |
+| Minimum final-window mean completed journeys | 5.0 |
+| Maximum consecutive zero-completion epochs | 4 |
+| Minimum selected validation completed journeys | 5.0 |
 | Minimum final validation retention | 0.80 |
 
 At simulation step `t`, the reported shared team reward is:
 
 ```text
-r_t = 10 N_pickup,t + 0.5 N_dispatch,t - 0.001 mean_wait_t
+r_t = 10 N_complete,t + 0.5 N_dispatch,t - 0.001 mean_wait_t
 ```
 
 For PPO training, taxi `i` receives an additional difference credit only when
@@ -236,10 +241,17 @@ its dispatch is accepted:
 r_train,i,t = r_t + 1.0 I(i makes a successful dispatch at t)
 ```
 
-Here, `I(.)` is one when the condition is true and zero otherwise. The shared
-reward is retained for reporting, while the agent-specific training reward
-enters advantage estimation and PPO updates. Neither reward contains a term for
-a faithful, stable, or human-readable attention map.
+Here, `N_complete,t` counts target passengers who reach their destinations;
+it is not a boarding count. `I(.)` is one when the condition is true and zero
+otherwise. A taxi can be absent from the action set while it serves a request.
+The implementation therefore keeps its last decision open and accumulates the
+shared reward from every intervening simulation step. For a gap of `Delta`
+steps, the interval return discounts those rewards by `gamma^j`, bootstraps with
+`gamma^Delta`, and applies the GAE trace factor
+`(gamma lambda)^Delta`. Terminal intervals do not bootstrap into the next
+episode. This semi-Markov treatment prevents rewards earned while a taxi is
+busy from disappearing. Neither reward contains a term for a faithful, stable,
+or human-readable attention map.
 
 Figure 3.3 shows how training, validation selection, and held-out evaluation
 remain separated.
@@ -247,7 +259,7 @@ remain separated.
 ![Model conditions and training process](../model_design_training_process.png)
 
 **Figure 3.3.** Shared training and validation-based selection pipeline with
-the model-specific budgets described above. Each frozen checkpoint receives 24 clean held-out
+the model-specific budgets described above. Each frozen checkpoint receives 48 clean held-out
 episodes. The faithfulness audit then compares the frozen GAT and GAT-Outage
 checkpoints across clean and four outage conditions without reselection. This
 produces 720 faithfulness-sweep episodes per GAT model and 1,440 in total.
@@ -427,12 +439,12 @@ delete request actions and does not depend on random subset overlap.
 ### 3.8.1 Primary evaluation
 
 MLP, GAT, and GAT-Outage are evaluated under clean telemetry with eight
-evaluation seeds (42-49) and three episodes per seed. One checkpoint is frozen
-for each model and training seed, giving 24 held-out episodes per checkpoint.
-The clean capability evaluation contains 216 episode evaluations:
+evaluation seeds (42-49) and six episodes per seed. One checkpoint is frozen
+for each model and training seed, giving 48 held-out episodes per checkpoint.
+The clean capability evaluation contains 432 episode evaluations:
 
 ```text
-3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 3 episodes
+3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 6 episodes
 ```
 
 Table 3.7 summarizes the complete evaluation structure. An episode evaluation
@@ -440,7 +452,7 @@ is one complete rollout of one frozen checkpoint under one telemetry condition.
 
 | Evaluation | Model families | Total frozen checkpoints | Telemetry cases | Episodes/cell | Total |
 |---|---:|---:|---:|---:|---:|
-| Clean capability context | 3 | 9 | 1 | 24 | 216 |
+| Clean capability context | 3 | 9 | 1 | 48 | 432 |
 | Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
 | Added ranking controls | 2 | 6 | 2 | 24 | 288 |
 | Random-trigger sensitivity analysis | 2 | 6 | 3 | 24 | 432 |
