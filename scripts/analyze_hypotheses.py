@@ -27,6 +27,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 
@@ -198,6 +199,50 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             paired_def_m_excl, dtype=np.float64
         ),
     }
+
+
+_STATISTICAL_FLOAT_FIELDS = {
+    "pi_full", "def", "def_m", "def_excl", "def_m_excl",
+    "primary_def", "primary_def_m", "primary_g_comp", "primary_g_suff",
+    "g_comp", "g_suff", "comp", "suff", "wamsn", "drift",
+    "stale_attention_share", "stale_attention_mass", "stale_attention_shift",
+    "stale_attention_share_clean_twin", "paired_def_delta",
+    "paired_def_m_delta", "paired_def_excl_delta", "paired_def_m_excl_delta",
+    "paired_primary_def_delta", "paired_primary_def_m_delta",
+}
+
+
+def quantize_statistical_inputs(cells: list[dict], decimals: int) -> list[dict]:
+    """Emulate legacy record quantization without changing the source files."""
+    quantized = copy.deepcopy(cells)
+    for cell in quantized:
+        records = cell.get("faith_records", [])
+        for record in records:
+            for key in _STATISTICAL_FLOAT_FIELDS:
+                value = record.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    record[key] = round(float(value), decimals)
+
+        eligible = [
+            record for record in records
+            if int(record.get("valid_reservations", 0)) > 0
+            and record.get("primary_metric_available", True)
+            and record.get("primary_def", record.get("def")) is not None
+        ]
+        if eligible:
+            faithfulness = cell.setdefault("faithfulness", {})
+            faithfulness["def_mean"] = float(np.mean([
+                record.get("primary_def", record["def"])
+                for record in eligible
+            ]))
+            margin = [
+                record.get("primary_def_m", record.get("def_m"))
+                for record in eligible
+                if record.get("primary_def_m", record.get("def_m")) is not None
+            ]
+            if margin:
+                faithfulness["def_m_mean"] = float(np.mean(margin))
+    return quantized
 
 
 def subset_frame(frame: dict[str, np.ndarray], mask: np.ndarray) -> dict[str, np.ndarray]:
@@ -656,9 +701,15 @@ def main() -> int:
     parser.add_argument("--n-bootstrap", type=int, default=2000)
     parser.add_argument("--stat-seed", type=int, default=0,
                         help="RNG seed for permutations/bootstrap only")
+    parser.add_argument("--input-round-decimals", type=int,
+                        help="sensitivity mode: round statistical records in memory")
+    parser.add_argument("--output", type=Path,
+                        help="analysis JSON path; defaults to <sweep_dir>/analysis.json")
     args = parser.parse_args()
 
     manifest, cells = load_sweep(args.sweep_dir)
+    if args.input_round_decimals is not None:
+        cells = quantize_statistical_inputs(cells, args.input_round_decimals)
     frame = decisions_frame(cells)
     rng = np.random.default_rng(args.stat_seed)
 
@@ -698,6 +749,7 @@ def main() -> int:
             "standard type-matched DEF for no-op; chosen-action-protected "
             "type-matched DEF for dispatch"
         ),
+        "input_quantization_decimals": args.input_round_decimals,
         "manifest": {"checkpoint": manifest["checkpoint"],
                      "git_rev": manifest.get("git_rev")},
     }
@@ -898,7 +950,8 @@ def main() -> int:
     )
     results["robust"] = robust
 
-    out_path = args.sweep_dir / "analysis.json"
+    out_path = args.output or (args.sweep_dir / "analysis.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(results, indent=2))
     print()
     print(f"analysis: {out_path}")

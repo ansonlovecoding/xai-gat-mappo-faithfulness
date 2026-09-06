@@ -2,7 +2,11 @@ import json
 
 import pytest
 
-from scripts.analyze_hypotheses import action_stratum_masks, decisions_frame
+from scripts.analyze_hypotheses import (
+    action_stratum_masks,
+    decisions_frame,
+    quantize_statistical_inputs,
+)
 from scripts.summarize_dissertation_experiment import (
     summarize_deterministic_diagnostics,
     summarize_training_seeds,
@@ -157,6 +161,31 @@ def test_small_faithfulness_values_survive_json_round_trip() -> None:
 
     assert frame["def"][0] == value
     assert frame["paired_def_delta"][0] == paired_delta
+
+
+def test_precision_sensitivity_quantizes_a_copy_only() -> None:
+    cells = [{
+        "cell": {"axis": "outage_duration", "level": 30.0, "seed": 42},
+        "faithfulness": {},
+        "faith_records": [{
+            "record_schema_version": 2,
+            "action": 1,
+            "primary_metric_available": True,
+            "primary_def": 0.000049,
+            "primary_def_m": -0.000051,
+            "def": 0.000049,
+            "def_m": -0.000051,
+            "wamsn": 0.012345,
+            "valid_reservations": 2,
+        }],
+    }]
+
+    quantized = quantize_statistical_inputs(cells, 4)
+
+    assert cells[0]["faith_records"][0]["primary_def"] == 0.000049
+    assert quantized[0]["faith_records"][0]["primary_def"] == 0.0
+    assert quantized[0]["faith_records"][0]["primary_def_m"] == -0.0001
+    assert quantized[0]["faithfulness"]["def_mean"] == 0.0
 
 
 def test_deterministic_diagnostic_counts_zero_pickup_episodes(tmp_path) -> None:
