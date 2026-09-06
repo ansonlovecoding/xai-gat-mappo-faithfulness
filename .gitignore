@@ -52,7 +52,10 @@ results/**
 !results/**/*.eval.json
 !results/**/*.json
 !results/**/AUDIT_REPORT.md
-!results/**/audit_checks.csv
+!results/**/*.csv
+!results/**/*.toml
+!results/**/ckpt_selected.pt
+!results/**/*.tar.gz
 !results/**/train_log.jsonl
 !results/**/ckpt_best.pt
 !results/**/ckpt_final.pt

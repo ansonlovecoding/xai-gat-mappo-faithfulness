@@ -124,7 +124,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path,
-        default=PROJECT_ROOT / "configs/experiments/dissertation_v9_exposure_audit.toml",
+        default=PROJECT_ROOT / "configs/experiments/dissertation_v10_corrected.toml",
     )
     parser.add_argument("--run-root", type=Path, default=None)
     parser.add_argument("--evidence-root", type=Path, default=None)
@@ -139,10 +139,10 @@ def main() -> int:
     audit_cfg = config.get("explanation_audit", {})
     run_root = args.run_root or _resolve(config["output_root"])
     evidence_root = args.evidence_root or _resolve(
-        audit_cfg.get("evidence_root", "results/dissertation_v9_exposure_audit")
+        audit_cfg.get("evidence_root", "results/dissertation_v10_corrected")
     )
     out = args.out or _resolve(
-        audit_cfg.get("output_root", "results/dissertation_v9_exposure_audit/explanation_audit")
+        audit_cfg.get("output_root", "results/dissertation_v10_corrected/explanation_audit")
     )
     controls_path = evidence_root / audit_cfg.get(
         "controls_summary", "faithfulness_controls/summary.json"

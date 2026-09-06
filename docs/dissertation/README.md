@@ -6,8 +6,7 @@ under Telemetry Degradation*.
 
 The dissertation is prepared for the MSc in Artificial Intelligence at De
 Montfort University Dubai. Its quantitative claims are based on the validated
-outputs under `results/dissertation_v9_exposure_audit/`. Supporting capability
-and construct-validity audits are stored under `results/supporting_audits/`.
+outputs under `results/dissertation_v10_corrected/`.
 
 | File | Content | Status |
 |---|---|---|
@@ -22,8 +21,8 @@ and construct-validity audits are stored under `results/supporting_audits/`.
 
 The generated submission files are:
 
-- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.docx`
-- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.pdf`
+- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_Final.docx`
+- `docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_Final.pdf`
 
 The code accompanies the dissertation submission. Reproduction instructions
 are in `docs/REPRODUCE_EXPERIMENTS.md`; the explanation-audit input and output

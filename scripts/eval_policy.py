@@ -117,8 +117,8 @@ def _run_episode(
     n_stale_exposed_scored = 0
     n_cadence_scored = 0
     # Empirical degradation rate — fraction of agent-obs pairs where
-    # position_valid == 0. Used by the degradation ablation script to
-    # calibrate the matched-rate random_dropout baseline.
+    # position_valid == 0. Used to report realized exposure when tunnel and
+    # fixed-rate random triggers are compared.
     n_degraded_obs = 0
     n_total_obs = 0
 

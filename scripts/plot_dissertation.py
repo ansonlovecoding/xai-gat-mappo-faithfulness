@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import tarfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,11 +12,11 @@ from matplotlib.patches import FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNS = ROOT / "runs" / "dissertation_v9_exposure_audit"
-TRAINING_RUNS = ROOT / "runs" / "dissertation_v8"
-ANALYSIS = ROOT / "results" / "dissertation_v9_exposure_audit"
+RUNS = ROOT / "runs" / "dissertation_v10_corrected"
+TRAINING_RUNS = ROOT / "runs" / "dissertation_v10_corrected"
+ANALYSIS = ROOT / "results" / "dissertation_v10_corrected"
 OUT = ROOT / "docs" / "figures"
-PREFIX = "v9"
+PREFIX = "v10"
 COLORS = {"B2_gat": "#176B87", "H5_gat_degraded": "#C75000"}
 LABELS = {
     "B1_mlp": "MLP",
@@ -56,10 +55,30 @@ def performance_figure() -> None:
     rows = _csv(RUNS / "performance_context.csv")
     models = list(LABELS)
     fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    baseline_path = ANALYSIS / "matched_baselines.json"
+    comparison_values: list[float] = []
+    if baseline_path.is_file():
+        baselines = json.loads(baseline_path.read_text())["summary"]
+        random_result = baselines["legal_random"]["completed_passenger_journeys"]
+        greedy_result = baselines["greedy_nearest"]["completed_passenger_journeys"]
+        comparison_values.extend([
+            float(random_result["ci95"][0]),
+            float(random_result["ci95"][1]),
+            float(greedy_result["mean"]),
+        ])
+        ax.axhspan(
+            *random_result["ci95"], color="#176B87", alpha=0.10,
+            label="Legal-random 95% CI",
+        )
+        ax.axhline(
+            greedy_result["mean"], color="#C75000", linestyle="--",
+            linewidth=1.2, label="Greedy-nearest mean",
+        )
     for index, model in enumerate(models):
         selected = sorted((row for row in rows if row["model"] == model),
                           key=lambda row: int(row["training_seed"]))
-        values = [float(row["mean_pickups"]) for row in selected]
+        values = [float(row["mean_completed_passenger_journeys"])
+                  for row in selected]
         offsets = np.linspace(-0.10, 0.10, len(values))
         for offset, row, value in zip(offsets, selected, values):
             seed = int(row["training_seed"])
@@ -72,11 +91,16 @@ def performance_figure() -> None:
         ax.hlines(np.mean(values), index - 0.22, index + 0.22,
                   color="#202020", linewidth=2)
     ax.set_xticks(range(len(models)), [LABELS[model] for model in models])
-    ax.set_ylabel("Mean pickups per test episode")
-    ax.set_title("Clean-test pickups by trained policy")
-    ax.set_ylim(bottom=0)
+    ax.set_ylabel("Mean completed journeys per test episode")
+    ax.set_title("Clean-test completed journeys by trained policy")
+    all_values = [float(row["mean_completed_passenger_journeys"]) for row in rows]
+    all_values.extend(comparison_values)
+    padding = max(0.35, (max(all_values) - min(all_values)) * 0.18)
+    ax.set_ylim(min(all_values) - padding, max(all_values) + padding)
     ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
     ax.spines[["top", "right"]].set_visible(False)
+    if baseline_path.is_file():
+        ax.legend(frameon=False, fontsize=8, loc="lower left")
     fig.tight_layout()
     _save(fig, "clean_performance_by_training_seed")
 
@@ -86,8 +110,8 @@ def training_diagnostics_figure() -> None:
     fig, axes = plt.subplots(4, 3, figsize=(8.0, 7.8), sharex=True)
     metrics = (
         ("reward", "Reward", True),
-        ("pickups", "Training pickups", True),
-        ("validation", "Validation pickups", False),
+        ("pickups", "Completed journeys", True),
+        ("validation", "Validation journeys", False),
         ("entropy", "Policy entropy", True),
         ("approx_kl", "Approx. KL", True),
         ("clipfrac", "Clip fraction", True),
@@ -253,29 +277,29 @@ def evidence_summary_figure() -> None:
     rows = [
         (
             "Clean baseline",
-            "Raw attention shows little advantage\nover matched-random subsets",
-            "This does not mean that\nevery attention map is wrong",
+            "Raw attention shows no reliable\nmatched-random advantage",
+            "A plausible attention map is\nnot evidence of faithfulness",
             "Test decision\nrelevance",
             "#A33A3A",
         ),
         (
             "Stale exposure",
-            "More attention is attached\nto old vehicle data",
-            "This does not show that AoI\ncauses lower faithfulness",
+            "Longer outages increase the\nmeasured stale-data exposure",
+            "This does not show that AoI\nreduces faithfulness",
             "Show freshness\nseparately",
             "#176B87",
         ),
         (
             "Within-policy\nassociation",
-            "Greater stale exposure tends\nto accompany lower DEF",
-            "Association is not causation\nor dispatch-only evidence",
-            "Check both\naction groups",
+            "DEF does not decline as\noutage duration increases",
+            "The proposed adverse\nrelationship is not supported",
+            "Report the\nunsupported test",
             "#6B5B95",
         ),
         (
             "Direct paired\nchange",
-            "The effect varies across\ntrained checkpoints",
-            "There is no single response\nto telemetry degradation",
+            "Attention reallocation varies\nacross trained checkpoints",
+            "A single degradation effect\ncannot be claimed",
             "Audit every\ncheckpoint",
             "#B06C00",
         ),
@@ -373,30 +397,21 @@ def _average_ranks(values: np.ndarray) -> np.ndarray:
 
 def _h4_episode_data(model: str, seed: int) -> tuple[np.ndarray, np.ndarray]:
     """Recreate H4 episode blocks and descriptive WAMSN groups."""
-    archive_path = (
-        ANALYSIS / "release" / "audit_records" /
-        f"{model}_seed_{seed}_cells.tar.gz"
-    )
     blocks: dict[tuple[str, int], tuple[list[float], list[float]]] = {}
-    with tarfile.open(archive_path, "r:gz") as archive:
-        for member in archive.getmembers():
-            if "/outage_duration_" not in member.name:
+    cell_dir = RUNS / "sweeps" / model / f"seed_{seed}" / "cells"
+    for cell_path in sorted(cell_dir.glob("outage_duration_*.json")):
+        payload = json.loads(cell_path.read_text())
+        for record in payload["faith_records"]:
+            if int(record["valid_reservations"]) <= 0:
                 continue
-            handle = archive.extractfile(member)
-            if handle is None:
+            wamsn = float(record["wamsn"])
+            probability_def = float(record.get("primary_def", record["def"]))
+            if not np.isfinite(wamsn) or not np.isfinite(probability_def):
                 continue
-            payload = json.load(handle)
-            for record in payload["faith_records"]:
-                if int(record["valid_reservations"]) <= 0:
-                    continue
-                wamsn = float(record["wamsn"])
-                probability_def = float(record.get("primary_def", record["def"]))
-                if not np.isfinite(wamsn) or not np.isfinite(probability_def):
-                    continue
-                key = (member.name, int(record["episode"]))
-                x_values, y_values = blocks.setdefault(key, ([], []))
-                x_values.append(wamsn)
-                y_values.append(probability_def)
+            key = (cell_path.name, int(record["episode"]))
+            x_values, y_values = blocks.setdefault(key, ([], []))
+            x_values.append(wamsn)
+            y_values.append(probability_def)
 
     correlations: list[float] = []
     grouped_def_ranks: list[list[float]] = []
@@ -480,20 +495,13 @@ def consistency_figure() -> None:
         low, high = np.percentile(sampled, [2.5, 97.5])
         value = float(row["H4_within_episode_rho"])
         style = SEED_STYLES[seed]
-        supported = bool(row["H4_supported"])
         result_ax.errorbar(
             value, y_position,
             xerr=[[value - low], [high - value]],
             fmt=style["marker"], markersize=7, capsize=3,
             color=style["color"], markerfacecolor=(
-                style["color"] if supported else "white"
+                style["color"] if bool(row["H4_supported"]) else "white"
             ), markeredgewidth=1.4, zorder=3,
-        )
-        result_ax.text(
-            0.045, y_position,
-            "SUPPORTED" if supported else "NOT SUPPORTED",
-            va="center", ha="left", fontsize=7.5, fontweight="bold",
-            color="#2F6B3C" if supported else "#9B2C2C",
         )
     result_ax.axvline(0, color="#202020", linewidth=1)
     result_ax.axhline(2.5, color="#A8A8A8", linewidth=0.8)
@@ -501,9 +509,12 @@ def consistency_figure() -> None:
         y_positions,
         [f"{LABELS[row['model']]} {row['training_seed']}" for row in ordered_rows],
     )
-    result_ax.set_xlim(-0.55, 0.23)
+    result_ax.set_xlim(-0.10, 0.70)
     result_ax.set_xlabel("Mean within-episode Spearman rho")
-    result_ax.set_title("(b) H4 result: 6/6 supported")
+    supported_count = sum(bool(row["H4_supported"]) for row in ordered_rows)
+    result_ax.set_title(
+        f"(b) H4 result: {supported_count}/{len(ordered_rows)} supported"
+    )
     result_ax.grid(axis="x", color="#D8D8D8", linewidth=0.7)
     result_ax.spines[["top", "right", "left"]].set_visible(False)
     result_ax.tick_params(axis="y", length=0)
@@ -545,15 +556,15 @@ def action_stratified_figure() -> None:
         hatch="///", edgecolor="white", linewidth=0.6, label="Dispatch",
     )
     count_ceiling = float(np.max(no_op_counts + dispatch_counts))
-    for x_pos, total, fraction in zip(
-        x, no_op_counts + dispatch_counts, dispatch_fraction
+    for x_pos, no_op, dispatch, fraction in zip(
+        x, no_op_counts, dispatch_counts, dispatch_fraction
     ):
         axes["counts"].text(
-            x_pos, total + count_ceiling * 0.025,
-            f"{fraction * 100:.1f}% dispatch", ha="center", va="bottom",
-            fontsize=7.2,
+            x_pos, no_op + dispatch * 0.52,
+            f"{fraction * 100:.1f}%", ha="center", va="center",
+            fontsize=7.2, color="white", fontweight="bold",
         )
-    axes["counts"].set_ylim(0, count_ceiling * 1.16)
+    axes["counts"].set_ylim(0, count_ceiling * 1.05)
     axes["counts"].set_ylabel("Eligible decisions (count)")
     axes["counts"].set_title("(a) Chosen-action counts", loc="left")
 
@@ -610,33 +621,20 @@ def action_stratified_figure() -> None:
     axes["def_full"].set_title("(c) DEF change: full scale", loc="left")
     axes["def_full"].legend(frameon=False, fontsize=7.5, loc="lower left", ncol=3)
 
-    zoom_low, zoom_high = -1.2, 1.2
+    zoom_low, zoom_high = -1.25, 0.30
     for label, marker, color, offset, values, ci_lows, ci_highs in series:
-        visible = (values >= zoom_low) & (values <= zoom_high)
-        if np.any(visible):
-            shown = values[visible]
-            shown_lows = np.maximum(ci_lows[visible], zoom_low)
-            shown_highs = np.minimum(ci_highs[visible], zoom_high)
-            axes["def_zoom"].errorbar(
-                x[visible] + offset, shown,
-                yerr=[shown - shown_lows, shown_highs - shown],
-                fmt=marker, color=color, markerfacecolor=color,
-                markersize=5.5, capsize=3, linewidth=1.1,
-            )
-        for x_pos, value in zip(x[~visible] + offset, values[~visible]):
-            boundary = zoom_low + 0.04 if value < zoom_low else zoom_high - 0.04
-            direction = "v" if value < zoom_low else "^"
-            axes["def_zoom"].scatter(x_pos, boundary, marker=direction,
-                                     s=42, color=color, zorder=4)
-            axes["def_zoom"].annotate(
-                f"{value:+.1f}", (x_pos, boundary),
-                xytext=(8, 7 if value < zoom_low else -12),
-                textcoords="offset points", ha="center", fontsize=6.8,
-            )
+        if label != "No-op":
+            continue
+        axes["def_zoom"].errorbar(
+            x, values,
+            yerr=[values - ci_lows, ci_highs - values],
+            fmt=marker, color=color, markerfacecolor=color,
+            markersize=5.5, capsize=3, linewidth=1.1,
+        )
     axes["def_zoom"].axhline(0, color="#202020", linewidth=0.9)
     axes["def_zoom"].set_ylim(zoom_low, zoom_high)
     axes["def_zoom"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
-    axes["def_zoom"].set_title("(d) DEF change: enlarged near zero", loc="left")
+    axes["def_zoom"].set_title("(d) No-op DEF change", loc="left")
 
     for ax in axes.values():
         ax.set_xticks(x, labels)
@@ -652,7 +650,7 @@ def action_stratified_figure() -> None:
 
 
 def random_loss_robustness_figure() -> None:
-    """Compare tunnel and random triggers at the same 30 s freeze duration."""
+    """Compare fixed-rate random and tunnel triggers for a 30 s freeze."""
     payload = json.loads((ANALYSIS / "random_loss_robustness.json").read_text())
     rows = payload["rows"]
     checkpoints = sorted({(row["model"], int(row["training_seed"])) for row in rows})
@@ -666,10 +664,8 @@ def random_loss_robustness_figure() -> None:
         ("tunnel", "Tunnel trigger", "o", "#C75000", -0.12),
         ("random", "Random trigger", "s", "#176B87", 0.12),
     )
-    fig = plt.figure(figsize=(8.0, 5.25))
-    axes = fig.subplot_mosaic(
-        [["exposure", "attention"], ["def_full", "def_zoom"]]
-    )
+    fig, axes_array = plt.subplots(1, 3, figsize=(9.2, 3.45))
+    exposure_ax, attention_ax, def_ax = axes_array
 
     width = 0.24
     for condition, label, _, color, offset in conditions:
@@ -677,13 +673,13 @@ def random_loss_robustness_figure() -> None:
             float(by_key[model, seed, condition]["empirical_degradation_rate"]) * 100
             for model, seed in checkpoints
         ]
-        axes["exposure"].bar(
+        exposure_ax.bar(
             x + offset, exposure, width=width, color=color,
             hatch="///" if condition == "random" else None,
             edgecolor="white", linewidth=0.5, label=label,
         )
-    axes["exposure"].set_ylabel("Degraded observations (%)")
-    axes["exposure"].set_title("(a) Observed exposure", loc="left")
+    exposure_ax.set_ylabel("Degraded observations (%)")
+    exposure_ax.set_title("(a) Observed exposure", loc="left")
 
     for condition, label, marker, color, offset in conditions:
         values, ci_lows, ci_highs = [], [], []
@@ -694,17 +690,16 @@ def random_loss_robustness_figure() -> None:
             ci_lows.append(float(row["stale_attention_ci_low"]) * 1e3)
             ci_highs.append(float(row["stale_attention_ci_high"]) * 1e3)
         values = np.asarray(values)
-        axes["attention"].errorbar(
+        attention_ax.errorbar(
             x + offset, values,
             yerr=[values - np.asarray(ci_lows), np.asarray(ci_highs) - values],
             fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
             linewidth=1.0, capsize=2.5, label=label,
         )
-    axes["attention"].axhline(0, color="#202020", linewidth=0.8)
-    axes["attention"].set_ylabel(r"Stale-attention shift ($\times 10^{-3}$)")
-    axes["attention"].set_title("(b) Attention shift", loc="left")
+    attention_ax.axhline(0, color="#202020", linewidth=0.8)
+    attention_ax.set_ylabel(r"Stale-attention shift ($\times 10^{-3}$)")
+    attention_ax.set_title("(b) Attention shift", loc="left")
 
-    def_series = []
     for condition, label, marker, color, offset in conditions:
         values, ci_lows, ci_highs = [], [], []
         for model, seed in checkpoints:
@@ -715,44 +710,16 @@ def random_loss_robustness_figure() -> None:
         values = np.asarray(values)
         ci_lows = np.asarray(ci_lows)
         ci_highs = np.asarray(ci_highs)
-        def_series.append((label, marker, color, offset, values, ci_lows, ci_highs))
-        axes["def_full"].errorbar(
+        def_ax.errorbar(
             x + offset, values, yerr=[values - ci_lows, ci_highs - values],
             fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
             linewidth=1.0, capsize=2.5, label=label,
         )
-    axes["def_full"].axhline(0, color="#202020", linewidth=0.8)
-    axes["def_full"].set_ylabel(r"Probability DEF shift ($\times 10^{-4}$)")
-    axes["def_full"].set_title("(c) Faithfulness shift: full scale", loc="left")
+    def_ax.axhline(0, color="#202020", linewidth=0.8)
+    def_ax.set_ylabel(r"Probability DEF shift ($\times 10^{-4}$)")
+    def_ax.set_title("(c) Faithfulness shift", loc="left")
 
-    zoom_low, zoom_high = -1.0, 1.0
-    for label, marker, color, offset, values, ci_lows, ci_highs in def_series:
-        visible = (values >= zoom_low) & (values <= zoom_high)
-        shown = values[visible]
-        shown_lows = np.maximum(ci_lows[visible], zoom_low)
-        shown_highs = np.minimum(ci_highs[visible], zoom_high)
-        axes["def_zoom"].errorbar(
-            x[visible] + offset, shown,
-            yerr=[shown - shown_lows, shown_highs - shown],
-            fmt=marker, color=color, markerfacecolor=color, markersize=4.8,
-            linewidth=1.0, capsize=2.5,
-        )
-        for x_pos, value in zip(x[~visible] + offset, values[~visible]):
-            boundary = zoom_low + 0.05 if value < zoom_low else zoom_high - 0.05
-            direction = "v" if value < zoom_low else "^"
-            axes["def_zoom"].scatter(x_pos, boundary, marker=direction,
-                                     s=42, color=color, zorder=4)
-            axes["def_zoom"].annotate(
-                f"{value:+.1f}", (x_pos, boundary),
-                xytext=(0, 7 if value < zoom_low else -12),
-                textcoords="offset points", ha="center", fontsize=6.8,
-            )
-    axes["def_zoom"].axhline(0, color="#202020", linewidth=0.8)
-    axes["def_zoom"].set_ylim(zoom_low, zoom_high)
-    axes["def_zoom"].set_ylabel(r"Probability DEF shift ($\times 10^{-4}$)")
-    axes["def_zoom"].set_title("(d) Faithfulness shift: enlarged near zero", loc="left")
-
-    for ax in axes.values():
+    for ax in axes_array:
         ax.set_xticks(x, labels)
         ax.text(1, -0.17, "GAT", transform=ax.get_xaxis_transform(),
                 ha="center", va="top", fontsize=8.5, fontweight="bold")
@@ -760,9 +727,9 @@ def random_loss_robustness_figure() -> None:
                 ha="center", va="top", fontsize=8.5, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
-    axes["exposure"].legend(frameon=False, fontsize=7.5, loc="upper left")
+    exposure_ax.legend(frameon=False, fontsize=7.5, loc="upper left")
     fig.suptitle("Sensitivity to tunnel-triggered versus random telemetry loss")
-    fig.tight_layout(rect=(0, 0.035, 1, 0.96))
+    fig.tight_layout(rect=(0, 0.035, 1, 0.93), w_pad=1.2)
     _save(fig, "random_loss_robustness")
 
 

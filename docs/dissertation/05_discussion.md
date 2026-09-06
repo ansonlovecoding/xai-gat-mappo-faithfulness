@@ -22,38 +22,38 @@ consistent evidence, so every tested checkpoint receives `WITHHOLD`.
 
 The experiment provides four related but different forms of evidence.
 
-**Clean baseline.** Under clean telemetry, raw attention performs close to its
-type-matched random control, while the LOO positive control gives a clearer
-response. This means that the evaluator can detect a more informative ranking,
-but raw attention does not provide that evidence consistently.
+**Clean baseline.** Under clean telemetry, raw-attention margin-DEF is below
+its type-matched random control for both models, while the LOO positive control
+is clearly above zero. The evaluator can therefore reward a ranking built from
+output changes, but raw attention does not provide the required evidence of
+decision relevance.
 
 **Stale-data exposure.** WAMSN rises as the outage becomes longer. This shows
 that more displayed attention is attached to old vehicle information. It does
 not show that data age causes faithfulness to decline because AoI is part of the
 WAMSN definition.
 
-**Within-policy association.** The association is supported for all six
-checkpoints: within the tested policies, decisions with greater stale exposure
-tend to have lower DEF. This is useful warning evidence, but it does not show
-that telemetry degradation caused the lower DEF or that the same pattern holds
-for dispatch actions alone.
+**Duration and within-policy association.** The proposed negative relationships
+are not supported. DEF does not decline as outage duration or WAMSN increases.
+These null and opposite-direction results must be reported rather than turned
+into a claim that data age improves faithfulness.
 
 **Direct paired change.** The clean/degraded pairs compare the same decision
-before and after the observation-layer change. Their attention and DEF changes
-are small and vary in direction across independently trained checkpoints. This
-is the more direct test of degradation, and it does not support one universal
-response.
+before and after the observation-layer change. Attention moves toward stale
+nodes in four checkpoints and away in two. DEF increases slightly in all six,
+which is opposite to the expected decline. This does not validate attention:
+the clean decision-relevance control has already failed.
 
-![Evidence interpretation summary](../figures/v9_evidence_path_summary.png)
+![Evidence interpretation summary](../figures/v10_evidence_path_summary.png)
 
 **Figure 5.1.** How the four forms of evidence should be interpreted. Each form
 answers a different question and leads to a separate audit requirement.
 
-The association and paired results are not contradictory. The first describes
-which decisions tend to have lower DEF within a trained policy. The second asks
-whether replacing a clean observation with its degraded twin changes DEF for
-the same decision. Keeping these questions separate prevents an association
-from being presented as a causal effect.
+These measures answer different questions. WAMSN checks whether stale evidence
+is present, the duration tests describe an ordered condition, and paired shifts
+measure the direct response of the same decision to a changed observation.
+Keeping them separate prevents a freshness measure from being presented as a
+faithfulness effect.
 
 ## 5.3 Why the result is not consistent
 
@@ -64,23 +64,21 @@ the random trigger does not create identical stale-node populations and cannot
 rule out scenario effects. The result therefore supports checkpoint dependence,
 not a general effect of telemetry loss.
 
-**Action composition.** No-op accounts for 93.0% of scorable decisions that
-contain an available request. The duration and stale-exposure associations are
-not reproduced in the smaller dispatch group. The overall result therefore
-describes the observed action mix and should not be presented as a general
-result for dispatch decisions.
+**Action composition.** Dispatch accounts for 80.2% of scorable decisions in
+the corrected experiment. Dispatch DEF increases slightly under degradation,
+whereas no-op DEF decreases in every checkpoint. The combined positive shift
+is therefore driven by the larger dispatch group and does not describe both
+action types.
 
 **Attention extraction.** Different heads, layers, aggregations, or query rows
 can change the direction or strength of the result. The network does not supply
 one self-evident attention map. Any map shown to an operator therefore needs a
 predeclared extraction rule that has been tested for stability.
 
-**Action rule.** The main audit samples actions from the learned policy, matching
-the training procedure. In the smaller deterministic diagnostic, the selected
-checkpoints choose only no-op. This does not invalidate the sampled-action
-faithfulness results, but it means that the study does not demonstrate a
-deployable deterministic dispatcher. The audit must always evaluate the action
-rule intended for deployment.
+**Action rule.** The main audit samples actions from the learned policy,
+matching the declared scope. The smaller deterministic diagnostic also
+completes journeys, but it is not part of the confirmatory audit. A deployment
+audit must use the same action rule that the deployed system will use.
 
 ## 5.4 Why the construct-validity controls matter
 
@@ -199,11 +197,11 @@ GAT-Outage and for all six individual checkpoints. This is not a failed
 experiment. The audit has completed and has found that the evidence is
 insufficient for explanation release. In particular, the dispatch-action
 decision-relevance intervals do not exceed the matched-random boundary,
-attention extraction can reverse the stale-attention direction, the
-stale-attention response changes direction across training seeds, and the
-tunnel/random comparison is indeterminate because several confidence intervals
-cross zero. Every argmax diagnostic also produces zero pickups, but this is a
-descriptive limitation rather than a release gate for the sampled action rule.
+attention extraction can reverse the stale-attention direction, and the
+stale-attention response changes direction across training seeds. The random
+trigger check passes for GAT-Outage but is indeterminate for GAT because one
+checkpoint interval crosses zero. The argmax diagnostic completes journeys,
+but it remains descriptive because the audit scope uses sampled actions.
 
 Sampled dispatch performance provides evidence of task capability, but it
 cannot show that the displayed reason is current or decision-relevant.
@@ -227,12 +225,11 @@ The study uses one simulated district, 20 taxis, and 50 requests. Tunnel
 exposure remains scenario-dependent, although the event-aware audit scores
 every observed stale-exposed decision. It evaluates three independent training
 seeds per model. Three seeds reveal variation but cannot estimate the wider
-distribution of training outcomes. The selected policies
-pass the training stability gates and their sampled-action evaluations outperform
-random and greedy lower bounds. However, every selected GAT checkpoint
-selects no-op throughout the small deterministic check. The study therefore
-cannot establish deterministic deployment capability or isolate the
-contribution of graph edges to sampled capability.
+distribution of training outcomes. The selected policies pass the training
+stability gates, but their held-out completed-journey results overlap the
+legal-random CI and the simple greedy range. These baselines are capability
+context, not evidence of a task-performance advantage. The experiment also
+does not isolate the contribution of graph edges to policy capability.
 
 Clean GAT and GAT-Outage also use different maximum training budgets and
 learning-rate decay horizons, selected from validation-only stability

@@ -107,7 +107,7 @@ def main() -> int:
     with (output_dir / "precision_sensitivity.csv").open(
         "w", newline="", encoding="utf-8"
     ) as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"precision sensitivity: {len(rows)} checkpoints")

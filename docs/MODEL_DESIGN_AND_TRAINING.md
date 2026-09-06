@@ -1,298 +1,140 @@
-# Model Design and Training Rationale
+# Model design and training
 
-This document explains why the experiment uses multiple dispatcher conditions,
-what each condition is designed to test, and how the learned models are
-trained. It is intended as supporting material for the dissertation
-methodology chapter.
+This document explains why the experiment uses MLP, GAT, and GAT-Outage, and
+how their checkpoints are trained and selected. The fixed settings are in
+`configs/experiments/dissertation_v10_corrected.toml`.
 
 ![Model conditions and training process](model_design_training_process.png)
 
-**Figure. Model conditions and shared MAPPO training process.** B0 is the
-non-learning dispatch reference; B1/B2 are trained on clean telemetry; H5
-is trained with tunnel-freeze degradation. After training, checkpoints are
-selected on validation demand and evaluated on held-out test demand under
-clean telemetry and fixed observation-layer outage durations.
+## Model roles
 
-## 1. Why multiple models are needed
+| Model | Encoder | Training telemetry | Purpose |
+|---|---|---|---|
+| MLP | multilayer perceptron | clean | task-capability context without an attention explanation |
+| GAT | graph attention | clean | main policy whose attention weights are audited |
+| GAT-Outage | graph attention | 30-second tunnel-triggered outages | tests whether the fitted outage-aware configuration is more consistent |
 
-The dissertation is not trying to prove that one dispatcher is the best
-possible fleet-management algorithm. Its main question is about explanation
-faithfulness:
+The dissertation uses these names rather than experimental codes. Internal
+identifiers appear only in commands and result paths.
 
-> Do attention-based explanations in a GAT-MARL fleet dispatcher remain
-> faithful when telemetry becomes stale?
+MLP is not used to answer the attention-faithfulness questions because it does
+not expose graph-attention weights. GAT and GAT-Outage have the same policy
+architecture. Their main difference is the training observation: GAT receives
+current telemetry, whereas GAT-Outage sometimes receives the last valid
+position and speed after tunnel entry.
 
-To answer that question, the experiment needs one main attention-based model
-and several comparison conditions. Each condition removes or changes one
-factor so the result can be interpreted more clearly.
+GAT-Outage is not assumed to be better. It tests whether experience with one
+30-second outage condition produces a more consistent explanation response at
+10, 20, 30, and 60 seconds. The reward has no explanation-faithfulness term, so
+outage training is not expected to guarantee faithful attention.
 
-## 2. Model conditions
+## Policy input and output
 
-| Condition | Learned? | Training telemetry | Main purpose |
-|---|---:|---|---|
-| B0 SUMO greedy | No | Not trained | Non-learning dispatch reference |
-| B1 MLP-MAPPO | Yes | Clean | RL baseline without graph attention |
-| B2 GAT-MAPPO | Yes | Clean | Main audited attention-based dispatcher |
-| H5′ degradation-aware GAT-MAPPO | Yes | Degraded | Training-side mitigation test |
+Each idle taxi receives a local graph with:
 
-Strictly, B0 is a baseline condition rather than a trained model. The learned
-models are B1, B2, and H5′.
+- one self-taxi node;
+- up to five peer-taxi nodes;
+- up to five passenger-request nodes.
 
-## 3. Purpose of each condition
+The actor returns a probability distribution over no-op and one dispatch action
+for each visible request. The critic returns a shared team-value estimate during
+training. GAT policies also return attention tensors through a read-only audit
+channel. The audit does not change the action or update the model.
 
-### B0: SUMO greedy dispatch baseline
+## Training process
 
-**Purpose:** provide a non-learning operational reference.
+All learned models use multi-agent proximal policy optimization with
+centralized training and decentralized execution. Each taxi acts from its own
+local observation. During training, the centralized critic pools valid node
+embeddings from the agents in the same transition.
 
-B0 uses SUMO's built-in greedy taxi matcher. It does not use reinforcement
-learning and does not provide attention explanations. It is included to answer
-a basic reviewer question:
-
-> How competent are the learned policies compared with a simple dispatch
-> heuristic?
-
-In the final results, B0 completes about 32 pickups per episode, while the
-learned policies complete around 6-8. This does not invalidate the
-faithfulness study, but it scopes the claims: the explanation results apply to
-the low-capability learned policies actually achieved.
-
-### B1: MLP-MAPPO baseline
-
-**Purpose:** test whether the graph/GAT architecture improves dispatch
-performance over a plain neural policy.
-
-B1 uses the same MAPPO training loop as B2 but replaces the graph-attention
-encoder with an MLP policy. It has no attention channel, so it is not used for
-DEF/WAMSN faithfulness scoring. Its role is mainly performance comparison:
-
-> Is the graph architecture useful for the control task, or could a simpler
-> MLP do the same?
-
-### B2: GAT-MAPPO main model
-
-**Purpose:** serve as the main system under audit.
-
-B2 is the central model in the dissertation. It uses a graph-attention encoder
-over the acting taxi, neighbouring taxis, and candidate reservations. Its
-attention weights are the coupled explanation channel tested by the
-faithfulness pipeline.
-
-B2 answers the core research questions:
-
-- Are attention explanations faithful on clean telemetry?
-- What happens to their faithfulness under stale telemetry?
-- Does attention shift toward stale vehicle nodes as AoI increases?
-- Does faithfulness degrade separately from dispatch performance?
-
-B2 is trained on clean telemetry first. Then it is evaluated under both clean
-and degraded telemetry. This design simulates the realistic case where a
-standard dispatcher trained under normal conditions is deployed into a world
-where telemetry sometimes becomes stale.
-
-### H5′: degradation-aware GAT-MAPPO
-
-**Purpose:** test whether training with degradation mitigates the problem.
-
-H5′ uses the same basic GAT-MAPPO configuration as B2, but training occurs
-with tunnel-triggered freeze degradation enabled. In the final experiment, the
-training degradation uses an outage level such as 30 s.
-
-This condition answers:
-
-> If the model experiences stale telemetry during training, does its attention
-> channel become more faithful or more robust?
-
-The final result is negative: degradation-aware training does not make the
-coupled attention channel faithful. Under the corrected type-matched DEF
-baseline, H5′ remains near zero, like B2.
-
-## 4. Training process for learned models
-
-All learned models use the same high-level MAPPO training pipeline.
+The shared reward at simulation step `t` is:
 
 ```text
-Initialise SUMO environment
-Initialise shared policy
-For each epoch:
-    reset one SUMO episode
-    collect one full rollout with the current policy
-    store each acting taxi's observation, action, log-probability, value, reward
-    compute GAE advantages per taxi trajectory
-    update the shared policy using PPO mini-batches
-    log pickups, reward, entropy, losses, KL, clip fraction
-    save periodic checkpoints
-    update ckpt_best.pt if rolling pickup mean improves
+r_t = 10 * completed_passenger_journeys_t
+    + 0.5 * accepted_dispatches_t
+    - 0.001 * mean_pending_wait_t
 ```
 
-The entry point is:
+A taxi that makes an accepted dispatch receives an additional difference
+credit of 1.0. When a taxi remains busy between decisions, all intervening team
+rewards are accumulated with the correct semi-Markov discount. Generalized
+advantage estimation also uses the actual decision interval. This prevents
+rewards earned during a passenger journey from being lost.
 
-```bash
-python scripts/train.py
-```
+## Training budgets
 
-The main training script creates the environment, constructs the selected
-policy, collects rollouts, computes GAE, performs PPO updates, and writes
-checkpoints under:
+| Setting | GAT | GAT-Outage | MLP |
+|---|---:|---:|---:|
+| Maximum epochs | 40 | 50 | 50 |
+| Learning rate | 0.0001 | 0.0001 | 0.0003 |
+| Learning-rate decay | linear | linear | none |
+| Training seeds | 42, 43, 44 | 42, 43, 44 | 42, 43, 44 |
 
-```text
-runs/mappo/<area>_<timestamp>/
-```
+The maximum budgets were fixed from validation-only stability work before the
+held-out test. Because GAT and GAT-Outage do not have identical optimization
+horizons, their comparison describes the two fitted configurations and cannot
+attribute any difference only to outage training.
 
-Each run saves:
+## Checkpoint selection
 
-```text
-args.json
-train_log.jsonl
-ckpt_epoch_XXXX.pt
-ckpt_best.pt
-best_metadata.json
-```
+Training, validation, and test demand files are separate. Epoch 0 is kept only
+as an initialization diagnostic and cannot be selected. Periodic trained
+checkpoints are evaluated over eight validation episodes with seed 2026. The
+checkpoint with the highest mean completed passenger journeys is selected;
+mean reward and earlier epoch break ties.
 
-## 5. Shared MAPPO details
+| Model | Seed 42 | Seed 43 | Seed 44 |
+|---|---:|---:|---:|
+| MLP | epoch 45 | epoch 30 | epoch 38 |
+| GAT | epoch 30 | epoch 20 | epoch 39 |
+| GAT-Outage | epoch 10 | epoch 40 | epoch 9 |
 
-The fleet uses parameter sharing: all taxis use the same policy network. At
-each RL step, all currently idle taxis act as agents. The policy samples an
-action for each acting taxi:
+MLP and GAT are selected under clean validation telemetry. GAT-Outage is
+selected under its 30-second training condition. The test split is never read
+during checkpoint selection.
 
-```text
-0      = no-op
-1..K   = accept the k-th candidate reservation
-```
+## Stability checks
 
-The action is applied to SUMO through `dispatchTaxi`, then SUMO advances by
-10 simulated seconds.
+A run is accepted only when it satisfies all declared checks:
 
-The team reward is:
-
-```text
-R = 10 * pickups
-    + 0.5 * successful_dispatches
-    - 0.001 * mean_pending_wait_time
-```
-
-This team reward is broadcast to all acting taxis at that step.
-
-After one full episode, the trainer computes Generalised Advantage Estimation
-(GAE):
-
-```text
-delta_t = r_t + gamma * V_{t+1} - V_t
-GAE_t   = delta_t + gamma * lambda * GAE_{t+1}
-return_t = GAE_t + V_t
-```
-
-Default values:
-
-```text
-gamma = 0.99
-lambda = 0.95
-```
-
-Then PPO updates the policy using the clipped surrogate objective:
-
-```text
-ratio = exp(new_log_prob - old_log_prob)
-policy_loss = -mean(min(ratio * advantage,
-                        clip(ratio, 1-eps, 1+eps) * advantage))
-```
-
-The full loss is:
-
-```text
-loss = policy_loss
-       + vf_coef * value_loss
-       - ent_coef * entropy
-```
-
-Default PPO settings:
-
-| Parameter | Default |
+| Check | Requirement |
 |---|---:|
-| learning rate | 3e-4 |
-| clip ratio | 0.2 |
-| PPO epochs | 4 |
-| minibatch size | 256 |
-| value-loss coefficient | 0.5 |
-| entropy coefficient | 0.01 |
-| max gradient norm | 0.5 |
+| Final-window mean completed journeys | at least 5.0 |
+| Longest zero-completion run | no more than 4 epochs |
+| Selected validation completed journeys | at least 5.0 |
+| Final validation retention | at least 0.80 |
 
-## 6. Example training commands
+All nine final training runs pass. These checks establish that the checkpoints
+can be evaluated; they do not validate attention as an explanation.
 
-### B1: MLP-MAPPO baseline
+## Held-out evaluation
 
-```bash
-python scripts/train.py \
-  --area central_park \
-  --policy mlp \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train
-```
+Each selected model checkpoint receives 48 clean test episodes: eight action
+sampling seeds and six episodes per seed. GAT and GAT-Outage additionally
+receive the five-condition faithfulness sweep. Actions are sampled from the
+policy distribution in the primary audit. A three-episode argmax diagnostic is
+reported separately.
 
-### B2: clean-trained GAT-MAPPO
+The main findings are not a performance claim. Completed journeys establish
+that the policies act in the environment. Explanation release depends on the
+freshness-aware checks documented in
+`docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`.
 
-```bash
-python scripts/train.py \
-  --area central_park \
-  --policy gat \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train \
-  --degradation off
-```
-
-### H5′: degradation-aware GAT-MAPPO
+## Commands
 
 ```bash
-python scripts/train.py \
-  --area central_park \
-  --policy gat \
-  --epochs 300 \
-  --seed 42 \
-  --demand-split train \
-  --degradation tunnel_triggered \
-  --outage-duration 30
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --stage train
+
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --stage select
+
+.venv/bin/python scripts/run_dissertation_experiments.py \
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --stage evaluate
 ```
 
-## 7. Evaluation after training
-
-After training, each learned checkpoint is evaluated separately. The main
-evaluation pattern is:
-
-```text
-Train on clean or degraded telemetry
-Freeze checkpoint
-Evaluate on held-out test demand
-Evaluate under clean telemetry
-Evaluate under outage durations {10, 20, 30, 60} seconds
-Compute pickups, reward, wait time
-For GAT models, compute DEF, margin-DEF, WAMSN, and attention drift
-```
-
-The main sweep command is:
-
-```bash
-python scripts/run_dissertation_experiments.py \
-  --stage sweep --model B2_gat --resume
-```
-
-This produces one clean condition plus four tunnel-degradation levels. B1 is
-not scored with DEF/WAMSN because it has no graph-attention explanation
-channel.
-
-## 8. Summary of experimental logic
-
-The model set is designed as a chain of controls:
-
-```text
-B0: Is the learned policy meaningful compared with a simple heuristic?
-B1: Does a non-graph RL policy behave similarly?
-B2: Are GAT attention explanations faithful?
-H5′: Can degradation-aware training fix the explanation problem?
-```
-
-The final dissertation conclusion relies most heavily on B2, with B0/B1/H5′
-serving as controls and mitigation checks. The negative result is important:
-the coupled GAT attention channel remains practically unfaithful even after
-the experiment controls for architecture, capability range, and
-degradation-aware training.
+See `docs/REPRODUCE_EXPERIMENTS.md` for the full audit and packaging workflow.

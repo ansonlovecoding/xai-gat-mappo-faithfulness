@@ -167,12 +167,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--out", type=Path,
-        default=PROJECT_ROOT / "runs" / "dissertation_v9_exposure_audit"
+        default=PROJECT_ROOT / "runs" / "dissertation_v10_corrected"
         / "faithfulness_controls",
     )
     parser.add_argument(
         "--checkpoint-root", type=Path,
-        default=PROJECT_ROOT / "runs" / "dissertation_v8" / "training",
+        default=PROJECT_ROOT / "runs" / "dissertation_v10_corrected" / "training",
         help="training directory containing MODEL/seed_N/ckpt_selected.pt",
     )
     args = parser.parse_args()
@@ -183,9 +183,6 @@ def main() -> int:
         args.eval_seeds = [42]
         args.episodes = 1
         args.out = args.out / "smoke"
-    if args.action_row_only:
-        args.faithfulness_every = 1
-
     device = args.device or choose_device()
     args.out.mkdir(parents=True, exist_ok=True)
     cell_dir = args.out / "cells"

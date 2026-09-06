@@ -67,7 +67,7 @@ def main() -> int:
                         help="observation-layer outage durations in seconds; "
                              "0 = clean is always run")
     parser.add_argument("--with-dropout-axis", action="store_true",
-                        help="ALSO run the matched random_dropout axis at the same "
+                        help="ALSO run a random_dropout axis at the same "
                              "AoI ladder (appendix robustness check)")
     parser.add_argument("--dropout-rate", type=float, default=0.05,
                         help="trigger rate for the appendix dropout axis")

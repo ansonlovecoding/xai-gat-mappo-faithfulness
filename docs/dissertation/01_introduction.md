@@ -95,28 +95,30 @@ finding: an attention explanation can remain available after the policy begins
 receiving stale vehicle information, but its availability does not show that it
 reliably identifies the evidence behind the decision.
 
-![Summary of stale data and the explanation-release decision](../figures/v9_main_findings_summary.png)
+![Summary of stale data and the explanation-release decision](../figures/v10_main_findings_summary.png)
 
 **Figure 1.1.** Main finding. A tunnel-triggered outage leaves the policy with a
 stale observation. Attention remains available, but the audit withholds it
 because freshness and faithfulness are not both established.
 
-Under clean telemetry, raw attention performs close to its type-matched random
-control and varies across the six trained policies. In contrast, the
-leave-one-out control produces a clearer faithfulness response. This shows that
-the evaluator can detect decision-relevant information, but raw attention does
-not consistently provide it.
+Under clean telemetry, raw attention remains close to its type-matched random
+control and varies across the six trained policies. A leave-one-out control
+produces a clearer response, showing that the evaluator can detect a more
+decision-relevant ranking even though raw attention does not provide one
+consistently.
 
-Longer outages consistently increase exposure to stale vehicle information.
-However, the resulting changes in attention and faithfulness differ across
-trained policies. Some policies assign more attention to stale nodes, while
-others assign less. The study therefore does not find a single, consistent
-attention response to telemetry degradation.
+Longer outages consistently increase the measured exposure to stale vehicle
+information. However, the paired attention response differs across trained
+policies: four checkpoints assign more attention to stale nodes and two assign
+less. Probability DEF shows a small increase, rather than the expected decline,
+for all six checkpoints. The study therefore does not find the proposed
+degradation-related loss of faithfulness, or one consistent attention response.
 
-The findings also depend on how attention is extracted and on whether the
-selected action is dispatch or no-op. Most scorable decisions are no-op, and
-the smaller dispatch-only results do not reproduce the main associations
-consistently. Degradation-aware training does not remove this variation.
+The interpretation also depends on how attention is extracted and on whether
+the selected action is dispatch or no-op. Dispatch accounts for most scorable
+decisions in the corrected experiment, but the two action groups have opposite
+paired DEF directions. Degradation-aware training does not remove the
+checkpoint variation.
 
 The practical conclusion is that data freshness and explanation faithfulness
 must be checked separately for each trained policy. In the present experiment,

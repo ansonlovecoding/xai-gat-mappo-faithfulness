@@ -21,7 +21,7 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASE = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis.docx"
-DEFAULT_OUTPUT = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis_v9.docx"
+DEFAULT_OUTPUT = ROOT / "docs" / "When_Explanations_Outlive_Their_Data_DMU_Thesis_Final.docx"
 MATHML_TO_OMML = Path(
     "/Applications/Microsoft Word.app/Contents/Resources/mathml2omml.xsl"
 )
@@ -83,12 +83,12 @@ TABLE_TITLES = {
     (3, 8): "Telemetry conditions used in held-out evaluation",
     (3, 9): "Hypothesis map and analysis roles",
     (4, 1): "Policy capability on held-out demand",
-    (4, 2): "Construct-validity audit of random controls",
-    (4, 3): "Clean-telemetry faithfulness controls by training seed",
+    (4, 2): "Protocol correction and numeric-precision audit",
+    (4, 3): "Decision-relevance controls under clean and degraded telemetry",
     (4, 4): "Valid node-count distribution in scored graphs",
     (4, 5): "Exposure-conditioned paired attention and DEF shifts",
-    (4, 6): "Action composition and dispatch-only DEF",
-    (4, 7): "Tunnel-triggered and random-loss sensitivity results",
+    (4, 6): "Action composition and paired DEF by action type",
+    (4, 7): "Tunnel and random-trigger sensitivity summary",
     (4, 8): "Hypothesis outcomes across training seeds",
     (4, 9): "Freshness-aware explanation audit decisions",
     (5, 1): "Freshness-aware explanation audit framework",
@@ -103,7 +103,7 @@ FIGURES = [
     ("Figure 3.4", "Tunnel-triggered observation-layer telemetry degradation"),
     ("Figure 3.5", "Construct-validity controls for action-linked request nodes"),
     ("Figure 4.1", "GAT and GAT-Outage training and checkpoint-selection diagnostics"),
-    ("Figure 4.2", "Clean-telemetry pickups by training seed"),
+    ("Figure 4.2", "Clean-telemetry completed journeys by training seed"),
     ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
     ("Figure 4.4", "Attention aggregation sensitivity"),
     ("Figure 4.5", "Attention query-row sensitivity"),
@@ -123,23 +123,23 @@ TABLES = [(f"Table {chapter}.{number}", title)
 FIGURE_PAGES = {
     "Figure 1.1": "3",
     "Figure 3.1": "11", "Figure 3.2": "13", "Figure 3.3": "15",
-    "Figure 3.4": "16", "Figure 3.5": "18",
+    "Figure 3.4": "16", "Figure 3.5": "19",
     "Figure 4.1": "25", "Figure 4.2": "26", "Figure 4.3": "28",
     "Figure 4.4": "29", "Figure 4.5": "30",
     "Figure 4.6": "31", "Figure 4.7": "32", "Figure 4.8": "33",
-    "Figure 4.9": "34", "Figure 4.10": "36", "Figure 4.11": "37",
-    "Figure 5.1": "41", "Figure 5.2": "43",
+    "Figure 4.9": "34", "Figure 4.10": "35", "Figure 4.11": "36",
+    "Figure 5.1": "39", "Figure 5.2": "41",
 }
 
 TABLE_PAGES = {
     "Table 2.1": "9", "Table 3.1": "11", "Table 3.2": "13",
-    "Table 3.3": "13", "Table 3.4": "14", "Table 3.5": "14",
-    "Table 3.6": "17", "Table 3.7": "19", "Table 3.8": "19",
+    "Table 3.3": "14", "Table 3.4": "14", "Table 3.5": "15",
+    "Table 3.6": "18", "Table 3.7": "20", "Table 3.8": "20",
     "Table 3.9": "21",
     "Table 4.1": "26", "Table 4.2": "27",
     "Table 4.3": "27", "Table 4.4": "30", "Table 4.5": "32",
-    "Table 4.6": "33", "Table 4.7": "36", "Table 4.8": "37",
-    "Table 4.9": "38", "Table 5.1": "43", "Table 5.2": "44",
+    "Table 4.6": "34", "Table 4.7": "35", "Table 4.8": "36",
+    "Table 4.9": "36", "Table 5.1": "41", "Table 5.2": "42",
 }
 
 HEADING_PAGES = {
@@ -171,25 +171,25 @@ HEADING_PAGES = {
     "3.12 Ethics and data governance": "24",
     "Chapter 4: Results": "25",
     "4.1 Policy capability and training stability": "25",
-    "4.2 Construct-validity audit": "27",
-    "4.3 Evaluator sensitivity and ranking controls": "27",
+    "4.2 Protocol correction and precision audit": "27",
+    "4.3 Decision-relevance controls": "27",
     "4.4 Small-graph resolution": "30",
     "4.5 Telemetry manipulation and stale exposure": "31",
-    "4.6 Exposure-conditioned paired audit": "32",
+    "4.6 Paired clean and degraded observations": "32",
     "4.7 Analysis by action type": "33",
     "4.8 Random-trigger sensitivity analysis": "34",
-    "4.9 Faithfulness hypotheses": "37", "4.10 Result summary": "38",
-    "4.11 Demonstrative framework decision": "38",
-    "Chapter 5: Discussion": "40", "5.1 Answer to the central problem": "40",
-    "5.2 How to read the evidence": "40",
-    "5.3 Why the result is not consistent": "41",
-    "5.4 Why the construct-validity controls matter": "42",
-    "5.5 Why outage training did not solve the problem": "42",
-    "5.6 Proposed audit framework": "42",
-    "5.6.1 Purpose and scope": "42", "5.6.2 Inputs, outputs and use": "44",
-    "5.6.3 Application to this study": "44",
-    "5.7 Limitations": "45", "5.8 Future work": "46",
-    "Chapter 6: Conclusion": "47",
+    "4.9 Hypothesis results": "35", "4.10 Answers to the research questions": "36",
+    "4.11 Explanation-release audit": "36",
+    "Chapter 5: Discussion": "38", "5.1 Answer to the central problem": "38",
+    "5.2 How to read the evidence": "38",
+    "5.3 Why the result is not consistent": "39",
+    "5.4 Why the construct-validity controls matter": "40",
+    "5.5 Why outage training did not solve the problem": "40",
+    "5.6 Proposed audit framework": "40",
+    "5.6.1 Purpose and scope": "40", "5.6.2 Inputs, outputs and use": "42",
+    "5.6.3 Application to this study": "42",
+    "5.7 Limitations": "43", "5.8 Future work": "43",
+    "Chapter 6: Conclusion": "45",
 }
 
 
@@ -473,9 +473,9 @@ def equation_spec(code: str) -> tuple[str, str] | None:
         return "(3.6)", _mathml(_mrow(_mtext("WAMSN"), _mo("="), _frac(_mrow(numerator), _mrow(denominator))))
 
     count_specs = {
-        "3 models x": ("(3.7)", "3 x 3 x 8 x 3 = 216"),
+        "3 models x": ("(3.7)", "3 x 3 x 8 x 6 = 432"),
         "2 models x 3 training seeds x 5 conditions": ("(3.8)", "2 x 3 x 5 x 8 x 6 = 1,440"),
-        "2 models x 3 training seeds x 2 conditions": ("(3.9)", "2 x 3 x 2 x 8 x 3 = 288"),
+        "2 models x 3 training seeds x 2 conditions": ("(3.9)", "2 x 3 x 2 x 3 x 3 = 108"),
     }
     for prefix, (number, expression) in count_specs.items():
         if code.startswith(prefix):
@@ -782,9 +782,9 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     elif title.startswith("Table 3.9:"):
         widths = [1100, 2900, 3000, 2020]
     elif title.startswith("Table 4.6:"):
-        widths = [1700, 950, 950, 1850, 3570]
+        widths = [1600, 850, 850, 1900, 1900, 1920]
     elif title.startswith("Table 4.9:"):
-        widths = [2100, 1300, 1550, 4070]
+        widths = [1800, 1600, 1800, 3820]
     elif title.startswith("Table 5.1:"):
         widths = [1900, 2350, 1900, 2870]
     else:
@@ -816,7 +816,8 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
             )
             run = paragraph.add_run(convert_citations(value))
             run.font.name = "Times New Roman"
-            run.font.size = Pt(9 if title.startswith("Table 3.9:") else 10)
+            compact_table = title.startswith(("Table 3.9:", "Table 4.9:"))
+            run.font.size = Pt(9 if compact_table else 10)
             if row_index == 0:
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
@@ -884,7 +885,7 @@ def add_image_before(doc: Document, anchor, source: Path, alt_text: str):
     paragraph.paragraph_format.space_before = Pt(6)
     paragraph.paragraph_format.space_after = Pt(2)
     run = paragraph.add_run()
-    width = 5.1 if source.name == "v9_gat_training_diagnostics.png" else 6.15
+    width = 5.1 if source.name == "v10_gat_training_diagnostics.png" else 6.15
     run.add_picture(str(source), width=Inches(width))
     drawing = run._r.find(qn("w:drawing"))
     if drawing is not None:
@@ -1285,7 +1286,6 @@ def update_front_text(doc: Document) -> None:
         "I declare that this dissertation is my own original work carried out under the supervision of Farhan S. Ujager and that all sources and references have been acknowledged appropriately. This dissertation has not been submitted previously for academic credit at De Montfort University, Dubai, or any other institution.":
             "I declare that this dissertation is my own original work carried out under the supervision of Dr Farhan S. Ujager and that all sources and references have been acknowledged appropriately. This dissertation has not been submitted previously for academic credit at De Montfort University, Dubai, or any other institution.",
         "Master of Science (MSc)": "MSc in Artificial Intelligence",
-        "August 2026": "September 2026",
         "No publication is claimed in this dissertation draft.":
             "No publication is claimed in this dissertation.",
         "ACKNOWLEDGEMENT": "ACKNOWLEDGMENT",
@@ -1332,22 +1332,26 @@ def style_references_and_appendices(doc: Document) -> None:
             paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
         if paragraph.text == "Appendix B: Supporting Artefacts":
             paragraph.text = "Appendix B: Supporting Artifacts"
-        if paragraph.text.startswith("The complete reproduction procedure"):
+        if paragraph.text.startswith((
+            "The complete reproduction procedure", "The complete procedure"
+        )):
             paragraph.text = (
                 "The complete procedure is provided in docs/REPRODUCE_EXPERIMENTS.md. "
                 "The guide identifies the required environment, fixed configurations, "
                 "commands, validation checks, and expected outputs. The final audit "
-                "uses configs/experiments/dissertation_v9_exposure_audit.toml, and its "
+                "uses configs/experiments/dissertation_v10_corrected.toml, and its "
                 "version-controlled results are stored under "
-                "results/dissertation_v9_exposure_audit/."
+                "results/dissertation_v10_corrected/."
             )
-        if paragraph.text.startswith("The project repository contains"):
+        if paragraph.text.startswith((
+            "The project repository contains", "The repository contains"
+        )):
             paragraph.text = (
                 "The repository contains the experiment configuration, source "
                 "code, validation selections, preflight reports, per-seed "
-                "analyses, summary tables and figure sources used in this "
-                "dissertation. Raw cells and checkpoints remain outside the "
-                "document because of their size."
+                "analyses, summary tables, figure sources, selected checkpoints, "
+                "and archived raw cells used in this dissertation. The release "
+                "package includes a SHA-256 manifest for verification."
             )
 
 

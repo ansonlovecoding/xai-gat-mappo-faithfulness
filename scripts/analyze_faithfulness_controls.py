@@ -13,16 +13,16 @@ from matplotlib.colors import TwoSlopeNorm
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUTS = [
-    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full",
-    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full",
-    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row",
-    ROOT / "runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row",
+    ROOT / "runs/dissertation_v10_corrected/faithfulness_controls/B2_full",
+    ROOT / "runs/dissertation_v10_corrected/faithfulness_controls/H5_full",
+    ROOT / "runs/dissertation_v10_corrected/faithfulness_controls/B2_action_row",
+    ROOT / "runs/dissertation_v10_corrected/faithfulness_controls/H5_action_row",
 ]
-DEFAULT_OUT = ROOT / "results/dissertation_v9_exposure_audit/faithfulness_controls"
+DEFAULT_OUT = ROOT / "results/dissertation_v10_corrected/faithfulness_controls"
 FIG_DIR = ROOT / "docs/figures"
-FIG_PREFIX = "v9"
-MODEL_LABEL = {"B2_gat": "B2", "H5_gat_degraded": "D30"}
-MODEL_DISPLAY = {"B2": "GAT", "D30": "GAT-Outage"}
+FIG_PREFIX = "v10"
+MODEL_LABEL = {"B2_gat": "GAT", "H5_gat_degraded": "GAT-Outage"}
+MODEL_DISPLAY = {"GAT": "GAT", "GAT-Outage": "GAT-Outage"}
 RANKER_LABEL = {
     "attention_control_def_m": "Raw attention",
     "grad_x_input_def_m": "Gradient x Input",
@@ -244,7 +244,7 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
     if not rows:
         return
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -255,7 +255,7 @@ def _plot_controls(seed_rows: list[dict]) -> None:
     fields = list(RANKER_LABEL)
     labels = [RANKER_LABEL[field] for field in fields]
     colors = {42: "#176B87", 43: "#C75000", 44: "#3A7D44"}
-    for col_index, model in enumerate(("B2", "D30")):
+    for col_index, model in enumerate(("GAT", "GAT-Outage")):
         for seed in (42, 43, 44):
             clean_values = []
             differences = []
@@ -300,7 +300,7 @@ def _plot_controls(seed_rows: list[dict]) -> None:
 
 def _plot_overlap(rows: list[dict]) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.3), sharey=True)
-    for ax, model in zip(axes, ("B2", "D30")):
+    for ax, model in zip(axes, ("GAT", "GAT-Outage")):
         selected = sorted((r for r in rows if r["model"] == model),
                           key=lambda r: r["k"])
         k = [r["k"] for r in selected]
@@ -324,7 +324,7 @@ def _plot_overlap(rows: list[dict]) -> None:
 
 
 def _plot_aggregation(rows: list[dict]) -> None:
-    models = ("B2", "D30")
+    models = ("GAT", "GAT-Outage")
     seeds = (42, 43, 44)
     preferred = [
         "default_mean",
@@ -388,7 +388,7 @@ def _plot_action_rows(seed_rows: list[dict]) -> None:
         "Selected request row": "action_row_request_def_m",
     }
     seeds = (42, 43, 44)
-    for col_index, model in enumerate(("B2", "D30")):
+    for col_index, model in enumerate(("GAT", "GAT-Outage")):
         for label, field in field_by_label.items():
             clean_values = []
             differences = []
@@ -482,7 +482,7 @@ def main() -> int:
                   for row in metrics if row["mean"] is not None}
     expected_plot_cells = {
         (model, condition, ranker)
-        for model in ("B2", "D30")
+        for model in ("GAT", "GAT-Outage")
         for condition in ("clean", "outage_60s")
         for ranker in RANKER_LABEL.values()
     }
@@ -497,7 +497,7 @@ def main() -> int:
     }
     expected_action_cells = {
         (model, condition, label)
-        for model in ("B2", "D30")
+        for model in ("GAT", "GAT-Outage")
         for condition in ("clean", "outage_60s")
         for label in ("Fixed self row", "Selected request row")
     }

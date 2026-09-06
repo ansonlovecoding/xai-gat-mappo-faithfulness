@@ -348,7 +348,7 @@ def summarize_deterministic_diagnostics(root: Path) -> list[dict]:
 def _write_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -357,7 +357,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "root", type=Path, nargs="?",
-        default=PROJECT_ROOT / "runs/dissertation_v9_exposure_audit",
+        default=PROJECT_ROOT / "runs/dissertation_v10_corrected",
     )
     parser.add_argument(
         "--performance-root", type=Path, default=None,

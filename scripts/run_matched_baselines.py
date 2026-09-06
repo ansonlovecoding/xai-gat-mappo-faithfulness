@@ -1,6 +1,6 @@
 """Evaluate legal-random and nearest-request baselines on a dissertation matrix.
 
-The runner mirrors the held-out protocol in ``dissertation_v8.toml``: the same
+The runner mirrors the held-out protocol in ``dissertation_v10_corrected.toml``: the same
 area, test-demand split, evaluation seeds, episodes per seed, and demand-file
 rotation. Results are written to a new immutable JSON file with per-episode
 records, aggregate confidence intervals, and runtime provenance.
@@ -127,7 +127,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path,
-        default=PROJECT_ROOT / "configs/experiments/dissertation_v8.toml",
+        default=PROJECT_ROOT / "configs/experiments/dissertation_v10_corrected.toml",
     )
     parser.add_argument(
         "--policies", nargs="+", choices=sorted(POLICIES),
@@ -136,7 +136,7 @@ def main() -> int:
     parser.add_argument(
         "--output", type=Path,
         default=PROJECT_ROOT /
-        "runs/dissertation_v9_exposure_audit/matched_baselines.json",
+        "results/dissertation_v10_corrected/matched_baselines.json",
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
@@ -178,7 +178,7 @@ def main() -> int:
                     })
                     records.append(row)
                     print(
-                        f"  pickups={row['total_pickups']} "
+                        f"  completed_journeys={row['completed_passenger_journeys']} "
                         f"reward={row['total_reward']:+.2f} "
                         f"wall={row['wall_time_s']:.1f}s",
                         flush=True,
@@ -210,7 +210,7 @@ def main() -> int:
         "schema_version": 1,
         "experiment": "dissertation_matched_baselines",
         "protocol": {
-            "source_config": str(args.config.relative_to(PROJECT_ROOT)),
+            "source_config": str(args.config.resolve().relative_to(PROJECT_ROOT)),
             "area": area,
             "demand_split": demand_split,
             "evaluation_seeds": seeds,

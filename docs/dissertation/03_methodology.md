@@ -452,7 +452,8 @@ is one complete rollout of one frozen checkpoint under one telemetry condition.
 |---|---:|---:|---:|---:|---:|
 | Clean capability context | 3 | 9 | 1 | 48 | 432 |
 | Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
-| Added ranking controls | 2 | 6 | 2 | 24 | 288 |
+| Full ranking controls | 2 | 6 | 2 | 9 | 108 |
+| Request-row sensitivity | 2 | 6 | 2 | 9 | 108 |
 | Random-trigger sensitivity analysis | 2 | 6 | 3 | 24 | 432 |
 
 GAT and GAT-Outage receive the full faithfulness sweep:
@@ -517,27 +518,30 @@ action.
 
 The random-trigger sensitivity analysis evaluates the six frozen checkpoints
 under clean telemetry, a 30-second tunnel-triggered freeze, and a 30-second
-randomly triggered freeze. A validation-only calibration set the per-taxi,
-per-step trigger probability to 0.0023, giving 0.569% exposure for the reference
-checkpoint compared with 0.580% under the tunnel trigger. The probability is
-then fixed for every checkpoint. Realized exposure is reported because actions
-change taxi availability and trajectories. This post-study analysis tests
-transfer to another trigger mechanism; it is not a fully independent robustness
-test because the calibration used a reference checkpoint and was not
-preregistered.
+randomly triggered freeze. The per-taxi, per-step trigger probability is fixed
+at 0.0023 for every checkpoint. This value was chosen before the revised-model
+test, but the corrected policies follow different trajectories and produce less
+random-trigger exposure than tunnel-trigger exposure. The two conditions are
+therefore not treated as exposure matched. The analysis reports realized
+exposure and uses the random condition only to check whether the direction of
+the paired response depends entirely on the tunnel trigger. It is a post-study
+sensitivity analysis, not a confirmatory test.
 
 The ranking controls use the same held-out demand and action-sampling protocol.
 They evaluate GAT and GAT-Outage under clean telemetry and a 60-second outage:
 
 ```text
-2 models x 3 training seeds x 2 conditions x 8 evaluation seeds x 3 episodes
+2 models x 3 training seeds x 2 conditions x 3 evaluation seeds x 3 episodes
 ```
 
-LOO, Gradient x Input, overlap, and aggregation diagnostics are sampled every
-eight decisions. Query-row sensitivity is evaluated for every selected-request
-action. Records are averaged within episodes before bootstrap intervals are
-calculated. Attention-aggregation sensitivity is reported by training seed for
-decisions with at least one visible stale vehicle node.
+The control evaluation uses seeds 42, 43, and 44 and covers all three held-out
+demand files in each run. LOO, Gradient x Input, overlap, and aggregation
+diagnostics are sampled every eight decisions. Query-row sensitivity uses the
+same cadence and retains only sampled selected-request actions. Records are averaged within
+episodes before bootstrap intervals are calculated. Attention-aggregation
+sensitivity is reported by training seed for decisions with at least one
+visible stale vehicle node. These controls support interpretation of the main
+48-episode-per-checkpoint sweep; they do not replace it.
 
 ## 3.9 Hypotheses and statistical analysis
 

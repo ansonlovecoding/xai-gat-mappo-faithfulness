@@ -1,0 +1,76 @@
+{
+  "rows": [
+    {
+      "model": "B1_mlp",
+      "training_seed": 42,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.5,
+      "mean_reward": 97.46225268539575
+    },
+    {
+      "model": "B1_mlp",
+      "training_seed": 43,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.458333333333334,
+      "mean_reward": 96.95921985844817
+    },
+    {
+      "model": "B1_mlp",
+      "training_seed": 44,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.458333333333332,
+      "mean_reward": 96.94077206815254
+    },
+    {
+      "model": "B2_gat",
+      "training_seed": 42,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.5625,
+      "mean_reward": 98.16279328175918
+    },
+    {
+      "model": "B2_gat",
+      "training_seed": 43,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.833333333333332,
+      "mean_reward": 100.98832924764466
+    },
+    {
+      "model": "B2_gat",
+      "training_seed": 44,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.625,
+      "mean_reward": 98.75329415395474
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 42,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.729166666666666,
+      "mean_reward": 99.86389229880776
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 43,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 12.666666666666668,
+      "mean_reward": 99.26465571864932
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 44,
+      "evaluation_seeds": 8,
+      "episodes": 48,
+      "mean_completed_passenger_journeys": 13.0,
+      "mean_reward": 102.66765146000282
+    }
+  ]
+}

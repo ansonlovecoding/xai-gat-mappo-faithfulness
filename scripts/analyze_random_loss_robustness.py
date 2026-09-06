@@ -137,7 +137,8 @@ def main() -> int:
     payload = {
         "design": (
             "Frozen checkpoints; 30 s observation-layer freeze; tunnel-entry "
-            "versus exposure-matched Bernoulli trigger; held-out demand."
+            "versus fixed-rate Bernoulli trigger; held-out demand. Realized "
+            "exposure is reported and is not assumed to be matched."
         ),
         "rows": rows,
         "comparisons": comparisons,
@@ -157,7 +158,7 @@ def main() -> int:
     }
     out_base.with_suffix(".json").write_text(json.dumps(payload, indent=2) + "\n")
     with out_base.with_suffix(".csv").open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(json.dumps(payload["summary"], indent=2))

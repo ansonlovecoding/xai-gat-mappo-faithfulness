@@ -82,7 +82,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path, required=True,
-        help="fixed protocol (use v8 for training and v9 for auditing)",
+        help="fixed experiment protocol",
     )
     parser.add_argument("--stage", choices=["train", "select", "evaluate", "diagnose",
                                             "sweep", "robustness", "preflight",
@@ -130,7 +130,7 @@ def main() -> int:
     for stage in stages:
         audit_cfg = config.get("explanation_audit", {})
         evidence_root = PROJECT_ROOT / audit_cfg.get(
-            "evidence_root", "results/dissertation_v9_exposure_audit"
+            "evidence_root", "results/dissertation_v10_corrected"
         )
         if stage == "summarize":
             command = [
@@ -201,7 +201,7 @@ def main() -> int:
                 "--fig-dir", str(PROJECT_ROOT / controls_cfg.get(
                     "figure_directory", "docs/figures"
                 )),
-                "--fig-prefix", controls_cfg.get("figure_prefix", "v9"),
+                "--fig-prefix", controls_cfg.get("figure_prefix", "v10"),
             ], dry_run=args.dry_run)
             continue
         if stage == "audit":

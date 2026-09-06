@@ -20,16 +20,17 @@ action-protected random controls. Weighted attention mass on stale nodes
 Further checks cover leave-one-out rankings,
 attention extraction, action type, and random telemetry-loss triggers.
 
-The results do not validate raw attention as a reliable explanation. Clean
-corrected DEF remains near zero and varies across checkpoints. Longer outages
-increase stale-data exposure, but paired attention and DEF shifts reverse
-direction for one training seed. The main associations are dominated by no-op
-decisions and do not reproduce for dispatch actions. The seed-dependent pattern
-also appears under random triggering and in both training regimes. Therefore,
-the tested attention weights do not provide consistent evidence of freshness
-or decision relevance.
+The results do not validate raw attention as a reliable explanation. Under
+clean telemetry, action-aware margin-DEF is below its matched-random control,
+while a leave-one-out positive control is above zero. Longer outages
+consistently increase stale-data exposure, but they do not produce the proposed
+decline in faithfulness. Attention moves toward stale nodes in four checkpoints
+and away in two, while paired probability DEF increases slightly in all six.
+No-op and dispatch decisions move in opposite DEF directions, and alternative
+attention heads or layers can reverse the stale-attention result. Therefore,
+the tested weights do not provide stable evidence of decision relevance.
 
-The dissertation proposes a freshness-aware explanation audit framework that
+The dissertation develops and applies a freshness-aware explanation audit framework that
 reports freshness and action composition separately, applies action-aware
 faithfulness tests, checks the attention extraction rule, and requires
 consistent evidence across checkpoints. Attention remains an internal
