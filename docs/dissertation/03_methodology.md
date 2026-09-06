@@ -348,24 +348,28 @@ is interpreted as follows:
    than the matched random nodes. This does not support the attention ranking
    as a faithful explanation.
 
-These interpretations apply to both variants. The predeclared H1-H4 analysis
-family and the paired clean-twin comparison use probability DEF, following the
-declared analysis plan. Logit-margin DEF is used for the
-construct-validity and ranking-control diagnostics because it can show output
-movement that a saturated probability hides. It is action-protected where
-request deletion could remove the chosen action. The two variants have
-different units and cannot be converted into one another. Both use the
-type-matched baseline described in Section 3.7. DEF provides comparative
-perturbation evidence; even a positive value does not prove that attention is
-a complete causal explanation.
+These interpretations apply to both score functions. For no-op decisions, the
+primary metric uses standard type-matched DEF because no request action is
+selected. For dispatch decisions, it uses the chosen-action-protected variant
+so that the selected request cannot be removed. This hybrid action rule applies
+to both probability DEF and logit-margin DEF.
+
+The predeclared H1-H4 analysis family and the paired clean-twin comparison use
+hybrid action-protected probability DEF, following the declared analysis plan.
+Logit-margin DEF is used for the construct-validity and ranking-control
+diagnostics because it can show output movement that a saturated probability
+hides. The two score functions have different units and cannot be converted
+into one another. Both use the type-matched baseline described in Section 3.7.
+DEF provides comparative perturbation evidence; even a positive value does not
+prove that attention is a complete causal explanation.
 
 The study uses related measures for different questions. They should not be
 read as interchangeable estimates. Table 3.6 states the role of each measure.
 
 | Measure | Decisions and score | Role in the study |
 |---|---|---|
-| Probability DEF | all scorable sampled actions; probability scale | primary H1-H4 and paired clean/degraded analysis |
-| Logit-margin DEF | all scorable sampled actions; selected-action margin | construct-validity and ranking diagnostics when probability is saturated |
+| Probability DEF (hybrid action rule) | standard type-matched score for no-op; selected request protected for dispatch | primary H1-H4 and paired clean/degraded analysis |
+| Logit-margin DEF (hybrid action rule) | standard type-matched score for no-op; selected request protected for dispatch | construct-validity and ranking diagnostics when probability is saturated |
 | Dispatch self-row margin-DEF | sampled dispatch actions only; declared self-row explanation | release check for decision relevance under clean and 60-second outage conditions |
 | WAMSN | stale-exposed decisions; AoI-weighted attention | freshness-exposure indicator and H3 manipulation check |
 | Paired attention and DEF shifts | degraded observation minus its clean twin | direct within-decision response to the observation-layer intervention |

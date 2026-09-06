@@ -39,10 +39,11 @@ These null and opposite-direction results must be reported rather than turned
 into a claim that data age improves faithfulness.
 
 **Direct paired change.** The clean/degraded pairs compare the same decision
-before and after the observation-layer change. Attention moves toward stale
-nodes in four checkpoints and away in two. DEF increases slightly in all six,
-which is opposite to the expected decline. This does not validate attention:
-the clean decision-relevance control has already failed.
+before and after the observation-layer change. Three checkpoints show a clear
+shift toward stale nodes, two show a clear shift away, and one is inconclusive.
+DEF increases slightly in all six, which is opposite to the expected decline.
+This does not validate attention: the clean decision-relevance control has
+already failed.
 
 ![Evidence interpretation summary](../figures/v10_evidence_path_summary.png)
 

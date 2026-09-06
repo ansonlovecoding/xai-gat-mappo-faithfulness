@@ -101,18 +101,18 @@ reliably identifies the evidence behind the decision.
 stale observation. Attention remains available, but the audit withholds it
 because freshness and faithfulness are not both established.
 
-Under clean telemetry, raw attention remains close to its type-matched random
-control and varies across the six trained policies. A leave-one-out control
-produces a clearer response, showing that the evaluator can detect a more
-decision-relevant ranking even though raw attention does not provide one
-consistently.
+Under clean telemetry, raw-attention margin-DEF falls below its type-matched
+random control for both model families. A leave-one-out control produces a
+positive response, showing that the evaluator can detect a more
+decision-relevant ranking even though raw attention does not provide one.
 
 Longer outages consistently increase the measured exposure to stale vehicle
 information. However, the paired attention response differs across trained
-policies: four checkpoints assign more attention to stale nodes and two assign
-less. Probability DEF shows a small increase, rather than the expected decline,
-for all six checkpoints. The study therefore does not find the proposed
-degradation-related loss of faithfulness, or one consistent attention response.
+policies: three checkpoints show a clear increase in attention to stale nodes,
+two show a clear decrease, and one is inconclusive. Probability DEF shows a
+small increase, rather than the expected decline, for all six checkpoints. The
+study therefore does not find the proposed degradation-related loss of
+faithfulness, or one consistent attention response.
 
 The interpretation also depends on how attention is extracted and on whether
 the selected action is dispatch or no-op. Dispatch accounts for most scorable

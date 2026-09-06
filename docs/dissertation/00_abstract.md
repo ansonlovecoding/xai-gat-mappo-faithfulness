@@ -24,8 +24,9 @@ The results do not validate raw attention as a reliable explanation. Under
 clean telemetry, action-aware margin-DEF is below its matched-random control,
 while a leave-one-out positive control is above zero. Longer outages
 consistently increase stale-data exposure, but they do not produce the proposed
-decline in faithfulness. Attention moves toward stale nodes in four checkpoints
-and away in two, while paired probability DEF increases slightly in all six.
+decline in faithfulness. Attention shows a clear shift toward stale nodes in
+three checkpoints, a clear shift away in two, and no clear shift in one, while
+paired probability DEF increases slightly in all six.
 No-op and dispatch decisions move in opposite DEF directions, and alternative
 attention heads or layers can reverse the stale-attention result. Therefore,
 the tested weights do not provide stable evidence of decision relevance.

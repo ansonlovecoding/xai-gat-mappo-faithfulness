@@ -139,7 +139,7 @@ TABLE_PAGES = {
     "Table 4.1": "26", "Table 4.2": "27",
     "Table 4.3": "27", "Table 4.4": "30", "Table 4.5": "32",
     "Table 4.6": "34", "Table 4.7": "35", "Table 4.8": "36",
-    "Table 4.9": "36", "Table 5.1": "41", "Table 5.2": "42",
+    "Table 4.9": "37", "Table 5.1": "41", "Table 5.2": "42",
 }
 
 HEADING_PAGES = {
@@ -179,7 +179,7 @@ HEADING_PAGES = {
     "4.7 Analysis by action type": "33",
     "4.8 Random-trigger sensitivity analysis": "34",
     "4.9 Hypothesis results": "35", "4.10 Answers to the research questions": "36",
-    "4.11 Explanation-release audit": "36",
+    "4.11 Explanation-release audit": "37",
     "Chapter 5: Discussion": "38", "5.1 Answer to the central problem": "38",
     "5.2 How to read the evidence": "38",
     "5.3 Why the result is not consistent": "39",
@@ -784,7 +784,7 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     elif title.startswith("Table 4.6:"):
         widths = [1600, 850, 850, 1900, 1900, 1920]
     elif title.startswith("Table 4.9:"):
-        widths = [1800, 1600, 1800, 3820]
+        widths = [1700, 1850, 1850, 3620]
     elif title.startswith("Table 5.1:"):
         widths = [1900, 2350, 1900, 2870]
     else:
@@ -818,6 +818,8 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
             run.font.name = "Times New Roman"
             compact_table = title.startswith(("Table 3.9:", "Table 4.9:"))
             run.font.size = Pt(9 if compact_table else 10)
+            if title.startswith("Table 4.9:") and value == "INDETERMINATE":
+                run.font.size = Pt(8)
             if row_index == 0:
                 run.bold = True
                 set_cell_shading(cell, "E7E6E6")
@@ -991,6 +993,8 @@ def insert_chapters(doc: Document, anchor) -> tuple[list[str], list[str]]:
                 headings.append(text)
                 add_bookmark(doc, paragraph, bookmark_name("heading", text))
                 paragraph.paragraph_format.keep_with_next = True
+                if text == "4.11 Explanation-release audit":
+                    paragraph.paragraph_format.page_break_before = True
             elif block_type == "paragraph":
                 text = payload
                 if re.match(r"\*\*Figure\s+\d+\.\d+\.\*\*", text):
@@ -1289,6 +1293,7 @@ def update_front_text(doc: Document) -> None:
         "No publication is claimed in this dissertation draft.":
             "No publication is claimed in this dissertation.",
         "ACKNOWLEDGEMENT": "ACKNOWLEDGMENT",
+        "August 2026": "September 2026",
     }
     for paragraph in doc.paragraphs:
         if paragraph.text in replacements:

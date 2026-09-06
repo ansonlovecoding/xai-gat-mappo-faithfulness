@@ -22,8 +22,8 @@ The research questions are answered as follows.
    under clean telemetry. Its action-aware margin-DEF is negative for both
    models, while LOO gives a positive control response.
 2. **RQ2:** Degradation changes the attention assigned to stale nodes, but the
-   direction is not consistent. Four checkpoints shift toward stale nodes and
-   two shift away.
+   direction is not consistent. Three checkpoints show a clear shift toward
+   stale nodes, two show a clear shift away, and one is inconclusive.
 3. **RQ3:** Outage duration consistently increases WAMSN, but it does not
    produce the proposed decline in DEF. The measured response also differs
    between no-op and dispatch actions and can reverse under alternative

@@ -175,10 +175,12 @@ means that measured DEF is higher, not lower, under degradation.
 | GAT-Outage | 43 | +0.928 | +1.596 |
 | GAT-Outage | 44 | -3.578 | +0.514 |
 
-Four checkpoints move attention toward stale nodes and two move it away. The
-direction follows the training seed more closely than the training condition:
-both seed-44 checkpoints are negative. All six paired DEF changes are small
-and positive, which is opposite to the proposed degradation-related decline.
+Three checkpoints show a clear increase in attention to stale nodes, two show
+a clear decrease, and GAT seed 43 is inconclusive because its 95% CI crosses
+zero. The direction follows the training seed more closely than the training
+condition: both seed-44 checkpoints are negative. All six paired DEF changes
+are small and positive, which is opposite to the proposed degradation-related
+decline.
 
 ![Paired attention and faithfulness shifts](../figures/v10_paired_attention_and_faithfulness_shift.png)
 
@@ -271,7 +273,8 @@ clean telemetry. Its matched-random margin-DEF is negative, while LOO gives a
 positive control response.
 
 **RQ2:** Degradation changes stale-node attention, but not in one consistent
-direction. Four checkpoints shift toward stale nodes and two shift away.
+direction. Three checkpoints show a clear shift toward stale nodes, two show a
+clear shift away, and one is inconclusive.
 
 **RQ3:** Longer outages consistently increase stale exposure, but the proposed
 decline in DEF is not observed. The result also differs by action type and by
