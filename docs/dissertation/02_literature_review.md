@@ -32,7 +32,8 @@ Graphs provide a natural representation of the local dispatch problem. Nodes
 can represent the acting taxi, nearby taxis, and open requests; edges permit
 their information to be combined [6]. A graph attention network (GAT) assigns
 learned weights while aggregating neighboring nodes [7]. Actor-Attention-Critic
-similarly uses attention for communication in MARL [8]. This makes GAT-MARL a
+uses attention in its centralized critic to select information from other
+agents [8]. This makes GAT-MARL a
 suitable test case, not because it is assumed to be the best dispatch model,
 but because it matches the relational, multi-agent structure of fleet dispatch
 while exposing an attention channel that can be audited. These weights are
@@ -55,11 +56,11 @@ Explainable reinforcement learning (XRL) covers more than a visual saliency
 map. An explanation may describe which state features mattered, summarize a
 policy, contrast the selected action with an alternative, or show the sequence
 of events that led to an outcome. Reviews by Heuillet, Couthouis and
-Diaz-Rodriguez [10], Puiutta and Veith [32], and Milani et al. [30] all stress
-that the method must match the user's question. A model developer debugging a
-policy and an operator checking one live action do not need the same output.
-The systematic taxonomy by Bekkemoen [31] reaches the same conclusion across a
-larger body of recent XRL studies.
+Diaz-Rodriguez [10] and Milani et al. [30] stress that the method must match the
+user's question. A model developer debugging a policy and an operator checking
+one live action do not need the same output. The systematic taxonomy by
+Bekkemoen [31] reaches the same conclusion across a larger body of recent XRL
+studies.
 
 This dissertation concerns a local, post-decision operator question: *which
 visible vehicles or requests supported the selected action, whether dispatch or
@@ -111,7 +112,9 @@ account for information mixing across layers, and report stronger correlations
 with ablation and gradient importance than raw attention in Transformers.
 Although their model is not a GAT-MARL dispatcher, the methodological point
 transfers: an attention result is incomplete unless the aggregation rule is
-defined and its sensitivity is checked.
+defined and its sensitivity is checked. Shin et al. [46] similarly show that
+raw self-attention coefficients can give weak graph attributions when
+message-passing paths are ignored.
 
 ## 2.4 Explaining graph neural networks
 
@@ -130,7 +133,8 @@ results show that no single method dominates every evaluation dimension. This
 supports the use of several checks in the present study: DEF tests
 counterfactual relevance, taxi-only rank correlation compares attention with
 leave-one-out effects, and stale-attention measures describe freshness
-exposure.
+exposure. Azzolin et al. [45] further show that GNN faithfulness metrics are not
+interchangeable, reinforcing the need to define what each measure tests.
 
 Most GNN explainability benchmarks study node or graph classification. Fleet
 dispatch differs because some graph nodes also define actions. A passenger
@@ -154,13 +158,13 @@ perturbed samples remain meaningful for the model and task.
 
 Perturbation is not automatically valid. Removing input features may create
 samples unlike the data seen during training. The Remove and Retrain (ROAR)
-benchmark addresses this issue by
-removing features and retraining the model, showing why a simple deletion test
-can confound attribution quality with distribution shift [28]. Adebayo et al.
-[27] provide a different sanity check: an explanation should respond when model
-parameters or training labels are randomized. Alvarez-Melis and Jaakkola [19]
-show that explanation methods can also be locally unstable. Together, these
-studies show that the evaluator itself must be audited.
+benchmark shows why deletion can confound attribution quality with distribution
+shift [28]. Zheng et al. [43] identify this problem in GNN fidelity measures and
+propose more robust alternatives. Adebayo et al. [27] argue that explanations
+should respond when model parameters or labels are randomized. Li et al. [44]
+show that small graph changes can preserve a prediction while substantially
+changing its explanation. Together, these studies show that the evaluator
+itself must be audited.
 
 The present action-deletion problem is related but more specific. If a selected
 request node is masked, its action logit becomes unavailable. A large margin
@@ -169,7 +173,7 @@ A random baseline that removes more request nodes than the attention top-k is
 not a fair comparison. Type matching, selected-action protection, and clamp
 logging are introduced to control this mechanism. A leave-one-out perturbation
 ranking acts as a positive control for comprehensiveness, while Gradient x
-Input provides a comparator that does not use attention coefficients.
+Input [48] provides a comparator that does not use attention coefficients.
 
 The small graph creates a second limit. When `k = 3` and only a few valid nodes
 exist, a random size-three set must overlap substantially with the explanation
@@ -218,17 +222,21 @@ data status, the validity of the faithfulness test, and consistency across
 independently trained policies. It then returns one of three decisions:
 *ELIGIBLE*, *WITHHOLD*, or *INCOMPLETE*. These labels and their decision rules
 are proposed in this dissertation; they are not prescribed by the NIST
-framework.
+framework. Recent work also shows why such caution is needed: Azzolin et al.
+[47] show that a self-explaining GNN can produce an explanation unrelated to its
+prediction process and that some metrics may miss this failure. Although their
+setting is graph classification, the result supports auditing an explanation
+before presenting it as evidence.
 
 ## 2.8 Research gap and positioning
 
-The literature supports four points: relational RL is appropriate for
-fleet dispatch; attention is easy to expose but disputed as an explanation;
-GNN faithfulness requires graph-aware perturbations; and stale state matters to
-operational control. Within the literature reviewed in this chapter, no study
-was identified that treats these topics as one explanation-assurance problem.
-This is a focused narrative review used to position the experiment; it is not a
-systematic or exhaustive literature search.
+The literature supports four points: relational RL is appropriate for fleet
+dispatch; attention is easy to expose but disputed as an explanation; GNN
+faithfulness requires graph-aware perturbations; and stale state matters to
+operational control. Recent work examines GNN explanation fidelity, instability,
+and auditing [43]-[47], but does not combine MARL fleet dispatch, paired clean
+and stale observations, and action-linked request nodes. This narrower gap is
+addressed here through a focused narrative review rather than a systematic one.
 
 Recent graph-based dispatch studies provide the closest task comparison, but
 they answer a different question from this dissertation. Hu, Feng and Li [33]
@@ -248,8 +256,8 @@ literature for positioning the contribution: recent work improves relational
 dispatch, whereas this dissertation tests whether an exposed attention channel
 has enough evidence to be presented as an explanation.
 
-Within the graph- and RL-explainability and delayed-observation studies reviewed
-in Sections 2.2-2.6, no evaluation protocol was identified that combines all of
+Across the graph- and RL-explainability and delayed-observation studies reviewed
+in Sections 2.2-2.7, no evaluation protocol was identified that combines all of
 the following:
 
 - a graph-attention MARL action explained at decision level;
@@ -258,9 +266,8 @@ the following:
 - a control for graph nodes that also remove available actions;
 - replication across independently trained checkpoints.
 
-This thesis contributes an audit protocol and an empirical test rather than a
-new dispatch algorithm. SUMO supplies a controlled simulated state [22]. The
-GAT-MAPPO policy supplies an auditable attention channel. The research contribution
-is to test whether that channel gives a reproducible freshness-aware and
-decision-relevant explanation, and to state clearly when the evidence cannot
-support that claim.
+This thesis contributes an audit protocol rather than a new dispatch algorithm.
+SUMO supplies a controlled state [22], and GAT-MAPPO supplies an auditable
+attention channel. The contribution is a reproducible test of whether that
+channel supports a freshness-aware, decision-relevant explanation and a rule
+for withholding it when the evidence is insufficient.

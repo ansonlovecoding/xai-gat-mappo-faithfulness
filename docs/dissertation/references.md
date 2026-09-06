@@ -2,9 +2,13 @@ Abnar, S. and Zuidema, W. (2020) 'Quantifying attention flow in transformers', i
 
 Adebayo, J. et al. (2018) 'Sanity checks for saliency maps', *Advances in Neural Information Processing Systems*, vol. 31. Available at: https://proceedings.neurips.cc/paper/2018/hash/294a8ed24b1ad22ec2e7efea049b8737-Abstract.html.
 
-Alvarez-Melis, D. and Jaakkola, T.S. (2018) 'On the robustness of interpretability methods', *arXiv preprint arXiv:1806.08049*. Available at: https://doi.org/10.48550/arXiv.1806.08049.
-
 Amara, K. et al. (2022) 'GraphFramEx: Towards systematic evaluation of explainability methods for graph neural networks', in *Proceedings of the First Learning on Graphs Conference*, *Proceedings of Machine Learning Research*, vol. 198, pp. 44:1-44:23. Available at: https://proceedings.mlr.press/v198/amara22a.html.
+
+Ancona, M., Ceolini, E., Oztireli, C. and Gross, M. (2018) 'Towards better understanding of gradient-based attribution methods for deep neural networks', in *Proceedings of the International Conference on Learning Representations*. Available at: https://openreview.net/forum?id=Sy21R9JAW.
+
+Azzolin, S., Longa, A., Teso, S. and Passerini, A. (2025) 'Reconsidering faithfulness in regular, self-explainable and domain invariant GNNs', in *Proceedings of the 13th International Conference on Learning Representations*. Available at: https://openreview.net/forum?id=kiOxNsrpQy.
+
+Azzolin, S., Teso, S., Lepri, B., Passerini, A. and Malhotra, S. (2026) 'GNN explanations that do not explain and how to find them', in *Proceedings of the 14th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2026/hash/75a58cfb4d0de35db7663714e0f52dfa-Abstract-Conference.html.
 
 Bekkemoen, Y. (2024) 'Explainable reinforcement learning (XRL): A systematic literature review and taxonomy', *Machine Learning*, vol. 113, no. 1, pp. 355-441. Available at: https://doi.org/10.1007/s10994-023-06479-7.
 
@@ -28,6 +32,8 @@ Jain, S. and Wallace, B.C. (2019) 'Attention is not explanation', in *Proceeding
 
 Kaul, S., Yates, R. and Gruteser, M. (2012) 'Real-time status: How often should one update?', in *Proceedings of IEEE INFOCOM*, pp. 2731-2735. Available at: https://doi.org/10.1109/INFCOM.2012.6195689.
 
+Li, J., Pang, M., Dong, Y., Jia, J. and Wang, B. (2024) 'Graph neural network explanations are fragile', in *Proceedings of the 41st International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 235, pp. 28551-28567. Available at: https://proceedings.mlr.press/v235/li24bd.html.
+
 Lin, K. et al. (2018) 'Efficient large-scale fleet management via multi-agent deep reinforcement learning', in *Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, pp. 1774-1783. Available at: https://doi.org/10.1145/3219819.3219993.
 
 Liotet, P., Maran, D., Bisi, L. and Restelli, M. (2022) 'Delayed reinforcement learning by imitation', in *Proceedings of the 39th International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 162, pp. 13528-13556. Available at: https://proceedings.mlr.press/v162/liotet22a.html.
@@ -48,8 +54,6 @@ Milani, S. et al. (2024) 'Explainable reinforcement learning: A survey and compa
 
 Mott, A. et al. (2019) 'Towards interpretable reinforcement learning using attention augmented agents', *Advances in Neural Information Processing Systems*, vol. 32. Available at: https://proceedings.neurips.cc/paper/2019/hash/e9510081ac30ffa83f10b68cde1cac07-Abstract.html.
 
-Puiutta, E. and Veith, E.M.S.P. (2020) 'Explainable reinforcement learning: A survey', in Holzinger, A. et al. (eds.) *Machine Learning and Knowledge Extraction*. Lecture Notes in Computer Science, vol. 12279. Cham: Springer, pp. 77-95. Available at: https://doi.org/10.1007/978-3-030-57321-8_5.
-
 Qin, Z., Zhu, H. and Ye, J. (2022) 'Reinforcement learning for ridesharing: An extended survey', *Transportation Research Part C: Emerging Technologies*, vol. 144, article 103852. Available at: https://doi.org/10.1016/j.trc.2022.103852.
 
 Rashid, T. et al. (2020) 'Monotonic value function factorisation for deep multi-agent reinforcement learning', *Journal of Machine Learning Research*, vol. 21, no. 178, pp. 1-51. Available at: https://jmlr.org/papers/v21/20-081.html.
@@ -61,6 +65,8 @@ Scarselli, F. et al. (2009) 'The graph neural network model', *IEEE Transactions
 Serrano, S. and Smith, N.A. (2019) 'Is attention interpretable?', in *Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics*, pp. 2931-2951. Available at: https://doi.org/10.18653/v1/P19-1282.
 
 Sha, J. et al. (2026) 'A multi-agent reinforcement learning scheduling algorithm integrating state graph and task graph structural modeling for ride-sharing dispatching', *Scientific Reports*, vol. 16, article 5461. Available at: https://doi.org/10.1038/s41598-026-35004-8.
+
+Shin, Y.-M., Li, S., Cao, X. and Shin, W.-Y. (2025) 'Faithful and accurate self-attention attribution for message passing neural networks via the computation tree viewpoint', *Proceedings of the AAAI Conference on Artificial Intelligence*, vol. 39, no. 19, pp. 20461-20469. Available at: https://doi.org/10.1609/aaai.v39i19.34254.
 
 Tabassi, E. (2023) *Artificial Intelligence Risk Management Framework (AI RMF 1.0)*. NIST AI 100-1. Gaithersburg, MD: National Institute of Standards and Technology. Available at: https://doi.org/10.6028/NIST.AI.100-1.
 
@@ -78,6 +84,8 @@ Ying, R. et al. (2019) 'GNNExplainer: Generating explanations for graph neural n
 
 Yu, C. et al. (2022) 'The surprising effectiveness of PPO in cooperative multi-agent games', *Advances in Neural Information Processing Systems*, vol. 35, pp. 24611-24624. Available at: https://doi.org/10.52202/068431-1787.
 
+Yuan, H. et al. (2021) 'On explainability of graph neural networks via subgraph explorations', in *Proceedings of the 38th International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 139, pp. 12241-12252. Available at: https://proceedings.mlr.press/v139/yuan21c.html.
+
 Yuan, H. et al. (2023) 'Explainability in graph neural networks: A taxonomic survey', *IEEE Transactions on Pattern Analysis and Machine Intelligence*, vol. 45, no. 5, pp. 5782-5799. Available at: https://doi.org/10.1109/TPAMI.2022.3204236.
 
-Yuan, H. et al. (2021) 'On explainability of graph neural networks via subgraph explorations', in *Proceedings of the 38th International Conference on Machine Learning*, *Proceedings of Machine Learning Research*, vol. 139, pp. 12241-12252. Available at: https://proceedings.mlr.press/v139/yuan21c.html.
+Zheng, X., Shirani, F., Wang, T., Cheng, W., Chen, Z., Chen, H., Wei, H. and Luo, D. (2024) 'Towards robust fidelity for evaluating explainability of graph neural networks', in *Proceedings of the 12th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2024/hash/34293d684b1012ed45c3274b4a7edc00-Abstract-Conference.html.
