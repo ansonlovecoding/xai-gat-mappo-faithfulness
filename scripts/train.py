@@ -145,7 +145,11 @@ def main() -> int:
                         help="observation-layer outage duration after a trigger "
                              "(seconds)")
     # Reward shaping.
-    parser.add_argument("--pickup-reward", type=float, default=10.0)
+    parser.add_argument(
+        "--completed-journey-reward", "--pickup-reward",
+        dest="pickup_reward", type=float, default=10.0,
+        help="team reward for one passenger reaching their destination",
+    )
     parser.add_argument("--dispatch-reward", type=float, default=0.5)
     parser.add_argument("--dispatch-credit-reward", type=float, default=0.5,
                         help="extra training-only credit for the taxi whose dispatch succeeds")
@@ -287,6 +291,9 @@ def main() -> int:
     input_inventory = file_inventory(provenance_inputs, PROJECT_ROOT)
     runtime = runtime_provenance(PROJECT_ROOT)
     specification = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
+        "reward_timeline": "semi_markov_decision_intervals",
         "kind": "training",
         "arguments": {k: str(v) if isinstance(v, Path) else v
                       for k, v in vars(args).items()},
@@ -378,6 +385,8 @@ def main() -> int:
 
     def _save_best(epoch: int, rolling_mean: float) -> None:
         torch.save({
+            "schema_version": 2,
+            "protocol_version": "2.0",
             "epoch": epoch,
             "policy_type": args.policy,
             "model": policy.state_dict(),
@@ -387,15 +396,17 @@ def main() -> int:
                            "degradation": env_cfg.degradation.__dict__},
             "ppo_config": ppo_cfg.__dict__,
             "best": {
+                "rolling_mean_completed_passenger_journeys": rolling_mean,
                 "rolling_mean_pickups": rolling_mean,
                 "window": args.best_window,
             },
         }, best_ckpt_path)
         best_meta_path.write_text(json.dumps({
             "best_epoch": epoch,
+            "best_rolling_mean_completed_passenger_journeys": rolling_mean,
             "best_rolling_mean_pickups": rolling_mean,
             "window": args.best_window,
-            "note": "Rolling mean of training-episode pickups over the last "
+            "note": "Rolling mean of completed passenger journeys over the last "
                     f"{args.best_window} epochs. Updated whenever it improves.",
         }, indent=2))
 
@@ -465,6 +476,9 @@ def main() -> int:
 
         row = {
             "epoch": epoch,
+            "completed_passenger_journeys": (
+                ep_stats.total_completed_passenger_journeys
+            ),
             "pickups": ep_stats.total_pickups,
             "reward": round(ep_stats.total_reward, 3),
             "n_agent_steps": ep_stats.n_agent_steps,
@@ -506,6 +520,8 @@ def main() -> int:
         if args.save_every > 0 and (epoch % args.save_every == 0 or epoch == args.epochs - 1):
             ckpt = run_dir / f"ckpt_epoch_{epoch:04d}.pt"
             torch.save({
+                "schema_version": 2,
+                "protocol_version": "2.0",
                 "epoch": epoch,
                 "policy_type": args.policy,
                 "model": policy.state_dict(),
@@ -519,6 +535,8 @@ def main() -> int:
     env.close()
     final_ckpt_path = run_dir / "ckpt_final.pt"
     torch.save({
+        "schema_version": 2,
+        "protocol_version": "2.0",
         "epoch": args.epochs - 1,
         "policy_type": args.policy,
         "model": policy.state_dict(),

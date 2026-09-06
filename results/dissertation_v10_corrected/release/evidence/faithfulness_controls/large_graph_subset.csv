@@ -1,0 +1,13 @@
+model_id,model,condition,ranker,field,minimum_valid_non_self_nodes,mean,ci95,n_episode_blocks,n_decisions
+B2_gat,GAT,clean,Raw attention,attention_control_def_m,6,-0.0013545893681441879,"[-0.002344762179070082, -0.000592334657980233]",27,356
+B2_gat,GAT,outage_60s,Raw attention,attention_control_def_m,6,-0.0010269656729724379,"[-0.0018277175660239453, -0.00038938486295437327]",27,356
+H5_gat_degraded,GAT-Outage,clean,Raw attention,attention_control_def_m,6,-0.0005955439114269282,"[-0.0008006053150335367, -0.0004043917700963179]",27,354
+H5_gat_degraded,GAT-Outage,outage_60s,Raw attention,attention_control_def_m,6,-0.00045395236140315716,"[-0.0006486151466325842, -0.00026967448102980477]",27,354
+B2_gat,GAT,clean,Gradient x Input,grad_x_input_def_m,6,-0.00038807813471747804,"[-0.0010660459566779546, 0.00029790150101144196]",27,356
+B2_gat,GAT,outage_60s,Gradient x Input,grad_x_input_def_m,6,1.6047236045084255e-06,"[-0.0006822873204692635, 0.0006536793326910074]",27,356
+H5_gat_degraded,GAT-Outage,clean,Gradient x Input,grad_x_input_def_m,6,-0.0005844977805432679,"[-0.0010753523051931437, -0.00013822206801389158]",27,354
+H5_gat_degraded,GAT-Outage,outage_60s,Gradient x Input,grad_x_input_def_m,6,-0.0005529346146929671,"[-0.0010060475324057327, -0.00011565621092259127]",27,354
+B2_gat,GAT,clean,LOO control,loo_oracle_def_m,6,0.005595109665291538,"[0.004063806337163889, 0.007526634148962553]",27,356
+B2_gat,GAT,outage_60s,LOO control,loo_oracle_def_m,6,0.005735315168970547,"[0.004166446837562239, 0.007560253312785494]",27,356
+H5_gat_degraded,GAT-Outage,clean,LOO control,loo_oracle_def_m,6,0.004001185655507104,"[0.0030315254217390827, 0.005117579925305234]",27,354
+H5_gat_degraded,GAT-Outage,outage_60s,LOO control,loo_oracle_def_m,6,0.003948838592806206,"[0.0029728842085909504, 0.005069399140352224]",27,354

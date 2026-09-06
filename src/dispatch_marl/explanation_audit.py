@@ -243,7 +243,7 @@ def _action_composition_check(run_root: Path, action_payload: dict[str, Any] | N
         )
     return _check(
         "action_composition", "Action composition", status,
-        "Stop a no-op majority from hiding the result for actual dispatch actions.",
+        "Stop either action group from hiding the result for the other group.",
         evidence,
         f"Both strata must be reported and dispatch must contain at least {rules.minimum_dispatch_decisions} decisions.",
         path,

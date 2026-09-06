@@ -34,16 +34,16 @@ The command reads evidence that is already produced by the experiment pipeline.
 
 | Input | Purpose | Default location |
 |---|---|---|
-| Sweep preflight reports | Confirm complete cells, provenance, exposure, and valid controls | `runs/dissertation_v9_exposure_audit/sweeps/*/seed_*/preflight.json` |
-| Condition summary | Report stale exposure and stale-attention measurements | `runs/dissertation_v9_exposure_audit/summary.json` |
-| Action strata | Separate no-op from dispatch decisions | `runs/dissertation_v9_exposure_audit/action_stratified.json` |
-| Seed synthesis | Treat independently trained policies as replication units | `runs/dissertation_v9_exposure_audit/training_seed_synthesis.json` |
-| Deterministic diagnostic | Check the action rule intended for deployment | `runs/dissertation_v9_exposure_audit/deterministic_diagnostics.json` |
-| Faithfulness controls | Supply type-matched DEF, LOO, query-row, and extraction-sensitivity evidence | `results/dissertation_v9_exposure_audit/faithfulness_controls/summary.json` |
-| Trigger robustness | Compare tunnel and random telemetry-loss triggers | `results/dissertation_v9_exposure_audit/random_loss_robustness.json` |
+| Sweep preflight reports | Confirm complete cells, provenance, exposure, and valid controls | `runs/dissertation_v10_corrected/sweeps/*/seed_*/preflight.json` |
+| Condition summary | Report stale exposure and stale-attention measurements | `runs/dissertation_v10_corrected/summary.json` |
+| Action strata | Separate no-op from dispatch decisions | `runs/dissertation_v10_corrected/action_stratified.json` |
+| Seed synthesis | Treat independently trained policies as replication units | `runs/dissertation_v10_corrected/training_seed_synthesis.json` |
+| Deterministic diagnostic | Check the action rule intended for deployment | `runs/dissertation_v10_corrected/deterministic_diagnostics.json` |
+| Faithfulness controls | Supply type-matched DEF, LOO, query-row, and extraction-sensitivity evidence | `results/dissertation_v10_corrected/faithfulness_controls/summary.json` |
+| Trigger robustness | Compare tunnel and random telemetry-loss triggers | `results/dissertation_v10_corrected/random_loss_robustness.json` |
 
 The audited model list and training seeds come from
-`configs/experiments/dissertation_v9_exposure_audit.toml`.
+`configs/experiments/dissertation_v10_corrected.toml`.
 
 ## 4. Checks
 
@@ -89,7 +89,7 @@ To execute the complete framework from the selected frozen checkpoints, run:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --config configs/experiments/dissertation_v10_corrected.toml \
   --stage framework --resume
 ```
 
@@ -102,7 +102,7 @@ If all evidence has already been generated, run only the final decision stage:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --config configs/experiments/dissertation_v10_corrected.toml \
   --stage audit
 ```
 
@@ -110,7 +110,7 @@ The direct final-decision command is equivalent:
 
 ```bash
 .venv/bin/python scripts/audit_explanations.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml
+  --config configs/experiments/dissertation_v10_corrected.toml
 ```
 
 For a deployment pipeline that must stop when attention is not eligible, add:
@@ -126,7 +126,7 @@ generated, regardless of the audit decision.
 ## 7. Outputs
 
 The default output directory is
-`results/dissertation_v9_exposure_audit/explanation_audit/`.
+`results/dissertation_v10_corrected/explanation_audit/`.
 
 | File | Audience | Contents |
 |---|---|---|

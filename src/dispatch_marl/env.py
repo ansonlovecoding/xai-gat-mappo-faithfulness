@@ -12,8 +12,9 @@ Per-taxi observation (Dict):
   - reservations_mask:  (K,)     1 = valid
   - position_valid:     (1,)     1 = trustworthy, 0 = degraded
 
-Reward is a team scalar broadcast to every agent:
-  R = pickups_this_step − λ · mean_current_wait_time
+Reward is a team scalar broadcast to every acting agent. Global step metrics
+remain available even when no taxi can act:
+  R = completed_journeys_this_step − λ · mean_current_wait_time
 
 Episode ends when SUMO reaches the sumocfg <time><end/> value.
 
@@ -58,6 +59,25 @@ VELOCITY_MAX_MS = 30.0
 AOI_MAX_S = 60.0
 
 
+@dataclass(frozen=True)
+class StepMetrics:
+    """Environment-wide outcomes from one RL step.
+
+    These values do not depend on the set of taxis that happened to be able to
+    act. Consumers should read ``env.last_step_metrics`` instead of selecting
+    an arbitrary entry from the per-agent ``infos`` dictionary.
+    """
+
+    completed_passenger_journeys: int = 0
+    accepted_dispatches: int = 0
+    mean_pending_wait_s: float = 0.0
+    team_reward: float = 0.0
+    sim_time_s: float = 0.0
+    accepted_dispatch_agents: tuple[str, ...] = ()
+    terminated: bool = False
+    sumo_died: bool = False
+
+
 @dataclass
 class DispatchEnvConfig:
     area: str = "central_park"
@@ -65,10 +85,10 @@ class DispatchEnvConfig:
     k_neighbors: int = 5
     k_reservations: int = 5
     step_length_s: int = 10  # SUMO seconds advanced per RL step
-    # Reward = pickup_reward * pickups_this_step
+    # Reward = pickup_reward * completed_passenger_journeys_this_step
     #        + dispatch_reward * successful_dispatches_this_step
     #        - wait_penalty_lambda * mean_pending_wait_time_s
-    # Defaults intentionally give large weight to completed pickups so the
+    # Defaults intentionally give large weight to completed journeys so the
     # policy can't degenerate into "do nothing to avoid the wait penalty".
     pickup_reward: float = 10.0
     dispatch_reward: float = 0.5
@@ -121,6 +141,7 @@ class DispatchEnv(ParallelEnv):
         self._label_counter = 0
         self._sim_time = 0.0
         self._end_time = 0.0
+        self._last_step_metrics = StepMetrics()
         self._net_bbox = (0.0, 0.0, 1.0, 1.0)  # xmin, ymin, xmax, ymax
         self._net_diag = 1.0
         self._rng = np.random.default_rng(self.config.seed)
@@ -225,6 +246,7 @@ class DispatchEnv(ParallelEnv):
         for _ in range(2):
             traci.simulationStep()
         self._sim_time = traci.simulation.getTime()
+        self._last_step_metrics = StepMetrics(sim_time_s=self._sim_time)
 
         self.agents = self._active_idle_taxi_ids()
         obs = self._build_all_obs(self.agents)
@@ -241,6 +263,11 @@ class DispatchEnv(ParallelEnv):
             # doesn't need to unwind an exception.
             self._sim_time = self._end_time
             self._sumo_started = False
+            self._last_step_metrics = StepMetrics(
+                sim_time_s=self._sim_time,
+                terminated=True,
+                sumo_died=True,
+            )
             return {}, {a: 0.0 for a in actions}, {a: True for a in actions}, \
                 {a: False for a in actions}, {a: {"sumo_died": True} for a in actions}
 
@@ -277,21 +304,23 @@ class DispatchEnv(ParallelEnv):
             except traci.exceptions.TraCIException:
                 continue
 
-        # 2. Advance the simulation by step_length_s SUMO seconds. Accumulate
-        #    delivered riders (persons that arrived at destination).
-        pickups_delta = 0
+        # 2. Advance the simulation by step_length_s SUMO seconds. SUMO's
+        #    arrived-person event means that a rider reached their destination;
+        #    it is not a passenger-pickup event.
+        completed_journeys_delta = 0
         target = self._sim_time + self.config.step_length_s
         while self._sim_time < target and self._sim_time < self._end_time:
             traci.simulationStep()
-            pickups_delta += len(traci.simulation.getArrivedPersonIDList())
+            completed_journeys_delta += len(
+                traci.simulation.getArrivedPersonIDList()
+            )
             self._sim_time = traci.simulation.getTime()
 
         # 3. Build reward.
-        n_pickups_delta = pickups_delta
         n_dispatches_ok = len(pickups_dispatched)
         mean_wait = self._mean_pending_wait_time()
         shared_task_reward = (
-            self.config.pickup_reward * float(n_pickups_delta)
+            self.config.pickup_reward * float(completed_journeys_delta)
             - self.config.wait_penalty_lambda * mean_wait
         )
         team_r = (
@@ -303,6 +332,16 @@ class DispatchEnv(ParallelEnv):
         terminated_all = self._sim_time >= self._end_time
         self.agents = [] if terminated_all else self._active_idle_taxi_ids()
 
+        self._last_step_metrics = StepMetrics(
+            completed_passenger_journeys=completed_journeys_delta,
+            accepted_dispatches=n_dispatches_ok,
+            mean_pending_wait_s=mean_wait,
+            team_reward=team_r,
+            sim_time_s=self._sim_time,
+            accepted_dispatch_agents=tuple(sorted(successful_dispatch_agents)),
+            terminated=terminated_all,
+        )
+
         obs = self._build_all_obs(self.agents)
         rewards = {a: team_r for a in actions}
         # For dead / newly-inactive agents that had actions this step, still
@@ -311,7 +350,10 @@ class DispatchEnv(ParallelEnv):
         truncations = {a: False for a in actions}
         infos = {
             a: {
-                "pickups_delta": n_pickups_delta,
+                "completed_passenger_journeys_delta": completed_journeys_delta,
+                # Protocol-v1 compatibility alias. This value counts completed
+                # journeys, despite the historical field name.
+                "pickups_delta": completed_journeys_delta,
                 "dispatches_ok": n_dispatches_ok,
                 "mean_wait_time": mean_wait,
                 "sim_time": self._sim_time,
@@ -327,6 +369,11 @@ class DispatchEnv(ParallelEnv):
             for a in actions
         }
         return obs, rewards, terminations, truncations, infos
+
+    @property
+    def last_step_metrics(self) -> StepMetrics:
+        """Environment-wide outcomes from the most recently completed step."""
+        return self._last_step_metrics
 
     @property
     def done(self) -> bool:

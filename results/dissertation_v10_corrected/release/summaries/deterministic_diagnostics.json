@@ -1,0 +1,77 @@
+{
+  "interpretation": "Descriptive held-out argmax diagnostic. It identifies deterministic policy collapse but is not the primary capability comparison.",
+  "rows": [
+    {
+      "model": "B2_gat",
+      "training_seed": 42,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 8.0,
+      "mean_reward": 49.476016234861106,
+      "mean_final_pending_wait_s": 864.609136987044,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "c6bbf25552293f595b16a075b902dfdfb797f7510ddcf8e7211f6a170bacf9a1"
+    },
+    {
+      "model": "B2_gat",
+      "training_seed": 43,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 7.333333333333333,
+      "mean_reward": 41.78284130110604,
+      "mean_final_pending_wait_s": 882.4289972899729,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "95cbb52b1e308647c82d4f5591fcba7934c99c2dbbd53750742456c9982640da"
+    },
+    {
+      "model": "B2_gat",
+      "training_seed": 44,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 9.666666666666666,
+      "mean_reward": 66.40035543302544,
+      "mean_final_pending_wait_s": 885.5583333333334,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "b45132afb88731400213c7db09b1971b471b8ff4053408a27aae886da45ec444"
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 42,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 7.0,
+      "mean_reward": 39.07033583895377,
+      "mean_final_pending_wait_s": 868.6478477342913,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "cc3907fb61aafae85a12433266cde90ce8e1694b45a377efd0460ec1b27a04c0"
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 43,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 7.666666666666667,
+      "mean_reward": 45.46082667345053,
+      "mean_final_pending_wait_s": 877.9825874608483,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "34f1069998c1aa8ff9903f282681097dcb4b81c01e37ae76e63ee747d05c6e64"
+    },
+    {
+      "model": "H5_gat_degraded",
+      "training_seed": 44,
+      "evaluation_seed": 42,
+      "episodes": 3,
+      "mean_pickups": 10.0,
+      "mean_reward": 70.02883194104125,
+      "mean_final_pending_wait_s": 886.756024317,
+      "zero_pickup_episodes": 0,
+      "all_episodes_zero_pickups": false,
+      "checkpoint_sha256": "396b8dc2c9da58e52b4be98e76f0b9e5e3158e2d1e219f1a4064088538672d92"
+    }
+  ]
+}

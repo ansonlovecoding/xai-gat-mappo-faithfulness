@@ -1,0 +1,2092 @@
+{
+  "inference_unit": "episode block for within-checkpoint estimates; training seed for cross-checkpoint synthesis",
+  "n_cells": 72,
+  "metrics": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "mean": -0.0013545893681441879,
+      "ci95": [
+        -0.002316069277185401,
+        -0.000589398588236167
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "mean": -0.0010269656729724379,
+      "ci95": [
+        -0.0018669729037000876,
+        -0.0004006836899781115
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "mean": -0.0005955439114269282,
+      "ci95": [
+        -0.0008122807325756181,
+        -0.0004038898845348294
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "mean": -0.00045395236140315716,
+      "ci95": [
+        -0.0006563605239300727,
+        -0.0002737023605097494
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "mean": -0.00038807813471747804,
+      "ci95": [
+        -0.001082889834592762,
+        0.00030273698803227216
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "mean": 1.6047236045084255e-06,
+      "ci95": [
+        -0.0006468210642011866,
+        0.0006723846659639412
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "mean": -0.0005844977805432679,
+      "ci95": [
+        -0.0010593215189395365,
+        -0.00013069287154182058
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "mean": -0.0005529346146929671,
+      "ci95": [
+        -0.001000898404501905,
+        -0.00011685972754648957
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "mean": 0.005595109665291538,
+      "ci95": [
+        0.004052741773604689,
+        0.007436301112798172
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "mean": 0.005735315168970547,
+      "ci95": [
+        0.004150935068527306,
+        0.007636293747653202
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "mean": 0.004001185655507104,
+      "ci95": [
+        0.00303678205591182,
+        0.005107635486221242
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "mean": 0.003948838592806206,
+      "ci95": [
+        0.002968097651286693,
+        0.005064174921101032
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    }
+  ],
+  "per_training_seed": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "attention_control_def_m",
+      "mean": -0.0008297103629100807,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "attention_control_def_m",
+      "mean": -0.0029140317094754073,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "attention_control_def_m",
+      "mean": -0.00032002603204707593,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "attention_control_def_m",
+      "mean": -0.0005711517139040338,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "attention_control_def_m",
+      "mean": -0.0023832892368403306,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "attention_control_def_m",
+      "mean": -0.00012645606817294886,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "attention_control_def_m",
+      "mean": -0.00034314463095750703,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "attention_control_def_m",
+      "mean": -0.0005385651169210277,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "attention_control_def_m",
+      "mean": -0.0009049219864022501,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "attention_control_def_m",
+      "mean": -0.0002167754031735559,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "attention_control_def_m",
+      "mean": -0.00037982758082777206,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "attention_control_def_m",
+      "mean": -0.0007652541002081437,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0018078405746490343,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0005130719390312336,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "grad_x_input_def_m",
+      "mean": 0.0011566781095278342,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0013419937125589494,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "grad_x_input_def_m",
+      "mean": -8.292237107382625e-06,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "grad_x_input_def_m",
+      "mean": 0.0013551001204798571,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0005630408886863606,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0005084234928554127,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0006820289600880303,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "grad_x_input_def_m",
+      "mean": -0.0006701172106225751,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "grad_x_input_def_m",
+      "mean": -0.00015479000589586458,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "grad_x_input_def_m",
+      "mean": -0.000833896627560462,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003866406438528753,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "loo_oracle_def_m",
+      "mean": 0.004650603583344743,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "loo_oracle_def_m",
+      "mean": 0.008268318974001113,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003764036026833035,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "loo_oracle_def_m",
+      "mean": 0.004661583094408115,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "loo_oracle_def_m",
+      "mean": 0.008780326385670492,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003377629545185409,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003880426859973198,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "loo_oracle_def_m",
+      "mean": 0.004745500561362707,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003222661951384714,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "loo_oracle_def_m",
+      "mean": 0.003753111310279503,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "loo_oracle_def_m",
+      "mean": 0.0048707425167544005,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "taxi_attention_loo_spearman",
+      "mean": -0.019349436073187714,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.3122617733644182,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "taxi_attention_loo_spearman",
+      "mean": -0.17362318257099243,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "taxi_attention_loo_spearman",
+      "mean": -0.0012767509132678469,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.3138571244625965,
+      "n_episode_blocks": 9,
+      "n_decisions": 119
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "taxi_attention_loo_spearman",
+      "mean": -0.1739688515708277,
+      "n_episode_blocks": 9,
+      "n_decisions": 117
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.18820947249028086,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.2229020248005189,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.017107744773280475,
+      "n_episode_blocks": 9,
+      "n_decisions": 115
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.1634740227548311,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.2257547196419049,
+      "n_episode_blocks": 9,
+      "n_decisions": 118
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "taxi_attention_loo_spearman",
+      "mean": 0.02306012572566142,
+      "n_episode_blocks": 9,
+      "n_decisions": 115
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "self_row_request_def_m",
+      "mean": -0.0012071012065635418,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "self_row_request_def_m",
+      "mean": -0.001748110410389559,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "self_row_request_def_m",
+      "mean": -0.0004343799234847055,
+      "n_episode_blocks": 9,
+      "n_decisions": 96
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "self_row_request_def_m",
+      "mean": -0.0008827069437247573,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "self_row_request_def_m",
+      "mean": -0.001715739022173709,
+      "n_episode_blocks": 9,
+      "n_decisions": 85
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "self_row_request_def_m",
+      "mean": -0.00018562251548930357,
+      "n_episode_blocks": 9,
+      "n_decisions": 95
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "self_row_request_def_m",
+      "mean": -0.0008866519923054992,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "self_row_request_def_m",
+      "mean": -0.0010286855852469,
+      "n_episode_blocks": 9,
+      "n_decisions": 81
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "self_row_request_def_m",
+      "mean": -0.001743852370953182,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "self_row_request_def_m",
+      "mean": -0.0006202960175962772,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "self_row_request_def_m",
+      "mean": -0.0007619992744008947,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "self_row_request_def_m",
+      "mean": -0.0016086740858193755,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "action_row_request_def_m",
+      "mean": -0.0011513069802446027,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "action_row_request_def_m",
+      "mean": 0.0006717177452199032,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "action_row_request_def_m",
+      "mean": -0.0004366479142706098,
+      "n_episode_blocks": 9,
+      "n_decisions": 96
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "action_row_request_def_m",
+      "mean": -0.001115652068891402,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "action_row_request_def_m",
+      "mean": 0.0005095261154575138,
+      "n_episode_blocks": 9,
+      "n_decisions": 85
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "action_row_request_def_m",
+      "mean": -0.00010923898077742297,
+      "n_episode_blocks": 9,
+      "n_decisions": 95
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "action_row_request_def_m",
+      "mean": 0.001550452646419958,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "action_row_request_def_m",
+      "mean": 0.0011414951316329018,
+      "n_episode_blocks": 9,
+      "n_decisions": 81
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "action_row_request_def_m",
+      "mean": -0.00168697909993563,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "action_row_request_def_m",
+      "mean": 0.0009052568643152943,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "action_row_request_def_m",
+      "mean": 0.0009474185426806545,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "action_row_request_def_m",
+      "mean": -0.0015165425836457587,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "action_row_request_gap_m",
+      "mean": 5.579422631893904e-05,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "action_row_request_gap_m",
+      "mean": 0.002419828155609462,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "action_row_request_gap_m",
+      "mean": -2.2679907859042603e-06,
+      "n_episode_blocks": 9,
+      "n_decisions": 96
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "action_row_request_gap_m",
+      "mean": -0.00023294512516664474,
+      "n_episode_blocks": 9,
+      "n_decisions": 99
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "action_row_request_gap_m",
+      "mean": 0.0022252651376312225,
+      "n_episode_blocks": 9,
+      "n_decisions": 85
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "action_row_request_gap_m",
+      "mean": 7.638353471188057e-05,
+      "n_episode_blocks": 9,
+      "n_decisions": 95
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 42,
+      "field": "action_row_request_gap_m",
+      "mean": 0.002437104638725457,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 43,
+      "field": "action_row_request_gap_m",
+      "mean": 0.002170180716879802,
+      "n_episode_blocks": 9,
+      "n_decisions": 81
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "training_seed": 44,
+      "field": "action_row_request_gap_m",
+      "mean": 5.6873271017551895e-05,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 42,
+      "field": "action_row_request_gap_m",
+      "mean": 0.0015255528819115712,
+      "n_episode_blocks": 9,
+      "n_decisions": 75
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 43,
+      "field": "action_row_request_gap_m",
+      "mean": 0.0017094178170815493,
+      "n_episode_blocks": 9,
+      "n_decisions": 83
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "training_seed": 44,
+      "field": "action_row_request_gap_m",
+      "mean": 9.213150217361663e-05,
+      "n_episode_blocks": 9,
+      "n_decisions": 79
+    }
+  ],
+  "overlap": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "k": 1,
+      "expected_random_overlap": 0.24531835205992508,
+      "attention_loo_agreement": 0.15168539325842698,
+      "n_decisions": 712
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "k": 2,
+      "expected_random_overlap": 0.41598782771535575,
+      "attention_loo_agreement": 0.2794943820224719,
+      "n_decisions": 712
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "k": 3,
+      "expected_random_overlap": 0.5944756554307115,
+      "attention_loo_agreement": 0.425561797752809,
+      "n_decisions": 712
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "k": 1,
+      "expected_random_overlap": 0.19999999999999996,
+      "attention_loo_agreement": 0.22175141242937854,
+      "n_decisions": 708
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "k": 2,
+      "expected_random_overlap": 0.3999999999999999,
+      "attention_loo_agreement": 0.3290960451977401,
+      "n_decisions": 708
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "k": 3,
+      "expected_random_overlap": 0.6,
+      "attention_loo_agreement": 0.5028248587570622,
+      "n_decisions": 708
+    }
+  ],
+  "aggregation_sensitivity": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": 0.004673090793326446,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": 0.006141435495208802,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": -0.005401766120360479,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": 0.007691506515388081,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": 0.00390843250344535,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": 0.0025113146718525477,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": 0.0030849032593970927,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": 0.008220239759495528,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": 0.006473679281823152,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": 0.00010706307605007303,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": 0.010244119529709165,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": 0.007178259294189453,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": 0.006261277412936145,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 42,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": 0.002629051054653245,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": -0.00015869987200008246,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": -0.005515074635741413,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": 0.002441313539708908,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": 0.007738069143538511,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": -0.0012949054449316944,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": -0.0020773164028185897,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": 0.0008423517978653364,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": -0.0016824843092760194,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": 0.0013870772079589509,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": -0.0012056313029909418,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": -0.0031379754110599733,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": -0.0017585386056918,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": -0.0011597532392843572,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 43,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": -0.0001217577858026472,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": -0.0031804875386207245,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": -0.007551805985847351,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": 0.0031964495510392746,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": -0.001066573198111278,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": 0.0041387502711795416,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": -0.003473897760971207,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": -0.00032080073289588834,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": -0.005454122399696366,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": -0.0016884115826432697,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": -0.010990218812054921,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": -0.006027957034584688,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": -0.006627586734739224,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": -0.006040173243013602,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "training_seed": 44,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": -0.0010396661480446738,
+      "n_stale_exposed_decisions": 31
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": 0.00493178111302914,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": 0.007660491111687203,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": -0.0065181358776825,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": 0.008545495796806104,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": 0.005690851599057116,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": 0.004275849546857038,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": 0.0038446762633068004,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": 0.008095369676092803,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": 0.006251064402422751,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": -0.0028500402872838762,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": 0.012579134047689325,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": 0.00687346833222799,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": 0.006018883610594614,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 42,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": 0.0029453179435824667,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": 0.0007082386415226785,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": -0.004119898584900205,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": 0.002233620458365565,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": 0.007823448377973103,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": 0.0003887651611945993,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": -0.0011713364413832865,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": 0.0015814838679468497,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": -0.0025118860105299056,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": 0.0023624939462222635,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": -0.0007098907182809796,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": 0.00019927299392162782,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": 0.0018563340841674413,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": -0.0001650050375293476,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 43,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": 0.00011846961451652518,
+      "n_stale_exposed_decisions": 29
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "default_mean",
+      "mean_stale_attention_shift": -0.004447864609197832,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_head_0",
+      "mean_stale_attention_shift": -0.008214791888759272,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_head_1",
+      "mean_stale_attention_shift": 0.002557792689841523,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_head_2",
+      "mean_stale_attention_shift": -0.0007608663045568442,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_head_3",
+      "mean_stale_attention_shift": 0.0035251412133474698,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_max",
+      "mean_stale_attention_shift": -0.0031732589724276033,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "first_mean",
+      "mean_stale_attention_shift": -0.0007231814122702025,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_head_0",
+      "mean_stale_attention_shift": -0.005894020744836181,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_head_1",
+      "mean_stale_attention_shift": 0.0003234890481218651,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_head_2",
+      "mean_stale_attention_shift": -0.018640077730445837,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_head_3",
+      "mean_stale_attention_shift": -0.008479561009907906,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_max",
+      "mean_stale_attention_shift": -0.007626417353315481,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "last_mean",
+      "mean_stale_attention_shift": -0.008172543820020962,
+      "n_stale_exposed_decisions": 33
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "training_seed": 44,
+      "aggregation": "rollout_mean",
+      "mean_stale_attention_shift": -0.001500428367179849,
+      "n_stale_exposed_decisions": 33
+    }
+  ],
+  "large_graph_subset": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.0013545893681441879,
+      "ci95": [
+        -0.002344762179070082,
+        -0.000592334657980233
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.0010269656729724379,
+      "ci95": [
+        -0.0018277175660239453,
+        -0.00038938486295437327
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.0005955439114269282,
+      "ci95": [
+        -0.0008006053150335367,
+        -0.0004043917700963179
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "Raw attention",
+      "field": "attention_control_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.00045395236140315716,
+      "ci95": [
+        -0.0006486151466325842,
+        -0.00026967448102980477
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.00038807813471747804,
+      "ci95": [
+        -0.0010660459566779546,
+        0.00029790150101144196
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": 1.6047236045084255e-06,
+      "ci95": [
+        -0.0006822873204692635,
+        0.0006536793326910074
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.0005844977805432679,
+      "ci95": [
+        -0.0010753523051931437,
+        -0.00013822206801389158
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "Gradient x Input",
+      "field": "grad_x_input_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": -0.0005529346146929671,
+      "ci95": [
+        -0.0010060475324057327,
+        -0.00011565621092259127
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": 0.005595109665291538,
+      "ci95": [
+        0.004063806337163889,
+        0.007526634148962553
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": 0.005735315168970547,
+      "ci95": [
+        0.004166446837562239,
+        0.007560253312785494
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 356
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": 0.004001185655507104,
+      "ci95": [
+        0.0030315254217390827,
+        0.005117579925305234
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "ranker": "LOO control",
+      "field": "loo_oracle_def_m",
+      "minimum_valid_non_self_nodes": 6,
+      "mean": 0.003948838592806206,
+      "ci95": [
+        0.0029728842085909504,
+        0.005069399140352224
+      ],
+      "n_episode_blocks": 27,
+      "n_decisions": 354
+    }
+  ],
+  "action_row_sensitivity": [
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "field": "self_row_request_def_m",
+      "label": "Fixed self row",
+      "mean": -0.001129863846812602,
+      "ci95": [
+        -0.0015036761339331623,
+        -0.0007889808964539584
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 278
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "field": "self_row_request_def_m",
+      "label": "Fixed self row",
+      "mean": -0.0009280228271292566,
+      "ci95": [
+        -0.0013651212385029177,
+        -0.000554155640183981
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 279
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "field": "self_row_request_def_m",
+      "label": "Fixed self row",
+      "mean": -0.0012197299828351936,
+      "ci95": [
+        -0.0014751828762070154,
+        -0.0009851752330743506
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 235
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "field": "self_row_request_def_m",
+      "label": "Fixed self row",
+      "mean": -0.0009969897926055157,
+      "ci95": [
+        -0.0012838156604136613,
+        -0.0007384398478231623
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 237
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "field": "action_row_request_def_m",
+      "label": "Selected request row",
+      "mean": -0.0003054123830984364,
+      "ci95": [
+        -0.0006186138540887276,
+        1.1570534414472583e-05
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 278
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "field": "action_row_request_def_m",
+      "label": "Selected request row",
+      "mean": -0.00023845497807043704,
+      "ci95": [
+        -0.0005250104651246138,
+        2.0459514233170973e-05
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 279
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "field": "action_row_request_def_m",
+      "label": "Selected request row",
+      "mean": 0.00033498955937241005,
+      "ci95": [
+        -0.0004652618931767531,
+        0.0011807982516324582
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 235
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "field": "action_row_request_def_m",
+      "label": "Selected request row",
+      "mean": 0.00011204427445006333,
+      "ci95": [
+        -0.000661611899931412,
+        0.0009086859923922686
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 237
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "clean",
+      "field": "action_row_request_gap_m",
+      "label": "Request row minus self row",
+      "mean": 0.0008244514637141658,
+      "ci95": [
+        0.0003598094614035163,
+        0.0013761569876482307
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 278
+    },
+    {
+      "model_id": "B2_gat",
+      "model": "GAT",
+      "condition": "outage_60s",
+      "field": "action_row_request_gap_m",
+      "label": "Request row minus self row",
+      "mean": 0.0006895678490588195,
+      "ci95": [
+        0.0002163344763704691,
+        0.0012447950155471531
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 279
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "clean",
+      "field": "action_row_request_gap_m",
+      "label": "Request row minus self row",
+      "mean": 0.0015547195422076037,
+      "ci95": [
+        0.0008486354267749073,
+        0.0023025075882211555
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 235
+    },
+    {
+      "model_id": "H5_gat_degraded",
+      "model": "GAT-Outage",
+      "condition": "outage_60s",
+      "field": "action_row_request_gap_m",
+      "label": "Request row minus self row",
+      "mean": 0.001109034067055579,
+      "ci95": [
+        0.0004798710165680626,
+        0.0017967435460375868
+      ],
+      "n_episode_blocks": 27,
+      "n_request_decisions": 237
+    }
+  ]
+}

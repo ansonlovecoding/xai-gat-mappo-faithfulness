@@ -82,7 +82,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path, required=True,
-        help="fixed protocol (use v8 for training and v9 for auditing)",
+        help="fixed experiment protocol",
     )
     parser.add_argument("--stage", choices=["train", "select", "evaluate", "diagnose",
                                             "sweep", "robustness", "preflight",
@@ -98,7 +98,7 @@ def main() -> int:
     args = parser.parse_args()
 
     config = tomllib.loads(args.config.read_text())
-    if config.get("schema_version") != 1:
+    if config.get("schema_version") not in (1, 2):
         parser.error("unsupported experiment-config schema")
 
     output_root = PROJECT_ROOT / config["output_root"]
@@ -130,7 +130,7 @@ def main() -> int:
     for stage in stages:
         audit_cfg = config.get("explanation_audit", {})
         evidence_root = PROJECT_ROOT / audit_cfg.get(
-            "evidence_root", "results/dissertation_v9_exposure_audit"
+            "evidence_root", "results/dissertation_v10_corrected"
         )
         if stage == "summarize":
             command = [
@@ -201,7 +201,7 @@ def main() -> int:
                 "--fig-dir", str(PROJECT_ROOT / controls_cfg.get(
                     "figure_directory", "docs/figures"
                 )),
-                "--fig-prefix", controls_cfg.get("figure_prefix", "v9"),
+                "--fig-prefix", controls_cfg.get("figure_prefix", "v10"),
             ], dry_run=args.dry_run)
             continue
         if stage == "audit":
@@ -294,9 +294,18 @@ def main() -> int:
                         "--demand-split", selection_cfg["demand_split"],
                         "--minimum-mean-pickups",
                         str(selection_cfg["minimum_mean_pickups"]),
-                        "--minimum-improvement-over-initial",
-                        str(selection_cfg["minimum_improvement_over_initial"]),
                     ]
+                    if model["degradation"] != "off":
+                        command += ["--degradation", model["degradation"]]
+                        command += [
+                            "--outage-duration",
+                            str(model.get("outage_duration", 0.0)),
+                        ]
+                    if "minimum_improvement_over_initial" in selection_cfg:
+                        command += [
+                            "--minimum-improvement-over-initial",
+                            str(selection_cfg["minimum_improvement_over_initial"]),
+                        ]
                     if args.resume:
                         command.append("--resume")
                     _run(command, dry_run=args.dry_run)

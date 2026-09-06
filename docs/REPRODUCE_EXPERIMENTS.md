@@ -1,102 +1,41 @@
 # Reproducing the dissertation experiments
 
-This guide reproduces the final experiment for *When Explanations Outlive Their
-Data: Faithfulness Decoupling in Graph-Attention MARL Fleet Dispatch under
-Telemetry Degradation*.
+This guide reproduces the final corrected experiment for *When Explanations
+Outlive Their Data: Faithfulness Decoupling in Graph-Attention MARL Fleet
+Dispatch under Telemetry Degradation*.
 
-> **Version note.** The stable models and clean evaluation are stored under
-> `runs/dissertation_v8/`. The exposure-conditioned follow-up audit uses those
-> frozen checkpoints and writes to a separate v9 directory. It does not retrain
-> or select models after seeing the faithfulness results.
-
-## Exposure-conditioned follow-up audit
-
-The follow-up protocol addresses sparse tunnel exposure without changing the
-policy, SUMO state, tunnel trigger, outage durations, or held-out demand. Its
-fixed configuration is:
+The single source of experiment settings is:
 
 ```text
-configs/experiments/dissertation_v9_exposure_audit.toml
+configs/experiments/dissertation_v10_corrected.toml
 ```
 
-Compared with the original sweep, it:
+Do not combine these outputs with earlier experiment directories. The corrected
+protocol retrains, reselects, and reevaluates every model after fixing reward
+credit, completed-journey counting, dispatch-action protection, and stored
+numeric precision.
 
-1. runs six episodes per condition and evaluation seed;
-2. keeps a broad background audit at one in every 16 decisions;
-3. audits every decision containing at least one stale vehicle node;
-4. evaluates the degraded observation and its exact clean twin with the same
-   selected action and the same type-matched random subsets;
-5. requires at least 20 stale-exposed records from at least three episodes in
-   every degraded cell before analysis is accepted;
-6. reports no-op and dispatch decisions separately, excluding forced no-op
-   records with no valid request;
-7. runs a three-episode deterministic argmax diagnostic for each selected GAT
-   checkpoint.
+## 1. What is reproduced
 
-Run the follow-up stages with:
-
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage sweep
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage preflight
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage analyze
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage diagnose
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage summarize
-```
-
-The primary follow-up statistic is degraded type-matched DEF minus clean-twin
-DEF among stale-exposed decisions. Negative values mean lower measured
-faithfulness under the degraded observation. This paired test does not treat
-the configured outage duration or AoI value as a causal dose.
-
-The frozen-model training protocol is:
-
-```text
-configs/experiments/dissertation_v8.toml
-```
-
-The final audit protocol is:
-
-```text
-configs/experiments/dissertation_v9_exposure_audit.toml
-```
-
-Compact citable summaries, analyses, manifests, and selection records are
-committed under `results/dissertation_v9_exposure_audit/`.
-
-Two compact supporting audits are stored under `results/supporting_audits/`.
-They provide the lower-bound comparison and the construct-validity result used
-in Chapter 4, but they are not the source of the final H1-H5 verdicts.
-
-## 1. What the experiment does
-
-The runner performs five linked tasks:
+The pipeline:
 
 1. trains MLP, GAT, and GAT-Outage with seeds 42, 43, and 44;
-2. selects checkpoints on validation demand, not test demand;
-3. evaluates every selected policy on held-out clean test demand;
-4. runs faithfulness sweeps for GAT and GAT-Outage under clean telemetry and 10, 20,
-   30, and 60-second observation-layer outages;
-5. validates and analyzes the outputs, including no-op/dispatch strata;
-6. runs a descriptive deterministic diagnostic and summarizes all outputs.
+2. selects checkpoints on validation demand, excluding epoch 0;
+3. evaluates selected policies on held-out clean demand;
+4. audits GAT and GAT-Outage under clean, 10, 20, 30, and 60-second
+   observation-layer conditions;
+5. runs preflight, hypothesis, action-type, precision, random-trigger, and
+   faithfulness-control analyses;
+6. applies the explanation-release rules and writes the final audit report.
 
-Tunnel entry triggers each outage. SUMO continues to simulate the true vehicle
-state, while the policy observation freezes the last valid position and speed.
-AoI describes the resulting stale observation; it is not treated as a causal
-dose of faithfulness.
+Tunnel entry starts an outage, but the degradation occurs at the observation
+boundary. SUMO continues to update the true vehicle state while the policy sees
+the last valid position and speed. The clean twin reads the same current SUMO
+state and never selects an action.
 
 ## 2. Environment
 
-Use Python 3.11 and a working SUMO/libsumo installation.
+Use Python 3.11 and SUMO/libsumo.
 
 ```bash
 cd "<repo-root>"
@@ -107,22 +46,17 @@ python -m pip install -r requirements.txt
 python -m pip install -e . --no-deps
 ```
 
-On the Intel macOS environment used for the original local runs, use the
-aligned dependency profile:
+For Intel macOS:
 
 ```bash
 python -m pip install -r requirements-macos-intel.txt
 python -m pip install -e . --no-deps
 ```
 
-NumPy is pinned to the 1.26 line because the installed PyTorch wheel was built
-against NumPy 1.x. NumPy 2.x can cause:
+This profile pins NumPy below 2 because the compatible PyTorch wheel was built
+against NumPy 1.x.
 
-```text
-RuntimeError: Numpy is not available
-```
-
-Check the environment and tests:
+Verify the environment before starting a long run:
 
 ```bash
 .venv/bin/python scripts/check_environment.py
@@ -131,382 +65,208 @@ Check the environment and tests:
 .venv/bin/python scripts/test_faithfulness.py
 ```
 
-`scripts/test_faithfulness.py` starts SUMO for its end-to-end section. TraCI
-may print several connection retries while SUMO starts. The retries are not a
-failure if the script ends with `evaluator OK`.
+TraCI may print short connection retries while SUMO starts. They are not a
+failure when the command later ends with `evaluator OK`.
 
-## 3. Inspect the fixed protocol
-
-Print every command without running it:
-
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml --dry-run
-```
-
-Important fixed settings are:
+## 3. Fixed protocol
 
 | Item | Value |
 |---|---|
-| Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
 | Training seeds | 42, 43, 44 |
-| Checkpoint selection | sampled-action validation pickups |
-| Validation seed and episodes | 2026, eight episodes |
-| Evaluation seeds | 42-49 |
-| Clean capability episodes per seed | three |
-| Final audit episodes per seed/condition | six |
-| Outage durations | 10, 20, 30, 60 seconds |
+| Training epochs | 40 GAT; 50 MLP and GAT-Outage |
+| Checkpoint selection | mean completed journeys on validation demand |
+| Validation | seed 2026, eight episodes |
+| Held-out evaluation seeds | 42-49 |
+| Held-out episodes per seed | six |
+| Faithfulness conditions | clean, 10 s, 20 s, 30 s, 60 s |
 | Corruption | freeze last valid position and speed |
-| Faithfulness sampling | every 16 decisions plus every stale-exposed decision |
-| Random control | five type-matched subsets |
-| Random-loss sensitivity | 30-second freeze; trigger probability 0.0023 |
+| Primary action rule | sample from policy distribution |
+| Random baseline | five type-matched subsets with chosen-action protection |
+| Main sweep size | 1,440 episode evaluations |
 
-The model-specific training budgets were fixed from validation-only stability
-diagnostics before held-out evaluation. Clean GAT and GAT-Outage consequently
-have different training and learning-rate-decay horizons. Their H5 comparison
-describes the two fitted configurations and does not isolate the effect of
-degraded training observations alone.
+Internal command-line model identifiers are `B1_mlp`, `B2_gat`, and
+`H5_gat_degraded`. The dissertation displays only MLP, GAT, and GAT-Outage.
 
-## 4. Run the complete experiment
+GAT and GAT-Outage use different fixed maximum training budgets. Their
+comparison describes the two fitted configurations; it does not isolate outage
+training as the only difference.
 
-Train, select, and evaluate the stable model set first:
+## 4. Inspect and run
 
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml --stage train
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml --stage select
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml --stage evaluate
-```
-
-Then run the five v9 audit commands listed at the start of this guide. The final
-faithfulness matrix contains 1,440 episodes and can take many hours on CPU.
-
-Run the frozen-policy random-loss sensitivity analysis separately:
+Print all generated commands without executing them:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage robustness
-.venv/bin/python scripts/analyze_random_loss_robustness.py \
-  runs/dissertation_v9_exposure_audit/robustness/random_loss_30s \
-  --out results/dissertation_v9_exposure_audit/random_loss_robustness
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --dry-run
 ```
 
-This adds 432 rollout evaluations: clean, 30-second tunnel-triggered, and
-30-second randomly triggered conditions for each of six frozen checkpoints.
-Each condition contains eight evaluation seeds and three held-out episodes.
-
-If a completed stage already exists, use `--resume`:
+Run the complete experiment:
 
 ```bash
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage sweep --resume
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --stage all --resume
 ```
 
-Resume skips complete immutable stages. It rejects partial training runs rather
-than silently treating them as complete.
+The complete CPU run can take many hours. `--resume` skips complete immutable
+cells and rejects incomplete training directories rather than treating them as
+finished.
 
-## 5. Run one stage or model
-
-The available stages are:
+Individual stages are:
 
 ```text
-train -> select -> evaluate
-framework: diagnose -> sweep -> robustness -> preflight -> analyze -> summarize
-           -> controls -> analyze-robustness -> analyze-controls -> audit
-```
-
-With selected checkpoints already available, run the complete explanation
-framework in the declared order with:
-
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage framework --resume
+train -> select -> evaluate -> diagnose -> sweep -> robustness -> preflight
+      -> analyze -> summarize -> controls -> analyze-robustness
+      -> analyze-controls -> audit
 ```
 
 Examples:
 
 ```bash
-# Train and select all models
+# Rerun only one selected model's clean evaluation
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml --stage train
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml --stage select
-
-# Evaluate one model
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v8.toml \
+  --config configs/experiments/dissertation_v10_corrected.toml \
   --stage evaluate --model B2_gat --resume
 
-# Run and validate one faithfulness matrix
+# Rerun the complete read-only audit from existing checkpoints
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage sweep --model B2_gat --resume
+  --config configs/experiments/dissertation_v10_corrected.toml \
+  --stage framework --resume
+
+# Reapply release rules to existing evidence
 .venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage preflight --model B2_gat
-
-# Analyse GAT-Outage and rebuild all summary tables.
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage analyze --model H5_gat_degraded
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage summarize
-```
-
-Valid model identifiers are:
-
-```text
-B1_mlp
-B2_gat
-H5_gat_degraded
-```
-
-Only GAT (`B2_gat`) and GAT-Outage (`H5_gat_degraded`) have faithfulness
-sweeps. MLP (`B1_mlp`) supplies performance context.
-
-## 6. Run the additional controls
-
-Run the legal-random and greedy-nearest lower bounds on the same held-out
-protocol:
-
-```bash
-.venv/bin/python scripts/run_matched_baselines.py
-```
-
-Run the additional faithfulness diagnostics. Start with the two-cell smoke
-test, then run the complete GAT and GAT-Outage matrices. Cell files make these
-commands resumable.
-
-```bash
-.venv/bin/python scripts/run_faithfulness_controls.py --smoke \
-  --checkpoint-root runs/dissertation_v8/training \
-  --out runs/dissertation_v9_exposure_audit/faithfulness_controls
-
-.venv/bin/python scripts/run_faithfulness_controls.py \
-  --models B2_gat \
-  --checkpoint-root runs/dissertation_v8/training \
-  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full
-
-.venv/bin/python scripts/run_faithfulness_controls.py \
-  --models H5_gat_degraded \
-  --checkpoint-root runs/dissertation_v8/training \
-  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full
-
-.venv/bin/python scripts/run_faithfulness_controls.py \
-  --models B2_gat --action-row-only \
-  --checkpoint-root runs/dissertation_v8/training \
-  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row
-
-.venv/bin/python scripts/run_faithfulness_controls.py \
-  --models H5_gat_degraded --action-row-only \
-  --checkpoint-root runs/dissertation_v8/training \
-  --out runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row
-
-.venv/bin/python scripts/analyze_faithfulness_controls.py \
-  runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_full \
-  runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_full \
-  runs/dissertation_v9_exposure_audit/faithfulness_controls/B2_action_row \
-  runs/dissertation_v9_exposure_audit/faithfulness_controls/H5_action_row \
-  --out results/dissertation_v9_exposure_audit/faithfulness_controls \
-  --fig-dir docs/figures --fig-prefix v9
-```
-
-The control run records raw attention, Gradient x Input, the LOO perturbation
-control, valid-node distributions, exact random top-k overlap, taxi-only rank
-correlation, and attention aggregation sensitivity. The analysis uses episode
-blocks rather than treating decisions from the same episode as independent.
-
-After the control and random-loss analyses are complete, apply the explanation
-release rules:
-
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
+  --config configs/experiments/dissertation_v10_corrected.toml \
   --stage audit
 ```
 
-This final stage is different from preflight. Preflight confirms that the
-experiment evidence is valid to analyze. The explanation audit decides whether
-the attention map may be presented as an explanation. See
-[`FRESHNESS_AWARE_EXPLANATION_AUDIT.md`](FRESHNESS_AWARE_EXPLANATION_AUDIT.md)
-for the inputs, decision rules, outputs, and use cases.
+## 5. Evidence checks
 
-## 7. Expected directory structure
-
-```text
-runs/dissertation_v8/
-  training/
-    <model>/seed_<training-seed>/
-      ckpt_selected.pt
-      checkpoint_selection.json
-      validation/
-  evaluations/
-    <model>/seed_<training-seed>/
-      eval_seed_<evaluation-seed>.json
-  performance_context.json
-  performance_context.csv
-
-results/dissertation_v9_exposure_audit/explanation_audit/
-  audit_report.json
-  audit_checks.csv
-  AUDIT_REPORT.md
-
-runs/dissertation_v9_exposure_audit/
-  sweeps/
-    B2_gat/seed_<training-seed>/
-    H5_gat_degraded/seed_<training-seed>/
-      manifest.json
-      cells/
-      preflight.json
-      analysis.json
-  faithfulness_controls/
-  deterministic_diagnostics/
-    <model>/seed_<training-seed>.json
-  summary.json
-  summary.csv
-  action_stratified.json
-  action_stratified.csv
-  deterministic_diagnostics.json
-  deterministic_diagnostics.csv
-  training_seed_synthesis.json
-  training_seed_synthesis.csv
-
-results/supporting_audits/
-  matched_baselines.json
-  type_matched_control.json
-```
-
-Do not delete `cells/` if another reader needs to audit or recompute the
-per-decision statistics.
-
-## 8. Verify preflight before reading results
-
-Every sweep used in the thesis must contain `preflight.json` with:
+Every sweep used in the dissertation must contain a `preflight.json` file with:
 
 ```json
 {"ok": true}
 ```
 
-Run the checks again with:
+Preflight confirms evidence completeness and protocol identity. It is not an
+explanation-release decision. The final audit separately returns `ELIGIBLE`,
+`WITHHOLD`, or `INCOMPLETE`.
 
-```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage preflight
+Important outputs are:
+
+```text
+runs/dissertation_v10_corrected/
+  training/<model>/seed_<training-seed>/
+    ckpt_selected.pt
+    checkpoint_selection.json
+    training_stability.json
+  evaluations/<model>/seed_<training-seed>/
+  sweeps/<gat-model>/seed_<training-seed>/
+    manifest.json
+    cells/
+    preflight.json
+    analysis.json
+  faithfulness_controls/
+  performance_context.csv
+  precision_sensitivity.csv
+  action_stratified.csv
+  training_seed_synthesis.csv
+
+results/dissertation_v10_corrected/
+  matched_baselines.json
+  random_loss_robustness.json
+  faithfulness_controls/
+  explanation_audit/
+    audit_report.json
+    audit_checks.csv
+    AUDIT_REPORT.md
 ```
 
-Preflight checks the expected condition/seed matrix, source provenance,
-checkpoint identity, type-matched random controls, chosen-action exclusion,
-and empirical differentiation of the outage conditions.
+Do not delete `cells/` from an archival reproduction package. They contain the
+per-decision evidence needed to recompute the statistics.
 
-A passing preflight report does not mean that attention is eligible for release
-as an explanation. Run the final `audit` stage after all supporting analyses.
+## 6. Supporting analyses
 
-## 9. Rebuild tables and figures
-
-After all analyses exist:
+The runner's `framework` stage executes the declared supporting analyses. They
+can also be run directly when debugging:
 
 ```bash
-.venv/bin/python scripts/run_dissertation_experiments.py \
-  --config configs/experiments/dissertation_v9_exposure_audit.toml \
-  --stage summarize
+.venv/bin/python scripts/run_matched_baselines.py \
+  --config configs/experiments/dissertation_v10_corrected.toml
+
+.venv/bin/python scripts/analyze_random_loss_robustness.py \
+  runs/dissertation_v10_corrected/robustness/random_loss_30s \
+  --out results/dissertation_v10_corrected/random_loss_robustness
+
+.venv/bin/python scripts/analyze_faithfulness_controls.py \
+  runs/dissertation_v10_corrected/faithfulness_controls/B2_full \
+  runs/dissertation_v10_corrected/faithfulness_controls/H5_full \
+  runs/dissertation_v10_corrected/faithfulness_controls/B2_action_row \
+  runs/dissertation_v10_corrected/faithfulness_controls/H5_action_row \
+  --out results/dissertation_v10_corrected/faithfulness_controls \
+  --fig-dir docs/figures --fig-prefix v10
+```
+
+The random trigger uses a fixed probability of 0.0023 per taxi-step. Its
+realized exposure is lower than tunnel exposure, so it is a trigger-location
+sensitivity check rather than an exposure-matched causal comparison.
+
+## 7. Expected qualitative result
+
+A correct rerun should be interpreted from its generated files rather than
+forced to reproduce every floating-point value exactly. The completed local
+run has the following stable pattern:
+
+- H3 is supported for all six GAT checkpoints;
+- H1, H2, and H4 are supported for none of the six checkpoints;
+- stale-node attention shifts toward stale nodes for four checkpoints and away
+  for two;
+- paired probability DEF increases slightly for all six checkpoints;
+- no-op DEF decreases while dispatch DEF increases in all six checkpoints;
+- raw-attention margin-DEF is below zero, while LOO is above zero;
+- alternative heads or layers can reverse the stale-attention direction;
+- the final release decision is `WITHHOLD` for both GAT model families.
+
+These results do not show that AoI improves or reduces faithfulness. They show
+that freshness, decision relevance, and explanation stability must be checked
+separately.
+
+## 8. Rebuild figures and release package
+
+```bash
 .venv/bin/python scripts/plot_dissertation.py \
-  --root runs/dissertation_v9_exposure_audit \
-  --training-root runs/dissertation_v8 \
-  --analysis-root results/dissertation_v9_exposure_audit \
-  --out docs/figures --prefix v9
+  --root runs/dissertation_v10_corrected \
+  --training-root runs/dissertation_v10_corrected \
+  --analysis-root results/dissertation_v10_corrected \
+  --out docs/figures --prefix v10
+
+.venv/bin/python scripts/package_dissertation_release.py \
+  --config configs/experiments/dissertation_v10_corrected.toml
 ```
 
-The primary thesis tables are:
+The package command copies the final configuration, six audited checkpoints,
+raw sweep cells, analyses, audit reports, documentation, and a SHA-256
+manifest. Verify the generated manifest before submission.
 
-- `summary.csv`: condition-level measurements for each training seed;
-- `performance_context.csv`: clean-test pickups and reward;
-- `action_stratified.csv`: eligible no-op and dispatch counts and their
-  separate faithfulness diagnostics;
-- `deterministic_diagnostics.csv`: three-episode argmax behavior for each
-  selected GAT checkpoint;
-- `training_seed_synthesis.csv`: effect ranges and hypothesis consistency
-  across independently trained policies.
-- `random_loss_robustness.csv`: tunnel-triggered and random-triggered paired
-  shifts for the 30-second sensitivity analysis.
-- `explanation_audit/AUDIT_REPORT.md`: the final explanation-release decision,
-  failed checks, checkpoint evidence, and permitted use.
+## 9. Troubleshooting
 
-The plotting script writes PNG and PDF versions to `docs/figures/`.
-
-## 10. Expected qualitative result
-
-A correct rerun should be interpreted from the generated files, not forced to
-match one seed exactly across hardware. In the completed local v9 run:
-
-- H3 and H4 are supported for all three GAT and all three GAT-Outage seeds;
-- H1 is supported for two of three GAT and all three GAT-Outage seeds;
-- the paired stale-attention shift is positive for seeds 42 and 43 and negative
-  for seed 44 under both training regimes;
-- paired probability-DEF decreases for seeds 42 and 43 but increases for seed
-  44 under both training regimes;
-- eligible records are dominated by no-op decisions, and the combined H1/H4
-  patterns do not reproduce in the dispatch stratum;
-- the six GAT checkpoints select no-op throughout the 18 deterministic
-  diagnostic episodes.
-- tunnel and random triggers agree on attention-shift direction in five of six
-  checkpoints and on probability-DEF direction in four of six checkpoints.
-
-The conclusion is therefore not that AoI causes lower faithfulness. Longer
-outages consistently increase stale-data exposure, while attention
-reallocation and its relationship with DEF depend on the trained policy.
-
-## 11. Supporting audits
-
-The retained construct-validity result explains why the final protocol uses
-type-matched random occlusions:
-
-```text
-results/supporting_audits/type_matched_control.json
-```
-
-This file documents the construct-validity problem: deleting a request node
-can also delete an action, while deleting a taxi node only removes information.
-It should not be substituted for the v9 H1-H5 analysis. The capability lower
-bounds reported in Table 4.1 are preserved separately at:
-
-```text
-results/supporting_audits/matched_baselines.json
-```
-
-## 12. Troubleshooting
-
-### PyTorch says NumPy is unavailable
+### PyTorch reports that NumPy is unavailable
 
 ```bash
 .venv/bin/python -m pip install --force-reinstall "numpy<2"
 ```
 
-Then confirm:
+### TraCI retries connection
 
-```bash
-.venv/bin/python -c "import numpy, torch; print(numpy.__version__, torch.__version__)"
-```
-
-### TraCI initially refuses the connection
-
-Wait for the command to finish. Short retry messages during SUMO startup are
-expected. Investigate only if the process exits non-zero or never reaches an
-`OK`/completed message.
+Allow the command to finish. Investigate only if it exits non-zero or never
+reaches an `OK` or completion message.
 
 ### Preflight fails
 
-Read the `errors` array in `preflight.json`. Do not analyse or quote that sweep
-until the missing cells or protocol mismatch is corrected and preflight passes.
+Read the `errors` array in `preflight.json`. Do not quote or analyze that sweep
+until the missing cell or protocol mismatch is corrected.
 
-### Results differ slightly across machines
+### Results differ slightly across systems
 
-SUMO, PyTorch, operating system, and floating-point differences can change
-individual trajectories. Compare the full training-seed pattern and retain all
-declared seeds rather than selecting the run that best matches the thesis.
+Retain all declared training seeds. Compare directions and audit decisions
+rather than selecting the run that most closely matches one machine.

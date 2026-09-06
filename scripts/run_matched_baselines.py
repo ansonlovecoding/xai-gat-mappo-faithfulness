@@ -1,6 +1,6 @@
 """Evaluate legal-random and nearest-request baselines on a dissertation matrix.
 
-The runner mirrors the held-out protocol in ``dissertation_v8.toml``: the same
+The runner mirrors the held-out protocol in ``dissertation_v10_corrected.toml``: the same
 area, test-demand split, evaluation seeds, episodes per seed, and demand-file
 rotation. Results are written to a new immutable JSON file with per-episode
 records, aggregate confidence intervals, and runtime provenance.
@@ -47,25 +47,24 @@ def run_episode(env: DispatchEnv, policy, *, episode: int,
     obs, _ = env.reset(options={"taxi_route_file": demand_variant})
     policy.reset()
     total_reward = 0.0
-    total_pickups = 0
+    total_completed_journeys = 0
     mean_wait = 0.0
     steps = 0
 
     while not env.done:
         actions = policy.act(obs) if obs else {}
-        obs, rewards, _, _, infos = env.step(actions)
-        if rewards:
-            total_reward += float(next(iter(rewards.values())))
-        if infos:
-            info = next(iter(infos.values()))
-            total_pickups += int(info.get("pickups_delta", 0))
-            mean_wait = float(info.get("mean_wait_time", mean_wait))
+        obs, _, _, _, _ = env.step(actions)
+        metrics = env.last_step_metrics
+        total_reward += metrics.team_reward
+        total_completed_journeys += metrics.completed_passenger_journeys
+        mean_wait = metrics.mean_pending_wait_s
         steps += 1
 
     return {
         "episode": episode,
         "demand_variant": demand_variant,
-        "total_pickups": total_pickups,
+        "completed_passenger_journeys": total_completed_journeys,
+        "total_pickups": total_completed_journeys,
         "total_reward": total_reward,
         "final_mean_pending_wait_s": mean_wait,
         "rl_steps": steps,
@@ -111,8 +110,11 @@ def summarise(records: list[dict], *, policy_name: str, seed: int) -> dict:
         cluster_unit = "evaluation seed x episode"
     return {
         "cluster_unit": cluster_unit,
-        "pickups": cluster_bootstrap_mean_ci(
-            [row["total_pickups"] for row in records], clusters, seed=seed),
+        "completed_passenger_journeys": cluster_bootstrap_mean_ci(
+            [row["completed_passenger_journeys"] for row in records],
+            clusters,
+            seed=seed,
+        ),
         "reward": cluster_bootstrap_mean_ci(
             [row["total_reward"] for row in records], clusters, seed=seed + 1),
         "final_mean_pending_wait_s": cluster_bootstrap_mean_ci(
@@ -125,7 +127,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path,
-        default=PROJECT_ROOT / "configs/experiments/dissertation_v8.toml",
+        default=PROJECT_ROOT / "configs/experiments/dissertation_v10_corrected.toml",
     )
     parser.add_argument(
         "--policies", nargs="+", choices=sorted(POLICIES),
@@ -134,7 +136,7 @@ def main() -> int:
     parser.add_argument(
         "--output", type=Path,
         default=PROJECT_ROOT /
-        "runs/dissertation_v9_exposure_audit/matched_baselines.json",
+        "results/dissertation_v10_corrected/matched_baselines.json",
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
@@ -176,7 +178,7 @@ def main() -> int:
                     })
                     records.append(row)
                     print(
-                        f"  pickups={row['total_pickups']} "
+                        f"  completed_journeys={row['completed_passenger_journeys']} "
                         f"reward={row['total_reward']:+.2f} "
                         f"wall={row['wall_time_s']:.1f}s",
                         flush=True,
@@ -208,7 +210,7 @@ def main() -> int:
         "schema_version": 1,
         "experiment": "dissertation_matched_baselines",
         "protocol": {
-            "source_config": str(args.config.relative_to(PROJECT_ROOT)),
+            "source_config": str(args.config.resolve().relative_to(PROJECT_ROOT)),
             "area": area,
             "demand_split": demand_split,
             "evaluation_seeds": seeds,

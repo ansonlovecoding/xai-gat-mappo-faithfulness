@@ -126,6 +126,8 @@ class DecisionFaithfulness:
     clamp_rand_frac: float = 0.0      # frac. of random-baseline forwards, same
     def_excl: float = float("nan")    # DEF with chosen-reservation node protected
     def_m_excl: float = float("nan")
+    g_comp_excl: float = float("nan")
+    g_suff_excl: float = float("nan")
     g_comp_m_excl: float = float("nan")
     g_suff_m_excl: float = float("nan")
     excl_evaluated: bool = False
@@ -657,6 +659,7 @@ class FaithfulnessEvaluator:
         # --- exclusion variant (construct-validity audit): the chosen
         # action's reservation node is protected from occlusion entirely.
         def_excl = def_m_excl = float("nan")
+        g_comp_excl = g_suff_excl = float("nan")
         g_comp_m_excl = g_suff_m_excl = float("nan")
         excl_evaluated = False
         if self.config.exclusion_variant and action >= 1:
@@ -669,6 +672,8 @@ class FaithfulnessEvaluator:
                 if excl["per_k"]:
                     def_excl = excl["def_score"]
                     def_m_excl = excl["def_margin"]
+                    g_comp_excl = excl["g_comp"]
+                    g_suff_excl = excl["g_suff"]
                     g_comp_m_excl = excl["g_comp_m"]
                     g_suff_m_excl = excl["g_suff_m"]
                     excl_evaluated = True
@@ -719,6 +724,8 @@ class FaithfulnessEvaluator:
             clamp_rand_frac=float(clamp_rand_frac),
             def_excl=float(def_excl),
             def_m_excl=float(def_m_excl),
+            g_comp_excl=float(g_comp_excl),
+            g_suff_excl=float(g_suff_excl),
             g_comp_m_excl=float(g_comp_m_excl),
             g_suff_m_excl=float(g_suff_m_excl),
             excl_evaluated=excl_evaluated,

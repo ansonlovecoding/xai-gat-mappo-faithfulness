@@ -1,0 +1,120 @@
+schema_version = 2
+name = "faithfulness_decoupling_corrected_protocol"
+output_root = "runs/dissertation_v10_corrected"
+area = "central_park"
+
+# Protocol 2 uses semi-Markov decision intervals. Team rewards continue to
+# accrue while a taxi is busy, and GAE discounts by the actual interval.
+[training]
+epochs = 40
+seeds = [42, 43, 44]
+demand_split = "train"
+save_every = 10
+best_window = 10
+deterministic_torch = true
+checkpoint_selection = "validation_completed_passenger_journeys"
+lr = 0.0001
+anneal_lr = true
+gamma = 0.99
+gae_lambda = 0.95
+clip_ratio = 0.20
+ppo_epochs = 4
+minibatch_size = 256
+vf_coef = 0.25
+ent_coef = 0.05
+entropy_floor = 0.20
+max_ent_coef = 0.20
+max_grad_norm = 0.50
+value_clip_ratio = 0.20
+target_kl = 0.015
+dispatch_credit_reward = 1.0
+critic_encoder_gradient_scale = 0.10
+
+[selection]
+demand_split = "val"
+episodes = 8
+seed = 2026
+minimum_mean_pickups = 2.0
+
+[stability]
+final_window = 10
+minimum_final_mean_pickups = 5.0
+maximum_consecutive_zero_pickups = 4
+minimum_selected_mean_pickups = 5.0
+minimum_final_validation_retention = 0.80
+
+[evaluation]
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+episodes_per_cell_seed = 6
+demand_split = "test"
+outage_durations_s = [10.0, 20.0, 30.0, 60.0]
+corruption = "freeze"
+faithfulness_every = 16
+faithfulness_exposed_every = 1
+random_baselines = 5
+random_baseline = "type_matched"
+exclusion_variant = true
+primary_def = "hybrid_action_protected"
+record_schema_version = 2
+minimum_stale_exposed_records = 20
+minimum_stale_exposed_episodes = 3
+stochastic = true
+
+[deterministic_diagnostic]
+episodes = 3
+seed = 42
+demand_split = "test"
+
+[random_loss_robustness]
+outage_duration_s = 30.0
+# Fixed-rate sensitivity condition. Realized exposure is reported; it is not
+# assumed to match tunnel-trigger exposure for the corrected policies.
+dropout_rate = 0.0023
+episodes_per_cell_seed = 3
+seeds = [42, 43, 44, 45, 46, 47, 48, 49]
+demand_split = "test"
+
+[explanation_audit]
+evidence_root = "results/dissertation_v10_corrected"
+output_root = "results/dissertation_v10_corrected/explanation_audit"
+controls_summary = "faithfulness_controls/summary.json"
+decision_relevance_ci_floor = 0.0
+minimum_dispatch_decisions = 20
+direction_epsilon = 1e-9
+require_deterministic_capability = false
+require_trigger_robustness = true
+
+[faithfulness_controls]
+evaluation_seeds = [42, 43, 44]
+episodes = 3
+conditions = ["clean", "outage_60s"]
+faithfulness_every = 8
+figure_directory = "docs/figures"
+figure_prefix = "v10"
+
+[[models]]
+id = "B1_mlp"
+label = "MLP"
+audit_slug = "B1"
+policy = "mlp"
+degradation = "off"
+faithfulness_sweep = false
+training = { epochs = 50, lr = 0.0003, anneal_lr = false }
+
+[[models]]
+id = "B2_gat"
+label = "GAT"
+audit_slug = "B2"
+policy = "gat"
+degradation = "off"
+faithfulness_sweep = true
+
+[[models]]
+id = "H5_gat_degraded"
+label = "GAT-Outage"
+audit_slug = "H5"
+policy = "gat"
+degradation = "tunnel_triggered"
+outage_duration = 30.0
+faithfulness_sweep = true
+training = { epochs = 50 }

@@ -67,7 +67,7 @@ def main() -> int:
                         help="observation-layer outage durations in seconds; "
                              "0 = clean is always run")
     parser.add_argument("--with-dropout-axis", action="store_true",
-                        help="ALSO run the matched random_dropout axis at the same "
+                        help="ALSO run a random_dropout axis at the same "
                              "AoI ladder (appendix robustness check)")
     parser.add_argument("--dropout-rate", type=float, default=0.05,
                         help="trigger rate for the appendix dropout axis")
@@ -174,6 +174,8 @@ def main() -> int:
     input_inventory = file_inventory(inputs, PROJECT_ROOT)
     runtime = runtime_provenance(PROJECT_ROOT)
     specification = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
         "kind": "severity_sweep",
         "checkpoint": checkpoint_ref,
         "checkpoint_sha256": checkpoint_sha256,

@@ -27,10 +27,16 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 
 import numpy as np
+
+
+def _numeric(value) -> float:
+    """Convert an optional JSON number to float without hiding missing data."""
+    return float(value) if value is not None else float("nan")
 
 
 # --------------------------------------------------------------- statistics
@@ -66,12 +72,19 @@ def spearman_permutation_p(
     n_permutations: int, rng: np.random.Generator,
 ) -> tuple[float, float]:
     """(rho, one-sided permutation p) for H0: no monotone association."""
-    rho = spearman(x, y)
-    y_perm = y.copy()
+    ranked_x = _rank(x)
+    ranked_y = _rank(y)
+    ranked_x -= ranked_x.mean()
+    ranked_y -= ranked_y.mean()
+    denominator = np.sqrt((ranked_x**2).sum() * (ranked_y**2).sum())
+    if denominator == 0:
+        return 0.0, 1.0
+    rho = float((ranked_x * ranked_y).sum() / denominator)
+    y_perm = ranked_y.copy()
     count = 0
     for _ in range(n_permutations):
         rng.shuffle(y_perm)
-        r = spearman(x, y_perm)
+        r = float((ranked_x * y_perm).sum() / denominator)
         if alternative == "less" and r <= rho:
             count += 1
         elif alternative == "greater" and r >= rho:
@@ -128,9 +141,20 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
     """Flatten per-decision records across cells into parallel arrays."""
     axis, level, seed, episode = [], [], [], []
     action, pi_full = [], []
-    def_, def_m, wamsn, drift, valid_res = [], [], [], [], []
+    def_, def_m, standard_def, standard_def_m = [], [], [], []
+    wamsn, drift, valid_res = [], [], []
     stale_count, stale_share, stale_shift = [], [], []
     paired_def, paired_def_m, paired_def_excl, paired_def_m_excl = [], [], [], []
+    record_versions = {
+        int(r.get("record_schema_version", 1))
+        for c in cells for r in c.get("faith_records", [])
+    }
+    if len(record_versions) > 1:
+        raise ValueError(
+            "mixed faithfulness record schemas are not valid statistical input: "
+            f"{sorted(record_versions)}"
+        )
+
     for c in cells:
         meta = c["cell"]
         for r in c.get("faith_records", []):
@@ -140,18 +164,24 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             episode.append(r.get("episode", 0))
             action.append(r["action"])
             pi_full.append(r.get("pi_full", np.nan))
-            def_.append(r["def"])
-            def_m.append(r.get("def_m", np.nan))  # absent in pre-margin sweeps
+            standard_def.append(_numeric(r["def"]))
+            standard_def_m.append(_numeric(r.get("def_m")))
+            def_.append(_numeric(r.get("primary_def", r["def"])))
+            def_m.append(_numeric(r.get("primary_def_m", r.get("def_m"))))
             wamsn.append(r["wamsn"])
             drift.append(r.get("drift", np.nan))
             valid_res.append(r["valid_reservations"])
             stale_count.append(r.get("n_stale_veh", 0))
             stale_share.append(r.get("stale_attention_share", np.nan))
             stale_shift.append(r.get("stale_attention_shift", np.nan))
-            paired_def.append(r.get("paired_def_delta", np.nan))
-            paired_def_m.append(r.get("paired_def_m_delta", np.nan))
-            paired_def_excl.append(r.get("paired_def_excl_delta", np.nan))
-            paired_def_m_excl.append(r.get("paired_def_m_excl_delta", np.nan))
+            paired_def.append(_numeric(
+                r.get("paired_primary_def_delta", r.get("paired_def_delta"))
+            ))
+            paired_def_m.append(_numeric(
+                r.get("paired_primary_def_m_delta", r.get("paired_def_m_delta"))
+            ))
+            paired_def_excl.append(_numeric(r.get("paired_def_excl_delta")))
+            paired_def_m_excl.append(_numeric(r.get("paired_def_m_excl_delta")))
     return {
         "axis": np.array(axis),
         "level": np.array(level, dtype=np.float64),
@@ -161,6 +191,8 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
         "pi_full": np.array(pi_full, dtype=np.float64),
         "def": np.array(def_, dtype=np.float64),
         "def_m": np.array(def_m, dtype=np.float64),
+        "def_standard": np.array(standard_def, dtype=np.float64),
+        "def_m_standard": np.array(standard_def_m, dtype=np.float64),
         "wamsn": np.array(wamsn, dtype=np.float64),
         "drift": np.array(drift, dtype=np.float64),
         "valid_res": np.array(valid_res, dtype=np.int64),
@@ -174,6 +206,50 @@ def decisions_frame(cells: list[dict]) -> dict[str, np.ndarray]:
             paired_def_m_excl, dtype=np.float64
         ),
     }
+
+
+_STATISTICAL_FLOAT_FIELDS = {
+    "pi_full", "def", "def_m", "def_excl", "def_m_excl",
+    "primary_def", "primary_def_m", "primary_g_comp", "primary_g_suff",
+    "g_comp", "g_suff", "comp", "suff", "wamsn", "drift",
+    "stale_attention_share", "stale_attention_mass", "stale_attention_shift",
+    "stale_attention_share_clean_twin", "paired_def_delta",
+    "paired_def_m_delta", "paired_def_excl_delta", "paired_def_m_excl_delta",
+    "paired_primary_def_delta", "paired_primary_def_m_delta",
+}
+
+
+def quantize_statistical_inputs(cells: list[dict], decimals: int) -> list[dict]:
+    """Emulate legacy record quantization without changing the source files."""
+    quantized = copy.deepcopy(cells)
+    for cell in quantized:
+        records = cell.get("faith_records", [])
+        for record in records:
+            for key in _STATISTICAL_FLOAT_FIELDS:
+                value = record.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    record[key] = round(float(value), decimals)
+
+        eligible = [
+            record for record in records
+            if int(record.get("valid_reservations", 0)) > 0
+            and record.get("primary_metric_available", True)
+            and record.get("primary_def", record.get("def")) is not None
+        ]
+        if eligible:
+            faithfulness = cell.setdefault("faithfulness", {})
+            faithfulness["def_mean"] = float(np.mean([
+                record.get("primary_def", record["def"])
+                for record in eligible
+            ]))
+            margin = [
+                record.get("primary_def_m", record.get("def_m"))
+                for record in eligible
+                if record.get("primary_def_m", record.get("def_m")) is not None
+            ]
+            if margin:
+                faithfulness["def_m_mean"] = float(np.mean(margin))
+    return quantized
 
 
 def subset_frame(frame: dict[str, np.ndarray], mask: np.ndarray) -> dict[str, np.ndarray]:
@@ -632,9 +708,15 @@ def main() -> int:
     parser.add_argument("--n-bootstrap", type=int, default=2000)
     parser.add_argument("--stat-seed", type=int, default=0,
                         help="RNG seed for permutations/bootstrap only")
+    parser.add_argument("--input-round-decimals", type=int,
+                        help="sensitivity mode: round statistical records in memory")
+    parser.add_argument("--output", type=Path,
+                        help="analysis JSON path; defaults to <sweep_dir>/analysis.json")
     args = parser.parse_args()
 
     manifest, cells = load_sweep(args.sweep_dir)
+    if args.input_round_decimals is not None:
+        cells = quantize_statistical_inputs(cells, args.input_round_decimals)
     frame = decisions_frame(cells)
     rng = np.random.default_rng(args.stat_seed)
 
@@ -653,7 +735,8 @@ def main() -> int:
                  if c["cell"]["axis"] == ax and c["cell"]["level"] == lv]
         deg = float(np.mean([c["empirical_degradation_rate"] for c in group]))
         pk = float(np.mean([c["mean_pickups"] for c in group]))
-        m = (frame["axis"] == ax) & (frame["level"] == lv) & (frame["valid_res"] > 0)
+        m = ((frame["axis"] == ax) & (frame["level"] == lv)
+             & (frame["valid_res"] > 0) & np.isfinite(frame["def"]))
         defs = frame["def"][m]
         lo, hi = bootstrap_ci(defs, args.n_bootstrap, rng)
         m_all = (frame["axis"] == ax) & (frame["level"] == lv)
@@ -666,8 +749,17 @@ def main() -> int:
     print()
 
     # ---- hypothesis tests
-    results: dict = {"manifest": {"checkpoint": manifest["checkpoint"],
-                                  "git_rev": manifest.get("git_rev")}}
+    results: dict = {
+        "schema_version": 2,
+        "protocol_version": "2.0",
+        "primary_faithfulness_metric": (
+            "standard type-matched DEF for no-op; chosen-action-protected "
+            "type-matched DEF for dispatch"
+        ),
+        "input_quantization_decimals": args.input_round_decimals,
+        "manifest": {"checkpoint": manifest["checkpoint"],
+                     "git_rev": manifest.get("git_rev")},
+    }
     has_margin = bool(np.isfinite(frame["def_m"]).any())
     # Axes are discovered from the sweep itself (old sweeps: dropout_rate /
     # tunnel_noise; ladder sweeps: outage_duration / dropout_outage_duration).
@@ -865,7 +957,8 @@ def main() -> int:
     )
     results["robust"] = robust
 
-    out_path = args.sweep_dir / "analysis.json"
+    out_path = args.output or (args.sweep_dir / "analysis.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(results, indent=2))
     print()
     print(f"analysis: {out_path}")

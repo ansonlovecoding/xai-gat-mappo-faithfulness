@@ -116,7 +116,7 @@ def main() -> None:
             color=INK, fontweight="bold")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / "v9_main_findings_summary"
+    path = OUT / "v10_main_findings_summary"
     fig.savefig(path.with_suffix(".png"), dpi=240, bbox_inches="tight",
                 facecolor="white")
     fig.savefig(path.with_suffix(".pdf"), bbox_inches="tight",

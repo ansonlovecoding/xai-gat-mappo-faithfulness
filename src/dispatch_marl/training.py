@@ -2,8 +2,8 @@
 
 Components:
 
-  * ``AgentStep`` — one atomic (obs, action, log_prob, value, reward)
-    record for one taxi at one RL step.
+  * ``AgentStep`` — one decision and the rewards observed until that taxi's
+    next decision opportunity.
   * ``collect_rollout`` — run one episode, produce a flat list of
     ``AgentStep`` records across all taxis.
   * ``compute_gae`` — group by agent, run backward-pass GAE per trajectory.
@@ -18,11 +18,11 @@ Design decisions:
   * Team task reward is shared, while the taxi whose dispatch succeeds receives
     an additional difference-credit bonus during training. This distinguishes
     its action from another taxi's no-op without changing reported team reward.
-    A taxi records no decisions while it is serving a passenger and is absent
-    from ``env.agents``.
-  * **GAE per agent trajectory**: each taxi's trajectory is a contiguous
-    sequence of records in observation order; episode end is treated as
-    terminal (V_{T+1} = 0).
+    A taxi records no actor decisions while it is serving a passenger, but its
+    pending decision continues to receive the shared reward.
+  * **Interval-aware GAE**: each taxi's trajectory is a sequence of decision
+    events. Returns use the number of environment steps between events;
+    episode end is terminal (V_{T+1} = 0).
 """
 from __future__ import annotations
 
@@ -44,13 +44,16 @@ from .models.policy import DispatchGATPolicy, obs_dict_to_tensors
 
 @dataclass
 class AgentStep:
-    """One agent's decision at one RL step, plus what happened afterwards."""
+    """One agent decision and its semi-Markov reward interval."""
     agent: str
     obs: dict[str, np.ndarray]  # copy of the obs dict for this agent (numpy)
     action: int
     log_prob: float
     value: float
     reward: float
+    reward_trace: list[float] = field(default_factory=list)
+    duration_steps: int = 0
+    terminal: bool = False
     # All agents acting in one environment step share a transition id.  The
     # centralised critic uses it to reconstruct joint states during PPO.
     transition_id: int = 0
@@ -61,10 +64,15 @@ class AgentStep:
 
 @dataclass
 class EpisodeStats:
-    total_pickups: int = 0
+    total_completed_passenger_journeys: int = 0
     total_reward: float = 0.0
     rl_steps: int = 0
     n_agent_steps: int = 0
+
+    @property
+    def total_pickups(self) -> int:
+        """Protocol-v1 compatibility alias for completed passenger journeys."""
+        return self.total_completed_passenger_journeys
 
 
 def collect_rollout(
@@ -79,6 +87,7 @@ def collect_rollout(
     protocol to rotate rider files per episode.
     """
     buffer: list[AgentStep] = []
+    pending: dict[str, AgentStep] = {}
     stats = EpisodeStats()
 
     obs_dict, _ = env.reset(options=reset_options)
@@ -93,6 +102,14 @@ def collect_rollout(
             log_probs = out["log_prob"].cpu().numpy()
             values = out["value"].cpu().numpy()
             actions = {a: int(actions_np[i]) for i, a in enumerate(agents)}
+
+            # A new decision opportunity closes the previous action's reward
+            # interval for that taxi. The current value becomes V(s_{t+Δ})
+            # through the next AgentStep in its per-agent trajectory.
+            for agent in agents:
+                previous = pending.pop(agent, None)
+                if previous is not None:
+                    buffer.append(previous)
         else:
             actions = {}
             agents = []
@@ -102,28 +119,65 @@ def collect_rollout(
 
         # env.step advances the sim by step_length_s and returns team reward.
         next_obs, rewards, _, _, infos = env.step(actions)
+        transition_id = stats.rl_steps
+        metrics = getattr(env, "last_step_metrics", None)
         info = next(iter(infos.values())) if infos else {}
         fallback_reward = float(next(iter(rewards.values()))) if rewards else 0.0
-        team_reward = float(info.get("team_reward", fallback_reward))
-        transition_id = stats.rl_steps
+        team_reward = float(
+            metrics.team_reward if metrics is not None
+            else info.get("team_reward", fallback_reward)
+        )
         stats.rl_steps += 1
         stats.total_reward += team_reward
-        stats.total_pickups += int(info.get("pickups_delta", 0))
+        stats.total_completed_passenger_journeys += int(
+            metrics.completed_passenger_journeys if metrics is not None
+            else info.get(
+                "completed_passenger_journeys_delta",
+                info.get("pickups_delta", 0),
+            )
+        )
 
-        # One AgentStep per agent that acted this step.
+        # Open one pending interval for every decision made on this step.
         for i, agent in enumerate(agents):
             per_agent_obs = {k: v[i].cpu().numpy() for k, v in batched.items()}
-            buffer.append(AgentStep(
+            pending[agent] = AgentStep(
                 agent=agent,
                 obs=per_agent_obs,
                 action=int(actions_np[i]),
                 log_prob=float(log_probs[i]),
                 value=float(values[i]),
-                reward=float(infos.get(agent, {}).get("training_reward", team_reward)),
+                reward=0.0,
                 transition_id=transition_id,
-            ))
+            )
+
+        # Every unresolved decision receives the shared team outcome, including
+        # decisions made by taxis that are currently busy and absent from the
+        # action dictionary. Actor-specific dispatch credit applies only on the
+        # step where that action was submitted.
+        for agent, step in pending.items():
+            step_reward = team_reward
+            if step.transition_id == transition_id:
+                step_reward = float(
+                    infos.get(agent, {}).get("training_reward", team_reward)
+                )
+            step.reward_trace.append(step_reward)
+            step.reward += step_reward
+            step.duration_steps += 1
+
+        terminated = bool(metrics.terminated) if metrics is not None else env.done
+        if terminated:
+            for step in pending.values():
+                step.terminal = True
+                buffer.append(step)
+            pending.clear()
         stats.n_agent_steps += len(agents)
         obs_dict = next_obs
+
+    # Defensive finalization for custom environments that set ``done`` without
+    # exposing a terminal StepMetrics record.
+    for step in pending.values():
+        step.terminal = True
+        buffer.append(step)
 
     return buffer, stats
 
@@ -138,8 +192,9 @@ def compute_gae(
 ) -> None:
     """Fill in `advantage` and `ret` on each AgentStep, per agent trajectory.
 
-    Modifies the buffer in place. Assumes agent-steps for the same agent are
-    stored in temporal order (which `collect_rollout` guarantees).
+    Rewards within an interval are discounted per environment step. Bootstrap
+    and trace discounts use the interval length, so decisions separated by a
+    long service period are not treated as adjacent environment steps.
     """
     by_agent: dict[str, list[AgentStep]] = defaultdict(list)
     for step in buffer:
@@ -148,11 +203,21 @@ def compute_gae(
     for steps in by_agent.values():
         gae = 0.0
         for t in reversed(range(len(steps))):
-            v_next = steps[t + 1].value if t + 1 < len(steps) else 0.0
-            delta = steps[t].reward + gamma * v_next - steps[t].value
-            gae = delta + gamma * gae_lambda * gae
-            steps[t].advantage = gae
-            steps[t].ret = gae + steps[t].value
+            step = steps[t]
+            rewards = step.reward_trace or [step.reward]
+            duration = max(1, step.duration_steps or len(rewards))
+            interval_reward = float(sum(
+                (gamma ** offset) * reward
+                for offset, reward in enumerate(rewards)
+            ))
+            step.reward = interval_reward
+            has_next = t + 1 < len(steps) and not step.terminal
+            v_next = steps[t + 1].value if has_next else 0.0
+            delta = interval_reward + (gamma ** duration) * v_next - step.value
+            continuation = ((gamma * gae_lambda) ** duration) * gae if has_next else 0.0
+            gae = delta + continuation
+            step.advantage = gae
+            step.ret = gae + step.value
 
 
 # ============================================================ PPO update =====
