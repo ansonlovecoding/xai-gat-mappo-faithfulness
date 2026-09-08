@@ -102,6 +102,48 @@ troubleshooting guidance are in
 contract is documented in
 [`docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`](docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md).
 
+## Run the viva demo
+
+Create a deterministic illustration of one stale-exposed GAT decision:
+
+```bash
+.venv/bin/python scripts/viva_demo.py
+```
+
+The script uses the selected seed-42 GAT checkpoint, the first held-out demand
+file, and a 60-second tunnel-triggered freeze. It writes
+`runs/viva_demo/viva_demo.png` and `runs/viva_demo/viva_demo.json`. The image
+shows the frozen and true positions, clean and degraded attention, WAMSN, DEF,
+and the formal audit verdict. Use `--gui` to show SUMO during the capture. The
+GUI opens at near-full-screen size and begins with a passenger request beside
+the highlighted telemetry-loss tunnel. It then shows up to five nearby taxis
+whose local action spaces contain that request, together with each policy
+probability. A separate phase identifies the stale taxi and its last valid
+position before the sampled assignment is shown. The GUI then follows the
+assigned taxi. The status distinguishes normal movement from traffic waiting. It changes to
+`PASSENGER PICKED UP` at pickup and `PASSENGER DROPPED OFF` at the destination,
+then freezes the completed journey instead of continuing the taxi's idle route.
+The default presentation lasts up to 10 minutes and leaves the GUI open
+afterward; close the GUI window or press `Ctrl+C` when the discussion is
+finished. Change the total
+duration with `--gui-duration-seconds N`, the annotated phase timing with
+`--gui-phase-seconds N`, and the playback speed with `--gui-step-delay-ms N`.
+The four annotated views remain static for five seconds so their events are easy
+to read without advancing past a taxi-state change. One-second ease-in/out camera
+moves connect the views instead of abruptly jumping between map boundaries. The
+subsequent tracking uses a 0.25-second SUMO step and a 100 ms frame delay, giving
+four visual updates per simulated second at about 2.5x simulation speed. Override
+these with `--gui-transition-seconds`, `--gui-simulation-step-s`, and
+`--gui-step-delay-ms` when needed.
+Use `--close-gui-on-finish` when an automatically closing GUI is preferred. The
+script also saves screenshots for tunnel entry, stale telemetry, assignment,
+pickup, and drop-off in `runs/viva_demo/` as presentation backups. Override the
+window dimensions with `--gui-window-size WIDTH HEIGHT`. On macOS,
+SUMO GUI also requires XQuartz
+(`brew install --cask xquartz`). macOS 15 on Intel requires XQuartz 2.8.7 or
+newer for a working GLX context. The script checks the GUI binary and X11
+server before starting the experiment.
+
 ## Build the dissertation
 
 ```bash

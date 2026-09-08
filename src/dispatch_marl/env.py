@@ -116,6 +116,12 @@ class DispatchEnvConfig:
     taxi_route_file: str | None = None
     # For debugging / smoke tests. Never set True in a training run.
     use_gui: bool = False
+    # Optional presentation controls used only when use_gui is True.
+    gui_settings_file: str | None = None
+    gui_delay_ms: int = 0
+    gui_simulation_step_s: float | None = None
+    gui_window_size: tuple[int, int] | None = None
+    gui_window_position: tuple[int, int] | None = None
 
 
 class DispatchEnv(ParallelEnv):
@@ -133,6 +139,7 @@ class DispatchEnv(ParallelEnv):
         # so an action index in {1..K} can be translated back to a concrete
         # reservation ID at step time.
         self._pending_res_map: dict[str, list[str]] = {}
+        self._last_neighbor_ids: dict[str, list[str]] = {}
         # Clean counterfactual of the latest obs build (emit_clean_obs only).
         self._last_clean_obs: dict[str, dict[str, np.ndarray]] = {}
         # Bookkeeping.
@@ -193,6 +200,28 @@ class DispatchEnv(ParallelEnv):
             "--no-step-log",
             "--no-warnings",
         ]
+        if self.config.use_gui:
+            # SUMO GUI otherwise waits for the toolbar's Play button before
+            # servicing the initial TraCI request.
+            load_args.append("--start")
+            if self.config.gui_delay_ms > 0:
+                load_args += ["--delay", str(self.config.gui_delay_ms)]
+            if self.config.gui_simulation_step_s is not None:
+                load_args += [
+                    "--step-length",
+                    str(self.config.gui_simulation_step_s),
+                ]
+            if self.config.gui_window_size:
+                width, height = self.config.gui_window_size
+                load_args += ["--window-size", f"{width},{height}"]
+            if self.config.gui_window_position:
+                x, y = self.config.gui_window_position
+                load_args += ["--window-pos", f"{x},{y}"]
+            if self.config.gui_settings_file:
+                settings = Path(self.config.gui_settings_file).expanduser().resolve()
+                if not settings.exists():
+                    raise FileNotFoundError(f"SUMO GUI settings not found: {settings}")
+                load_args += ["--gui-settings-file", str(settings)]
         # Rider-demand variant override (per-episode option wins over config).
         taxi_route = self.config.taxi_route_file
         if options and "taxi_route_file" in options:
@@ -219,7 +248,7 @@ class DispatchEnv(ParallelEnv):
                 reloaded = True
             except (traci.exceptions.TraCIException, traci.exceptions.FatalTraCIError):
                 try:
-                    traci.close()
+                    traci.close(wait=not self.config.use_gui)
                 except (traci.exceptions.TraCIException, traci.exceptions.FatalTraCIError):
                     pass
                 self._sumo_started = False
@@ -393,6 +422,16 @@ class DispatchEnv(ParallelEnv):
         return self._sim_time
 
     @property
+    def network_bounds(self) -> tuple[float, float, float, float]:
+        """SUMO network bounds in metres: ``(xmin, ymin, xmax, ymax)``."""
+        return self._net_bbox
+
+    @property
+    def network_diagonal_m(self) -> float:
+        """Network diagonal used to normalize relative graph positions."""
+        return self._net_diag
+
+    @property
     def last_clean_obs(self) -> dict[str, dict[str, np.ndarray]]:
         """Clean counterfactuals of the most recent obs build.
 
@@ -403,12 +442,20 @@ class DispatchEnv(ParallelEnv):
         """
         return self._last_clean_obs
 
+    def neighbor_ids(self, agent: str) -> tuple[str, ...]:
+        """Taxi IDs occupying the latest neighbor slots for one agent."""
+        return tuple(self._last_neighbor_ids.get(agent, ()))
+
+    def reservation_ids(self, agent: str) -> tuple[str, ...]:
+        """Reservation IDs occupying the latest action slots for one agent."""
+        return tuple(self._pending_res_map.get(agent, ()))
+
     def close(self) -> None:
         if self._sumo_started:
             try:
                 if self._sumo_label is not None:
                     traci.switch(self._sumo_label)
-                traci.close()
+                traci.close(wait=not self.config.use_gui)
             except (traci.exceptions.FatalTraCIError, traci.exceptions.TraCIException):
                 pass
             self._sumo_started = False
@@ -439,6 +486,7 @@ class DispatchEnv(ParallelEnv):
 
     def _build_all_obs(self, agents: list[str]) -> dict[str, dict[str, np.ndarray]]:
         self._last_clean_obs = {}
+        self._last_neighbor_ids = {}
         if not agents:
             self._pending_res_map = {}
             return {}
@@ -529,6 +577,7 @@ class DispatchEnv(ParallelEnv):
         others = [(oid, s[0], s[1], s[4]) for oid, s in observed.items() if oid != agent]
         others.sort(key=lambda t: (t[1] - x) ** 2 + (t[2] - y) ** 2)
         chosen = others[:K_n]
+        self._last_neighbor_ids[agent] = [item[0] for item in chosen]
         taxi_feat = np.zeros((K_n, TAXI_FEAT_DIM), dtype=np.float32)
         taxi_mask = np.zeros(K_n, dtype=np.int8)
         for i, (oid, ox, oy, oaoi) in enumerate(chosen):
