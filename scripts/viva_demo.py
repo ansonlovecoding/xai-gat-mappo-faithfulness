@@ -9,6 +9,8 @@ explanation audit and is never inferred from this one sample.
 
 Usage:
   .venv/bin/python scripts/viva_demo.py
+  .venv/bin/python scripts/viva_demo.py --guided --gui
+  .venv/bin/python scripts/viva_demo.py --guided --auto-advance
   .venv/bin/python scripts/viva_demo.py --gui
   .venv/bin/python scripts/viva_demo.py --checkpoint path/to/ckpt_selected.pt
 """
@@ -26,6 +28,11 @@ from pathlib import Path
 from collections.abc import Callable
 from typing import Any
 
+import matplotlib
+
+# Figures are saved to disk; SUMO owns the live GUI. Avoid opening a second
+# native GUI backend when rendering the evidence in a terminal-only run.
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import sumolib
@@ -35,6 +42,9 @@ from matplotlib.patches import FancyBboxPatch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
+# The presentation uses the TraCI GUI API directly. Keep the environment on
+# that same connection even when libsumo happens to be installed.
+os.environ["DISPATCH_MARL_FORCE_TRACI"] = "1"
 
 from dispatch_marl import (  # noqa: E402
     DegradationConfig,
@@ -47,12 +57,16 @@ from dispatch_marl import (  # noqa: E402
 )
 from dispatch_marl.env import AOI_MAX_S  # noqa: E402
 from dispatch_marl.models import obs_dict_to_tensors  # noqa: E402
-from dispatch_marl.runtime import choose_device, load_policy  # noqa: E402
+from dispatch_marl.runtime import load_policy  # noqa: E402
 from dispatch_marl.scenario import demand_split_files  # noqa: E402
 
 DEFAULT_CHECKPOINT = (
     PROJECT_ROOT
     / "runs/dissertation_v10_corrected/training/B2_gat/seed_42/ckpt_selected.pt"
+)
+RELEASE_CHECKPOINT = (
+    PROJECT_ROOT
+    / "results/dissertation_v10_corrected/release/checkpoints/B2_gat_seed_42/ckpt_selected.pt"
 )
 DEFAULT_AUDIT = (
     PROJECT_ROOT
@@ -75,6 +89,66 @@ COLORS = {
     "line": "#CCD1D1",
     "warning": "#B9770E",
 }
+
+
+def _pause(args: argparse.Namespace, message: str = "Continue") -> None:
+    if args.guided and not args.auto_advance:
+        try:
+            if input(f"\n[Enter] {message} | [q] finish: ").strip().lower() == "q":
+                raise KeyboardInterrupt
+        except EOFError:
+            raise KeyboardInterrupt from None
+
+
+def _stage(args: argparse.Namespace, number: int, title: str, text: str) -> None:
+    if args.guided:
+        print(f"\n{'=' * 72}\nSTEP {number}/6 — {title}\n{'=' * 72}\n{text}", flush=True)
+
+
+def _present_results(record: dict[str, Any], args: argparse.Namespace) -> None:
+    telemetry = record["telemetry"]
+    explanation = record["explanation"]
+    _stage(args, 4, "Paired telemetry and explanation outputs | 2 minutes",
+           "The clean twin is a read-only observation from the SAME SUMO step.\n"
+           "SUMO keeps moving; only the policy's telemetry is frozen.")
+    print(f"Frozen position (m): {telemetry['observed_frozen_xy_m']}")
+    print(f"True position (m):   {telemetry['sumo_true_xy_m']}")
+    print(f"Position error: {telemetry['position_error_m']:.2f} m; "
+          f"maximum graph AoI: {telemetry['max_aoi_s']:.2f} s")
+    print("\nNode              Stale       Clean attention   Degraded attention")
+    for label, valid, stale, clean, degraded in zip(
+        explanation["node_labels"], explanation["node_mask"],
+        explanation["stale_vehicle_mask"], explanation["clean_attention"],
+        explanation["degraded_attention"],
+    ):
+        if valid:
+            print(f"{label:<18}{str(bool(stale)):<12}{clean:>14.6f}{degraded:>21.6f}")
+    print(f"\nWAMSN: {explanation['wamsn']:.6f} (age-weighted stale attention exposure)")
+    print(f"{explanation['primary_def_name']}:")
+    print(f"  clean={explanation['clean_twin_primary_def']:+.8f}; "
+          f"degraded={explanation['primary_def']:+.8f}")
+    print("DEF compares attention-ranked perturbations with type-matched random controls.\n"
+          "For dispatch, the selected request is protected in the primary margin DEF.\n"
+          "One decision illustrates the calculation; it cannot establish the study result.")
+    print(f"\nOpen the generated figure: {args.output_dir / 'viva_demo.png'}")
+    _pause(args, "Show the formal offline audit")
+    audit = record["formal_audit"]
+    _stage(args, 5, "Formal explanation-release audit | 1.5 minutes",
+           f"Source: {args.audit_report.resolve()}\n"
+           f"Model identifier: {args.model_id}\n"
+           "This is a stored full-experiment verdict, not a verdict computed from this sample.")
+    print(f"Decision: {audit['model_decision']}")
+    for check in audit["failed_checks"]:
+        print(f"  - {check}")
+    print("WITHHOLD means keep attention as an internal diagnostic; it does not stop dispatch.\n"
+          "Custom checkpoints are not automatically covered by this stored audit.")
+    _pause(args, "Inspect saved evidence and finish")
+    _stage(args, 6, "Evidence and implementation recap | 1 minute",
+           f"JSON: {args.output_dir / 'viva_demo.json'}\n"
+           f"Figure: {args.output_dir / 'viva_demo.png'}\n"
+           "The JSON records the checkpoint, demand, model inputs/outputs, paired metrics,\n"
+           "and offline audit summary. The figure presents the captured decision.\n"
+           "Demonstrated: key functionality, model execution, outputs/results, system components.")
 
 
 def _single_observation(
@@ -363,7 +437,7 @@ def _request_candidates(
 
 
 def _capture_decision(args: argparse.Namespace) -> tuple[dict[str, Any], DispatchEnv]:
-    device = args.device or choose_device()
+    device = args.device
     seed_everything(args.eval_seed, deterministic_torch=True)
     policy, checkpoint = load_policy(args.checkpoint, device)
     if checkpoint.get("policy_type", "gat") != "gat":
@@ -374,6 +448,19 @@ def _capture_decision(args: argparse.Namespace) -> tuple[dict[str, Any], Dispatc
     demand_files = demand_split_files(area, "test")
     if args.demand_file:
         demand_files = [args.demand_file]
+
+    _stage(args, 2, "Load the trained model | 1 minute",
+           f"Checkpoint: {args.checkpoint.resolve()}\n"
+           f"Epoch: {checkpoint.get('epoch')}; device: {device}\n"
+           f"Parameters: {sum(p.numel() for p in policy.parameters()):,}\n"
+           f"Policy configuration: {policy.config}\n"
+           f"Demand: {demand_files[0]}\n"
+           "Execution: policy.eval() + no_grad(); categorical sampling from action logits.\n"
+           "Each taxi has its own action distribution; candidate probabilities are not\n"
+           "a single probability distribution over competing taxis.")
+    _pause(args, "Run inference and capture a stale-exposed decision")
+    if args.guided:
+        print("Running SUMO and the loaded policy; searching for a stale-exposed decision ...", flush=True)
 
     env = DispatchEnv(
         DispatchEnvConfig(
@@ -473,6 +560,7 @@ def _capture_decision(args: argparse.Namespace) -> tuple[dict[str, Any], Dispatc
                         record = _score_candidate(
                             candidate, evaluator, checkpoint, args, device
                         )
+                        record["scope"]["live_scene_matches_capture"] = True
                         return record, env
                 obs_dict, *_ = env.step(actions)
         selected_fallback = dispatch_fallback or fallback
@@ -480,6 +568,7 @@ def _capture_decision(args: argparse.Namespace) -> tuple[dict[str, Any], Dispatc
             record = _score_candidate(
                 selected_fallback, evaluator, checkpoint, args, device
             )
+            record["scope"]["live_scene_matches_capture"] = False
             return record, env
     except BaseException:
         env.close()
@@ -513,7 +602,8 @@ def _advance_gui_for(
 def _run_gui_presentation(record: dict[str, Any], args: argparse.Namespace) -> None:
     started = time.monotonic()
     context = _annotate_gui(record, args)
-    remaining = args.gui_duration_seconds - (time.monotonic() - started)
+    remaining = (args.journey_seconds if args.guided else
+                 args.gui_duration_seconds - (time.monotonic() - started))
     if remaining > 0:
         print(
             f"Phase 5: live pickup and drop-off for about "
@@ -521,7 +611,7 @@ def _run_gui_presentation(record: dict[str, Any], args: argparse.Namespace) -> N
             flush=True,
         )
         _advance_gui_for(remaining, _pickup_tracker(context, args))
-    if args.close_gui_on_finish:
+    if args.close_gui_on_finish or args.guided:
         return
     print(
         "Timed presentation complete. SUMO GUI will remain open; "
@@ -702,12 +792,15 @@ def _annotate_gui(
             )
             traci.gui.screenshot(view, str(args.output_dir / filename))
             traci.simulationStep()
+            timing = ("automatic rehearsal" if args.auto_advance else "press Enter in terminal") if args.guided else f"{args.gui_phase_seconds:g} seconds"
             print(
-                f"Phase {number}: {description} "
-                f"({args.gui_phase_seconds:g} seconds)",
+                f"Phase {number}: {description} ({timing})",
                 flush=True,
             )
-            time.sleep(args.gui_phase_seconds)
+            if args.guided:
+                _pause(args, "Next SUMO view (switch back to this terminal)")
+            else:
+                time.sleep(args.gui_phase_seconds)
 
         request_points = [pickup_xy] if pickup_xy is not None else []
         tunnel_shapes = [
@@ -992,7 +1085,20 @@ def _score_candidate(
         if action > 0 and action - 1 < len(reservation_ids)
         else None
     )
+    with torch.no_grad():
+        forward_output = evaluator.policy.forward(degraded)
+        action_probabilities = torch.softmax(forward_output["logits"], dim=-1)[0]
     return {
+        "model_execution": {
+            "input_shapes": {key: list(value.shape) for key, value in degraded.items()},
+            "output_shapes": {
+                key: list(value.shape) for key, value in forward_output.items()
+                if isinstance(value, torch.Tensor)
+            },
+            "action_probabilities": action_probabilities.detach().cpu().tolist(),
+            "reservation_ids": list(reservation_ids),
+            "action_rule": "categorical sampling (not argmax)",
+        },
         "scope": {
             "kind": "illustrative single decision",
             "checkpoint": str(args.checkpoint.resolve()),
@@ -1200,20 +1306,24 @@ def _render_figure(record: dict[str, Any], output: Path) -> None:
         )
 
     line(0.91, "POLICY DECISION", COLORS["muted"], 9, "bold")
-    line(0.83, decision["action_label"], COLORS["ink"], 17, "bold")
-    line(0.76, f"chosen-action probability  {decision['probability']:.3f}", COLORS["muted"], 10)
+    display_action = ("no-op" if decision["action_index"] == 0 else
+                      f"dispatch slot {decision['action_index']}")
+    line(0.83, display_action, COLORS["ink"], 17, "bold")
+    line(0.78, f"reservation ID: {decision['reservation_id']}", COLORS["muted"], 9)
+    line(0.73, f"chosen-action probability  {decision['probability']:.3f}", COLORS["muted"], 10)
     line(0.65, "ILLUSTRATIVE METRICS", COLORS["muted"], 9, "bold")
     line(0.58, f"WAMSN  {explanation['wamsn']:.3f}", COLORS["ink"], 13, "bold")
     line(0.51, f"stale attention share  {explanation['stale_attention_share']:.3f}", COLORS["ink"], 10.5)
-    line(0.45, f"attention drift (JS)  {explanation['attention_drift_js']:.3f}", COLORS["ink"], 10.5)
-    line(0.39, f"{explanation['primary_def_name']}  {explanation['primary_def']:+.3f}", COLORS["ink"], 10.5)
-    line(0.33, f"clean-to-degraded DEF change  {explanation['primary_def_change']:+.3f}", COLORS["ink"], 10.5)
+    line(0.45, f"attention drift (JS)  {explanation['attention_drift_js']:.6f}", COLORS["ink"], 9)
+    line(0.39, explanation['primary_def_name'], COLORS["ink"], 9)
+    line(0.35, f"DEF {explanation['primary_def']:+.8f}", COLORS["ink"], 10)
+    line(0.30, f"Paired change {explanation['primary_def_change']:+.8f}", COLORS["ink"], 9)
     line(0.23, "FORMAL OFFLINE AUDIT", COLORS["muted"], 9, "bold")
     verdict_color = COLORS["stale"] if audit["model_decision"] == "WITHHOLD" else COLORS["clean"]
     line(0.16, audit["model_decision"], verdict_color, 22, "bold")
     failed = audit.get("failed_checks", [])
     if failed:
-        line(0.075, f"{len(failed)} checks need attention; see JSON for details", COLORS["muted"], 8.7)
+        line(0.075, f"{len(failed)} checks need attention.\nSee JSON for details.", COLORS["muted"], 8.7)
 
     fig.savefig(output, dpi=180, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -1221,7 +1331,12 @@ def _render_figure(record: dict[str, Any], output: Path) -> None:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--checkpoint", type=Path,
+                        default=DEFAULT_CHECKPOINT if DEFAULT_CHECKPOINT.exists() else RELEASE_CHECKPOINT)
+    parser.add_argument("--guided", action="store_true", help="six presenter-led viva steps; Enter advances, q exits")
+    parser.add_argument("--auto-advance", action="store_true", help="run guided steps without keyboard pauses (rehearsal)")
+    parser.add_argument("--journey-seconds", type=float, default=90.0,
+                        help="guided-mode live journey budget after annotated scenes (default: 90)")
     parser.add_argument("--model-id", default="B2_gat")
     parser.add_argument("--training-seed", type=int, default=42)
     parser.add_argument("--eval-seed", type=int, default=42)
@@ -1229,7 +1344,10 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--demand-file", default=None)
     parser.add_argument("--max-steps", type=int, default=240)
     parser.add_argument("--max-episodes", type=int, default=3)
-    parser.add_argument("--device", choices=("cpu", "mps", "cuda"), default=None)
+    parser.add_argument(
+        "--device", choices=("cpu", "mps", "cuda"), default="cpu",
+        help="inference device (default: cpu, the verified viva path; accelerators are opt-in)",
+    )
     parser.add_argument("--gui", action="store_true", help="show SUMO while capturing")
     parser.add_argument(
         "--gui-step-delay-ms",
@@ -1279,6 +1397,12 @@ def _parse_args() -> argparse.Namespace:
         "--output-dir", type=Path, default=PROJECT_ROOT / "runs/viva_demo"
     )
     args = parser.parse_args()
+    if args.auto_advance and not args.guided:
+        parser.error("--auto-advance requires --guided")
+    if args.guided and not args.auto_advance and not sys.stdin.isatty():
+        parser.error("guided mode needs an interactive terminal; use --auto-advance for rehearsal")
+    if not math.isfinite(args.journey_seconds) or args.journey_seconds < 0:
+        parser.error("--journey-seconds must be finite and non-negative")
     if not args.checkpoint.exists():
         parser.error(f"checkpoint not found: {args.checkpoint}")
     if args.max_steps < 1 or args.max_episodes < 1:
@@ -1300,6 +1424,22 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
+    _stage(args, 1, "System components and demonstration contract | 1 minute",
+           "SUMO traffic -> DispatchEnv observations -> telemetry freeze -> GAT policy\n"
+           "            -> sampled dispatch action -> SUMO execution\n"
+           "Clean/degraded pair -> faithfulness evaluator -> offline release audit\n\n"
+           "Implementation (under src/dispatch_marl/):\n"
+           "  env.py                 traffic and dispatch environment\n"
+           "  degradation.py         tunnel-triggered observation freeze\n"
+           "  models/policy.py        graph policy and action outputs\n"
+           "  faithfulness.py         paired perturbation-based evaluation\n"
+           "  explanation_audit.py   formal explanation-release checks\n\n"
+           "This run performs inference and paired scoring using a frozen checkpoint.\n"
+           "The multi-checkpoint release verdict is read from the completed offline audit.\n"
+           "Budget: roughly 10 minutes; Enter advances, q exits at a prompt, Ctrl+C stops.\n"
+           + ("SUMO views also wait for Enter in this terminal." if args.gui else
+              "Headless mode: model and metrics run live; no vehicle animation is shown."))
+    _pause(args, "Load the model")
     _prepare_gui(args)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     print(f"checkpoint: {args.checkpoint}")
@@ -1311,6 +1451,33 @@ def main() -> int:
         png_path = args.output_dir / "viva_demo.png"
         json_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
         _render_figure(record, png_path)
+
+        if args.guided:
+            _stage(args, 3, "Model execution and dispatch | 3 minutes including GUI",
+                   f"Captured agent: {record['scope']['agent']}; "
+                   f"simulation time: {record['scope']['sim_time_s']:.2f} s\n"
+                   "Actual batched input shapes:")
+            execution = record["model_execution"]
+            for name, shape in execution["input_shapes"].items():
+                print(f"  {name}: {shape}")
+            print(f"Output shapes: {execution['output_shapes']}")
+            print("\nAction probabilities for the captured taxi (including padded slots):")
+            for index, probability in enumerate(execution["action_probabilities"]):
+                label = ("no-op" if index == 0 else
+                         f"request {execution['reservation_ids'][index - 1]}"
+                         if index <= len(execution["reservation_ids"]) else "masked/padded")
+                print(f"  {index}: {label:<30} {probability:.6f}")
+            print(f"Sampled action slot: {record['decision']['action_index']}; "
+                  f"reservation ID: {record['decision']['reservation_id']}; "
+                  f"P={record['decision']['probability']:.6f}")
+            _pause(args, "Show SUMO execution" if args.gui else "Show paired outputs")
+            if args.gui and record["scope"]["live_scene_matches_capture"]:
+                _run_gui_presentation(record, args)
+            elif args.gui:
+                print("Historical fallback captured: live scene has advanced. "
+                      "Skipping animation to avoid replaying an unrelated assignment.")
+            _present_results(record, args)
+            return 0
 
         print("\nCaptured decision")
         print(f"  agent/action: {record['scope']['agent']} / {record['decision']['action_label']}")
@@ -1330,7 +1497,7 @@ def main() -> int:
             print(
                 "Pickup/drop-off screenshots are added when those events occur."
             )
-        if args.gui:
+        if args.gui and record["scope"]["live_scene_matches_capture"]:
             _run_gui_presentation(record, args)
     except KeyboardInterrupt:
         print("\nDemo stopped by user.", flush=True)
@@ -1340,4 +1507,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except KeyboardInterrupt:
+        print("\nDemo stopped by user.", flush=True)

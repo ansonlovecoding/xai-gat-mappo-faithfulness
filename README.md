@@ -104,6 +104,52 @@ contract is documented in
 
 ## Run the viva demo
 
+For a presenter-led, six-step viva demonstration, run:
+
+```bash
+.venv/bin/python scripts/viva_demo.py --guided --gui
+```
+
+The demo defaults to **CPU**, including on Apple Silicon. This is the verified
+presentation path; automatic MPS selection has produced an invalid 512 GiB
+buffer allocation in the critic during inference. Accelerator devices remain
+explicit opt-ins through `--device`. This demo default does not change training
+or experiment device selection.
+
+Press **Enter in the terminal** to advance each step and annotated SUMO view;
+enter `q` at a prompt or press `Ctrl+C` to stop. The English prompts cover:
+
+1. System components and data flow (1 minute).
+2. Actual checkpoint loading, configuration and execution rule (1 minute).
+3. Actual input/output shapes, action probabilities and SUMO dispatch (3 minutes).
+4. Frozen/true positions, paired attention, WAMSN and DEF (2 minutes).
+5. The stored full-experiment explanation-release audit (1.5 minutes).
+6. Saved evidence and implementation recap (1 minute).
+
+This leaves about 30 seconds of a ten-minute slot for transitions. Guided mode
+waits for the presenter, so this is a rehearsal budget, not a hard deadline.
+After the four annotated SUMO views, journey playback runs for at most 90
+seconds by default (`--journey-seconds N` changes this). It then returns to
+the metrics and audit steps, even if the journey has not finished. The GUI
+closes when the final step completes. Historical fallback samples are scored
+but not animated against a later, unrelated simulation state.
+
+For a terminal-only demonstration, omit `--gui`. For a non-interactive rehearsal
+that performs real inference and generates the same JSON and figure, use:
+
+```bash
+.venv/bin/python scripts/viva_demo.py --guided --auto-advance --device cpu
+```
+
+The JSON includes actual model input/output shapes and the captured taxi's
+action probabilities. Probabilities displayed for different candidate taxis
+belong to separate local policies; they are not a softmax over taxis. The
+stored audit is explicitly identified as offline evidence, and is not an audit
+of an arbitrary custom checkpoint. The script falls back to the packaged
+seed-42 GAT checkpoint in `results/dissertation_v10_corrected/release/checkpoints/`
+when the original training-run checkpoint is absent. It uses TraCI consistently
+for both headless capture and GUI presentation.
+
 Create a deterministic illustration of one stale-exposed GAT decision:
 
 ```bash
