@@ -240,7 +240,7 @@ def decoupling_figure() -> None:
             ax.spines[["top", "right"]].set_visible(False)
     axes[0, 0].set_ylabel("WAMSN (stale-exposed decisions)")
     axes[1, 0].set_ylabel("Probability DEF")
-    axes[2, 0].set_ylabel("Mean pickups per episode")
+    axes[2, 0].set_ylabel("Mean completed journeys per episode")
     axes[0, 1].legend(frameon=False, fontsize=8)
     shift_limits = [axes[0, column].get_ylim() for column in range(2)]
     axes[0, 0].set_ylim(min(v[0] for v in shift_limits),

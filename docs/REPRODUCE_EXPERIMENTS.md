@@ -1,5 +1,10 @@
 # Reproducing the dissertation experiments
 
+The post-review no-op analysis and prospective five-seed matched-budget protocol
+are documented in `docs/MATCHED_BUDGET_FOLLOWUP.md`. They are separate from the
+historical v10 reproduction below; the v11 training run has not passed the
+environment gate and contributes no results to the current thesis.
+
 This guide reproduces the final corrected experiment for *When Explanations
 Outlive Their Data: Faithfulness Decoupling in Graph-Attention MARL Fleet
 Dispatch under Telemetry Degradation*.
@@ -35,7 +40,18 @@ state and never selects an action.
 
 ## 2. Environment
 
-Use Python 3.11 and SUMO/libsumo.
+The archived sweep manifests record Python 3.11.15, macOS 15.7.9 x86_64,
+SUMO 1.20.0 and the TraCI backend (not libsumo). Their dependency versions
+are retained in `docs/dissertation/requirements-evaluated.txt`. The committed
+network was built using SUMO tools 1.27.0; the current general requirements
+also target newer bindings. Distinguish network generation from the runtime
+used to obtain the reported results. For a historical reproduction, preserve
+the committed network and use the manifest-recorded simulation stack. The
+commands below otherwise describe a current development setup.
+
+Hardware model, memory and complete wall-clock timings were not retained for
+the reported runs. Record them during reruns rather than estimating them from
+the current workstation.
 
 ```bash
 cd "<repo-root>"
@@ -270,3 +286,18 @@ until the missing cell or protocol mismatch is corrected.
 
 Retain all declared training seeds. Compare directions and audit decisions
 rather than selecting the run that most closely matches one machine.
+
+
+## 7. Dissertation EDA and document regeneration
+
+Run `python scripts/plot_dataset_eda.py` to recompute the descriptive demand
+figures and `docs/figures/dataset_eda_summary.json` from committed XML inputs.
+This command does not train policies or replace experimental results.
+
+Build the Word document with `python scripts/build_dmu_thesis_docx.py`.
+After rendering it to PDF, run `python scripts/update_thesis_page_map.py
+<rendered.pdf>` and rebuild/render again until the page-map command reports
+`changed: false`. This refreshes the contents and figure/table lists from
+actual pagination. Inspect the final rendered pages before distributing both
+formats. Document-generation packages are separate from the evaluated
+simulation environment.

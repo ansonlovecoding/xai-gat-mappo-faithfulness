@@ -9,9 +9,11 @@ and graph attention networks (GATs) add learned weights over neighboring
 nodes [6], [7]. Because the weights are easy to display, they are often read as
 an explanation of which vehicles or requests influenced a decision.
 
-That reading is convenient, but it is not automatically valid. Prior work has
-shown that an attention weight can be weakly related to the evidence that
-actually changes a model's output [12], [14], [13], [15]. The issue becomes more serious in
+Interpreting these weights requires care. Studies in NLP and other attention-based
+models have found that attention weights can be weakly related to the evidence
+that changes a model's output [12], [14], [15]. Wiegreffe and Pinter [13]
+caution that such findings do not rule out all attention-based explanations.
+The issue becomes more serious in
 an operational system because the input itself may no longer describe the
 current world.
 
@@ -25,12 +27,11 @@ nodes represent old information. The interface reveals where
 the model placed attention, but it does not reveal whether that information is
 fresh or whether removing it would change the decision.
 
-This creates an assurance problem. An operator may read a complete attention
+This makes the explanation difficult to trust. An operator may read a complete attention
 map as a trustworthy reason even when its evidence is stale, and stable dispatch
-performance cannot show whether the explanation is valid. This dissertation
-focuses on explanation reliability rather than increasing the number
-of pickups. It tests whether raw graph-attention weights provide reliable
-evidence about a decision under clean and degraded telemetry.
+performance cannot show whether the explanation is valid. This dissertation tests the reliability of raw graph-attention explanations
+under clean and degraded telemetry, with dispatch performance providing context
+for interpreting the explanation results.
 
 This dissertation uses *faithfulness decoupling* to describe a situation in
 which an explanation still appears credible after its supporting data have
@@ -39,6 +40,13 @@ identify the evidence that influenced the decision. One possible pattern is decl
 faithfulness while dispatch performance remains stable. The core question is
 whether attention provides reliable evidence under the tested conditions.
 
+The term identifies the risk being investigated, rather than a result assumed
+in advance. Showing that degradation reduces faithfulness would require a valid clean
+faithfulness baseline and a lower score in the paired degraded observation.
+As reported below, the experiment does not establish that decline. Its
+contribution includes identifying why raw attention fails the release audit
+and distinguishing that failure from the predicted decline under degradation.
+
 ## 1.3 Research questions
 
 The central research question is:
@@ -46,7 +54,7 @@ The central research question is:
 **Can raw graph-attention weights be trusted as explanations of fleet-dispatch
 decisions when vehicle telemetry becomes stale?**
 
-Four operational questions provide the evidence needed to answer it:
+Four research questions guide the evaluation:
 
 1. **RQ1:** Under clean telemetry, do raw graph-attention weights identify
    decision-relevant nodes more reliably than type-matched random controls?
@@ -59,10 +67,9 @@ Four operational questions provide the evidence needed to answer it:
    produce more consistent attention and faithfulness responses under telemetry
    degradation than clean training?
 
-The construct-validity audit supports the interpretation of all four research
-questions. It is not a separate primary problem. Its purpose is to check that
-the faithfulness evaluator measures the effect of removing information rather
-than the accidental removal of an available action.
+All four questions depend on a valid faithfulness measure. The evaluation
+therefore distinguishes the removal of information from the removal of an
+available action, which can otherwise distort the measured effect.
 
 ## 1.4 Objectives
 
@@ -87,22 +94,27 @@ The measurable objectives are to:
    that converts the collected evidence into an `ELIGIBLE`, `WITHHOLD`, or
    `INCOMPLETE` explanation-release decision.
 
+Objectives 1-2 provide the benchmark and clean controls for RQ1; objective 3
+addresses the paired telemetry comparison in RQ2; objective 4 tests repeatability and sensitivity for RQ3; and objective 5 addresses RQ4.
+Objective 6 uses these findings to reach the audit decision. The answers
+and release outcomes are presented in Sections 4.10-4.11.
+
 ## 1.5 Main findings
 
-Overall, **this study does not validate raw graph-attention weights as reliable
-explanations of fleet-dispatch decisions**. Figure 1.1 summarizes the central
-finding: an attention explanation can remain available after the policy begins
-receiving stale vehicle information, but its availability does not show that it
-reliably identifies the evidence behind the decision.
+The tested self-row attention channel lacks consistent evidence of decision
+relevance and stability. Figure 1.1 summarizes the practical consequence: an
+attention map can remain visible as telemetry becomes stale, even when the
+evidence is insufficient to present it as an explanation.
 
 ![Summary of stale data and the explanation-release decision](../figures/v10_main_findings_summary.png)
 
 **Figure 1.1.** Main finding. A tunnel-triggered outage leaves the policy with a
 stale observation. Attention remains available, but the audit withholds it
-because freshness and faithfulness are not both established.
+because decision relevance and extraction consistency are not established.
+Freshness visibility passes as a reporting check; it does not certify fresh data.
 
-Under clean telemetry, raw-attention margin-DEF falls below its type-matched
-random control for both model families. A leave-one-out control produces a
+Under clean telemetry, the tested averaged self-row attention has dispatch
+margin-DEF below its type-matched random control for both model families. A leave-one-out control produces a
 positive response, showing that the evaluator can detect a more
 decision-relevant ranking even though raw attention does not provide one.
 
@@ -152,9 +164,8 @@ objectives, main findings, and contributions.
 **Chapter 2: Literature Review.** Reviews MARL fleet dispatch, graph attention,
 explanation faithfulness, graph explainability, and telemetry freshness.
 
-**Chapter 3: Methodology.** Describes the SUMO environment, policy models,
-observation-layer degradation, faithfulness measures, evaluation design, and
-audit rules.
+**Chapter 3: Methodology.** Describes dataset selection and EDA, the SUMO environment, policy models,
+observation-layer degradation, faithfulness measures, evaluation design, implementation details, and audit rules.
 
 **Chapter 4: Results.** Reports policy capability, construct-validity checks,
 faithfulness results, stale-data exposure, sensitivity analyses, and audit

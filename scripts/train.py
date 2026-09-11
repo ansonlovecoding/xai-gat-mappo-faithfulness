@@ -237,6 +237,7 @@ def main() -> int:
     parser.add_argument("--device", default=None,
                         help="cpu, cuda, or mps; default: auto")
     args = parser.parse_args()
+    training_started = time.monotonic()
 
     if args.faith_every_epochs > 0 and args.policy == "mlp":
         parser.error("--faith-every-epochs requires --policy gat: the MLP "
@@ -548,6 +549,11 @@ def main() -> int:
         "seed_settings": seed_settings,
     }, final_ckpt_path)
     print(f"\ndone. logs: {log_file}")
+    atomic_write_json(run_dir / "timing.json", {
+        "status": "completed",
+        "total_training_wall_seconds": time.monotonic() - training_started,
+        "scope": "initialization, all epochs and checkpoint saves; excludes validation selection",
+    })
     print(f"final:  {final_ckpt_path}")
     if best_epoch >= 0:
         print(f"best:   epoch {best_epoch}, rolling mean pickups = {best_rolling_mean:.2f}")

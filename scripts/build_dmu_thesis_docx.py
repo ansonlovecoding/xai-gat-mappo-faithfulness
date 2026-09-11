@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import json
 import re
 from copy import deepcopy
 from html import escape
@@ -13,6 +15,7 @@ from docx.enum.section import WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK, WD_LINE_SPACING, WD_TAB_ALIGNMENT, WD_TAB_LEADER
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
@@ -33,10 +36,10 @@ CITATIONS = {
     4: "Rashid et al., 2020",
     5: "Yu et al., 2022",
     6: "Scarselli et al., 2009",
-    7: "Velickovic et al., 2018",
+    7: "Veličković et al., 2018",
     8: "Iqbal and Sha, 2019",
     9: "Vaswani et al., 2017",
-    10: "Heuillet, Couthouis and Diaz-Rodriguez, 2021",
+    10: "Heuillet, Couthouis and Díaz-Rodríguez, 2021",
     11: "Madumal et al., 2020",
     12: "Jain and Wallace, 2019",
     13: "Wiegreffe and Pinter, 2019",
@@ -73,10 +76,32 @@ CITATIONS = {
     46: "Shin et al., 2025",
     47: "Azzolin et al., 2026",
     48: "Ancona et al., 2018",
+    49: "S. Lu et al., 2024",
+    50: "Bui et al., 2024",
+    51: "Zhang et al., 2024",
+    52: "Armgaan et al., 2024",
+    53: "Liu and Xie, 2025",
+    54: "Liu et al., 2025",
+    55: "Saha and Bandyopadhyay, 2026",
+    56: "Wu et al., 2025",
+    57: "Zhou et al., 2024",
+    58: "Yao, Florescu and Lee, 2024",
+    59: "Ding et al., 2024",
+    60: "Soudijani and Dimitrova, 2025",
+    61: "Hong et al., 2024",
+    62: "W. Lu et al., 2024",
+    63: "Amitai, Septon and Amir, 2024",
+    64: "Pan et al., 2025",
+    65: "He et al., 2025",
+    66: "Varbella et al., 2024",
+    67: "Wang and Shen, 2024",
+    68: "Yu and Gao, 2025",
+    69: "OpenStreetMap contributors, n.d.",
+
 }
 
 TABLE_TITLES = {
-    (2, 1): "Recent graph-based dispatch literature compared with this study",
+    (2, 1): "Critical comparison of eight closely related explanation studies",
     (3, 1): "Observation graph node types and roles",
     (3, 2): "Policy conditions used in the experiment",
     (3, 3): "Validation-selected checkpoint indices (zero-based)",
@@ -86,6 +111,7 @@ TABLE_TITLES = {
     (3, 7): "Held-out evaluation structure and episode counts",
     (3, 8): "Telemetry conditions used in held-out evaluation",
     (3, 9): "Hypothesis map and analysis roles",
+    (3, 10): "Implementation components and design rationale",
     (4, 1): "Policy capability on held-out demand",
     (4, 2): "Protocol correction and numeric-precision audit",
     (4, 3): "Decision-relevance controls under clean and degraded telemetry",
@@ -95,17 +121,20 @@ TABLE_TITLES = {
     (4, 7): "Tunnel and random-trigger sensitivity summary",
     (4, 8): "Hypothesis outcomes across training seeds",
     (4, 9): "Freshness-aware explanation audit decisions",
+    (4, 10): "Exploratory no-op margin-DEF by checkpoint and condition",
     (5, 1): "Freshness-aware explanation audit framework",
     (5, 2): "Audit framework inputs and outputs",
 }
 
 FIGURES = [
     ("Figure 1.1", "Stale data and the explanation-release decision"),
-    ("Figure 3.1", "Local observation graph and request-to-action mapping"),
-    ("Figure 3.2", "Graph-attention policy and audit channel"),
-    ("Figure 3.3", "Training, selection and held-out evaluation"),
-    ("Figure 3.4", "Tunnel-triggered observation-layer telemetry degradation"),
-    ("Figure 3.5", "Construct-validity controls for action-linked request nodes"),
+    ("Figure 3.1", "Spatial distribution of generated demand and tunnel triggers"),
+    ("Figure 3.2", "Demand arrival and origin-destination distributions by split"),
+    ("Figure 3.3", "Local observation graph and request-to-action mapping"),
+    ("Figure 3.4", "Graph-attention policy and audit channel"),
+    ("Figure 3.5", "Training, selection and held-out evaluation"),
+    ("Figure 3.6", "Tunnel-triggered observation-layer telemetry degradation"),
+    ("Figure 3.7", "Construct-validity controls for action-linked request nodes"),
     ("Figure 4.1", "GAT and GAT-Outage training and checkpoint-selection diagnostics"),
     ("Figure 4.2", "Clean-telemetry completed journeys by training seed"),
     ("Figure 4.3", "Faithfulness perturbation controls by checkpoint"),
@@ -123,6 +152,7 @@ FIGURES = [
 
 TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
+TABLES.append(("Table C.1", "Original per-checkpoint hypothesis statistics"))
 
 FIGURE_PAGES = {
     "Figure 1.1": "3",
@@ -429,7 +459,7 @@ def equation_spec(code: str) -> tuple[str, str] | None:
 
     if code.startswith("r_t ="):
         formula = _mrow(
-            _sub(_mi("r"), _mi("t")), _mo("="), _mn(10), _sub(_mi("N"), _mrow(_mtext("pickup"), _mo(","), _mi("t"))),
+            _sub(_mi("r"), _mi("t")), _mo("="), _mn(10), _sub(_mi("N"), _mrow(_mtext("complete"), _mo(","), _mi("t"))),
             _mo("+"), _mn("0.5"), _sub(_mi("N"), _mrow(_mtext("dispatch"), _mo(","), _mi("t"))),
             _mo("-"), _mn("0.001"), _sub(_mtext("mean_wait"), _mi("t")),
         )
@@ -656,12 +686,23 @@ def set_paragraph_numbering(paragraph, num_id: int) -> None:
 def apply_inline(paragraph, text: str) -> None:
     """Add a small Markdown subset while preserving DMU body typography."""
     text = text.replace("`", "")
-    pattern = re.compile(r"(\*\*.+?\*\*|\*.+?\*)")
+    pattern = re.compile(r"(https?://\S+|\*\*.+?\*\*|\*.+?\*)")
     position = 0
     for match in pattern.finditer(text):
         if match.start() > position:
             paragraph.add_run(text[position:match.start()])
         token = match.group(0)
+        if token.startswith(("https://", "http://")):
+            url = token.rstrip(".,;")
+            hyperlink = OxmlElement("w:hyperlink")
+            hyperlink.set(qn("r:id"), paragraph.part.relate_to(url, RT.HYPERLINK, is_external=True))
+            run = paragraph.add_run(url)
+            hyperlink.append(run._r)
+            paragraph._p.append(hyperlink)
+            if len(url) < len(token):
+                paragraph.add_run(token[len(url):])
+            position = match.end()
+            continue
         run = paragraph.add_run(token.strip("*"))
         run.bold = token.startswith("**")
         run.italic = not token.startswith("**")
@@ -673,7 +714,7 @@ def apply_inline(paragraph, text: str) -> None:
 def convert_citations(text: str) -> str:
     # Preserve narrative Harvard citations: "Author [n]" becomes
     # "Author (year)", while a standalone [n] remains "(Author, year)".
-    ordered_groups = ([6, 7], [12, 14, 13, 15])
+    ordered_groups = ([6, 7], [12, 14, 13, 15], [12, 14, 15], [12, 13])
     for group in ordered_groups:
         token = ", ".join(f"[{number}]" for number in group)
         citation = "; ".join(CITATIONS[number] for number in group)
@@ -766,13 +807,13 @@ def add_caption_before(doc: Document, anchor, text: str):
 
 def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     caption_paragraph = add_caption_before(doc, anchor, title)
-    if title.startswith("Table 4.7:"):
+    if title.startswith(("Table 2.1:", "Table 4.10:")):
         caption_paragraph.paragraph_format.page_break_before = True
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
     total = 9020
     if title.startswith("Table 2.1:"):
-        widths = [1500, 2500, 1800, 3220]
+        widths = [1800, 1700, 2000, 1400, 2120]
     elif title.startswith("Table 3.2:"):
         widths = [1200, 1650, 2650, 3520]
     elif title.startswith("Table 3.5:"):
@@ -1103,12 +1144,9 @@ def add_internal_hyperlink(paragraph: Paragraph, text: str, target: str) -> None
     label_text.set(qn("xml:space"), "preserve")
     label_text.text = label
     run.append(label_text)
-    run.append(OxmlElement("w:tab"))
-    page_text = OxmlElement("w:t")
-    page_text.text = page
-    run.append(page_text)
     hyperlink.append(run)
     paragraph._p.append(hyperlink)
+    paragraph.add_run(f"\t{page}")
 
 
 def set_outline_level(paragraph: Paragraph, level: int = 0) -> None:
@@ -1130,6 +1168,7 @@ def add_front_entry(
     target: str | None = None,
 ):
     paragraph = doc.add_paragraph()
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     paragraph.paragraph_format.left_indent = Inches(indent)
     paragraph.paragraph_format.space_after = Pt(2)
     paragraph.paragraph_format.line_spacing = 1.0
@@ -1153,7 +1192,7 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
             doc,
             list_tables,
             f"{number}  {title}",
-            FIGURE_PAGES[number],
+            FIGURE_PAGES.get(number, "?"),
             target=bookmark_name("figure", number),
         )
 
@@ -1167,7 +1206,7 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
             doc,
             list_abbr,
             f"{number}  {title}",
-            TABLE_PAGES[number],
+            TABLE_PAGES.get(number, "?"),
             target=bookmark_name("table", number),
         )
 
@@ -1239,7 +1278,7 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
                 doc,
                 chapter_one,
                 heading,
-                HEADING_PAGES[heading],
+                HEADING_PAGES.get(heading, "?"),
                 target=bookmark_name("heading", heading),
             )
         else:
@@ -1247,10 +1286,15 @@ def replace_front_lists(doc: Document, headings: list[str]) -> None:
                 doc,
                 chapter_one,
                 heading,
-                HEADING_PAGES[heading],
+                HEADING_PAGES.get(heading, "?"),
                 indent=0.25,
                 target=bookmark_name("heading", heading),
             )
+    for title in ("List of Publications", "References", "Appendices"):
+        add_front_entry(doc, chapter_one, title, HEADING_PAGES.get(title, "?"),
+                        target=bookmark_name("heading", title))
+        destination = next(p for p in doc.paragraphs if p.text == title)
+        add_bookmark(doc, destination, bookmark_name("heading", title))
     if section_properties is None:
         raise ValueError("front-matter section break not found")
     section_break = doc.add_paragraph()
@@ -1375,6 +1419,7 @@ def replace_references(doc: Document) -> None:
         paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
         paragraph.paragraph_format.left_indent = Inches(0.5)
         paragraph.paragraph_format.first_line_indent = Inches(-0.5)
+        paragraph.paragraph_format.keep_together = True
         paragraph.paragraph_format.line_spacing = 1.0
         paragraph.paragraph_format.space_after = Pt(2)
 
@@ -1401,6 +1446,12 @@ def ensure_image_alt_text(doc: Document) -> None:
 
 
 def build(base: Path, output: Path) -> None:
+    page_map = ROOT / "docs" / "dissertation" / "rendered_page_map.json"
+    if page_map.exists():
+        maps = json.loads(page_map.read_text())
+        FIGURE_PAGES.update(maps["figures"])
+        TABLE_PAGES.update(maps["tables"])
+        HEADING_PAGES.update(maps["headings"])
     doc = Document(base)
     style_document(doc)
     update_front_text(doc)
@@ -1411,6 +1462,7 @@ def build(base: Path, output: Path) -> None:
     replace_front_lists(doc, headings)
     replace_references(doc)
     style_references_and_appendices(doc)
+    add_statistical_appendix(doc)
     enable_field_updates(doc)
     ensure_image_alt_text(doc)
 
@@ -1424,6 +1476,42 @@ def build(base: Path, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(output)
     print(output)
+
+
+def add_statistical_appendix(doc: Document) -> None:
+    anchor = doc.element.body.sectPr
+    search_note = ROOT / "docs/dissertation/literature_search_note.md"
+    for kind, payload in collect_blocks(search_note):
+        if kind == "heading":
+            add_paragraph_before(doc, anchor, payload[1], "Heading 3")
+        elif kind == "paragraph":
+            add_paragraph_before(doc, anchor, payload)
+    paragraph = add_paragraph_before(doc, anchor, "Appendix C: Statistical details", "Heading 2")
+    paragraph.paragraph_format.page_break_before = True
+    add_paragraph_before(doc, anchor,
+        "Table C.1 reproduces the original checkpoint-specific H1-H4 statistics. "
+        "H1 and H3 report Spearman rho; H2 reports the clean-relative rate difference "
+        "and remains exploratory; H4 reports mean within-episode rho. N is the number "
+        "of scored records for H1/H3, comparison cells for H2, and episodes for H4. "
+        "B is the episode-block count where available. Holm adjustment is within "
+        "each checkpoint's H1-H4 family. These are not cross-training-seed tests.")
+    source = ROOT / "results/dissertation_v10_corrected/supplementary_review/hypothesis_statistics.csv"
+    rows = [["Model/seed", "H", "Statistic", "Raw p", "Holm p", "N / B"]]
+    for row in csv.DictReader(source.open()):
+        label = ("GAT-O" if row["checkpoint"].startswith("H5") else "GAT") + "/" + row["checkpoint"][-2:]
+        rows.append([label, row["hypothesis"], f'{float(row["statistic"]):+.4g}',
+                     f'{float(row["raw_p"]):.4g}', f'{float(row["holm_p"]):.4g}',
+                     row["n"] + " / " + (row["n_episode_blocks"] or "n/a")])
+    caption = add_table_before(doc, anchor, rows, "Table C.1: Original per-checkpoint hypothesis statistics")
+    add_bookmark(doc, caption, bookmark_name("table", "Table C.1"))
+    add_paragraph_before(doc, anchor,
+        "GAT-O denotes GAT-Outage. Full-precision values and the original H1/H3 "
+        "confidence intervals are retained in hypothesis_statistics.csv under "
+        "results/dissertation_v10_corrected/supplementary_review/. Missing original "
+        "intervals are not estimated retrospectively. The same directory contains "
+        "all probability and margin no-op estimates, sample counts and input hashes. "
+        "The prospective five-seed matched-budget configuration is documented in "
+        "docs/MATCHED_BUDGET_FOLLOWUP.md; it has not produced results for this thesis.")
 
 
 def main() -> int:

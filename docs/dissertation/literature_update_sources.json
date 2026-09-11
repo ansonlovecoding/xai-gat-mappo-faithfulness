@@ -1,0 +1,142 @@
+[
+  {
+    "id": 49,
+    "citation": "Lu et al., 2024a",
+    "reference": "Lu, S., Mills, K.G., He, J., Liu, B. and Niu, D. (2024a) 'GOAt: Explaining graph neural networks via graph output attribution', in *Proceedings of the 12th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2024/hash/92ee07d8a2c8f5ec08eff83f9eff0c1b-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 50,
+    "citation": "Bui et al., 2024",
+    "reference": "Bui, N., Nguyen, H.T., Nguyen, V.A. and Ying, R. (2024) 'Explaining graph neural networks via structure-aware interaction index', in *Proceedings of the 41st International Conference on Machine Learning*, *PMLR*, vol. 235, pp. 4854-4883. Available at: https://proceedings.mlr.press/v235/bui24b.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 51,
+    "citation": "Zhang et al., 2024",
+    "reference": "Zhang, J., Chen, Z., Mei, H., Da, L., Luo, D. and Wei, H. (2024) 'RegExplainer: Generating explanations for graph neural networks in regression tasks', *Advances in Neural Information Processing Systems*, vol. 37. Available at: https://proceedings.neurips.cc/paper_files/paper/2024/hash/909f526db5127f8bd8158af32d9e313a-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 52,
+    "citation": "Armgaan et al., 2024",
+    "reference": "Armgaan, B., Dalmia, M., Medya, S. and Ranu, S. (2024) 'GraphTrail: Translating GNN predictions into human-interpretable logical rules', *Advances in Neural Information Processing Systems*, vol. 37. Available at: https://proceedings.neurips.cc/paper_files/paper/2024/hash/df2d51e1d3e899241c5c4c779c1d509f-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 53,
+    "citation": "Liu and Xie, 2025",
+    "reference": "Liu, Y. and Xie, S. (2025) 'Explanations of GNN on evolving graphs via axiomatic layer edges', in *Proceedings of the 13th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2025/hash/de88d78c875d93a2098dc49a0d0422da-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 54,
+    "citation": "Liu et al., 2025",
+    "reference": "Liu, Y., Zhang, X., Xie, S. and Xiong, H. (2025) 'Robust explanations of graph neural networks via graph curvatures', *Advances in Neural Information Processing Systems*, vol. 38. Available at: https://proceedings.neurips.cc/paper_files/paper/2025/hash/2c2e95b75a10adbd2359f8ed5c0a38cd-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 55,
+    "citation": "Saha and Bandyopadhyay, 2026",
+    "reference": "Saha, S. and Bandyopadhyay, S. (2026) 'Certified evaluation of model-level explanations for graph neural networks', in *Proceedings of the 14th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2026/hash/c354d2a64a71776538d6dbbc38285216-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 56,
+    "citation": "Wu et al., 2025",
+    "reference": "Wu, Q. et al. (2025) 'Directly forecasting belief for reinforcement learning with delays', in *Proceedings of the 42nd International Conference on Machine Learning*, *PMLR*, vol. 267, pp. 67810-67832. Available at: https://proceedings.mlr.press/v267/wu25ag.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 57,
+    "citation": "Zhou et al., 2024",
+    "reference": "Zhou, H., Huang, A., Azizzadenesheli, K., Childers, D. and Lipton, Z. (2024) 'Timing as an action: Learning when to observe and act', in *Proceedings of the 27th International Conference on Artificial Intelligence and Statistics*, *PMLR*, vol. 238, pp. 3979-3987. Available at: https://proceedings.mlr.press/v238/zhou24c.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 58,
+    "citation": "Yao, Florescu and Lee, 2024",
+    "reference": "Yao, Z., Florescu, I. and Lee, C. (2024) 'Control in stochastic environment with delays: A model-based reinforcement learning approach', *Proceedings of the International Conference on Automated Planning and Scheduling*, vol. 34, no. 1, pp. 663-670. Available at: https://doi.org/10.1609/icaps.v34i1.31529.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 59,
+    "citation": "Ding et al., 2024",
+    "reference": "Ding, S., Du, W., Ding, L., Guo, L. and Zhang, J. (2024) 'Learning efficient and robust multi-agent communication via graph information bottleneck', *Proceedings of the AAAI Conference on Artificial Intelligence*, vol. 38, no. 16, pp. 17346-17353. Available at: https://doi.org/10.1609/aaai.v38i16.29682.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 60,
+    "citation": "Soudijani and Dimitrova, 2025",
+    "reference": "Soudijani, S. and Dimitrova, R. (2025) 'Synthesis of communication policies for multi-agent systems robust to communication restrictions', in *Proceedings of the 34th International Joint Conference on Artificial Intelligence*, pp. 257-266. Available at: https://doi.org/10.24963/ijcai.2025/30.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 61,
+    "citation": "Hong et al., 2024",
+    "reference": "Hong, S., Liu, Y., Li, Z., Li, S. and He, Y. (2024) 'Multi-agent collaborative perception via motion-aware robust communication network', in *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition*, pp. 15301-15310. Available at: https://openaccess.thecvf.com/content/CVPR2024/html/Hong_Multi-agent_Collaborative_Perception_via_Motion-aware_Robust_Communication_Network_CVPR_2024_paper.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 62,
+    "citation": "Lu et al., 2024b",
+    "reference": "Lu, W., Zhao, X., Fryen, T., Lee, J.H., Li, M., Magg, S. and Wermter, S. (2024b) 'Causal state distillation for explainable reinforcement learning', in *Proceedings of the Third Conference on Causal Learning and Reasoning*, *PMLR*, vol. 236, pp. 106-142. Available at: https://proceedings.mlr.press/v236/lu24a.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 63,
+    "citation": "Amitai, Septon and Amir, 2024",
+    "reference": "Amitai, Y., Septon, Y. and Amir, O. (2024) 'Explaining reinforcement learning agents through counterfactual action outcomes', *Proceedings of the AAAI Conference on Artificial Intelligence*, vol. 38, no. 9, pp. 10003-10011. Available at: https://doi.org/10.1609/aaai.v38i9.28863.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 64,
+    "citation": "Pan et al., 2025",
+    "reference": "Pan, B. et al. (2025) 'GraphNarrator: Generating textual explanations for graph neural networks', in *Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics*, vol. 1, pp. 23-42. Available at: https://doi.org/10.18653/v1/2025.acl-long.2.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 65,
+    "citation": "He et al., 2025",
+    "reference": "He, J., Rafiey, A., Mishne, G. and Wang, Y. (2025) 'Explaining GNN explanations with edge gradients', in *Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining*, vol. 2, pp. 884-895. Available at: https://doi.org/10.1145/3711896.3736947.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 66,
+    "citation": "Varbella et al., 2024",
+    "reference": "Varbella, A., Amara, K., Gjorgiev, B., El-Assady, M. and Sansavini, G. (2024) 'PowerGraph: A power grid benchmark dataset for graph neural networks', *Advances in Neural Information Processing Systems*, vol. 37. Available at: https://proceedings.neurips.cc/paper_files/paper/2024/hash/c7caf017cbbca1f4b368ffdc7bb8f319-Abstract-Datasets_and_Benchmarks_Track.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 67,
+    "citation": "Wang and Shen, 2024",
+    "reference": "Wang, X. and Shen, H.W. (2024) 'GNNBoundary: Towards explaining graph neural networks through the lens of decision boundaries', in *Proceedings of the 12th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2024/hash/f72d4fdfd5eb425cd81df9fe6272a533-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  },
+  {
+    "id": 68,
+    "citation": "Yu and Gao, 2025",
+    "reference": "Yu, Z. and Gao, H. (2025) 'MAGE: Model-level graph neural networks explanations via motif-based graph generation', in *Proceedings of the 13th International Conference on Learning Representations*. Available at: https://proceedings.iclr.cc/paper_files/paper/2025/hash/7749f9c0d5ff109231be21e910a3ced2-Abstract-Conference.html.",
+    "checked_on": "2026-09-12",
+    "basis": "Primary proceedings or publisher record; targeted narrative review"
+  }
+]

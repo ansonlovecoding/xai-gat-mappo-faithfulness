@@ -1,0 +1,301 @@
+{
+  "analysis": "Exploratory, post-review no-op absolute DEF; no new training",
+  "sources": [
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/B2_gat_seed_42_cells.tar.gz",
+      "sha256": "25d5d34c535b2ad8108c4b7e2859f5d1d158a0b202edc4aab2b31b6a4d69217a"
+    },
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/B2_gat_seed_43_cells.tar.gz",
+      "sha256": "237450e8b761dadde057c9c58f64d50b7ed8e7583a63583d4c46f00fbdb2d5f6"
+    },
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/B2_gat_seed_44_cells.tar.gz",
+      "sha256": "4036560ba44ff7469d49a7d08c08c0a07b3652890edce650275f63843b130477"
+    },
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/H5_gat_degraded_seed_42_cells.tar.gz",
+      "sha256": "3fbfaeefd1fad16c3f677161781d22ccdcd037b75066898e5bd9a9889aa8dc5c"
+    },
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/H5_gat_degraded_seed_43_cells.tar.gz",
+      "sha256": "301c1dcc7d76383a54570fb2c52fe5855876ea2a8bcada4b0da3950abebb718b"
+    },
+    {
+      "path": "results/dissertation_v10_corrected/release/audit_records/H5_gat_degraded_seed_44_cells.tar.gz",
+      "sha256": "f51eaecad475008cdaaa610a91642a594bfe0532e2bb041c8f103ea67c82db6a"
+    }
+  ],
+  "bootstrap_seed": 20260912,
+  "bootstrap_draws": 10000,
+  "sampling": "Existing cadence plus stale-exposure schedule; not all policy decisions",
+  "unit": "Equal-weight episode means within each fixed checkpoint and condition",
+  "intervals": "Pointwise percentile intervals, not simultaneous or population intervals",
+  "exclusions": "No-op with no available request; missing or non-finite metric",
+  "rows": [
+    {
+      "checkpoint": "B2_gat_seed_42",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": 7.24707674394306e-05,
+      "ci95_low": 4.4545041413133984e-05,
+      "ci95_high": 0.00010429366688745526,
+      "n_episode_blocks": 26,
+      "n_decisions": 41,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_42",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": 0.0004484330678088034,
+      "ci95_low": 0.00027385983345472916,
+      "ci95_high": 0.0006276655566488577,
+      "n_episode_blocks": 26,
+      "n_decisions": 41,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_42",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": 2.351097723582998e-05,
+      "ci95_low": 1.4633433632105992e-05,
+      "ci95_high": 3.317460318010116e-05,
+      "n_episode_blocks": 47,
+      "n_decisions": 194,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_42",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": 0.00014994393869333675,
+      "ci95_low": 8.174673431955231e-05,
+      "ci95_high": 0.0002205790356160146,
+      "n_episode_blocks": 47,
+      "n_decisions": 194,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_43",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": -0.0007318008601575997,
+      "ci95_low": -0.0014161770588049926,
+      "ci95_high": -0.0001556997029418434,
+      "n_episode_blocks": 37,
+      "n_decisions": 64,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_43",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": -0.0034748296088374046,
+      "ci95_low": -0.0068503882477266905,
+      "ci95_high": -0.0007582305860076413,
+      "n_episode_blocks": 37,
+      "n_decisions": 64,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_43",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": -0.001047809096125233,
+      "ci95_low": -0.001451324102273405,
+      "ci95_high": -0.0006810688165165659,
+      "n_episode_blocks": 48,
+      "n_decisions": 322,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_43",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": -0.004938963203745087,
+      "ci95_low": -0.006840513990325287,
+      "ci95_high": -0.003225862575513107,
+      "n_episode_blocks": 48,
+      "n_decisions": 322,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_44",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": 6.0413943396674274e-06,
+      "ci95_low": -9.834905341267589e-06,
+      "ci95_high": 2.6419514086511383e-05,
+      "n_episode_blocks": 25,
+      "n_decisions": 40,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_44",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": 3.11579008897145e-05,
+      "ci95_low": -6.026571244001401e-05,
+      "ci95_high": 0.00014450179653035267,
+      "n_episode_blocks": 25,
+      "n_decisions": 40,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_44",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": -0.00011251673231354272,
+      "ci95_low": -0.00012870796029389544,
+      "ci95_high": -9.610890442757646e-05,
+      "n_episode_blocks": 46,
+      "n_decisions": 209,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "B2_gat_seed_44",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": -0.0008522007787998225,
+      "ci95_low": -0.0009644229424033723,
+      "ci95_high": -0.0007423206624620593,
+      "n_episode_blocks": 46,
+      "n_decisions": 209,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_42",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": 0.00014341716742935544,
+      "ci95_low": 0.00011520871262603658,
+      "ci95_high": 0.00017137213162371137,
+      "n_episode_blocks": 41,
+      "n_decisions": 92,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_42",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": 0.0006603161846969006,
+      "ci95_low": 0.0005394396602753789,
+      "ci95_high": 0.0007828760347587782,
+      "n_episode_blocks": 41,
+      "n_decisions": 92,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_42",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": 4.403993527003138e-05,
+      "ci95_low": 3.145417479049259e-05,
+      "ci95_high": 5.7302688840687474e-05,
+      "n_episode_blocks": 48,
+      "n_decisions": 417,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_42",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": 0.00017345632387316166,
+      "ci95_low": 0.0001105028061890357,
+      "ci95_high": 0.00024085258269727469,
+      "n_episode_blocks": 48,
+      "n_decisions": 417,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_43",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": 2.3501219826417653e-05,
+      "ci95_low": -9.327091880746794e-06,
+      "ci95_high": 5.569993495918788e-05,
+      "n_episode_blocks": 37,
+      "n_decisions": 65,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_43",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": 0.0002656141223313215,
+      "ci95_low": 7.763843720515929e-05,
+      "ci95_high": 0.0004589734251076753,
+      "n_episode_blocks": 37,
+      "n_decisions": 65,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_43",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": -3.6883656614580097e-05,
+      "ci95_low": -5.724878966437552e-05,
+      "ci95_high": -1.506174065283267e-05,
+      "n_episode_blocks": 48,
+      "n_decisions": 324,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_43",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": -0.00010204693965527153,
+      "ci95_low": -0.00021620409555145933,
+      "ci95_high": 2.1419620354396815e-05,
+      "n_episode_blocks": 48,
+      "n_decisions": 324,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_44",
+      "condition": "clean",
+      "metric": "primary_def",
+      "mean": 8.079012897279527e-05,
+      "ci95_low": 3.055691278746557e-05,
+      "ci95_high": 0.00013712200114710462,
+      "n_episode_blocks": 40,
+      "n_decisions": 82,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_44",
+      "condition": "clean",
+      "metric": "primary_def_m",
+      "mean": 0.0004604575320457419,
+      "ci95_low": 0.00017528484576226504,
+      "ci95_high": 0.0007820579884315117,
+      "n_episode_blocks": 40,
+      "n_decisions": 82,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_44",
+      "condition": "outage_60s",
+      "metric": "primary_def",
+      "mean": 2.9577927035298808e-05,
+      "ci95_low": -5.867652562733595e-06,
+      "ci95_high": 6.767620604152863e-05,
+      "n_episode_blocks": 48,
+      "n_decisions": 383,
+      "n_missing_metric": 0
+    },
+    {
+      "checkpoint": "H5_gat_degraded_seed_44",
+      "condition": "outage_60s",
+      "metric": "primary_def_m",
+      "mean": 0.0002378142234985689,
+      "ci95_low": 5.200760637497798e-05,
+      "ci95_high": 0.0004468880285524721,
+      "n_episode_blocks": 48,
+      "n_decisions": 383,
+      "n_missing_metric": 0
+    }
+  ]
+}

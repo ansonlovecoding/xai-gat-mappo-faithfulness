@@ -83,6 +83,7 @@ def runtime_provenance(root: Path) -> dict[str, Any]:
         "executable": sys.executable,
         "platform": platform.platform(),
         "machine": platform.machine(),
+        "hardware": hardware_inventory(),
         "command": [str(arg) for arg in sys.argv],
         "cwd": os.getcwd(),
         "dependencies": dependency_versions(
@@ -97,6 +98,28 @@ def runtime_provenance(root: Path) -> dict[str, Any]:
         },
         "git": git_state(root),
     }
+
+
+def hardware_inventory() -> dict[str, Any]:
+    """Record the current machine only; never backfill historical runs."""
+    cpu = platform.processor() or None
+    memory = None
+    if platform.system() == "Darwin":
+        for key in ("machdep.cpu.brand_string", "hw.memsize"):
+            result = subprocess.run(["/usr/sbin/sysctl", "-n", key],
+                                    capture_output=True, text=True, check=False)
+            if result.returncode == 0:
+                if key == "hw.memsize":
+                    memory = int(result.stdout.strip())
+                else:
+                    cpu = result.stdout.strip() or cpu
+    else:
+        try:
+            memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        except (ValueError, OSError, AttributeError):
+            pass
+    return {"cpu_model": cpu, "logical_cpus": os.cpu_count(),
+            "installed_memory_bytes": memory}
 
 
 def file_inventory(paths: Iterable[Path], root: Path | None = None) -> list[dict[str, Any]]:

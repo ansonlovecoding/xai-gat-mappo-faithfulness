@@ -1,0 +1,62 @@
+{
+  "definition": "Euclidean distance between lane-0 polyline midpoints; not routed distance or observed travel time",
+  "non_internal_edges": 524,
+  "trigger_edges": 3,
+  "splits": {
+    "train": {
+      "variants": 14,
+      "requests": 700,
+      "arrival_mean_s": 289.82142857142856,
+      "arrival_median_s": 276.5,
+      "arrival_min_s": 0.0,
+      "arrival_max_s": 600.0,
+      "od_median_m": 1557.8796683135356,
+      "od_p10_m": 502.2293546876198,
+      "od_p90_m": 2909.3373560151404
+    },
+    "val": {
+      "variants": 3,
+      "requests": 150,
+      "arrival_mean_s": 300.84,
+      "arrival_median_s": 310.0,
+      "arrival_min_s": 5.0,
+      "arrival_max_s": 599.0,
+      "od_median_m": 1494.7984404916228,
+      "od_p10_m": 536.9321027523158,
+      "od_p90_m": 2966.6767337267984
+    },
+    "test": {
+      "variants": 3,
+      "requests": 150,
+      "arrival_mean_s": 294.1066666666667,
+      "arrival_median_s": 265.5,
+      "arrival_min_s": 0.0,
+      "arrival_max_s": 598.0,
+      "od_median_m": 1302.1030034708738,
+      "od_p10_m": 364.09132980868947,
+      "od_p90_m": 3055.2675502901443
+    }
+  },
+  "input_sha256": {
+    "central_park_taxis_v000.rou.xml": "1a0893ca36c400e053d4217053d4040bd46c5515282a978dbe32dc233172c795",
+    "central_park_taxis_v001.rou.xml": "d0a28aa5a318836678224022f99e554108fb89c421662274680a960a0e369623",
+    "central_park_taxis_v002.rou.xml": "95252ee0a11d0e099666d889e4d4c1b8bde050fdb53693fafc32e7911dd17fee",
+    "central_park_taxis_v003.rou.xml": "f0e4d0c4c9bebdf433efb288f4691ee03cbe320a90895fbc8373334bf82c4837",
+    "central_park_taxis_v004.rou.xml": "b1cf734ed907a39f07485de319ac9d12b52fffb6065a78e10bf1bd9a5e27325a",
+    "central_park_taxis_v005.rou.xml": "9cc425581f4f3e7f40313f65d603a8dd6d66450a68bf471da58e12f900a317a0",
+    "central_park_taxis_v006.rou.xml": "736f29a5d02e79e4ec35f6bedf0dac3bc4da6f6cb476bfe67510ea0114a89118",
+    "central_park_taxis_v007.rou.xml": "6224a77d2e4b17691b3f7c3995fc13c4c47b400008b575166236efef520fc550",
+    "central_park_taxis_v008.rou.xml": "a0951cdea3ab73c8d9683aae152eeaa05967f58d582322a29baa224ac556652f",
+    "central_park_taxis_v009.rou.xml": "46a182e50caf54f65497f9007ebbf30737c18b5a751ec4044b6fef132830dfbd",
+    "central_park_taxis_v010.rou.xml": "bbaa7f80a7d83277793421283b96b44083e2e7eb9b3f5df20c865d7670f2ac54",
+    "central_park_taxis_v011.rou.xml": "7171822e2adf5e38abf2495b5f72fe93557827270986adc2adb0e93a9818dabd",
+    "central_park_taxis_v012.rou.xml": "98523d402df9d55865acb6252e88a9aee9182602d03a1378381d4ea226667f6c",
+    "central_park_taxis_v013.rou.xml": "dd27505cbc42bba18418c9a6307e73a7ebf110c10d9921322d197dc7e301e6de",
+    "central_park_taxis_v014.rou.xml": "e536a4b35b511b8458970313a8bef7cd7ea5bfc99780307e078b1e41cc9e7e48",
+    "central_park_taxis_v015.rou.xml": "3372cf17939dc9ad84b7e8f4262f36baf23b05d3f6b484b89d13d224ddd71c5a",
+    "central_park_taxis_v016.rou.xml": "fe40223e83660353ad30c80c0be89ad8810b87d2e97736c99590090a2053e093",
+    "central_park_taxis_v017.rou.xml": "e8762f1b62c67318a599c4b82ab19e28e0d7e6891b503934f176ecb46a6813ad",
+    "central_park_taxis_v018.rou.xml": "2259899611fa375560fd4b5c6f32b433656288deb5e46de536554354e83e5186",
+    "central_park_taxis_v019.rou.xml": "124543e3f678de2c6a4982c265153a444c736b6c14fd1b3f12f25187f977301d"
+  }
+}

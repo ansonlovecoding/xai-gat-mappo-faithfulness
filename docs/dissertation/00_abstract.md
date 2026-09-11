@@ -16,12 +16,13 @@ decision. Graph-attention network (GAT) policies trained on clean data or with
 evaluated across three independent training seeds. Decision-level explanation
 faithfulness (DEF) compares attention-ranked nodes with type-matched,
 action-protected random controls. Weighted attention mass on stale nodes
-(WAMSN) separately measures attention assigned to stale vehicle information.
+(WAMSN) separately measures attention-weighted vehicle-information age.
 Further checks cover leave-one-out rankings,
 attention extraction, action type, and random telemetry-loss triggers.
 
-The results do not validate raw attention as a reliable explanation. Under
-clean telemetry, action-aware margin-DEF is below its matched-random control,
+The results do not validate the tested layer- and head-averaged self-row
+attention channel as a reliable explanation. Under clean telemetry,
+dispatch-action margin-DEF is below its matched-random control,
 while a leave-one-out positive control is above zero. Longer outages
 consistently increase stale-data exposure, but they do not produce the proposed
 decline in faithfulness. Attention shows a clear shift toward stale nodes in
@@ -35,6 +36,6 @@ The dissertation develops and applies a freshness-aware explanation audit framew
 reports freshness and action composition separately, applies action-aware
 faithfulness tests, checks the attention extraction rule, and requires
 consistent evidence across checkpoints. Attention remains an internal
-diagnostic when these checks fail. The framework governs explanation release;
-it does not repair the model. Its demonstrative application returns `WITHHOLD`
-for both model families and all six checkpoints.
+diagnostic when these checks fail. Applied to the collected evidence, the framework returns `WITHHOLD` for both
+model families and all six checkpoints, restricting the tested attention
+channel to diagnostic use.

@@ -1,11 +1,12 @@
 # 2. Literature review
 
-This chapter reviews the literature needed to define the research gap. It
-first considers reinforcement learning for relational fleet dispatch, then
-examines explanations for sequential and graph-based decisions. It also
-reviews the debate over attention and the limits of faithfulness tests. The
-final sections connect these topics to stale telemetry and position the
-experiment.
+This chapter reviews research on graph-based fleet dispatch, attention-based
+explanations, and explanation faithfulness under changing observations. It
+draws on foundational studies to establish the models and evaluation concepts,
+alongside recent work on graph attribution, delayed observations, and
+multi-agent communication. Particular attention is given to how these studies
+assess decision relevance and whether their assumptions remain valid when
+vehicle telemetry becomes stale.
 
 ## 2.1 Reinforcement learning for fleet dispatch
 
@@ -24,19 +25,16 @@ preserving a monotonic relation to the joint action [4].
 Multi-Agent Proximal Policy Optimization (MAPPO) uses the more familiar
 Proximal Policy Optimization (PPO) objective with centralized training and
 decentralized execution; its empirical stability makes it a practical baseline
-for cooperative tasks [5]. This dissertation adopts MAPPO because the research
-focus is the explanation attached to each taxi's local decision, not a new MARL
-algorithm.
+for cooperative tasks [5]. MAPPO provides a stable training basis for examining the explanation attached
+to each taxi's local decision.
 
 Graphs provide a natural representation of the local dispatch problem. Nodes
 can represent the acting taxi, nearby taxis, and open requests; edges permit
 their information to be combined [6]. A graph attention network (GAT) assigns
 learned weights while aggregating neighboring nodes [7]. Actor-Attention-Critic
 uses attention in its centralized critic to select information from other
-agents [8]. This makes GAT-MARL a
-suitable test case, not because it is assumed to be the best dispatch model,
-but because it matches the relational, multi-agent structure of fleet dispatch
-while exposing an attention channel that can be audited. These weights are
+agents [8]. GAT-MARL is a suitable test case because it represents the relational,
+multi-agent structure of fleet dispatch and exposes attention weights for audit. These weights are
 easy to visualize, which makes them tempting to present as reasons for an
 action. Ease of display, however, is not evidence that the weights identify the
 information that caused the decision.
@@ -56,7 +54,7 @@ Explainable reinforcement learning (XRL) covers more than a visual saliency
 map. An explanation may describe which state features mattered, summarize a
 policy, contrast the selected action with an alternative, or show the sequence
 of events that led to an outcome. Reviews by Heuillet, Couthouis and
-Diaz-Rodriguez [10] and Milani et al. [30] stress that the method must match the
+Díaz-Rodríguez [10] and Milani et al. [30] stress that the method must match the
 user's question. A model developer debugging a policy and an operator checking
 one live action do not need the same output. The systematic taxonomy by
 Bekkemoen [31] reaches the same conclusion across a larger body of recent XRL
@@ -70,14 +68,25 @@ regions to visualize what changes an Atari policy. Madumal et al. [11] use a
 causal model to generate contrastive explanations. Mott et al. [35] introduce
 an attention bottleneck intended to expose what an RL agent uses. These
 approaches differ in mechanism, but they share an important lesson: a useful
-picture and a faithful account of model dependence are separate properties.
+picture does not necessarily show what the model relied on.
 
 For an operational dashboard, readability and faithfulness must be considered
 separately. An explanation may be easy to read but weakly connected to the
-policy computation. A faithful explanation should change when information that
-matters to the action is removed or retained. This experiment tests that link
+policy computation. Perturbation tests assess whether removing the identified evidence weakens
+the prediction and whether retaining sufficient evidence preserves it [16]. This experiment tests that link
 through a controlled decision-level faithfulness test; it does not measure user
 preference for the attention map.
+
+Recent XRL work also clarifies which question an explanation answers.
+Causal state distillation [62] extends reward decomposition with objectives
+for sparse, sufficient and distinct causal factors. This is a model-design
+route to explanatory structure, whereas the present study audits a frozen
+policy with no explanatory training objective. COViz [63] displays the
+outcomes of chosen and alternative actions and evaluates human understanding.
+It addresses the consequences of a choice rather than the importance of each
+input node. These approaches are complementary: perturbation faithfulness
+cannot establish that a dispatcher understands an explanation, and a useful
+counterfactual visualization cannot by itself validate raw attention.
 
 ## 2.3 Is attention an explanation?
 
@@ -143,6 +152,41 @@ context only. Deleting them creates different interventions. This action-linked
 graph structure motivates the
 construct-validity audit in Section 3.7.
 
+Several 2024-2025 methods offer alternatives to raw attention. GOAt [49]
+analytically allocates graph outputs to input features and evaluates fidelity,
+discriminability and stability. Its explicit attribution path is attractive,
+but transferring it to a residual attention actor requires accounting for the
+actual computation and selected output. Bui et al. [50] use the Myerson-Taylor
+interaction index to respect graph connectivity and interactions. This exposes
+a limitation of a single-node ranking: two jointly relevant nodes need not
+have large individual LOO effects. Applying either approach to dispatch would require accounting for request
+nodes that also define available actions.
+
+The output type matters as well. RegExplainer [51] adapts graph explanations
+to regression through information-bottleneck, mix-up and self-supervised
+objectives. It challenges the assumption that a classification-oriented
+explanation score transfers unchanged to a continuous value estimate.
+Here, the target is the actor's selected action, not the critic's team value;
+that distinction determines which output and perturbation to evaluate.
+
+Global explanations answer a different question from the present local audit.
+GraphTrail [52] converts predictions into logical rules over mined graph
+concepts, while GNNBoundary [67] generates graphs near class boundaries.
+Both reveal model-level behavior that a local ranking can miss. However,
+global agreement or a plausible boundary graph cannot establish that one
+particular dispatch decision used fresh vehicle data. Yu and Gao's MAGE [68]
+generates motif-based molecular explanations, emphasizing domain-valid
+substructures. Its molecular validity requirements illustrate why a dispatch
+explainer likewise needs task-specific constraints. This MAGE is distinct
+from the Myerson-Taylor explainer of Bui et al. [50].
+
+GraphNarrator [64] generates textual explanations using saliency-derived
+pseudo-labels and iterative refinement. This makes explanations easier to present,
+but their quality still depends on the underlying attribution: a
+fluent explanation cannot serve as an independent check of the saliency labels
+that helped train it. For this dissertation, adding text to an attention map
+would therefore require the same freshness and decision-relevance audit.
+
 ## 2.5 Evaluating faithfulness: methods and pitfalls
 
 Comprehensiveness and sufficiency are common perturbation measures. In the
@@ -160,8 +204,9 @@ Perturbation is not automatically valid. Removing input features may create
 samples unlike the data seen during training. The Remove and Retrain (ROAR)
 benchmark shows why deletion can confound attribution quality with distribution
 shift [28]. Zheng et al. [43] identify this problem in GNN fidelity measures and
-propose more robust alternatives. Adebayo et al. [27] argue that explanations
-should respond when model parameters or labels are randomized. Li et al. [44]
+propose more robust alternatives. Adebayo et al. [27] test whether saliency methods depend on learned parameters
+and training data by randomizing model parameters and retraining on randomized
+labels. Li et al. [44]
 show that small graph changes can preserve a prediction while substantially
 changing its explanation. Together, these studies show that the evaluator
 itself must be audited.
@@ -181,6 +226,20 @@ set. This compresses the possible difference between them. Reporting the exact
 expected overlap and a taxi-only rank correlation makes that limitation
 visible instead of treating every near-zero DEF as decisive evidence.
 
+Recent evaluation research provides stronger alternatives to a single fidelity
+number. He et al. [65] establish connections between edge-gradient and
+perturbation methods, including equivalence under restricted linear settings.
+This suggests that agreement between two explainers may reflect shared
+mechanics rather than independent validation; their conditions should not be
+assumed for the nonlinear actor used here. PowerGraph [66] supplies
+cascading-failure explanation ground truth in a domain-specific benchmark.
+It demonstrates the value of external explanatory labels, which the present
+SUMO experiment lacks: its LOO ranking remains a positive control, not ground
+truth. Saha and Bandyopadhyay [55] introduce sufficiency-risk certificates and
+coverage, gain and overlap measures for model-level graph explanations.
+Their uncertainty-aware evaluation is relevant to audit design, but those
+certificates do not automatically apply to a local action-level DEF score.
+
 ## 2.6 Age of Information and telemetry degradation
 
 Age of Information (AoI) measures the time since the newest received update
@@ -199,7 +258,39 @@ without delay. Both studies focus on maintaining decision performance under
 delay. They do not test whether an explanation remains faithful when the policy
 receives stale telemetry.
 
-This dissertation uses AoI only as a node-level freshness descriptor and as
+Recent delay-aware RL explicitly models uncertainty about the current state.
+Yao, Florescu and Lee [58] use stochastic planning for delayed feedback,
+whereas Wu et al. [56] directly forecast belief to reduce errors accumulated
+by recursive state prediction. Both provide candidate approaches to recovering
+useful state information; neither result establishes that an attention ranking
+is faithful to the resulting action. Zhou et al. [57] instead make observation
+timing part of the action. This separates a deliberately scheduled observation
+from an externally triggered outage. The present freeze intervention models
+the latter and does not optimize the communication schedule.
+
+Communication robustness also differs from explanation robustness. MAGI [59]
+uses a graph information bottleneck to learn compact, action-relevant messages
+under perturbations. Soudijani and Dimitrova [60] jointly synthesize action and
+communication policies subject to communication restrictions. These methods
+address information exchange and task objectives; robust coordination is not
+itself an explanation-release criterion. In vehicle perception, MRCNet [61]
+addresses motion and sensing noise during communication and fusion. Its setting
+motivates testing richer telemetry failures, although perception noise and a
+last-value freeze are distinct interventions.
+
+Dynamic graph attribution is especially close to the present problem. Liu and
+Xie [53] attribute changes in predictions on evolving graphs to message flows
+and layer edges, with KL-divergence used to select explanatory edges. This
+supports explicitly comparing two observations rather than treating a static
+map as sufficient. Their evolving edge weights differ from the feature-level
+freeze with fixed paired node identities here. Liu et al. [54] use graph
+curvature and resistance to improve explanation robustness without retraining
+the target model. That is a potential improvement to an explainer, whereas
+this study measures whether the declared raw-attention channel is stable.
+Robustness to structural perturbations does not establish robustness to stale
+features, so the two require separate tests.
+
+This dissertation uses AoI only to describe the freshness of each node and as
 the weight inside weighted attention mass on stale nodes (WAMSN). The
 experiment manipulates the duration of an
 observation-layer outage triggered by tunnel entry, not AoI itself. It therefore
@@ -207,15 +298,14 @@ makes no causal claim that a larger AoI value lowers faithfulness. The analysis
 instead asks whether stale exposure and attention-based explanation behavior
 provide consistent evidence under controlled outages.
 
-## 2.7 From explanation evaluation to explanation assurance
+## 2.7 Deciding when an explanation can be shown
 
-An explanation test becomes an assurance process when its result is used to
-decide whether an explanation should be shown to a user. The NIST AI Risk
+Explanation tests can inform the decision to show an explanation to a user. The NIST AI Risk
 Management Framework treats testing, validation, documentation, and monitoring
 as parts of managing the risks of AI systems [42]. It provides general risk
 management guidance rather than a test for attention explanations.
 
-This dissertation applies that general assurance principle to a narrower
+This dissertation applies that principle to a specific
 question: whether an attention map has enough supporting evidence to be
 presented for a fleet-dispatch decision. The resulting framework checks the
 data status, the validity of the faithfulness test, and consistency across
@@ -228,33 +318,21 @@ prediction process and that some metrics may miss this failure. Although their
 setting is graph classification, the result supports auditing an explanation
 before presenting it as evidence.
 
-## 2.8 Research gap and positioning
+## 2.8 Research gap
 
 The literature supports four points: relational RL is appropriate for fleet
 dispatch; attention is easy to expose but disputed as an explanation; GNN
 faithfulness requires graph-aware perturbations; and stale state matters to
 operational control. Recent work examines GNN explanation fidelity, instability,
 and auditing [43]-[47], but does not combine MARL fleet dispatch, paired clean
-and stale observations, and action-linked request nodes. This narrower gap is
-addressed here through a focused narrative review rather than a systematic one.
+and stale observations, and action-linked request nodes. The present study brings these elements together in a controlled evaluation.
 
-Recent graph-based dispatch studies provide the closest task comparison, but
-they answer a different question from this dissertation. Hu, Feng and Li [33]
-evaluate BMG-Q, Wang et al. [37] evaluate CoopRide, and Sha et al. [38] evaluate
-DualG-MARL. Table 2.1 summarizes how their aims differ from the present study.
-
-| Study | Data and graph design | Main purpose | Unaddressed assurance question |
-|---|---|---|---|
-| BMG-Q (2025) | ride-pooling with a local bipartite matching graph | dispatch quality and scalability | Are graph weights faithful under stale telemetry? |
-| CoopRide (2025) | cooperative MARL across city grids and real order data | city-scale dispatch quality | Are node-level explanations faithful? |
-| DualG-MARL (2026) | vehicle-state and task graphs with real order data | ride-sharing scheduling quality | Do explanations remain supported under paired telemetry degradation? |
-| This dissertation | local GAT-MAPPO taxi/request graphs in controlled SUMO runs | explanation assurance | Tests paired degradation, action-aware faithfulness, and release conditions. |
-
-These methods are not treated as performance baselines because their tasks,
-action spaces, and data-generation procedures differ. They are benchmark
-literature for positioning the contribution: recent work improves relational
-dispatch, whereas this dissertation tests whether an exposed attention channel
-has enough evidence to be presented as an explanation.
+The closest task studies are BMG-Q [33], CoopRide [37] and DualG-MARL [38].
+Their dispatch objectives and datasets differ from this controlled benchmark,
+so their performance figures are not directly comparable. The closest
+methodological studies instead concern attribution paths, fidelity measurement,
+explanation instability and changes in graph inputs. Table 2.1 compares eight closely related studies, highlighting their
+contributions and the adaptations needed for the dispatch setting.
 
 Across the graph- and RL-explainability and delayed-observation studies reviewed
 in Sections 2.2-2.7, no evaluation protocol was identified that combines all of
@@ -266,8 +344,19 @@ the following:
 - a control for graph nodes that also remove available actions;
 - replication across independently trained checkpoints.
 
-This thesis contributes an audit protocol rather than a new dispatch algorithm.
-SUMO supplies a controlled state [22], and GAT-MAPPO supplies an auditable
-attention channel. The contribution is a reproducible test of whether that
-channel supports a freshness-aware, decision-relevant explanation and a rule
-for withholding it when the evidence is insufficient.
+The proposed audit protocol uses the controlled state available in SUMO [22]
+and the attention weights exposed by GAT-MAPPO to test explanation faithfulness
+and sensitivity to stale telemetry. It links these measurements to a decision
+about whether the evidence is sufficient to present the attention map to an
+operator.
+
+| Study | Method and setting | Evaluation and finding | Strength | Limit and implication for this study |
+|---|---|---|---|---|
+| Zheng et al. [43] | Robust fidelity for subgraph explanations | Synthetic and real graphs; conventional deletion can distort fidelity | Explicit treatment of distribution shift | Does not resolve request-linked action removal; motivates separate action protection |
+| Li et al. [44] | Adversarial changes to graph structure | Explanations can change while predictions remain correct | Separates prediction and explanation robustness | Adversarial edges differ from stale vehicle features; requires a paired telemetry test |
+| Azzolin et al. [45] | Analysis of regular and self-explainable GNNs | Faithfulness metrics need not agree | Exposes dependence on metric and architecture | Prevents interpreting DEF as a universal or complete causal score |
+| Shin et al. [46] | GAtt computation-tree edge attribution | Synthetic and real data; improves on naive attention attribution | Accounts for message-passing paths | Edge attribution needs adaptation to residual actor outputs and action-linked nodes |
+| Liu and Xie [53] | Layer-edge attribution on evolving graphs | Eight datasets; evaluates fidelity of prediction changes | Directly studies change between graphs | Evolving edge weights differ from the fixed-identity telemetry twins used here |
+| Liu et al. [54] | Curvature and resistance regularization | Nine datasets across three graph tasks; improves robustness | Leaves the target model unchanged | Structural robustness does not establish stale-feature or action-level faithfulness |
+| Azzolin et al. [47] | Audit of degenerate self-explanations | Accurate models can yield explanations unrelated to prediction | Shows why accuracy is insufficient for assurance | Self-explainable classifiers differ from raw-attention MARL; motivates an explicit rejection path |
+| Saha and Bandyopadhyay [55] | Certified model-level evaluation | Sufficiency risk, coverage, gain and overlap with uncertainty | Evaluates quality beyond target-class score | Model-level certificates are not local DEF guarantees; motivates scoped statistical claims |

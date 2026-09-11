@@ -42,7 +42,8 @@ episodes: eight action-sampling seeds and six episodes per seed.
 
 **Figure 4.2.** Clean-test completed journeys for each selected policy. The
 shaded band is the legal-random 95% CI and the dashed line is the greedy mean.
-Performance is capability context, not the main explanation outcome.
+Performance shows whether the policies can complete journeys; explanation
+faithfulness is evaluated separately.
 
 The separate argmax diagnostic also completes journeys. Across three held-out
 episodes, GAT checkpoint means are 8.0, 7.3, and 9.7; GAT-Outage means are 7.0,
@@ -67,8 +68,8 @@ official analysis.
 |---|---:|---:|---:|---|
 | Full precision versus four-decimal sensitivity | 6 | 0 | 0 | full precision |
 
-This check is important because DEF values are small. It shows that the
-reported signs and hypothesis decisions are not artifacts of early rounding.
+The agreement is useful given the small DEF values: the reported signs and
+hypothesis decisions are unchanged by the tested rounding precision.
 
 ## 4.3 Decision-relevance controls
 
@@ -166,14 +167,24 @@ at the same SUMO step. Positive attention shift means that the degraded
 observation assigns more attention to nodes marked stale. Positive DEF shift
 means that measured DEF is higher, not lower, under degradation.
 
-| Model | Seed | Stale-attention shift x 1,000 | Probability-DEF shift x 10,000 |
+| Model | Seed | Stale-attention shift x 1,000 [95% CI] | Probability-DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|
-| GAT | 42 | +3.834 | +0.852 |
-| GAT | 43 | +0.015 | +1.222 |
-| GAT | 44 | -2.639 | +1.889 |
-| GAT-Outage | 42 | +3.347 | +0.855 |
-| GAT-Outage | 43 | +0.928 | +1.596 |
-| GAT-Outage | 44 | -3.578 | +0.514 |
+| GAT | 42 | +3.834 [+3.725, +3.943] | +0.852 [+0.763, +0.940] |
+| GAT | 43 | +0.015 [-0.005, +0.037] | +1.222 [+1.048, +1.418] |
+| GAT | 44 | -2.639 [-2.708, -2.574] | +1.889 [+1.772, +2.008] |
+| GAT-Outage | 42 | +3.347 [+3.254, +3.443] | +0.855 [+0.739, +0.979] |
+| GAT-Outage | 43 | +0.928 [+0.913, +0.943] | +1.596 [+1.489, +1.699] |
+| GAT-Outage | 44 | -3.578 [-3.646, -3.508] | +0.514 [+0.455, +0.574] |
+
+The estimates summarize stale-exposed decisions across the evaluated degraded
+conditions using the saved episode-block analysis. Attention uses all eligible
+stale-exposed records; DEF additionally requires a scorable action, so their
+record and episode-block counts can differ. They do not estimate variation across new, independently trained policies. The unscaled paired probability-DEF increases
+range from approximately 0.000051 to 0.000189. These are changes in the
+composite, random-adjusted DEF score, not percentage-point improvements in
+success probability. Their consistent positive direction contradicts the
+predicted decline but does not establish practically useful explanations.
+No deployment utility threshold for this effect size has been validated.
 
 Three checkpoints show a clear increase in attention to stale nodes, two show
 a clear decrease, and GAT seed 43 is inconclusive because its 95% CI crosses
@@ -192,8 +203,10 @@ six.
 ## 4.7 Analysis by action type
 
 The corrected reward handling changes the action composition compared with the
-earlier experiment. Dispatch now accounts for 9,649 of 12,028 scorable
-decisions (80.2%); no-op accounts for 2,379 (19.8%). Table 4.6 shows that this
+earlier experiment. For GAT, dispatch accounts for 9,649 of 12,028 scorable
+decisions (80.2%); no-op accounts for 2,379 (19.8%). For GAT-Outage,
+dispatch accounts for 8,392 of 12,022 decisions (69.8%) and no-op for
+3,630 (30.2%). Table 4.6 shows that this
 balance still differs by checkpoint.
 
 | Checkpoint | No-op (%) | Dispatch (%) | All-action DEF shift x 10,000 | No-op DEF shift x 10,000 | Dispatch DEF shift x 10,000 |
@@ -206,9 +219,8 @@ balance still differs by checkpoint.
 | GAT-Outage, seed 44 | 30.8 | 69.2 | +0.514 | -0.456 | +0.999 |
 
 The two action groups move in opposite directions in every checkpoint: no-op
-DEF decreases, while dispatch DEF increases. The positive all-action estimate
-is therefore driven by the larger dispatch group. A combined result should not
-be presented as if it describes both kinds of decision.
+DEF decreases, while dispatch DEF increases. The positive all-action estimate obscures this difference between the two
+action types, making the separate results necessary for interpretation.
 
 ![Faithfulness analysis by action type](../figures/v10_action_stratified_faithfulness.png)
 
@@ -221,7 +233,7 @@ CIs.
 
 The random-loss control replaces tunnel entry with an independent per-taxi,
 per-step trigger while retaining a 30-second observation-layer freeze. The
-configured trigger rate is fixed, but realized random exposure is only about
+configured trigger rate is fixed, but observed random exposure is only about
 18% of tunnel exposure. This is a trigger-location sensitivity check, not an
 exposure-matched causal comparison.
 
@@ -240,10 +252,9 @@ are wide because few stale-exposed decisions occur.
 
 ## 4.9 Hypothesis results
 
-Figure 4.11 makes the corrected H4 result visible. DEF rank rises rather than
-falls across within-episode WAMSN groups, and all six checkpoint correlations
-are positive. The one-sided test for a negative association therefore supports
-zero checkpoints.
+Figure 4.11 shows increasing DEF rank across within-episode WAMSN groups.
+All six checkpoint correlations are positive, providing no support for the
+negative association predicted by H4.
 
 ![Within-episode WAMSN-DEF relationship and H4 results](../figures/v10_h4_correlation_by_training_seed.png)
 
@@ -268,9 +279,12 @@ not seed 43; H5 is therefore not consistent.
 
 ## 4.10 Answers to the research questions
 
-**RQ1:** Raw attention does not reliably identify decision-relevant nodes under
-clean telemetry. Its matched-random margin-DEF is negative, while LOO gives a
-positive control response.
+**RQ1:** The tested averaged self-row attention does not establish reliable
+dispatch decision relevance under clean telemetry. Its dispatch margin-DEF
+is below the matched-random control, while LOO gives a positive control
+response. Selected-request-row sensitivity does not establish a consistent
+advantage over random controls; this does not reject all attention-based
+explanation methods. No-op evidence is reported separately in Section 4.12.
 
 **RQ2:** Degradation changes stale-node attention, but not in one consistent
 direction. Three checkpoints show a clear shift toward stale nodes, two show a
@@ -288,7 +302,10 @@ variation or make raw attention pass the decision-relevance check.
 The final framework decision is `WITHHOLD` for GAT, GAT-Outage, and all six
 checkpoints. This means that the evidence is complete enough to audit, but raw
 attention should not be presented as the reason for a dispatch or no-op
-decision.
+decision. This is a conservative decision for the whole declared explanation
+channel, based in part on failed dispatch decision relevance. It does not mean
+that no-op faithfulness fails individually in every checkpoint. The exploratory
+no-op analysis in Section 4.12 does not alter the original release criteria.
 
 | Audit check | GAT | GAT-Outage | Main reason |
 |---|---|---|---|
@@ -303,7 +320,51 @@ decision.
 | Trigger robustness | INDETERMINATE | PASS | GAT seed 43 random-trigger interval crosses zero |
 | Model decision | WITHHOLD | WITHHOLD | required release checks do not pass |
 
-`WITHHOLD` is the intended output when an explanation lacks reliable support;
-it is not a failed execution. Attention may still be used as an internal model
-diagnostic, with freshness shown separately, but not as an audited explanation
-of the selected action.
+Under this decision, attention remains available for internal model diagnosis,
+with freshness displayed separately. It is not released as an audited
+explanation of the selected action.
+
+
+## 4.12 Supplementary no-op decision relevance
+
+A supplementary analysis of the archived main-sweep records examines whether
+no-op attention exceeds its type-matched random control in absolute DEF. This
+addresses a different question from the paired change under degradation. The
+analysis is exploratory and leaves the original H1-H5 tests and release
+criteria unchanged. Only scored no-op decisions
+with at least one available request are eligible. The existing cadence and
+stale-exposure sampling schedule is retained, so these estimates describe the
+scored records rather than all no-op actions or a matched clean/degraded sample.
+
+Each cell first averages scores within evaluation-seed/episode blocks for one
+fixed checkpoint. Table 4.10 reports equal-weight block means and pointwise
+95% percentile intervals from 10,000 bootstrap draws (seed 20260912). These
+intervals are exploratory, are not multiplicity-adjusted, and do not estimate
+between-training-seed uncertainty. E/D denotes eligible episode blocks/scored
+decisions; episodes without eligible no-op records do not contribute.
+
+| Model / seed | Clean mean [95% CI] | 60 s mean [95% CI] | E/D clean; 60 s |
+|---|---|---|---|
+| GAT / 42 | +0.448 [+0.274, +0.628] | +0.150 [+0.082, +0.221] | 26/41; 47/194 |
+| GAT / 43 | -3.475 [-6.850, -0.758] | -4.939 [-6.841, -3.226] | 37/64; 48/322 |
+| GAT / 44 | +0.031 [-0.060, +0.145] | -0.852 [-0.964, -0.742] | 25/40; 46/209 |
+| GAT-Outage / 42 | +0.660 [+0.539, +0.783] | +0.173 [+0.111, +0.241] | 41/92; 48/417 |
+| GAT-Outage / 43 | +0.266 [+0.078, +0.459] | -0.102 [-0.216, +0.021] | 37/65; 48/324 |
+| GAT-Outage / 44 | +0.460 [+0.175, +0.782] | +0.238 [+0.052, +0.447] | 40/82; 48/383 |
+
+All margin-DEF values in Table 4.10 are multiplied by 1,000 for readability.
+GAT seed 42 and GAT-Outage seeds 42 and 44 have positive margin-DEF intervals
+in both conditions. GAT seed 43 is below zero in both; GAT seed 44 is
+inconclusive when clean and below zero at 60 seconds; GAT-Outage seed 43 is
+positive when clean and inconclusive at 60 seconds. Probability DEF is less
+consistent: only GAT seed 42 and GAT-Outage seed 42 have positive intervals
+in both conditions. Thus a decline under degradation need not imply an
+absolute failure against the random comparator, and the dispatch result must
+not be generalized to every no-op explanation. Small effects, score choice,
+sampling differences and checkpoint variation limit interpretation.
+
+The original whole-channel decision remains WITHHOLD because its dispatch
+and stability requirements are not met. This supplementary analysis does not
+certify any checkpoint for explanation release. Appendix C summarizes the original hypothesis tests and identifies the
+supporting files containing full-precision estimates, sample counts and
+archive hashes.
