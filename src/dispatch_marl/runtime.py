@@ -1,6 +1,7 @@
 """Shared device selection and checkpoint reconstruction."""
 from __future__ import annotations
 
+import os
 import platform
 from pathlib import Path
 
@@ -15,6 +16,11 @@ from .models import (
 
 
 def choose_device() -> str:
+    override = os.environ.get("DISPATCH_MARL_DEVICE")
+    if override is not None:
+        if override not in {"cpu", "cuda", "mps"}:
+            raise ValueError(f"Invalid DISPATCH_MARL_DEVICE: {override}")
+        return override
     if torch.backends.mps.is_available() and platform.machine() == "arm64":
         return "mps"
     if torch.cuda.is_available():

@@ -70,7 +70,7 @@ def runtime_provenance(root: Path) -> dict[str, Any]:
     sumo_result = subprocess.run(
         [sumo_binary, "--version"], text=True, capture_output=True, check=False
     ) if sumo_binary else subprocess.CompletedProcess([], 127, "", "not found")
-    match = re.search(r"Version\s+(\d+\.\d+\.\d+)", sumo_result.stdout)
+    match = re.search(r"(?:Version|Eclipse SUMO sumo)\s+(\d+\.\d+\.\d+)", sumo_result.stdout)
     try:
         from ._sumo import USING_LIBSUMO, traci as sumo_backend
         backend = sumo_backend.__name__

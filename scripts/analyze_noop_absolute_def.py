@@ -1,6 +1,7 @@
 """Supplementary no-op analysis from immutable, archived decision records."""
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -15,6 +16,12 @@ OUT = ROOT / "results/dissertation_v10_corrected/supplementary_review"
 
 
 def main():
+    global EVIDENCE, OUT
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--evidence', type=Path, default=EVIDENCE)
+    parser.add_argument('--out', type=Path, default=OUT)
+    args = parser.parse_args()
+    EVIDENCE, OUT = args.evidence.resolve(), args.out.resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     rows, sources, tests = [], [], []
     rng = np.random.default_rng(20260912)
@@ -74,6 +81,8 @@ def main():
                               n=detail.get('n', detail.get('n_episodes')),
                               n_episode_blocks=detail.get('n_episode_blocks', detail.get('n_episodes')),
                               ci95=json.dumps(detail.get('rho_cluster_ci95'))))
+    if not rows:
+        raise ValueError('No archived clean/60-second cells found')
     for name, data in [('noop_absolute_def', rows), ('hypothesis_statistics', tests)]:
         with (OUT / f'{name}.csv').open('w') as f:
             writer = csv.DictWriter(f, fieldnames=list(data[0]))
