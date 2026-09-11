@@ -12,7 +12,6 @@ validity, and environment integration. Pickup performance is not evaluated.
 """
 from __future__ import annotations
 
-import platform
 import sys
 from pathlib import Path
 
@@ -25,6 +24,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from dispatch_marl import DispatchEnv, DispatchEnvConfig  # noqa: E402
+from dispatch_marl.runtime import choose_device
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
     PolicyConfig,
@@ -33,8 +33,7 @@ from dispatch_marl.models import (  # noqa: E402
 
 
 def main() -> int:
-    device = ("mps" if torch.backends.mps.is_available()
-              and platform.machine() == "arm64" else "cpu")
+    device = choose_device()
     print(f"device: {device}")
 
     env_cfg = DispatchEnvConfig(area="central_park")

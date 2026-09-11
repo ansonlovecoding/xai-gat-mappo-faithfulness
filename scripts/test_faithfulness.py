@@ -13,7 +13,6 @@ interfaces, output ranges, and numerical validity.
 """
 from __future__ import annotations
 
-import platform
 import sys
 from pathlib import Path
 
@@ -36,6 +35,7 @@ from dispatch_marl import (  # noqa: E402
     expected_type_matched_topk_overlap,
     spearman_rank_correlation,
 )
+from dispatch_marl.runtime import choose_device
 from dispatch_marl.models import (  # noqa: E402
     DispatchGATPolicy,
     PolicyConfig,
@@ -120,8 +120,7 @@ def _slice_batch(obs: dict[str, torch.Tensor], i: int) -> dict[str, torch.Tensor
 
 
 def test_evaluator_end_to_end() -> None:
-    device = ("mps" if torch.backends.mps.is_available()
-              and platform.machine() == "arm64" else "cpu")
+    device = choose_device()
     print(f"  device: {device}")
 
     env_cfg = DispatchEnvConfig(area="central_park")
