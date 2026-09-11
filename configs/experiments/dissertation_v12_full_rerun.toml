@@ -2,8 +2,8 @@
 # All models use 50 epochs; the two GAT conditions share optimizer settings.
 # Equal epoch budgets do not guarantee identical decision counts or PPO updates.
 schema_version = 2
-name = "full_rerun_five_seed"
-output_root = "runs/dissertation_v12_full_rerun"
+name = "full_rerun_five_seed_sumo120"
+output_root = "runs/dissertation_v12_sumo120"
 area = "central_park"
 
 # Protocol 2 uses semi-Markov decision intervals. Team rewards continue to
@@ -78,8 +78,8 @@ seeds = [42, 43, 44, 45, 46, 47, 48, 49]
 demand_split = "test"
 
 [explanation_audit]
-evidence_root = "runs/dissertation_v12_full_rerun/evidence"
-output_root = "runs/dissertation_v12_full_rerun/evidence/explanation_audit"
+evidence_root = "runs/dissertation_v12_sumo120/evidence"
+output_root = "runs/dissertation_v12_sumo120/evidence/explanation_audit"
 controls_summary = "faithfulness_controls/summary.json"
 decision_relevance_ci_floor = 0.0
 minimum_dispatch_decisions = 20
@@ -92,7 +92,7 @@ evaluation_seeds = [42, 43, 44]
 episodes = 3
 conditions = ["clean", "outage_60s"]
 faithfulness_every = 8
-figure_directory = "runs/dissertation_v12_full_rerun/figures"
+figure_directory = "runs/dissertation_v12_sumo120/figures"
 figure_prefix = "v12"
 
 [[models]]

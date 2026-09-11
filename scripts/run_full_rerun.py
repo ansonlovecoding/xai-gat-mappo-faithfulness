@@ -13,9 +13,10 @@ from dispatch_marl.provenance import atomic_write_json, runtime_provenance, sha2
 
 
 def main():
-    import sumo
-    os.environ['SUMO_HOME'] = str(Path(sumo.__file__).parent)
-    os.environ['PATH'] = str(Path(sys.executable).parent) + os.pathsep + os.environ.get('PATH', '')
+    sumo_home = ROOT / "runs/runtime/sumo-1.20.0"
+    os.environ["SUMO_HOME"] = str(sumo_home)
+    os.environ["PATH"] = os.pathsep.join([str(sumo_home / "bin"),
+                                        str(Path(sys.executable).parent), os.environ.get("PATH", "")])
     os.environ['DISPATCH_MARL_FORCE_TRACI'] = '1'
     os.environ['DISPATCH_MARL_DEVICE'] = 'cpu'
     os.environ['OMP_NUM_THREADS'] = '1'
@@ -23,14 +24,17 @@ def main():
     os.environ['PYTHONUNBUFFERED'] = '1'
     os.chdir(ROOT)
     config = Path('configs/experiments/dissertation_v12_full_rerun.toml')
-    run = Path('runs/dissertation_v12_full_rerun')
+    run = Path('runs/dissertation_v12_sumo120')
     evidence = run / 'evidence'
     records = run / 'execution_records'
     records.mkdir(parents=True, exist_ok=True)
     record_path = records / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '.json')
     record = dict(status='running', started_utc=datetime.now(timezone.utc).isoformat(),
                   config_sha256=sha256_file(config), provenance=runtime_provenance(ROOT),
-                  device='cpu', threads=1, stages=[])
+                  device='cpu', threads=1, sumo_binary_sha256=sha256_file(sumo_home/'bin/sumo'),
+                  sumo_source_revision=subprocess.check_output(
+                      ['git', '-C', str(sumo_home), 'rev-parse', 'HEAD'], text=True).strip(),
+                  stages=[])
     atomic_write_json(record_path, record)
     py = sys.executable
     stages = [('environment', [py, 'scripts/check_environment.py'])]

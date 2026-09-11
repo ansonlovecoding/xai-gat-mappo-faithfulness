@@ -1,7 +1,7 @@
 cloudpickle==3.1.2
 contourpy==1.3.3
 cycler==0.12.1
-eclipse-sumo==1.27.0
+eclipse-sumo @ file:///tmp/v12-sumo-wheel/eclipse_sumo-1.20.0-py2.py3-none-macosx_14_0_arm64.whl#sha256=9fa34c68a39168aafc1e5f8e35581560dc15369892a0f4fb0508aac8568b0b65
 Farama-Notifications==0.0.6
 filelock==3.32.6
 fonttools==4.65.0
@@ -24,9 +24,8 @@ pytest==8.3.5
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 six==1.17.0
-sumo-data==1.27.0
-sumolib==1.27.0
+sumolib==1.20.0
 sympy==1.14.0
 torch==2.2.2
-traci==1.27.0
+traci==1.20.0
 typing_extensions==4.16.0
