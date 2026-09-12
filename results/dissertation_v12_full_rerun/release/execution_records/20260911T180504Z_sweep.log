@@ -1,0 +1,748 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/check_environment.py
+python: 3.11.14
+torch:  2.2.2
+numpy:  1.26.4
+SUMO:   1.20.0 via traci
+traci:  1.20.0
+git:    2c604e73fe1501a9a1a370520857e12cdaeb74a8 (clean)
+environment: PASS
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42
+
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  1/40] clean_0_seed42: pickups=12.7  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  2/40] clean_0_seed43: pickups=13.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  3/40] clean_0_seed44: pickups=12.2  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  4/40] clean_0_seed45: pickups=14.2  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  5/40] clean_0_seed46: pickups=12.8  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  6/40] clean_0_seed47: pickups=12.8  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  7/40] clean_0_seed48: pickups=12.8  deg_rate=0.000  DEF_m=-0.002  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  8/40] clean_0_seed49: pickups=12.2  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (6s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  9/40] outage_duration_10_seed42: pickups=12.7  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 10/40] outage_duration_10_seed43: pickups=13.0  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 11/40] outage_duration_10_seed44: pickups=12.2  deg_rate=0.008  DEF_m=-0.000  WAMSN=0.013  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 12/40] outage_duration_10_seed45: pickups=14.2  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 13/40] outage_duration_10_seed46: pickups=12.8  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 14/40] outage_duration_10_seed47: pickups=12.8  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 15/40] outage_duration_10_seed48: pickups=12.8  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 16/40] outage_duration_10_seed49: pickups=12.2  deg_rate=0.008  DEF_m=-0.001  WAMSN=0.013  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 17/40] outage_duration_20_seed42: pickups=12.7  deg_rate=0.015  DEF_m=-0.000  WAMSN=0.026  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 18/40] outage_duration_20_seed43: pickups=13.0  deg_rate=0.016  DEF_m=-0.001  WAMSN=0.025  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 19/40] outage_duration_20_seed44: pickups=12.2  deg_rate=0.016  DEF_m=-0.000  WAMSN=0.026  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 20/40] outage_duration_20_seed45: pickups=14.2  deg_rate=0.016  DEF_m=-0.001  WAMSN=0.025  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 21/40] outage_duration_20_seed46: pickups=12.8  deg_rate=0.015  DEF_m=-0.001  WAMSN=0.026  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 22/40] outage_duration_20_seed47: pickups=12.8  deg_rate=0.015  DEF_m=-0.000  WAMSN=0.026  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 23/40] outage_duration_20_seed48: pickups=12.8  deg_rate=0.017  DEF_m=-0.001  WAMSN=0.025  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 24/40] outage_duration_20_seed49: pickups=12.2  deg_rate=0.016  DEF_m=-0.001  WAMSN=0.026  drift=0.0000  (9s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 25/40] outage_duration_30_seed42: pickups=12.7  deg_rate=0.020  DEF_m=-0.000  WAMSN=0.039  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 26/40] outage_duration_30_seed43: pickups=13.0  deg_rate=0.025  DEF_m=-0.001  WAMSN=0.038  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 27/40] outage_duration_30_seed44: pickups=12.2  deg_rate=0.025  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 28/40] outage_duration_30_seed45: pickups=14.2  deg_rate=0.023  DEF_m=-0.001  WAMSN=0.037  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 29/40] outage_duration_30_seed46: pickups=12.8  deg_rate=0.021  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 30/40] outage_duration_30_seed47: pickups=12.8  deg_rate=0.022  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (10s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 31/40] outage_duration_30_seed48: pickups=12.8  deg_rate=0.025  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (10s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 32/40] outage_duration_30_seed49: pickups=12.2  deg_rate=0.025  DEF_m=-0.001  WAMSN=0.038  drift=0.0001  (11s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 33/40] outage_duration_60_seed42: pickups=12.3  deg_rate=0.027  DEF_m=-0.000  WAMSN=0.061  drift=0.0001  (13s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 34/40] outage_duration_60_seed43: pickups=13.0  deg_rate=0.031  DEF_m=-0.000  WAMSN=0.059  drift=0.0001  (13s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 35/40] outage_duration_60_seed44: pickups=12.2  deg_rate=0.034  DEF_m=-0.000  WAMSN=0.060  drift=0.0001  (15s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 36/40] outage_duration_60_seed45: pickups=14.2  deg_rate=0.030  DEF_m=-0.000  WAMSN=0.060  drift=0.0001  (15s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 37/40] outage_duration_60_seed46: pickups=12.8  deg_rate=0.033  DEF_m=-0.000  WAMSN=0.064  drift=0.0001  (15s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 38/40] outage_duration_60_seed47: pickups=12.8  deg_rate=0.035  DEF_m=-0.000  WAMSN=0.061  drift=0.0001  (15s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 39/40] outage_duration_60_seed48: pickups=12.8  deg_rate=0.032  DEF_m=-0.000  WAMSN=0.060  drift=0.0001  (15s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 40/40] outage_duration_60_seed49: pickups=12.2  deg_rate=0.032  DEF_m=-0.000  WAMSN=0.060  drift=0.0001  (15s)
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/ckpt_selected.pt' --episodes 6 --seeds 42 43 44 45 46 47 48 49 --outage-durations 10.0 20.0 30.0 60.0 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46' --faithfulness-exposed-every 1 --minimum-stale-exposed-records 20 --minimum-stale-exposed-episodes 3
+sweep: 5 cells × 8 seeds = 40 runs × 6 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46
+
+[  1/40] clean_0_seed42: exists, skipping
+[  2/40] clean_0_seed43: exists, skipping
+[  3/40] clean_0_seed44: exists, skipping
+[  4/40] clean_0_seed45: exists, skipping
+[  5/40] clean_0_seed46: exists, skipping
+[  6/40] clean_0_seed47: exists, skipping
+[  7/40] clean_0_seed48: exists, skipping
+[  8/40] clean_0_seed49: exists, skipping
+[  9/40] outage_duration_10_seed42: exists, skipping
+[ 10/40] outage_duration_10_seed43: exists, skipping
+[ 11/40] outage_duration_10_seed44: exists, skipping
+[ 12/40] outage_duration_10_seed45: exists, skipping
+[ 13/40] outage_duration_10_seed46: exists, skipping
+[ 14/40] outage_duration_10_seed47: exists, skipping
+[ 15/40] outage_duration_10_seed48: exists, skipping
+[ 16/40] outage_duration_10_seed49: exists, skipping
+[ 17/40] outage_duration_20_seed42: exists, skipping
+[ 18/40] outage_duration_20_seed43: exists, skipping
+[ 19/40] outage_duration_20_seed44: exists, skipping
+[ 20/40] outage_duration_20_seed45: exists, skipping
+[ 21/40] outage_duration_20_seed46: exists, skipping
+[ 22/40] outage_duration_20_seed47: exists, skipping
+[ 23/40] outage_duration_20_seed48: exists, skipping
+[ 24/40] outage_duration_20_seed49: exists, skipping
+[ 25/40] outage_duration_30_seed42: exists, skipping
+[ 26/40] outage_duration_30_seed43: exists, skipping
+[ 27/40] outage_duration_30_seed44: exists, skipping
+[ 28/40] outage_duration_30_seed45: exists, skipping
+[ 29/40] outage_duration_30_seed46: exists, skipping
+[ 30/40] outage_duration_30_seed47: exists, skipping
+[ 31/40] outage_duration_30_seed48: exists, skipping
+[ 32/40] outage_duration_30_seed49: exists, skipping
+[ 33/40] outage_duration_60_seed42: exists, skipping
+[ 34/40] outage_duration_60_seed43: exists, skipping
+[ 35/40] outage_duration_60_seed44: exists, skipping
+[ 36/40] outage_duration_60_seed45: exists, skipping
+[ 37/40] outage_duration_60_seed46: exists, skipping
+[ 38/40] outage_duration_60_seed47: exists, skipping
+[ 39/40] outage_duration_60_seed48: exists, skipping
+[ 40/40] outage_duration_60_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46

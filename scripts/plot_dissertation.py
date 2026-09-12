@@ -291,9 +291,9 @@ def evidence_summary_figure() -> None:
         ),
         (
             "Within-policy\nassociation",
-            "DEF does not decline as\noutage duration increases",
-            "The proposed adverse\nrelationship is not supported",
-            "Report the\nunsupported test",
+            "DEF declines for only a\nminority of checkpoints",
+            "The proposed relationship\nis checkpoint dependent",
+            "Report the\nmixed evidence",
             "#6B5B95",
         ),
         (
@@ -504,12 +504,12 @@ def consistency_figure() -> None:
             ), markeredgewidth=1.4, zorder=3,
         )
     result_ax.axvline(0, color="#202020", linewidth=1)
-    result_ax.axhline(2.5, color="#A8A8A8", linewidth=0.8)
+    result_ax.axhline(len(SEED_STYLES) - 0.5, color="#A8A8A8", linewidth=0.8)
     result_ax.set_yticks(
         y_positions,
         [f"{LABELS[row['model']]} {row['training_seed']}" for row in ordered_rows],
     )
-    result_ax.set_xlim(-0.10, 0.70)
+    result_ax.autoscale(axis="x")
     result_ax.set_xlabel("Mean within-episode Spearman rho")
     supported_count = sum(bool(row["H4_supported"]) for row in ordered_rows)
     result_ax.set_title(
@@ -529,7 +529,8 @@ def action_stratified_figure() -> None:
     rows = _csv(RUNS / "action_stratified.csv")
     checkpoints = sorted({(row["model"], int(row["training_seed"])) for row in rows})
     labels = [str(seed) for _, seed in checkpoints]
-    x = np.array([0, 1, 2, 4, 5, 6], dtype=float)
+    x = np.array([i + list(COLORS).index(model)
+                  for i, (model, _) in enumerate(checkpoints)], dtype=float)
     by_key = {(row["model"], int(row["training_seed"]), row["stratum"]): row
               for row in rows}
 
@@ -562,7 +563,8 @@ def action_stratified_figure() -> None:
         axes["counts"].text(
             x_pos, no_op + dispatch * 0.52,
             f"{fraction * 100:.1f}%", ha="center", va="center",
-            fontsize=7.2, color="white", fontweight="bold",
+            fontsize=6.0, color="white", fontweight="bold",
+            bbox={"facecolor": "#C75000", "edgecolor": "none", "pad": 0.2},
         )
     axes["counts"].set_ylim(0, count_ceiling * 1.05)
     axes["counts"].set_ylabel("Eligible decisions (count)")
@@ -621,7 +623,6 @@ def action_stratified_figure() -> None:
     axes["def_full"].set_title("(c) DEF change: full scale", loc="left")
     axes["def_full"].legend(frameon=False, fontsize=7.5, loc="lower left", ncol=3)
 
-    zoom_low, zoom_high = -1.25, 0.30
     for label, marker, color, offset, values, ci_lows, ci_highs in series:
         if label != "No-op":
             continue
@@ -632,16 +633,17 @@ def action_stratified_figure() -> None:
             markersize=5.5, capsize=3, linewidth=1.1,
         )
     axes["def_zoom"].axhline(0, color="#202020", linewidth=0.9)
-    axes["def_zoom"].set_ylim(zoom_low, zoom_high)
+    axes["def_zoom"].margins(y=0.15)
     axes["def_zoom"].set_ylabel(r"Paired probability DEF change ($\times 10^{-4}$)")
     axes["def_zoom"].set_title("(d) No-op DEF change", loc="left")
 
     for ax in axes.values():
         ax.set_xticks(x, labels)
-        ax.text(1, -0.16, "GAT", transform=ax.get_xaxis_transform(),
-                ha="center", va="top", fontsize=9, fontweight="bold")
-        ax.text(5, -0.16, "GAT-Outage", transform=ax.get_xaxis_transform(),
-                ha="center", va="top", fontsize=9, fontweight="bold")
+        for model in COLORS:
+            center = np.mean([position for position, (m, _) in zip(x, checkpoints)
+                              if m == model])
+            ax.text(center, -0.16, LABELS[model], transform=ax.get_xaxis_transform(),
+                    ha="center", va="top", fontsize=9, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
     fig.suptitle("Faithfulness analysis by action type", y=0.995)
@@ -658,7 +660,8 @@ def random_loss_robustness_figure() -> None:
         (row["model"], int(row["training_seed"]), row["condition"]): row
         for row in rows
     }
-    x = np.array([0, 1, 2, 4, 5, 6], dtype=float)
+    x = np.array([i + list(COLORS).index(model)
+                  for i, (model, _) in enumerate(checkpoints)], dtype=float)
     labels = [str(seed) for _, seed in checkpoints]
     conditions = (
         ("tunnel", "Tunnel trigger", "o", "#C75000", -0.12),
@@ -721,10 +724,11 @@ def random_loss_robustness_figure() -> None:
 
     for ax in axes_array:
         ax.set_xticks(x, labels)
-        ax.text(1, -0.17, "GAT", transform=ax.get_xaxis_transform(),
-                ha="center", va="top", fontsize=8.5, fontweight="bold")
-        ax.text(5, -0.17, "GAT-Outage", transform=ax.get_xaxis_transform(),
-                ha="center", va="top", fontsize=8.5, fontweight="bold")
+        for model in COLORS:
+            center = np.mean([position for position, (m, _) in zip(x, checkpoints)
+                              if m == model])
+            ax.text(center, -0.17, LABELS[model], transform=ax.get_xaxis_transform(),
+                    ha="center", va="top", fontsize=8.5, fontweight="bold")
         ax.grid(axis="y", color="#D8D8D8", linewidth=0.7)
         ax.spines[["top", "right"]].set_visible(False)
     exposure_ax.legend(frameon=False, fontsize=7.5, loc="upper left")
@@ -734,7 +738,7 @@ def random_loss_robustness_figure() -> None:
 
 
 def main() -> None:
-    global RUNS, TRAINING_RUNS, ANALYSIS, OUT, PREFIX
+    global RUNS, TRAINING_RUNS, ANALYSIS, OUT, PREFIX, SEED_STYLES
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=RUNS)
     parser.add_argument(
@@ -753,6 +757,15 @@ def main() -> None:
     ANALYSIS = args.analysis_root
     OUT = args.out
     PREFIX = args.prefix
+    seeds = sorted({int(row["training_seed"]) for row in
+                    _csv(RUNS / "performance_context.csv")})
+    palette = ["#176B87", "#C75000", "#3A7D44", "#8064A2", "#8C564B"]
+    markers = ["o", "s", "^", "D", "v"]
+    lines = ["-", "--", ":", "-.", "-"]
+    SEED_STYLES = {seed: {"marker": markers[i % len(markers)],
+                          "linestyle": lines[i % len(lines)],
+                          "color": palette[i % len(palette)]}
+                   for i, seed in enumerate(seeds)}
     performance_figure()
     training_diagnostics_figure()
     decoupling_figure()

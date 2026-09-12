@@ -1,0 +1,373 @@
+[legal_random] seed=42 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+72.44 wall=1.6s
+[legal_random] seed=42 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=7 reward=+36.82 wall=0.5s
+[legal_random] seed=42 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+104.64 wall=0.5s
+[legal_random] seed=42 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+124.13 wall=0.5s
+[legal_random] seed=42 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+78.92 wall=0.5s
+[legal_random] seed=42 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=16 reward=+135.78 wall=0.5s
+[legal_random] seed=43 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.33 wall=1.6s
+[legal_random] seed=43 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=7 reward=+37.13 wall=0.5s
+[legal_random] seed=43 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+125.77 wall=0.5s
+[legal_random] seed=43 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=14 reward=+115.04 wall=0.5s
+[legal_random] seed=43 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+89.57 wall=0.5s
+[legal_random] seed=43 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=16 reward=+135.82 wall=0.5s
+[legal_random] seed=44 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+93.54 wall=1.6s
+[legal_random] seed=44 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=8 reward=+47.39 wall=0.5s
+[legal_random] seed=44 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=17 reward=+146.94 wall=0.5s
+[legal_random] seed=44 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+104.12 wall=0.5s
+[legal_random] seed=44 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.60 wall=0.5s
+[legal_random] seed=44 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+93.64 wall=0.5s
+[legal_random] seed=45 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+92.71 wall=1.6s
+[legal_random] seed=45 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+90.21 wall=0.5s
+[legal_random] seed=45 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=16 reward=+136.03 wall=0.5s
+[legal_random] seed=45 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+93.05 wall=0.5s
+[legal_random] seed=45 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+89.80 wall=0.5s
+[legal_random] seed=45 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=17 reward=+147.21 wall=0.5s
+[legal_random] seed=46 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=14 reward=+114.08 wall=1.6s
+[legal_random] seed=46 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=9 reward=+57.86 wall=0.5s
+[legal_random] seed=46 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=16 reward=+136.34 wall=0.5s
+[legal_random] seed=46 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+125.53 wall=0.5s
+[legal_random] seed=46 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=9 reward=+58.25 wall=0.5s
+[legal_random] seed=46 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=14 reward=+115.18 wall=0.5s
+[legal_random] seed=47 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+93.36 wall=1.6s
+[legal_random] seed=47 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=8 reward=+46.72 wall=0.5s
+[legal_random] seed=47 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+105.15 wall=0.5s
+[legal_random] seed=47 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+124.69 wall=0.5s
+[legal_random] seed=47 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=12 reward=+90.04 wall=0.5s
+[legal_random] seed=47 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+125.62 wall=0.5s
+[legal_random] seed=48 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+103.44 wall=1.6s
+[legal_random] seed=48 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+78.16 wall=0.5s
+[legal_random] seed=48 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+104.55 wall=0.5s
+[legal_random] seed=48 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=18 reward=+156.99 wall=0.5s
+[legal_random] seed=48 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+79.08 wall=0.5s
+[legal_random] seed=48 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=17 reward=+146.52 wall=0.5s
+[legal_random] seed=49 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=13 reward=+103.45 wall=1.6s
+[legal_random] seed=49 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=9 reward=+58.13 wall=0.5s
+[legal_random] seed=49 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=18 reward=+157.62 wall=0.5s
+[legal_random] seed=49 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+72.64 wall=0.5s
+[legal_random] seed=49 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=8 reward=+47.52 wall=0.5s
+[legal_random] seed=49 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=17 reward=+146.45 wall=0.5s
+[greedy_nearest] seed=42 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.6s
+[greedy_nearest] seed=42 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=42 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=42 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=42 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=42 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=43 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=43 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=43 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=43 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=43 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=43 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=44 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=44 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=44 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=44 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=44 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=44 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=45 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=45 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=45 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=45 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=45 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=45 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=46 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=46 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=46 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=46 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=46 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=46 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.6s
+[greedy_nearest] seed=47 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=47 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=47 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=47 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=47 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=47 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=48 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=48 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=48 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=48 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=48 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=48 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=49 episode=0 demand=central_park_taxis_v017.rou.xml
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=1.5s
+[greedy_nearest] seed=49 episode=1 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=49 episode=2 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+[greedy_nearest] seed=49 episode=3 demand=central_park_taxis_v017.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=11 reward=+82.77 wall=0.5s
+[greedy_nearest] seed=49 episode=4 demand=central_park_taxis_v018.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=10 reward=+68.95 wall=0.5s
+[greedy_nearest] seed=49 episode=5 demand=central_park_taxis_v019.rou.xml
+Warning: Could not set locale to 'C'.
+  completed_journeys=15 reward=+126.45 wall=0.5s
+{
+  "legal_random": {
+    "cluster_unit": "evaluation seed x episode",
+    "completed_passenger_journeys": {
+      "mean": 12.708333333333334,
+      "std_between_clusters": 2.9747757529168215,
+      "ci95": [
+        11.875,
+        13.541666666666666
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 48
+    },
+    "reward": {
+      "mean": 99.77070472789683,
+      "std_between_clusters": 32.87854134356958,
+      "ci95": [
+        90.41279732417442,
+        108.77410736975352
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 48
+    },
+    "final_mean_pending_wait_s": {
+      "mean": 857.4755719001419,
+      "std_between_clusters": 34.13029982368816,
+      "ci95": [
+        848.263762118887,
+        867.2411721094878
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 48
+    }
+  },
+  "greedy_nearest": {
+    "cluster_unit": "demand variant (deterministic policy repeats across seeds)",
+    "completed_passenger_journeys": {
+      "mean": 12.0,
+      "std_between_clusters": 2.6457513110645907,
+      "ci95": [
+        10.0,
+        15.0
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 3
+    },
+    "reward": {
+      "mean": 92.7255152234295,
+      "std_between_clusters": 30.012527433302292,
+      "ci95": [
+        68.95357659953538,
+        126.45005141786866
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 3
+    },
+    "final_mean_pending_wait_s": {
+      "mean": 850.4247863247864,
+      "std_between_clusters": 46.659847087888885,
+      "ci95": [
+        823.0,
+        904.2999999999998
+      ],
+      "n_episode_records": 48,
+      "n_independent_clusters": 3
+    }
+  }
+}
+saved: runs/dissertation_v12_sumo120/evidence/matched_baselines.json

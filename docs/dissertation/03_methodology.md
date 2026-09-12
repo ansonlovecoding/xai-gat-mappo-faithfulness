@@ -53,7 +53,9 @@ three test variants. This separation prevents test results from influencing
 model selection. During evaluation, consecutive episodes cycle through the
 three test variants, and actions are sampled from the policy's probability
 distribution. Evaluation seeds control this action sampling; they do not create
-additional independent demand datasets.
+additional independent demand datasets. The same demand splits were used in an earlier
+pilot study. They remain separate from training and checkpoint selection, but
+this rerun does not constitute validation on a newly collected dataset.
 
 SUMO generates microscopic traffic simulations [22] from the chosen road
 network, demand, routes, vehicle behavior, tunnel locations, and random seeds.
@@ -253,27 +255,24 @@ non-graph baseline uses a multilayer perceptron (MLP).
 | GAT | GAT-MAPPO | clean | primary attention model under audit |
 | GAT-Outage | GAT-MAPPO | tunnel-triggered 30-second outages | tested degradation-aware training configuration |
 
-Each model is trained in three independently initialized runs using seeds 42,
-43, and 44. Corresponding GAT and GAT-Outage seeds are paired in the H5
-comparison.
+Each model is trained in five independently initialized runs using seeds
+42-46. All three models receive 50 training epochs. GAT and GAT-Outage use the
+same learning rate, linear decay schedule, PPO settings and checkpoint-selection
+criterion; MLP retains its architecture-specific learning rate. Corresponding
+GAT and GAT-Outage seeds are paired in the H5 comparison.
 
-The maximum training budgets were fixed from validation-only stability
-diagnostics before the held-out evaluation. Clean GAT uses 40 epochs to limit
-late policy drift. MLP and GAT-Outage use 50 epochs because their earlier
-development runs needed the longer budget to meet the stability checks. The
-same fixed budgets are used for all three seeds within each model condition.
-
-These choices improve stability but mean that GAT and GAT-Outage do not have
-the same training duration: their learning rates decay over 40 and 50
-epochs, respectively. H5 therefore compares the two fitted training
-configurations descriptively. It does not isolate the effect of degraded
-training observations from the difference in training budget.
+Equal epoch budgets do not guarantee equal numbers of agent decisions or PPO
+updates because the learned policies follow different trajectories. Training
+logs retain those counts. Validation telemetry matches each model's training
+condition, as specified below. H5 therefore compares the fitted clean and
+outage training-and-selection configurations, rather than isolating training
+telemetry as the only difference.
 
 Candidate checkpoints include periodic trained snapshots, the final snapshot,
 and a rolling-best snapshot that may come from any trained epoch. The epoch-0
-snapshot is evaluated only as an initialization diagnostic and cannot be
-selected as the final model. Because the implementation records zero-based
-indices, index 39 denotes the checkpoint saved after 40 training epochs.
+snapshot is saved after the first training epoch. It is evaluated only as an
+early-training diagnostic and is excluded from final checkpoint selection. Because the implementation records zero-based
+indices, index 49 denotes the checkpoint saved after 50 training epochs.
 Selection uses eight sampled-action validation episodes with seed 2026 and the
 mean number of completed passenger journeys as the primary criterion; mean
 reward and the earlier checkpoint index break ties. MLP and GAT are selected
@@ -282,17 +281,17 @@ tunnel-triggered training condition. The test split is not read during
 selection. Table 3.3 reports the selected checkpoint index for each training
 run.
 
-| Model | seed 42 | seed 43 | seed 44 |
-|---|---:|---:|---:|
-| MLP | 45 | 30 | 38 |
-| GAT | 30 | 20 | 39 |
-| GAT-Outage | 10 | 40 | 9 |
+| Model | seed 42 | seed 43 | seed 44 | seed 45 | seed 46 |
+|---|---:|---:|---:|---:|---:|
+| MLP | 20 | 20 | 40 | 40 | 49 |
+| GAT | 40 | 28 | 10 | 20 | 10 |
+| GAT-Outage | 10 | 10 | 30 | 20 | 31 |
 
 Table 3.4 reports the training and optimization settings.
 
 | Setting | Value |
 |---|---:|
-| Training epochs | 40 (GAT), 50 (MLP and GAT-Outage) |
+| Training epochs | 50 for all models |
 | Learning rate | 0.0001 (GAT variants), 0.0003 (MLP) |
 | Learning-rate schedule | linear decay over each run (GAT variants); constant (MLP) |
 | Discount factor (gamma) | 0.99 |
@@ -358,10 +357,10 @@ remain separated.
 ![Model conditions and training process](../model_design_training_process.png)
 
 **Figure 3.5.** Shared training and validation-based selection pipeline with
-the model-specific budgets described above. Each frozen checkpoint receives 48 clean held-out
+the common 50-epoch budget and model-specific settings described above. Each frozen checkpoint receives 48 clean held-out
 episodes. The faithfulness audit then compares the frozen GAT and GAT-Outage
 checkpoints across clean and four outage conditions without reselection. This
-produces 720 faithfulness-sweep episodes per GAT model and 1,440 in total.
+produces 1,200 faithfulness-sweep episodes per GAT model and 2,400 in total.
 
 ## 3.5 Telemetry degradation
 
@@ -545,10 +544,10 @@ delete request actions and does not depend on random subset overlap.
 MLP, GAT, and GAT-Outage are evaluated under clean telemetry with eight
 evaluation seeds (42-49) and six episodes per seed. One checkpoint is frozen
 for each model and training seed, giving 48 held-out episodes per checkpoint.
-The clean capability evaluation contains 432 episode evaluations:
+The clean capability evaluation contains 720 episode evaluations:
 
 ```text
-3 models x 3 frozen checkpoints per model x 8 evaluation seeds x 6 episodes
+3 models x 5 frozen checkpoints per model x 8 evaluation seeds x 6 episodes
 ```
 
 Table 3.7 summarizes the complete evaluation structure. An episode evaluation
@@ -556,19 +555,19 @@ is one complete rollout of one frozen checkpoint under one telemetry condition.
 
 | Evaluation | Model families | Total frozen checkpoints | Telemetry cases | Episodes/cell | Total |
 |---|---:|---:|---:|---:|---:|
-| Clean capability context | 3 | 9 | 1 | 48 | 432 |
-| Exposure-conditioned faithfulness sweep | 2 | 6 | 5 | 48 | 1,440 |
-| Full ranking controls | 2 | 6 | 2 | 9 | 108 |
-| Request-row sensitivity | 2 | 6 | 2 | 9 | 108 |
-| Random-trigger sensitivity analysis | 2 | 6 | 3 | 24 | 432 |
+| Clean capability context | 3 | 15 | 1 | 48 | 720 |
+| Exposure-conditioned faithfulness sweep | 2 | 10 | 5 | 48 | 2,400 |
+| Full ranking controls | 2 | 10 | 2 | 9 | 180 |
+| Request-row sensitivity | 2 | 10 | 2 | 9 | 180 |
+| Random-trigger sensitivity analysis | 2 | 10 | 3 | 24 | 720 |
 
 GAT and GAT-Outage receive the full faithfulness sweep:
 
 ```text
-2 models x 3 training seeds x 5 conditions x 8 evaluation seeds x 6 episodes = 1,440
+2 models x 5 training seeds x 5 conditions x 8 evaluation seeds x 6 episodes = 2,400
 ```
 
-This gives 720 episode evaluations per GAT model and 1,440 across both models.
+This gives 1,200 episode evaluations per GAT model and 2,400 across both models.
 
 Table 3.8 lists the five telemetry conditions and their roles.
 
@@ -613,7 +612,7 @@ sweep is included in the analysis only if it passes these gates.
 Actions in the primary learned-policy evaluation are sampled from the policy
 distribution, matching training and preserving both no-op and dispatch
 decisions for audit. A separate descriptive diagnostic applies deterministic
-argmax to each of the six GAT checkpoints over three held-out episodes. It does
+argmax to each of the ten GAT checkpoints over three held-out episodes. It does
 not affect checkpoint selection or the primary capability comparison.
 
 The action-type diagnostic separates scorable decisions into `no-op` and
@@ -622,7 +621,7 @@ forced. Records are averaged by episode within each action group. This shows whe
 combined results apply to both action types or mainly reflect the more common
 action.
 
-The random-trigger sensitivity analysis evaluates the six frozen checkpoints
+The random-trigger sensitivity analysis evaluates the ten frozen checkpoints
 under clean telemetry, a 30-second tunnel-triggered freeze, and a 30-second
 randomly triggered freeze. The per-taxi, per-step trigger probability is fixed
 at 0.0023 for every checkpoint. This value was chosen before the revised-model
@@ -630,14 +629,14 @@ test, but the corrected policies follow different trajectories and produce less
 random-trigger exposure than tunnel-trigger exposure. The two conditions are
 therefore not treated as exposure matched. The analysis reports observed
 exposure and uses the random condition only to check whether the direction of
-the paired response depends entirely on the tunnel trigger. It is a post-study
+the paired response depends entirely on the tunnel trigger. Its role is a supporting
 sensitivity analysis, not a confirmatory test.
 
 The ranking controls use the same held-out demand and action-sampling protocol.
 They evaluate GAT and GAT-Outage under clean telemetry and a 60-second outage:
 
 ```text
-2 models x 3 training seeds x 2 conditions x 3 evaluation seeds x 3 episodes
+2 models x 5 training seeds x 2 conditions x 3 evaluation seeds x 3 episodes
 ```
 
 The control evaluation uses seeds 42, 43, and 44 and covers all three held-out
@@ -645,7 +644,7 @@ demand files in each run. LOO, Gradient x Input, overlap, and aggregation
 diagnostics are sampled every eight decisions. Query-row sensitivity uses the
 same cadence and retains only sampled selected-request actions. Records are averaged within
 episodes before bootstrap intervals are calculated. The pooled control CIs
-describe episode-level evaluation variation conditional on the three fixed
+describe episode-level evaluation variation conditional on the five fixed
 checkpoints; they do not estimate uncertainty over a population of training
 runs. Per-training-seed control means are retained in the supporting data. Attention-aggregation
 sensitivity is reported by training seed for decisions with at least one
@@ -685,13 +684,13 @@ applied to H1-H4 within each trained policy; H2 remains exploratory.
 All tests use 10,000 permutation draws, 2,000 bootstrap draws, statistical seed
 0, and 95% percentile bootstrap intervals. Episodes, rather than individual
 decisions, are the resampling blocks. Each training seed represents one trained
-policy. Three seeds can show variation but cannot support a population-level
+policy. Five seeds can show variation but provide limited support for a population-level
 claim, so cross-seed results are reported as ranges and counts of supporting
 seeds without a population p-value.
 
 H5 is supported for a matched seed only when both the outage-duration/DEF and
 WAMSN/DEF correlations are closer to zero for GAT-Outage than for GAT. The
-result is the number of supporting pairs out of three; no cross-seed
+result is the number of supporting pairs out of five; no cross-seed
 significance test is used. This criterion measures weaker association, not
 stability across training seeds or causal improvement from outage training.
 
@@ -705,9 +704,9 @@ H3 is a manipulation check, not evidence that AoI causes DEF to change. WAMSN
 contains normalized AoI by definition, so H3 only confirms that longer outages
 create more AoI-weighted stale exposure.
 
-H5 compares two fitted configurations with different maximum training budgets
-and learning-rate decay horizons. It does not isolate the effect of degraded
-training observations. The exposure-conditioned paired follow-up is also kept
+H5 uses matched training budgets and learning-rate schedules. However,
+validation telemetry still matches each model's training condition, so the
+comparison does not isolate training observations from checkpoint selection. The exposure-conditioned paired follow-up is also kept
 separate from H1-H5: it subtracts clean-twin DEF from degraded DEF for the same
 decision and reports episode-block intervals, effect size, direction across
 trained policies, and uncertainty.
@@ -773,10 +772,11 @@ proof of a complete causal explanation; it only permits presentation with an
 explicit freshness indicator and audit scope as an audited candidate
 explanation.
 
-The release rules are a post-study synthesis of the risks identified by the
-experiment. Applying them to the present results demonstrates how the audit works; it
-does not provide an additional confirmatory test of H1-H5. For future candidate
-models, the rules and thresholds must be fixed before held-out evaluation.
+The release rules were developed from an earlier pilot and fixed before the
+present rerun. Their application is separate from the H1-H5 tests. Because the
+rerun uses the same scenario and demand splits as the pilot, it does not
+establish transfer to an independently collected dataset. Future evaluations
+should retain the rules and thresholds before examining test results.
 
 ## 3.11 Implementation and reproducibility
 
@@ -794,18 +794,34 @@ decision, a CSV check table, and a reader-facing Markdown report. The detailed
 input and output contract is documented in
 `docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md`.
 
-The six frozen-checkpoint sweep manifests agree on Python 3.11.15,
-macOS 15.7.9 on x86_64, NumPy 1.26.4, PyTorch 2.2.2,
-Gymnasium 1.3.0 and PettingZoo 1.26.1. They record SUMO,
-TraCI and sumolib version 1.20.0, with the TraCI backend and no libsumo.
-These recorded versions define the evaluated environment. The current general
-requirements file specifies SUMO bindings 1.27.0, so it must not be mistaken
-for the historical environment. A separate manifest-derived dependency file,
-`docs/dissertation/requirements-evaluated.txt`, preserves the recorded stack.
+All reported models were trained and evaluated on one Apple M3 Pro workstation
+with 12 logical CPU cores, 18 GiB of installed memory and macOS 14.2.1. The
+runtime uses Python 3.11.14, NumPy 1.26.4, PyTorch 2.2.2, Gymnasium 1.3.0,
+PettingZoo 1.26.1 and SUMO, TraCI and sumolib 1.20.0. Training and evaluation
+use CPU execution, with one Torch intra-operation thread and the default 12
+inter-operation threads. SUMO runs through TraCI. Training, selection and
+clean performance evaluation run sequentially. The main sweep, random-loss checks and attribution controls use up to six
+independent evaluation processes, each with a separate output directory and
+the same per-process settings. Execution records retain worker commands and
+timings; the overlapping batch is reported separately from sequential stages.
 
-The CPU model, installed memory and complete end-to-end timings were not
-recorded. Computational workload is therefore reported as evaluation counts
-(Table 3.7), with hardware and per-stage timing records left for future reruns.
+The SUMO command-line binary was built from the unmodified upstream 1.20.0
+source tag using AppleClang 15.0.0, Xerces-C 3.3.0 and PROJ 9.7.0. The source
+revision, binary hash, exact Python dependency lock and build commands are
+retained with the experiment records. Network generation remains a separate
+step using the version recorded in Section 3.2.
+
+Training all 15 models took 491.8 seconds at the orchestration-stage level,
+including process startup and checkpoint output. Checkpoint selection took
+633.6 seconds, clean performance evaluation 585.7 seconds, and the deterministic
+diagnostic 34.9 seconds. The overlapping main-sweep, random-loss and attribution-control batch took 1,684.7 seconds at the wrapper level. Later robustness and control stages reused the completed cells, so their short durations are aggregation overhead rather than simulation cost. Main hypothesis analysis took 232.5 seconds and baseline evaluation 65.4 seconds. The execution records retain the remaining analysis and packaging durations. These are measurements on
+this workstation, not comparisons with the earlier machine, whose hardware
+and complete timings were not recorded.
+
+The initial SUMO 1.27.0 attempt stopped on a reservation-data decoding error.
+Its partial and completed runs were excluded, and all models restarted under
+the fixed 1.20.0 runtime in a fresh output directory. No result from that
+attempt or from the earlier workstation enters the reported estimates.
 
 ### 3.11.2 Component interfaces and feature configuration
 

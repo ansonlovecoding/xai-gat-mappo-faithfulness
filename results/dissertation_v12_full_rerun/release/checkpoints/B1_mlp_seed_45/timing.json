@@ -1,0 +1,5 @@
+{
+  "status": "completed",
+  "total_training_wall_seconds": 27.691310249996604,
+  "scope": "initialization, all epochs and checkpoint saves; excludes validation selection"
+}

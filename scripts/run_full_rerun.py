@@ -46,6 +46,7 @@ def main():
     stages.extend([
         ('baselines', [py, 'scripts/run_matched_baselines.py', '--config', str(config),
                        '--output', str(evidence / 'matched_baselines.json')]),
+        ('precision', [py, 'scripts/run_precision_sensitivity.py', str(run)]),
         ('package', [py, 'scripts/package_dissertation_release.py', '--config', str(config)]),
         ('noop', [py, 'scripts/analyze_noop_absolute_def.py', '--evidence', str(evidence/'release'),
                   '--out', str(evidence/'supplementary_review')]),

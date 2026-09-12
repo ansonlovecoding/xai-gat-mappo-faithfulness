@@ -1,0 +1,810 @@
+{
+  "schema_version": 2,
+  "protocol_version": "2.0",
+  "primary_faithfulness_metric": "standard type-matched DEF for no-op; chosen-action-protected type-matched DEF for dispatch",
+  "input_quantization_decimals": 4,
+  "manifest": {
+    "checkpoint": "runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_selected.pt",
+    "git_rev": null
+  },
+  "H1_outage_duration": {
+    "n": 4026,
+    "rho": 0.19861669984518288,
+    "p_one_sided": 1.0,
+    "per_level_mean": {
+      "0": -0.0003408805031446541,
+      "10": -0.0002119705340699816,
+      "20": -0.000143125,
+      "30": -9.815533980582524e-05,
+      "60": -3.670411985018726e-05
+    }
+  },
+  "H2_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": -0.6388193474711401,
+    "p_one_sided": 1.0,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3258
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4846
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.28
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3178
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5059
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.304
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4077
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3873
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5754
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5296
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6704
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4912
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.699
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5648
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6016
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.762
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6432
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8487
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6808
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.876
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.65
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6498
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5736
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -1.013
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.9247
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.9902
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8765
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": -0.0417,
+        "faith_rate": -0.9132
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7771
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8534
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8069
+      }
+    ]
+  },
+  "H3_outage_duration": {
+    "n": 4874,
+    "rho": 0.48318188223636915,
+    "p_one_sided": 9.999000099990002e-05,
+    "per_level_mean": {
+      "0": 0.0,
+      "10": 0.013013741496598641,
+      "20": 0.02532429435483871,
+      "30": 0.03785261865793781,
+      "60": 0.06006096922069417
+    }
+  },
+  "H1m_outage_duration": {
+    "n": 4026,
+    "rho": 0.19077266859767963,
+    "p_one_sided": 1.0,
+    "per_level_mean": {
+      "0": -0.0013006289308176101,
+      "10": -0.0007996316758747698,
+      "20": -0.0005305,
+      "30": -0.0003583495145631068,
+      "60": -0.00012681647940074905
+    }
+  },
+  "H2m_outage_duration": {
+    "n": 32,
+    "n_skipped_perf_floor": 0,
+    "mean_delta_faith_minus_perf": -0.6495980685752799,
+    "p_one_sided": 1.0,
+    "cells": [
+      {
+        "level": 10.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3422
+      },
+      {
+        "level": 10.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5007
+      },
+      {
+        "level": 10.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.2854
+      },
+      {
+        "level": 10.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3071
+      },
+      {
+        "level": 10.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5079
+      },
+      {
+        "level": 10.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3249
+      },
+      {
+        "level": 10.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.3999
+      },
+      {
+        "level": 10.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4027
+      },
+      {
+        "level": 20.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5651
+      },
+      {
+        "level": 20.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5725
+      },
+      {
+        "level": 20.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6744
+      },
+      {
+        "level": 20.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.4891
+      },
+      {
+        "level": 20.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6912
+      },
+      {
+        "level": 20.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5991
+      },
+      {
+        "level": 20.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6093
+      },
+      {
+        "level": 20.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5288
+      },
+      {
+        "level": 30.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7711
+      },
+      {
+        "level": 30.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6628
+      },
+      {
+        "level": 30.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8507
+      },
+      {
+        "level": 30.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6919
+      },
+      {
+        "level": 30.0,
+        "seed": 46,
+        "perf_rate": 0.0,
+        "faith_rate": -0.886
+      },
+      {
+        "level": 30.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6716
+      },
+      {
+        "level": 30.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.6568
+      },
+      {
+        "level": 30.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.5986
+      },
+      {
+        "level": 60.0,
+        "seed": 42,
+        "perf_rate": 0.0,
+        "faith_rate": -1.019
+      },
+      {
+        "level": 60.0,
+        "seed": 43,
+        "perf_rate": 0.0,
+        "faith_rate": -0.9408
+      },
+      {
+        "level": 60.0,
+        "seed": 44,
+        "perf_rate": 0.0,
+        "faith_rate": -0.9954
+      },
+      {
+        "level": 60.0,
+        "seed": 45,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8876
+      },
+      {
+        "level": 60.0,
+        "seed": 46,
+        "perf_rate": -0.0417,
+        "faith_rate": -0.9306
+      },
+      {
+        "level": 60.0,
+        "seed": 47,
+        "perf_rate": 0.0,
+        "faith_rate": -0.7834
+      },
+      {
+        "level": 60.0,
+        "seed": 48,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8597
+      },
+      {
+        "level": 60.0,
+        "seed": 49,
+        "perf_rate": 0.0,
+        "faith_rate": -0.8226
+      }
+    ]
+  },
+  "H4_pooled": {
+    "n": 3708,
+    "rho": 0.39800109575440973,
+    "p_one_sided": 1.0
+  },
+  "robust": {
+    "primary_axis": "outage_duration",
+    "primary_stale_attention_shift": {
+      "mean_shift": 0.0033309769499014403,
+      "ci95": [
+        0.0032321810704718196,
+        0.003430958879242732
+      ],
+      "p_one_sided": 9.999000099990002e-05,
+      "n_decisions": 3003,
+      "n_episode_blocks": 192,
+      "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+    },
+    "exposure_conditioned_paired_followup": {
+      "probability_def": {
+        "metric": "paired_def_delta",
+        "mean_degraded_minus_clean": 9.966835288771431e-05,
+        "ci95": [
+          8.706703418079319e-05,
+          0.00011296501828254938
+        ],
+        "p_one_sided_decrease": 1.0,
+        "n_decisions": 2555,
+        "n_episode_blocks": 176,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "margin_def": {
+        "metric": "paired_def_m_delta",
+        "mean_degraded_minus_clean": 0.0003535103171058575,
+        "ci95": [
+          0.00030438883495611255,
+          0.00040185042662748923
+        ],
+        "p_one_sided_decrease": 1.0,
+        "n_decisions": 2555,
+        "n_episode_blocks": 176,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "protected_probability_def": {
+        "metric": "paired_def_excl_delta",
+        "mean_degraded_minus_clean": 0.00015651642650415693,
+        "ci95": [
+          0.0001416821166041439,
+          0.00017242079387158864
+        ],
+        "p_one_sided_decrease": 1.0,
+        "n_decisions": 1767,
+        "n_episode_blocks": 176,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      },
+      "protected_margin_def": {
+        "metric": "paired_def_m_excl_delta",
+        "mean_degraded_minus_clean": 0.0005968360747551968,
+        "ci95": [
+          0.0005359521628705543,
+          0.0006563338563982671
+        ],
+        "p_one_sided_decrease": 1.0,
+        "n_decisions": 1767,
+        "n_episode_blocks": 176,
+        "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+      }
+    },
+    "H1_robust": {
+      "n": 4026,
+      "n_episode_blocks": 240,
+      "rho": 0.19861669984518288,
+      "p_episode_perm": 1.0,
+      "rho_cluster_ci95": [
+        0.16401624798615794,
+        0.23476349697618334
+      ]
+    },
+    "H1m_robust": {
+      "n": 4026,
+      "n_episode_blocks": 240,
+      "rho": 0.19077266859767963,
+      "p_episode_perm": 1.0,
+      "rho_cluster_ci95": [
+        0.15617587380731207,
+        0.2254195223147402
+      ]
+    },
+    "H3_robust": {
+      "n": 4874,
+      "n_episode_blocks": 240,
+      "rho": 0.48318188223636915,
+      "p_episode_perm": 9.999000099990002e-05,
+      "rho_cluster_ci95": [
+        0.4521611298813293,
+        0.5110663327283155
+      ]
+    },
+    "H4_within_episode": {
+      "n_episodes": 176,
+      "mean_rho_within_episode": 0.3790025252366126,
+      "frac_negative": 0.03409090909090909,
+      "p_one_sided": 1.0
+    },
+    "H4m_within_episode": {
+      "n_episodes": 176,
+      "mean_rho_within_episode": 0.38002171969017234,
+      "frac_negative": 0.045454545454545456,
+      "p_one_sided": 1.0
+    },
+    "confirmatory_family_raw_p": {
+      "H1": 1.0,
+      "H2": 1.0,
+      "H3": 9.999000099990002e-05,
+      "H4": 1.0
+    },
+    "confirmatory_family_holm_p": {
+      "H3": 0.00039996000399960006,
+      "H1": 1.0,
+      "H2": 1.0,
+      "H4": 1.0
+    },
+    "def_agreement": {
+      "n": 4026,
+      "spearman_def_vs_def_m": 0.9830327364438483
+    },
+    "action_strata": {
+      "all": {
+        "n_records": 4026,
+        "n_clean_records": 318,
+        "n_stale_exposed_records": 2555,
+        "mean_selected_action_probability": 0.3410569796323895,
+        "clean_probability_def_mean": -0.0003408805031446541,
+        "clean_margin_def_mean": -0.0013006289308176101,
+        "fraction_of_eligible_records": 1.0,
+        "primary_stale_attention_shift": {
+          "mean_shift": 0.0035853161992133744,
+          "ci95": [
+            0.0034633868781814895,
+            0.0037110031512572156
+          ],
+          "p_one_sided": 9.999000099990002e-05,
+          "n_decisions": 2555,
+          "n_episode_blocks": 176,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": 9.966835288771431e-05,
+          "ci95": [
+            8.705728788590826e-05,
+            0.00011214292844653455
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 2555,
+          "n_episode_blocks": 176,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": 0.0003535103171058575,
+          "ci95": [
+            0.00030414725482458114,
+            0.00040126734199094144
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 2555,
+          "n_episode_blocks": 176,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 4026,
+          "n_episode_blocks": 240,
+          "rho": 0.6615004312813283,
+          "p_episode_perm": 1.0,
+          "rho_cluster_ci95": [
+            0.5654011328968503,
+            0.7423351779194297
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 4026,
+          "n_episode_blocks": 240,
+          "rho": 0.6621775507882217,
+          "p_episode_perm": 1.0,
+          "rho_cluster_ci95": [
+            0.569372371660598,
+            0.7413074097753634
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 176,
+          "mean_rho_within_episode": 0.3790025252366126,
+          "frac_negative": 0.03409090909090909,
+          "p_one_sided": 1.0
+        },
+        "H4_margin_def": {
+          "n_episodes": 176,
+          "mean_rho_within_episode": 0.38002171969017234,
+          "frac_negative": 0.045454545454545456,
+          "p_one_sided": 1.0
+        }
+      },
+      "no_op": {
+        "n_records": 1033,
+        "n_clean_records": 54,
+        "n_stale_exposed_records": 788,
+        "mean_selected_action_probability": 0.3225552758954502,
+        "clean_probability_def_mean": 0.00019259259259259262,
+        "clean_margin_def_mean": 0.000938888888888889,
+        "fraction_of_eligible_records": 0.25658221559860905,
+        "primary_stale_attention_shift": {
+          "mean_shift": 0.003722946361688876,
+          "ci95": [
+            0.003407344683551644,
+            0.004069807744982894
+          ],
+          "p_one_sided": 9.999000099990002e-05,
+          "n_decisions": 788,
+          "n_episode_blocks": 167,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": -3.9061201606111794e-05,
+          "ci95": [
+            -4.542374209290378e-05,
+            -3.2393298235364125e-05
+          ],
+          "p_one_sided_decrease": 9.999000099990002e-05,
+          "n_decisions": 788,
+          "n_episode_blocks": 167,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": -0.00023085413920743265,
+          "ci95": [
+            -0.0002637693260664818,
+            -0.00019641338481046568
+          ],
+          "p_one_sided_decrease": 9.999000099990002e-05,
+          "n_decisions": 788,
+          "n_episode_blocks": 167,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 1033,
+          "n_episode_blocks": 219,
+          "rho": -0.3765881397787317,
+          "p_episode_perm": 9.999000099990002e-05,
+          "rho_cluster_ci95": [
+            -0.4949687681629203,
+            -0.23605511626053888
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 1033,
+          "n_episode_blocks": 219,
+          "rho": -0.42996881926489405,
+          "p_episode_perm": 9.999000099990002e-05,
+          "rho_cluster_ci95": [
+            -0.5440734594658198,
+            -0.2965388550165391
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 48,
+          "mean_rho_within_episode": -0.3976659135738405,
+          "frac_negative": 0.8958333333333334,
+          "p_one_sided": 9.999000099990002e-05
+        },
+        "H4_margin_def": {
+          "n_episodes": 48,
+          "mean_rho_within_episode": -0.41053382177773895,
+          "frac_negative": 0.9583333333333334,
+          "p_one_sided": 9.999000099990002e-05
+        }
+      },
+      "dispatch": {
+        "n_records": 2993,
+        "n_clean_records": 264,
+        "n_stale_exposed_records": 1767,
+        "mean_selected_action_probability": 0.34744263280988974,
+        "clean_probability_def_mean": -0.00045,
+        "clean_margin_def_mean": -0.0017587121212121215,
+        "fraction_of_eligible_records": 0.743417784401391,
+        "primary_stale_attention_shift": {
+          "mean_shift": 0.0035212449410236936,
+          "ci95": [
+            0.003352716937464528,
+            0.0036908633165882924
+          ],
+          "p_one_sided": 9.999000099990002e-05,
+          "n_decisions": 1767,
+          "n_episode_blocks": 176,
+          "interpretation": "positive values mean the degraded observation assigned more attention mass to stale nodes than its exact clean twin"
+        },
+        "paired_probability_def": {
+          "metric": "paired_def_delta",
+          "mean_degraded_minus_clean": 0.00015651642650415693,
+          "ci95": [
+            0.00014124859493951252,
+            0.00017149815534603534
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 1767,
+          "n_episode_blocks": 176,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "paired_margin_def": {
+          "metric": "paired_def_m_delta",
+          "mean_degraded_minus_clean": 0.0005968360747551968,
+          "ci95": [
+            0.0005364724597417722,
+            0.0006590657540794996
+          ],
+          "p_one_sided_decrease": 1.0,
+          "n_decisions": 1767,
+          "n_episode_blocks": 176,
+          "interpretation": "negative values mean lower faithfulness on the degraded observation than on its exact clean twin"
+        },
+        "H1_probability_def": {
+          "n": 2993,
+          "n_episode_blocks": 240,
+          "rho": 0.7209417629137151,
+          "p_episode_perm": 1.0,
+          "rho_cluster_ci95": [
+            0.640337627905186,
+            0.7907815196049579
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H1_margin_def": {
+          "n": 2993,
+          "n_episode_blocks": 240,
+          "rho": 0.7320283257247345,
+          "p_episode_perm": 1.0,
+          "rho_cluster_ci95": [
+            0.6495717692900869,
+            0.7989723803754784
+          ],
+          "analysis_unit": "equal-weight episode block"
+        },
+        "H4_probability_def": {
+          "n_episodes": 173,
+          "mean_rho_within_episode": 0.5391295152203309,
+          "frac_negative": 0.017341040462427744,
+          "p_one_sided": 1.0
+        },
+        "H4_margin_def": {
+          "n_episodes": 173,
+          "mean_rho_within_episode": 0.5524080305651952,
+          "frac_negative": 0.023121387283236993,
+          "p_one_sided": 1.0
+        }
+      }
+    },
+    "action_strata_interpretation": "Exploratory diagnostic. The all-decision result is split into no-op and request-dispatch decisions without changing the frozen policy or the predeclared primary hypothesis family."
+  }
+}

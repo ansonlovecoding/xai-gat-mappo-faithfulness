@@ -1,3 +1,5 @@
+> Superseded by the completed v12 five-seed full rerun. See `FULL_RERUN_V12.md` and `REPRODUCE_EXPERIMENTS.md`; v11 contributes no thesis results. The original planning notes follow for provenance.
+
 # Matched-budget follow-up and supplementary no-op analysis
 
 ## Completed supplementary analysis

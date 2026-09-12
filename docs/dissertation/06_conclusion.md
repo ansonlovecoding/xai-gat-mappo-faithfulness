@@ -8,33 +8,22 @@ required checks for decision relevance, extraction stability, and consistency
 across independently trained checkpoints. This conclusion concerns the
 declared averaged self-row channel, not all attention-based explanation methods.
 
-The corrected experiment does not show that telemetry degradation reduces
-DEF. Longer outages consistently increase stale-data exposure, confirming that
-the manipulation worked, but H1, H2, and H4 are not supported. Paired DEF
-increases slightly for all six checkpoints. This increase should not be interpreted as improved explanation quality because raw attention
-has dispatch margin-DEF below its type-matched random control under clean telemetry.
-Telemetry freshness and explanation faithfulness therefore need separate
-checks.
+Longer outages consistently increase stale-data exposure, confirming that the manipulation worked. A decline in DEF is supported for a minority of checkpoints: H1 is supported for three of ten checkpoints and H4 for two. Both seed-45 checkpoints support H1, H2 and H4. Paired DEF intervals are positive in seven checkpoints, negative in two, and inconclusive in one. These mixed results do not establish a uniform effect of degradation, and positive shifts do not by themselves validate explanation quality. Telemetry freshness and explanation faithfulness require separate checks.
 
 The research questions are answered as follows.
 
 1. **RQ1:** The tested averaged self-row attention does not establish reliable
    dispatch decision relevance under clean telemetry. Dispatch margin-DEF is
    below the matched-random control for both models, while LOO gives a positive
-   control response. Request-row sensitivity does not establish a consistent
-   advantage, and supplementary no-op results vary by checkpoint and condition.
+   control response. The selected request row is positive for GAT-Outage but negative for GAT, and supplementary no-op results vary by checkpoint and condition.
    These findings do not exclude other attention-based explanation methods.
 2. **RQ2:** Degradation changes the attention assigned to stale nodes, but the
-   direction is not consistent. Three checkpoints show a clear shift toward
-   stale nodes, two show a clear shift away, and one is inconclusive.
-3. **RQ3:** Outage duration consistently increases WAMSN, but it does not
-   produce the proposed decline in DEF. The measured response also differs
+   direction is not consistent. Seven checkpoints shift attention toward stale nodes and three shift away.
+3. **RQ3:** Outage duration consistently increases WAMSN, but the proposed decline in DEF is supported only for some checkpoints. The measured response also differs
    between no-op and dispatch actions and can reverse under alternative
    attention-extraction choices.
 4. **RQ4:** The tested GAT-Outage configuration does not make raw attention
-   reliably decision-relevant or remove checkpoint variation. Because GAT and
-   GAT-Outage use different maximum training budgets, this comparison does not
-   isolate outage training as the cause.
+   reliably decision-relevant or remove checkpoint variation. Although training budgets and optimization settings are matched, validation telemetry differs between the two configurations, so this comparison does not isolate training telemetry alone.
 
 The construct-validity audit is essential to these answers. A passenger-request
 node represents both information and an available action, whereas a peer-taxi
@@ -49,21 +38,19 @@ framework. It accepts frozen checkpoints and held-out evidence, checks
 freshness, decision relevance, action composition, extraction stability,
 checkpoint consistency, action-rule capability, and trigger sensitivity, and
 returns `ELIGIBLE`, `WITHHOLD`, or `INCOMPLETE`. In this study, both model
-families and all six checkpoints receive `WITHHOLD`. The evidence is complete,
+families and all ten checkpoints receive `WITHHOLD`. The evidence is complete,
 but it does not justify presenting attention as the reason for a dispatch or
 no-op decision under the declared whole-channel release rule. This conservative
 rule does not assert that every individual no-op explanation is unfaithful.
 
-The study is limited to one simulated district, three training seeds
-per model, three held-out demand variants, different clean/outage training
-budgets and a small action-linked graph. The experiment demonstrates rejection
+The study is limited to one simulated district, five training seeds
+per model, three held-out demand variants, different validation telemetry
+conditions and a small action-linked graph. The experiment demonstrates rejection
 of the tested raw-attention channel; it does not yet demonstrate a trained
 model that meets all the release requirements. It also does not measure human
 understanding or generalization to real fleet telemetry.
 
-Future work should first compare clean and outage training under the same
-training budgets with more independent seeds, then extend evaluation to
-other road networks and calibrated telemetry-loss conditions. Explanation-aware
+Future work should hold validation telemetry fixed when comparing clean and outage training, use more independent seeds and newly reserved demand, and extend evaluation to other road networks and calibrated telemetry-loss conditions. Explanation-aware
 training and alternative graph attribution methods offer further candidates
 for evaluation. These experiments should retain fixed release criteria, report
 both passing and failing checkpoints, and record hardware and timing details.

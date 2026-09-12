@@ -1,0 +1,30 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45/preflight.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/preflight_experiment.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46'
+preflight: PASS
+report:    /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46/preflight.json

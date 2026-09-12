@@ -1,0 +1,47 @@
+sweep:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46
+ckpt:    runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_selected.pt  (epoch 10)
+cells:   40  |  decisions with records: 4873
+
+axis             level  deg_rate  pickups     DEF         DEF 95% CI   WAMSN   drift
+------------------------------------------------------------------------------------
+clean                0    0.0000    12.92  -0.000 [-0.000, -0.000]     0.000  0.0000
+outage_duration      10    0.0082    12.92  -0.000 [-0.000, -0.000]     0.013  0.0000
+outage_duration      20    0.0159    12.92  -0.000 [-0.000, -0.000]     0.025  0.0000
+outage_duration      30    0.0233    12.92  -0.000 [-0.000, -0.000]     0.038  0.0000
+outage_duration      60    0.0319    12.92  -0.000 [-0.000, -0.000]     0.060  0.0000
+
+hypothesis tests (α = 0.05, one-sided):
+  H1 (DEF ↓ with outage_duration): not supported  (stat=+0.075, p=1.0000, n=4025)
+  H1m (margin-DEF ↓ with outage_duration): not supported  (stat=+0.074, p=1.0000, n=4025)
+  H2 (faith declines faster, outage_duration): not supported  (stat=-0.596, p=1.0000, n=32)
+  H2m (margin-faith declines faster, outage_duration): not supported  (stat=-0.594, p=1.0000, n=32)
+  H3 (WAMSN ↑ with outage_duration): SUPPORTED  (stat=+0.484, p=0.0001, n=4873)
+  H4 (WAMSN–DEF negative, pooled): not supported  (stat=+0.142, p=1.0000, n=3709)
+
+cluster-robust statistics (episode-block permutation, primary):
+  stale-attention shift (binary stale mask, degraded - clean twin): mean=+0.0025  CI95=[+0.0024, +0.0025]  p=0.0001  (episode blocks=192)
+  paired exposed probability_def: delta=+0.0001  CI95=[+0.0001, +0.0001]  p(decrease)=1.0000  (blocks=176)
+  paired exposed margin_def: delta=+0.0003  CI95=[+0.0002, +0.0003]  p(decrease)=1.0000  (blocks=176)
+  paired exposed protected_probability_def: delta=+0.0001  CI95=[+0.0001, +0.0002]  p(decrease)=1.0000  (blocks=176)
+  paired exposed protected_margin_def: delta=+0.0005  CI95=[+0.0005, +0.0006]  p(decrease)=1.0000  (blocks=176)
+  H1_robust (def vs outage_duration): rho=+0.075  p_episode=0.9999  CI95=[+0.040, +0.114]  (blocks=240)
+  H1m_robust (def_m vs outage_duration): rho=+0.074  p_episode=0.9999  CI95=[+0.035, +0.113]  (blocks=240)
+  H3_robust (wamsn vs outage_duration): rho=+0.484  p_episode=0.0001  CI95=[+0.454, +0.511]  (blocks=240)
+  H4_within_episode: mean within-episode rho=+0.145  (34% episodes negative)  p=1.0000  (episodes=176)
+  H4m_within_episode: mean within-episode rho=+0.145  (35% episodes negative)  p=1.0000  (episodes=176)
+
+confirmatory family (robust p where available) with Holm correction:
+  H1: raw p=0.9999 → Holm p=1.0000  not supported
+  H2: raw p=1.0000 → Holm p=1.0000  not supported
+  H3: raw p=0.0001 → Holm p=0.0004  SUPPORTED
+  H4: raw p=1.0000 → Holm p=1.0000  not supported
+  (margin-DEF variants and secondary axes are exploratory by declaration — reported unadjusted, flagged as such)
+
+prob-DEF vs margin-DEF rank agreement: rho=+0.986 (n=4025)
+
+action-stratified diagnostics (exploratory):
+  all      n=4025   (100.0%)  mean pi=0.3380  paired DEF=+0.000086
+  no_op    n=1083   (26.9%)  mean pi=0.3397  paired DEF=-0.000016
+  dispatch n=2942   (73.1%)  mean pi=0.3374  paired DEF=+0.000149
+
+analysis: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46/analysis_rounded4.json

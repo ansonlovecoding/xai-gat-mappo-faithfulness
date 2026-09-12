@@ -254,9 +254,11 @@ def _plot_controls(seed_rows: list[dict]) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(8.0, 5.7), sharey="row")
     fields = list(RANKER_LABEL)
     labels = [RANKER_LABEL[field] for field in fields]
-    colors = {42: "#176B87", 43: "#C75000", 44: "#3A7D44"}
+    palette = ["#176B87", "#C75000", "#3A7D44", "#8064A2", "#8C564B"]
+    colors = {seed: palette[i % len(palette)] for i, seed in
+              enumerate(sorted({row["training_seed"] for row in seed_rows}))}
     for col_index, model in enumerate(("GAT", "GAT-Outage")):
-        for seed in (42, 43, 44):
+        for seed in colors:
             clean_values = []
             differences = []
             for field in fields:
@@ -325,7 +327,7 @@ def _plot_overlap(rows: list[dict]) -> None:
 
 def _plot_aggregation(rows: list[dict]) -> None:
     models = ("GAT", "GAT-Outage")
-    seeds = (42, 43, 44)
+    seeds = sorted({row["training_seed"] for row in rows})
     preferred = [
         "default_mean",
         *(f"first_{head}" for head in
@@ -367,7 +369,7 @@ def _plot_aggregation(rows: list[dict]) -> None:
                         ha="center", va="center", fontsize=6.5,
                         color="white" if abs(matrix[i, j]) > limit * 0.55
                         else "#202020")
-    ax.axvline(2.5, color="#202020", linewidth=1.2)
+    ax.axvline(len(seeds) - 0.5, color="#202020", linewidth=1.2)
     colorbar = fig.colorbar(image, ax=ax, pad=0.02)
     colorbar.set_label("Stale-attention shift x 10^3")
     ax.set_title("Attention response depends on layer, head and checkpoint")
@@ -387,7 +389,7 @@ def _plot_action_rows(seed_rows: list[dict]) -> None:
         "Fixed self row": "self_row_request_def_m",
         "Selected request row": "action_row_request_def_m",
     }
-    seeds = (42, 43, 44)
+    seeds = sorted({row["training_seed"] for row in seed_rows})
     for col_index, model in enumerate(("GAT", "GAT-Outage")):
         for label, field in field_by_label.items():
             clean_values = []

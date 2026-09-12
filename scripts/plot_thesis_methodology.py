@@ -258,7 +258,7 @@ def model_training_design():
             fontsize=11.5, fontweight="bold", color=GREY)
 
     pipeline = [
-        (0.145, "Train all three", "GAT 40 | MLP 50 | Outage 50\nvalidation-derived budgets\nseeds 42, 43, 44", BLUE),
+        (0.145, "Train all three", "50 epochs per model\nmatched GAT training budgets\nseeds 42–46", BLUE),
         (0.38, "Validate and select",
          "validation demand\ncompleted journeys first; reward tie-break", GREEN),
         (0.615, "Freeze", "one checkpoint\nper model and seed", GREY),

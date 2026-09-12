@@ -1,0 +1,1718 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/check_environment.py
+python: 3.11.14
+torch:  2.2.2
+numpy:  1.26.4
+SUMO:   1.20.0 via traci
+traci:  1.20.0
+git:    2c604e73fe1501a9a1a370520857e12cdaeb74a8 (clean)
+environment: PASS
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy mlp --epochs 50 --seed 42 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_42' --deterministic-torch --no-anneal-lr --lr 0.0003 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_42
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  mlp — 106,487 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       11    +81.03      129   -0.0008  1074.9653    1.553   0.292   0.0000     0.000     1.6
+Warning: Could not set locale to 'C'.
+    1       15   +121.95      130   -0.0008  1484.6948    1.339   0.291   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       12    +91.43      133   -0.0010  1032.2304    1.244   0.274   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    3       12    +92.68      139   -0.0010  737.8459    1.358   0.313   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       12    +92.24       97   -0.0001  1132.8128    1.675   0.169   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    5       13   +104.90      161   -0.0002  1040.5858    1.393   0.277   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+    6       14   +114.67       89    0.0006  1596.9490    1.538   0.213   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+    7       13   +100.44      117   -0.0002  833.0727    1.350   0.196   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+    8       14   +111.93       96   -0.0003  1417.6931    1.549   0.171   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       14   +109.89      101    0.0003  952.4742    1.459   0.160   0.0003     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   10       13   +102.50      115   -0.0022  843.4631    1.202   0.243   0.0007     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   11       13   +104.04      137    0.0020  810.0379    1.186   0.256   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   12       11    +82.66      167    0.0024  537.2522    1.206   0.308   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   13       16   +135.45      168   -0.0035  1578.4358    1.258   0.194   0.0004     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   14       13   +101.71      127   -0.0027  1029.5262    1.485   0.126   0.0006     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   15       17   +142.84      130    0.0030  1666.3541    1.309   0.209   0.0010     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   16        8    +48.79      129    0.0005  315.5105    1.203   0.248   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   17       14   +115.69      135    0.0007  1232.6667    1.319   0.200   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   18       15   +123.95      112   -0.0011  1226.4768    1.664   0.141   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   19       14   +115.92      167   -0.0014  917.8907    1.394   0.196   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   20       11    +82.91       92    0.0022  776.5902    1.517   0.272   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   21       12    +89.64      122   -0.0023  421.3345    1.352   0.216   0.0004     0.000     0.6
+Warning: Could not set locale to 'C'.
+   22       14   +112.06      110    0.0045  985.0974    1.555   0.244   0.0011     0.000     0.5
+Warning: Could not set locale to 'C'.
+   23       12    +89.24      104    0.0032  541.5543    1.440   0.238   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   24       12    +92.91      118    0.0008  774.6271    1.201   0.314   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   25       11    +82.65      134    0.0009  386.7001    1.172   0.333   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   26       10    +72.23      164    0.0015  317.7662    1.193   0.231   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   27       17   +146.50      177    0.0002  1277.9688    1.294   0.265   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+   28       11    +80.53      124   -0.0029  377.7299    1.443   0.238   0.0012     0.000     0.5
+Warning: Could not set locale to 'C'.
+   29       17   +143.20      137   -0.0042  1286.4495    1.281   0.308   0.0025     0.004     0.6
+Warning: Could not set locale to 'C'.
+   30       16   +133.57      139    0.0019  819.6893    1.163   0.311   0.0027     0.000     0.5
+Warning: Could not set locale to 'C'.
+   31       12    +93.65      143   -0.0002  420.1809    1.227   0.398   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   32        7    +39.12      100   -0.0015   96.7381    1.441   0.150   0.0008     0.000     0.5
+Warning: Could not set locale to 'C'.
+   33       10    +73.96      170    0.0003  214.4435    1.190   0.455   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   34       10    +72.19       82    0.0025  476.1016    1.238   0.268   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   35       12    +89.31      119   -0.0007  197.8666    1.136   0.343   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+   36        8    +48.43      109   -0.0010   75.2285    1.320   0.315   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   37        9    +58.17      111   -0.0004   90.4900    1.275   0.374   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   38       14   +112.36      128   -0.0043  423.0187    1.136   0.453   0.0006     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       11    +82.98      138    0.0003  150.0273    1.107   0.407   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40        9    +61.27      171    0.0009   45.6289    1.141   0.405   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   41       12    +94.16      167    0.0016  497.2383    1.134   0.458   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   42       13   +101.64      134    0.0006  364.6698    1.295   0.351   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   43       19   +164.61      142    0.0011  1345.6520    1.150   0.418   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   44       14   +112.53      145   -0.0029  322.4175    1.084   0.448   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   45       10    +72.66      135   -0.0050   96.4380    1.091   0.274   0.0024     0.009     0.5
+Warning: Could not set locale to 'C'.
+   46       17   +144.69      124    0.0003  546.3158    1.158   0.144   0.0024     0.018     0.6
+Warning: Could not set locale to 'C'.
+   47       11    +84.90      172   -0.0002   83.0513    0.966   0.223   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   48       12    +94.29      101   -0.0022  276.0228    1.043   0.188   0.0011     0.002     0.5
+Warning: Could not set locale to 'C'.
+   49       10    +68.98      121    0.0029   24.5357    1.010   0.208   0.0009     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_42/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_42/ckpt_final.pt
+best:   epoch 15, rolling mean pickups = 13.80
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_42/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy mlp --epochs 50 --seed 43 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_43' --deterministic-torch --no-anneal-lr --lr 0.0003 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_43
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  mlp — 106,487 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       10    +70.38      123   -0.0009  857.7045    1.535   0.229   0.0000     0.000     1.6
+Warning: Could not set locale to 'C'.
+    1       17   +142.83      133   -0.0005  2139.6828    1.350   0.248   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2       14   +113.04      133    0.0001  1455.4218    1.242   0.363   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    3       11    +82.47      131    0.0001  817.9899    1.318   0.242   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    4       14   +112.34      107   -0.0011  1070.8742    1.686   0.195   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    5       12    +95.49      162   -0.0005  1051.5827    1.395   0.225   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    6       16   +136.67       90   -0.0010  1889.4184    1.539   0.200   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+    7       10    +69.08      119   -0.0005  474.7181    1.351   0.222   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+    8       11    +80.54       96    0.0006  858.8577    1.544   0.158   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+    9       11    +79.41      104    0.0004  642.2375    1.454   0.155   0.0004     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   10       12    +91.84      113   -0.0020  1034.5227    1.189   0.168   0.0003     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   11       13   +103.61      133    0.0020  848.1261    1.183   0.283   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   12        8    +50.60      168   -0.0013  269.6515    1.241   0.222   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   13       12    +93.35      166    0.0006  974.0275    1.290   0.208   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   14       10    +69.36      121   -0.0012  583.5855    1.467   0.198   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   15       20   +174.33      133   -0.0006  2325.4034    1.278   0.150   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   16       14   +113.21      134   -0.0029  1063.4940    1.170   0.254   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   17       12    +93.81      135   -0.0019  863.6936    1.240   0.168   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   18       11    +81.07       92   -0.0039  636.8708    1.460   0.028   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   19       13   +106.07      164   -0.0007  909.3168    1.253   0.106   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   20       13   +103.70       78    0.0031  1104.5407    1.340   0.179   0.0008     0.000     0.5
+Warning: Could not set locale to 'C'.
+   21        8    +47.74      110    0.0020  165.7983    1.181   0.178   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   22       14   +112.38      105   -0.0004  1084.8239    1.442   0.200   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   23       10    +68.80      102   -0.0007  361.6210    1.339   0.256   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   24       15   +123.57      114    0.0025  1122.9032    1.144   0.272   0.0003     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   25       11    +83.06      134    0.0009  523.0943    1.126   0.316   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   26        9    +61.03      164    0.0006  201.0815    1.150   0.317   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+   27       17   +145.97      167    0.0011  1349.5241    1.232   0.299   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   28       10    +69.81      122   -0.0013  310.5995    1.361   0.232   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   29       19   +162.76      135   -0.0040  1448.4403    1.203   0.296   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       12    +91.59      129   -0.0007  569.6783    1.055   0.330   0.0022     0.006     0.6
+Warning: Could not set locale to 'C'.
+   31       11    +82.78      127   -0.0010  331.5925    1.046   0.310   0.0010     0.000     0.5
+Warning: Could not set locale to 'C'.
+   32       11    +81.10       93   -0.0033  302.2150    1.312   0.082   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   33        7    +42.00      169    0.0022   61.6515    1.090   0.303   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   34       12    +93.17       86   -0.0020  649.2989    1.062   0.279   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   35       11    +78.84      118   -0.0039  187.7492    0.957   0.347   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   36       12    +90.96       96    0.0001  347.6353    1.087   0.224   0.0013     0.000     0.5
+Warning: Could not set locale to 'C'.
+   37       10    +68.92      103    0.0007  181.2331    0.946   0.241   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   38        7    +39.10      111   -0.0006   67.4485    0.783   0.514   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   39       10    +72.23      142   -0.0023  132.3147    0.841   0.484   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   40       10    +71.66      172   -0.0016   97.2574    0.776   0.420   0.0007     0.016     0.6
+Warning: Could not set locale to 'C'.
+   41       16   +136.30      173   -0.0022  890.5401    0.963   0.416   0.0007     0.010     0.6
+Warning: Could not set locale to 'C'.
+   42        9    +59.54      130   -0.0022   79.7075    0.971   0.233   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   43       18   +154.23      140    0.0022  1021.5032    1.054   0.408   0.0007     0.002     0.6
+Warning: Could not set locale to 'C'.
+   44       11    +79.83      134    0.0002  146.5537    0.939   0.395   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       13   +104.02      142    0.0010  227.2883    1.057   0.314   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   46       14   +113.19      101    0.0020  442.6449    1.307   0.185   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   47       10    +74.42      179    0.0009   92.8027    1.081   0.370   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   48       13   +104.15       88   -0.0024  338.7250    1.248   0.193   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   49       13    +99.74      121   -0.0024  121.9923    1.140   0.366   0.0015     0.006     0.5
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_43/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_43/ckpt_final.pt
+best:   epoch 24, rolling mean pickups = 13.00
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_43/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy mlp --epochs 50 --seed 44 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_44' --deterministic-torch --no-anneal-lr --lr 0.0003 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_44
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  mlp — 106,487 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0        9    +59.66      128   -0.0012  611.3859    1.550   0.250   0.0000     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       13   +100.13      129   -0.0006  1169.0046    1.335   0.321   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2       12    +90.49      136   -0.0004  1026.7424    1.258   0.345   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    3       12    +93.49      130   -0.0005  889.2416    1.315   0.300   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    4       11    +81.08       96   -0.0004  967.8710    1.673   0.184   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    5       11    +84.54      157   -0.0005  807.0011    1.379   0.258   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    6       14   +114.17       87   -0.0051  1442.7285    1.534   0.195   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+    7       14   +109.85      120    0.0010  877.8734    1.365   0.310   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+    8       14   +112.27      102   -0.0003  1300.1385    1.564   0.159   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+    9       13   +100.22      105   -0.0008  897.8030    1.464   0.318   0.0003     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   10        6    +27.94      108    0.0035  171.9334    1.177   0.352   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   11       12    +92.39      140    0.0019  617.8483    1.225   0.300   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   12        9    +61.21      165    0.0003  368.6318    1.214   0.352   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   13       16   +135.25      171    0.0011  1384.1271    1.288   0.306   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   14       14   +112.49      132    0.0010  1148.6813    1.480   0.141   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   15       16   +133.43      130    0.0008  1864.4861    1.295   0.245   0.0002     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   16       10    +69.93      131    0.0002  517.7160    1.176   0.315   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   17       14   +114.08      136   -0.0032  930.1353    1.218   0.250   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   18       15   +123.58      102   -0.0096  1358.1833    1.513   0.146   0.0011     0.000     0.5
+Warning: Could not set locale to 'C'.
+   19        9    +63.54      158    0.0012  395.3789    1.302   0.245   0.0012     0.000     0.6
+Warning: Could not set locale to 'C'.
+   20       15   +124.78       82   -0.0035  1328.2491    1.155   0.098   0.0014     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   21       13   +100.01      120    0.0042  558.3451    1.113   0.180   0.0012     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   22       12    +91.27      101   -0.0009  864.1907    1.179   0.136   0.0006     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   23       15   +122.10      114   -0.0011  847.5360    1.049   0.117   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   24       10    +70.92      112    0.0027  543.6151    1.046   0.268   0.0012     0.000     0.5
+Warning: Could not set locale to 'C'.
+   25       15   +124.72      142   -0.0007  740.6776    1.084   0.328   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   26       11    +81.78      162    0.0031  338.0242    0.874   0.314   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   27       18   +156.48      172    0.0006  1513.5423    1.117   0.286   0.0006     0.003     0.5
+Warning: Could not set locale to 'C'.
+   28       13   +101.89      131   -0.0010  683.0332    1.132   0.165   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   29       17   +142.25      131    0.0002  1281.4031    1.209   0.252   0.0005     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   30       13   +102.32      134   -0.0021  647.6561    1.046   0.272   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   31       12    +93.78      133    0.0000  547.8684    0.981   0.290   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   32       11    +81.18       94   -0.0016  494.4797    1.454   0.054   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   33       11    +84.51      158    0.0000  448.5079    1.235   0.184   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   34       13   +104.35       86   -0.0024  783.6857    1.103   0.163   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   35       11    +79.25      117    0.0020  228.4386    1.115   0.196   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   36       11    +80.80      100   -0.0000  351.2651    1.279   0.138   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   37       16   +132.48      107    0.0010  648.9290    1.222   0.241   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   38       13   +103.28      118   -0.0009  671.9083    1.065   0.373   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   39       11    +82.47      134    0.0012  142.6619    1.016   0.333   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   40       12    +92.44      165   -0.0002  210.8458    1.040   0.257   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   41       16   +135.59      167   -0.0002  769.3663    1.146   0.224   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+   42       10    +69.65      123   -0.0022  155.4101    1.166   0.096   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   43       14   +110.28      127    0.0004  513.6685    1.052   0.206   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   44       15   +122.53      148    0.0020  413.8144    0.995   0.344   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   45       10    +72.30      133    0.0016   83.4455    0.942   0.280   0.0010     0.000     0.5
+Warning: Could not set locale to 'C'.
+   46       13   +102.45       93   -0.0009  405.9601    1.267   0.041   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   47       12    +95.18      166    0.0008  257.1474    1.068   0.094   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   48       13   +103.85       90    0.0009  444.8918    1.069   0.111   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   49        9    +57.86      118   -0.0028   23.0122    1.001   0.204   0.0003     0.000     0.5
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_44/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_44/ckpt_final.pt
+best:   epoch 29, rolling mean pickups = 13.90
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_44/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy mlp --epochs 50 --seed 45 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_45' --deterministic-torch --no-anneal-lr --lr 0.0003 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_45
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  mlp — 106,487 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       11    +80.89      123   -0.0008  865.8849    1.536   0.205   0.0000     0.000     1.6
+Warning: Could not set locale to 'C'.
+    1       11    +79.56      127   -0.0005  957.9002    1.327   0.280   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    2       13   +101.88      142   -0.0003  898.8201    1.285   0.238   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3       10    +71.86      133   -0.0005  531.8699    1.330   0.269   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    4       12    +91.54       98   -0.0005  915.0863    1.676   0.179   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    5       10    +73.80      165    0.0005  676.7741    1.408   0.267   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    6       11    +82.41       84    0.0003  1081.1162    1.527   0.238   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    7       13   +100.73      122   -0.0000  767.1505    1.375   0.196   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    8       12    +90.97      104   -0.0026  1180.0273    1.582   0.202   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+    9       16   +132.98      113   -0.0071  1488.9463    1.509   0.194   0.0005     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   10       10    +71.10      110   -0.0056  701.5759    1.193   0.236   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   11       11    +83.07      135   -0.0024  581.3249    1.206   0.226   0.0007     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12        9    +61.45      161   -0.0019  388.2512    1.195   0.267   0.0007     0.002     0.5
+Warning: Could not set locale to 'C'.
+   13       13   +103.86      167   -0.0015  969.5053    1.246   0.234   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   14       10    +70.12      126   -0.0023  601.3177    1.408   0.174   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   15       13   +100.20      124    0.0004  872.9342    1.198   0.269   0.0008     0.000     0.5
+Warning: Could not set locale to 'C'.
+   16       12    +91.11      135    0.0002  790.5102    1.117   0.200   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   17       12    +93.15      131    0.0033  638.7046    1.094   0.132   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   18        8    +49.38       94   -0.0001  366.1724    1.244   0.041   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   19       12    +95.36      162   -0.0023  702.3750    1.223   0.216   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   20       13   +103.67       83   -0.0005  1049.9095    1.172   0.108   0.0008     0.006     0.5
+Warning: Could not set locale to 'C'.
+   21       12    +90.06      116    0.0005  539.3456    1.106   0.208   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   22       12    +90.92       99    0.0018  639.1665    1.131   0.127   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   23       15   +121.77      111   -0.0012  856.1649    1.097   0.176   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   24        8    +49.42      106    0.0034  235.9762    0.938   0.283   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   25       11    +83.25      140   -0.0029  461.3116    0.971   0.292   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   26        9    +61.44      168   -0.0019  202.1176    0.949   0.306   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   27       14   +114.90      165   -0.0025  889.6706    0.977   0.276   0.0006     0.000     0.6
+Warning: Could not set locale to 'C'.
+   28        9    +59.62      126   -0.0004  297.9027    1.002   0.081   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   29       15   +122.66      132    0.0021  1267.1761    0.912   0.134   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   30       14   +112.44      138    0.0020  722.3836    0.877   0.212   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   31       14   +114.96      136   -0.0003  708.8869    0.901   0.208   0.0001     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   32       10    +70.53       93    0.0018  344.1544    1.074   0.014   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   33       11    +84.44      169   -0.0017  338.2935    0.876   0.055   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   34       12    +93.46       81    0.0003  749.7279    1.020   0.123   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   35       11    +79.34      115    0.0006  197.8919    0.864   0.105   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   36       16   +132.17      102   -0.0033  834.0501    1.018   0.061   0.0002     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   37       15   +121.55      105   -0.0020  529.6866    1.013   0.082   0.0018     0.019     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   38       11    +81.12      108    0.0006  279.1306    0.788   0.139   0.0011     0.005     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   39        9    +61.86      140    0.0005  104.9888    0.816   0.125   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   40       11    +82.08      162   -0.0019  166.0372    0.906   0.176   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   41       12    +93.66      162   -0.0018  396.9663    0.801   0.059   0.0005     0.000     0.6
+Warning: Could not set locale to 'C'.
+   42       12    +91.18      125   -0.0021  242.6785    0.904   0.059   0.0005     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       17   +141.96      131    0.0015  642.6842    0.786   0.072   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   44       14   +112.05      133   -0.0029  433.4636    0.822   0.177   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   45       11    +82.64      134    0.0017   99.6495    1.019   0.202   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   46       13   +102.15       99    0.0055  273.9165    0.966   0.013   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   47       12    +95.26      164   -0.0030  146.4408    0.731   0.038   0.0005     0.009     0.5
+Warning: Could not set locale to 'C'.
+   48       15   +125.00       89    0.0014  535.7998    1.072   0.146   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   49       12    +90.48      117   -0.0012   76.8972    0.871   0.124   0.0011     0.004     0.5
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_45/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_45/ckpt_final.pt
+best:   epoch 38, rolling mean pickups = 12.90
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_45/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy mlp --epochs 50 --seed 46 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_46' --deterministic-torch --no-anneal-lr --lr 0.0003 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_46
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  mlp — 106,487 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       11    +80.74      119   -0.0011  865.2101    1.523   0.190   0.0000     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       16   +131.78      139   -0.0004  1553.6984    1.373   0.261   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2       15   +122.85      138   -0.0000  1484.0719    1.267   0.347   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    3       10    +72.24      129   -0.0008  652.8441    1.309   0.247   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+    4       12    +91.20       97    0.0000  1148.0004    1.673   0.260   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+    5       12    +94.61      161   -0.0008  935.9433    1.386   0.218   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+    6       14   +114.19       87   -0.0000  1414.4084    1.527   0.195   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+    7       14   +111.36      123   -0.0037  841.7636    1.358   0.272   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+    8       11    +80.97       98    0.0021  939.2502    1.509   0.128   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+    9       10    +68.74      105   -0.0011  549.8315    1.437   0.165   0.0002     0.000     0.5  ★ new best
+Warning: Could not set locale to 'C'.
+   10       11    +81.29      113   -0.0040  891.2260    1.168   0.274   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   11       12    +93.10      135    0.0014  744.2504    1.149   0.209   0.0008     0.000     0.5
+Warning: Could not set locale to 'C'.
+   12        7    +40.35      165    0.0024  260.4158    1.150   0.238   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   13       11    +83.01      160   -0.0040  775.4205    1.157   0.180   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   14       12    +91.30      127    0.0012  813.1151    1.406   0.057   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   15       16   +132.87      130    0.0001  1663.8602    1.225   0.218   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   16       13   +102.02      140   -0.0000  680.6402    1.152   0.150   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   17       13   +103.80      138   -0.0006  786.1492    1.206   0.204   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   18       12    +91.53       99   -0.0008  783.5298    1.411   0.013   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   19        9    +63.32      155   -0.0003  347.3850    1.074   0.063   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   20       16   +134.61       82   -0.0015  1288.0354    1.316   0.098   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   21       12    +90.20      116    0.0004  544.6806    1.150   0.125   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   22        9    +59.00      103    0.0005  371.6587    1.351   0.036   0.0002     0.000     0.5
+Warning: Could not set locale to 'C'.
+   23       11    +79.50      102    0.0005  476.3678    1.309   0.122   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   24       13   +102.37      112   -0.0016  772.2265    1.059   0.116   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   25       12    +93.30      134   -0.0011  445.1525    1.070   0.140   0.0001     0.000     0.5
+Warning: Could not set locale to 'C'.
+   26       12    +93.47      167    0.0024  433.4064    1.131   0.168   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   27       14   +115.23      165   -0.0003  1065.1319    1.100   0.181   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   28       11    +80.84      120    0.0000  494.4604    1.248   0.075   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   29       15   +122.18      126   -0.0017  988.9129    1.084   0.123   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   30       10    +70.78      130   -0.0009  414.2491    1.037   0.109   0.0007     0.002     0.5
+Warning: Could not set locale to 'C'.
+   31       13   +104.29      132   -0.0003  533.8844    1.167   0.130   0.0006     0.000     0.5
+Warning: Could not set locale to 'C'.
+   32        9    +59.78       91    0.0004  136.1672    1.437   0.028   0.0011     0.000     0.5
+Warning: Could not set locale to 'C'.
+   33       11    +84.51      162   -0.0007  352.2803    1.139   0.039   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   34       11    +82.56       84   -0.0014  558.4185    1.353   0.119   0.0010     0.000     0.5
+Warning: Could not set locale to 'C'.
+   35        9    +57.92      116   -0.0026   49.4788    1.158   0.083   0.0007     0.000     0.5
+Warning: Could not set locale to 'C'.
+   36       10    +69.96       96   -0.0022  197.4598    1.336   0.132   0.0013     0.000     0.5
+Warning: Could not set locale to 'C'.
+   37       12    +89.14      106    0.0003  221.6900    1.231   0.035   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   38       12    +92.03      115    0.0068  378.8642    1.033   0.104   0.0013     0.009     0.5
+Warning: Could not set locale to 'C'.
+   39        9    +61.67      133   -0.0019   61.1504    1.037   0.159   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   40       13   +103.35      168    0.0003  213.3721    1.127   0.139   0.0005     0.000     0.5
+Warning: Could not set locale to 'C'.
+   41       15   +125.57      164   -0.0026  653.6492    1.189   0.096   0.0003     0.000     0.5
+Warning: Could not set locale to 'C'.
+   42       11    +80.55      124   -0.0039  218.2671    1.440   0.048   0.0013     0.012     0.5
+Warning: Could not set locale to 'C'.
+   43       14   +110.07      129   -0.0018  449.8282    1.285   0.165   0.0012     0.010     0.5
+Warning: Could not set locale to 'C'.
+   44       11    +80.50      140   -0.0019  170.6069    1.233   0.350   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   45       16   +135.75      141   -0.0054  477.6982    1.301   0.257   0.0009     0.000     0.5
+Warning: Could not set locale to 'C'.
+   46       13   +103.11      112   -0.0034  230.1977    1.602   0.304   0.0012     0.007     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   47       10    +74.06      169   -0.0016   63.5092    1.316   0.367   0.0004     0.000     0.5
+Warning: Could not set locale to 'C'.
+   48       13   +104.37       91    0.0026  274.3440    1.185   0.143   0.0012     0.000     0.5
+Warning: Could not set locale to 'C'.
+   49       11    +79.18      116    0.0005   42.6357    1.166   0.354   0.0003     0.000     0.5  ★ new best
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_46/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_46/ckpt_final.pt
+best:   epoch 49, rolling mean pickups = 12.70
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B1_mlp/seed_46/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 42 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       13   +101.35      126   -0.0010  1080.6653    1.542   0.221   0.0002     0.000     1.8
+Warning: Could not set locale to 'C'.
+    1       15   +121.55      125   -0.0005  1450.8482    1.310   0.210   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       10    +69.94      130   -0.0007  583.0311    1.214   0.282   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3        9    +61.90      131   -0.0018  507.7148    1.298   0.242   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       12    +91.11       93    0.0009  946.6431    1.648   0.110   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5        9    +63.72      157    0.0000  609.9280    1.348   0.093   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    6       15   +124.77       86   -0.0003  1823.3217    1.509   0.233   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +90.46      118   -0.0002  726.6169    1.333   0.214   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       11    +80.86      100   -0.0018  928.1178    1.557   0.250   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       15   +122.60      111   -0.0004  1430.6343    1.497   0.220   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   10       10    +70.77      110    0.0001  714.5038    1.198   0.264   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       12    +93.59      134   -0.0007  772.4993    1.222   0.272   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12       11    +82.10      167    0.0003  518.1440    1.271   0.299   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       12    +93.96      167    0.0002  1111.5181    1.325   0.206   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       10    +70.00      126    0.0000  583.9462    1.543   0.267   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   15       15   +121.62      130   -0.0004  1539.2761    1.337   0.282   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   16       14   +112.90      139   -0.0003  1068.4205    1.268   0.319   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   17       14   +114.73      137    0.0002  1180.7994    1.345   0.247   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       12    +91.92       97    0.0001  932.1853    1.674   0.182   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   19       10    +73.68      158   -0.0002  581.8074    1.380   0.204   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       13   +103.90       81    0.0002  1292.2686    1.516   0.259   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       13   +100.77      120   -0.0009  728.1009    1.366   0.250   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   22        9    +59.28      100    0.0005  667.9856    1.575   0.163   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   23       17   +142.73      117    0.0000  1392.8111    1.527   0.289   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   24       12    +91.77      117    0.0001  967.7966    1.242   0.333   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   25       12    +93.49      139   -0.0004  677.4509    1.252   0.269   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   26       12    +92.50      170    0.0003  644.7437    1.288   0.291   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       13   +104.25      172   -0.0000  1006.6466    1.348   0.304   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       11    +80.95      126   -0.0004  827.8355    1.545   0.128   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   29       12    +89.34      126    0.0002  716.1840    1.322   0.311   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       12    +91.84      134   -0.0000  921.4797    1.249   0.307   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   31       10    +71.65      133   -0.0005  432.3410    1.330   0.344   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32        9    +59.83       92   -0.0005  463.9238    1.668   0.139   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33       11    +84.09      158    0.0004  526.4772    1.381   0.245   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       12    +93.16       84   -0.0005  951.3420    1.527   0.262   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       10    +68.80      117   -0.0000  331.1758    1.356   0.216   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   36       15   +122.54      109    0.0003  1213.7033    1.597   0.247   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   37       12    +89.47      104    0.0000  613.7522    1.487   0.274   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       11    +80.39      113   -0.0001  386.3511    1.223   0.310   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   39       14   +114.71      146   -0.0000  807.7978    1.281   0.270   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   40       11    +83.01      168   -0.0012  526.6725    1.278   0.278   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       15   +124.94      169   -0.0002  1250.1049    1.333   0.257   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42        9    +59.03      117    0.0000  356.2411    1.513   0.117   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   43       14   +110.02      129    0.0000  1020.0396    1.331   0.294   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       17   +144.81      140   -0.0000  1665.9243    1.271   0.250   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   45        9    +61.92      132   -0.0000  384.6319    1.321   0.315   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   46       14   +111.77       99   -0.0000  768.2026    1.675   0.177   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47        7    +42.27      155   -0.0000  180.1866    1.366   0.189   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       14   +115.85       84   -0.0000  1389.4942    1.525   0.202   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       11    +78.59      118   -0.0000  359.4791    1.356   0.184   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/ckpt_final.pt
+best:   epoch 24, rolling mean pickups = 12.90
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 43 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       13   +102.00      127   -0.0002  1149.0747    1.536   0.368   0.0001     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       15   +122.02      134   -0.0003  1723.7914    1.349   0.316   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       13   +101.78      140   -0.0028  1022.7846    1.275   0.367   0.0005     0.000     0.7
+Warning: Could not set locale to 'C'.
+    3       11    +82.47      135   -0.0018  792.6040    1.339   0.337   0.0005     0.000     0.7
+Warning: Could not set locale to 'C'.
+    4       14   +112.19       98   -0.0018  1347.9361    1.676   0.128   0.0004     0.000     0.7
+Warning: Could not set locale to 'C'.
+    5       10    +74.23      156    0.0008  737.6445    1.361   0.135   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       14   +114.30       80    0.0005  1740.5904    1.498   0.188   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       14   +111.41      124    0.0001  850.4666    1.361   0.144   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    8       12    +91.13      103   -0.0004  1060.7264    1.567   0.120   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       11    +79.69      105   -0.0005  687.9563    1.474   0.153   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       11    +81.43      112    0.0004  1009.1944    1.199   0.304   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   11       12    +93.59      139   -0.0003  696.7159    1.234   0.244   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   12        7    +39.84      166   -0.0003  273.5807    1.246   0.245   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       11    +83.61      163    0.0006  1114.1509    1.281   0.175   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       13   +101.68      128   -0.0000  1055.7932    1.530   0.170   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   15       16   +131.57      129   -0.0002  1418.6176    1.309   0.156   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   16       13   +103.25      133    0.0000  1293.2225    1.217   0.204   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   17       12    +93.69      136   -0.0000  1005.5108    1.322   0.260   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   18        9    +59.51       90   -0.0009  520.8905    1.653   0.129   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19       11    +84.58      156   -0.0008  735.1185    1.363   0.167   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       16   +134.82       92    0.0007  1670.4809    1.546   0.250   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       13   +100.97      121   -0.0001  835.1181    1.368   0.188   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   22       13   +101.45      101   -0.0002  1134.3657    1.577   0.148   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   23       14   +111.66      108   -0.0003  1003.9015    1.499   0.273   0.0000     0.000     0.8  ★ new best
+Warning: Could not set locale to 'C'.
+   24       10    +70.76      115    0.0001  625.3632    1.231   0.383   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   25       13   +104.40      139   -0.0006  800.2400    1.249   0.336   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   26       12    +92.75      167   -0.0019  593.0289    1.268   0.271   0.0001     0.000     0.8
+Warning: Could not set locale to 'C'.
+   27       18   +157.10      170   -0.0007  1752.3835    1.327   0.218   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       11    +80.88      130   -0.0013  858.3749    1.541   0.189   0.0002     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   29       11    +79.02      126    0.0004  813.3514    1.294   0.217   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       10    +70.23      131    0.0001  698.5948    1.196   0.171   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31       15   +124.39      140    0.0001  1191.9770    1.326   0.200   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32       15   +123.40      102   -0.0004  1244.2487    1.659   0.073   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33        9    +63.02      159   -0.0007  394.7017    1.349   0.212   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       13   +103.61       84   -0.0001  1175.4174    1.486   0.143   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   35       12    +90.09      121    0.0000  592.6042    1.318   0.129   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   36       15   +122.75      105   -0.0002  1262.5250    1.543   0.165   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       15   +121.48      103   -0.0010  1153.9508    1.424   0.133   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   38        9    +59.35      108    0.0000  349.4828    1.110   0.139   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       12    +93.20      136    0.0001  641.0364    1.151   0.181   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   40        6    +29.87      159   -0.0000  194.9695    1.142   0.141   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   41       15   +125.77      168    0.0000  1390.1517    1.252   0.176   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       10    +70.47      121   -0.0000  630.9209    1.468   0.086   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       12    +89.21      121   -0.0002  811.2696    1.220   0.168   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   44       10    +70.66      135    0.0001  558.6674    1.170   0.122   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   45       12    +93.61      130    0.0000  814.8309    1.233   0.144   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   46        9    +60.80       88   -0.0000  574.0244    1.611   0.059   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   47       12    +94.78      157    0.0000  612.0061    1.311   0.155   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48        7    +40.21       74   -0.0000  383.8193    1.427   0.108   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       14   +110.04      121    0.0000  603.7121    1.301   0.089   0.0000     0.000     0.7
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_final.pt
+best:   epoch 28, rolling mean pickups = 13.10
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 44 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       11    +80.41      126   -0.0018  692.5943    1.516   0.349   0.0006     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       10    +69.05      124    0.0007  783.0939    1.300   0.308   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2        9    +59.95      138   -0.0017  599.8055    1.259   0.314   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    3       12    +93.97      139   -0.0008  824.4317    1.356   0.333   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       12    +92.22      106   -0.0012  1107.9761    1.689   0.256   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    5       13   +105.46      159    0.0013  1120.9524    1.388   0.293   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       12    +93.86       92   -0.0024  1312.9897    1.552   0.315   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7        9    +58.18      116   -0.0001  358.5943    1.347   0.260   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       14   +111.94      103    0.0006  1169.5869    1.578   0.181   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    9       14   +109.97      105    0.0000  1117.8936    1.481   0.188   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       14   +113.88      118   -0.0005  1274.5185    1.233   0.263   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   11       12    +93.51      135   -0.0012  748.9854    1.215   0.226   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   12       10    +71.87      164   -0.0008  451.3276    1.234   0.250   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   13       12    +93.07      165   -0.0018  944.5841    1.287   0.162   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       12    +91.42      124   -0.0002  963.6117    1.509   0.107   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   15       16   +131.32      133   -0.0006  1373.2902    1.304   0.195   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   16       12    +91.13      127   -0.0001  1037.8378    1.153   0.178   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   17       11    +82.78      130    0.0002  653.1523    1.254   0.200   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       10    +70.35       92   -0.0000  565.7528    1.631   0.083   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19        9    +63.27      156    0.0000  462.4592    1.324   0.062   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20        9    +61.73       75   -0.0005  767.2510    1.448   0.080   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       10    +68.88      115    0.0000  514.7812    1.283   0.189   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   22       10    +69.73       99   -0.0003  638.4147    1.523   0.127   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   23       15   +121.40      109   -0.0002  1201.7966    1.441   0.112   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   24        9    +60.37      108    0.0000  540.0713    1.109   0.157   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25       12    +93.62      133   -0.0002  776.8583    1.135   0.115   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   26        9    +61.03      164    0.0000  284.3538    1.168   0.125   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       15   +125.55      165    0.0000  1457.3552    1.234   0.057   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       14   +112.09      131   -0.0001  985.7460    1.496   0.088   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   29       12    +89.45      122   -0.0002  788.7364    1.226   0.147   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   30       13   +102.09      135    0.0003  1179.4622    1.175   0.165   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31       13   +104.50      132   -0.0000  1030.6927    1.251   0.065   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   32       12    +91.61       91    0.0000  918.4232    1.618   0.028   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33       11    +84.71      159   -0.0001  644.1185    1.323   0.141   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   34       16   +135.41       85    0.0000  1346.3379    1.475   0.106   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       12    +89.56      120   -0.0001  490.9247    1.304   0.120   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   36       11    +79.77       99   -0.0003  578.0523    1.527   0.076   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   37       13   +100.66      102    0.0001  708.5813    1.428   0.073   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       10    +69.76      109   -0.0003  457.5433    1.142   0.165   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       10    +72.52      134   -0.0001  419.4624    1.175   0.132   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40       11    +82.36      171    0.0003  441.8364    1.246   0.171   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       11    +82.70      163   -0.0000  644.7363    1.264   0.146   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       13   +102.02      128   -0.0001  1028.4290    1.515   0.182   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   43       14   +110.67      129   -0.0001  854.6027    1.291   0.101   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44        8    +49.12      127    0.0000  425.6419    1.161   0.187   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       14   +113.95      135   -0.0000  894.8429    1.292   0.200   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   46       10    +69.80       94   -0.0000  413.0728    1.640   0.108   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47       10    +74.07      159   -0.0000  440.2121    1.346   0.141   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   48       10    +71.81       79    0.0000  540.2260    1.473   0.165   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       12    +89.78      122   -0.0000  607.2798    1.332   0.137   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/ckpt_final.pt
+best:   epoch 36, rolling mean pickups = 12.90
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 45 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       12    +91.18      128   -0.0018  1119.4221    1.546   0.284   0.0003     0.000     1.8
+Warning: Could not set locale to 'C'.
+    1       16   +131.80      132   -0.0018  1901.7078    1.347   0.304   0.0004     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       16   +133.48      139   -0.0009  1672.5882    1.272   0.286   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3        9    +61.45      128    0.0004  540.1388    1.302   0.307   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4        7    +38.97       89   -0.0007  368.9411    1.663   0.130   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5       10    +74.12      161    0.0001  656.6113    1.396   0.228   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       13   +104.12       83   -0.0007  1372.8824    1.527   0.193   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       10    +69.14      114   -0.0007  589.7757    1.344   0.298   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       11    +80.87       99   -0.0011  1028.8293    1.573   0.203   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       14   +109.97      106   -0.0018  1024.6381    1.490   0.209   0.0002     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       11    +81.09      115    0.0007  889.2096    1.220   0.443   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11        7    +40.52      135   -0.0004  266.5236    1.217   0.461   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12        9    +61.30      164   -0.0015  439.0235    1.249   0.404   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       13   +103.76      168    0.0003  910.3945    1.327   0.306   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       12    +90.76      129   -0.0011  976.3078    1.553   0.348   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   15       15   +120.66      128   -0.0007  1476.1665    1.331   0.343   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   16       14   +112.38      139    0.0007  1064.4795    1.272   0.261   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   17       13   +104.56      139    0.0000  1142.2598    1.358   0.354   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       12    +92.49      100   -0.0014  1148.4049    1.682   0.250   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   19       10    +74.37      161   -0.0019  673.7099    1.394   0.277   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       11    +82.66       82   -0.0012  889.4533    1.518   0.207   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       12    +89.36      127   -0.0014  572.1412    1.385   0.243   0.0002     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   22       14   +112.26      103   -0.0014  1176.7444    1.568   0.120   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   23       11    +79.19      107    0.0004  609.5055    1.471   0.195   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   24        9    +60.60      109    0.0003  638.3002    1.164   0.239   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25       11    +82.32      135   -0.0003  519.6007    1.195   0.139   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   26        8    +50.81      163   -0.0004  260.5970    1.211   0.194   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       12    +93.24      162    0.0001  797.1189    1.258   0.108   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       10    +70.21      124   -0.0000  689.8495    1.499   0.071   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   29       15   +121.11      128   -0.0005  1154.2252    1.280   0.167   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   30       12    +91.98      134   -0.0001  785.1803    1.187   0.140   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   31       12    +93.82      132   -0.0002  731.9425    1.263   0.120   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32       10    +71.13       92    0.0000  696.9062    1.625   0.083   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33        9    +63.35      155   -0.0000  390.9140    1.310   0.084   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       10    +72.30       88    0.0000  760.5543    1.485   0.136   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35        9    +58.27      113   -0.0001  272.8074    1.269   0.097   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   36       13   +102.12      104   -0.0003  987.7202    1.537   0.083   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       13   +100.16      103    0.0001  731.0677    1.429   0.072   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       12    +91.67      119    0.0000  723.5505    1.190   0.218   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       12    +94.14      134   -0.0000  825.8620    1.166   0.193   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40        9    +61.32      161   -0.0000  299.1573    1.181   0.198   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   41       16   +135.88      170    0.0000  1339.6045    1.283   0.136   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       11    +80.37      124    0.0000  485.1607    1.494   0.083   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       18   +153.27      130    0.0000  1763.1741    1.285   0.173   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       20   +175.47      143   -0.0001  2111.3684    1.229   0.171   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   45       15   +125.96      141   -0.0003  1175.6870    1.310   0.168   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   46       13   +102.20       95    0.0000  1037.3651    1.633   0.013   0.0000     0.000     0.5
+Warning: Could not set locale to 'C'.
+   47       10    +73.67      158   -0.0002  510.4630    1.329   0.173   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       12    +93.98       81   -0.0003  1057.0684    1.468   0.111   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       11    +79.55      119   -0.0001  450.5095    1.303   0.141   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_final.pt
+best:   epoch 45, rolling mean pickups = 13.90
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 46 --demand-split train --save-every 10 --best-window 10 --degradation off --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       10    +70.27      127   -0.0014  712.0572    1.546   0.218   0.0002     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       15   +120.52      129   -0.0038  1246.2424    1.335   0.294   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       10    +70.37      129   -0.0007  849.2193    1.224   0.275   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3       10    +71.88      131    0.0000  584.0398    1.318   0.220   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4        6    +28.19       90    0.0001  257.6767    1.662   0.114   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5       12    +94.92      161   -0.0003  893.2545    1.393   0.238   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       10    +72.62       80   -0.0005  1003.4275    1.515   0.250   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +89.74      121    0.0004  667.5376    1.374   0.297   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    8       17   +144.18      110   -0.0009  2031.0130    1.600   0.211   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    9       10    +68.20      101   -0.0009  567.5534    1.475   0.235   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       10    +70.78      109    0.0002  736.8002    1.197   0.257   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       13   +103.77      138   -0.0013  950.2021    1.240   0.297   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   12        8    +50.91      167   -0.0002  329.1194    1.264   0.290   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       14   +114.93      172    0.0001  1380.5013    1.334   0.295   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       13   +101.82      122    0.0002  1259.6931    1.518   0.073   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   15       18   +152.67      132   -0.0006  1829.5815    1.329   0.259   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   16       11    +80.40      130   -0.0012  835.3235    1.205   0.255   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   17       16   +135.29      137    0.0001  1562.2408    1.322   0.124   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       11    +81.19       93   -0.0002  827.9547    1.646   0.068   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19       11    +84.34      157   -0.0004  767.5146    1.342   0.124   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       14   +115.17       86    0.0003  1700.2599    1.498   0.163   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       14   +111.38      125    0.0003  861.9389    1.345   0.171   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   22       11    +80.59       99   -0.0007  824.9830    1.535   0.089   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   23       10    +68.64      105   -0.0013  434.8273    1.444   0.153   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   24        9    +60.21      107   -0.0001  447.2442    1.118   0.224   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25        9    +61.61      128   -0.0001  455.1941    1.114   0.185   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   26       11    +82.28      164    0.0001  482.2795    1.172   0.125   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       13   +104.29      164   -0.0002  1225.2355    1.228   0.135   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       10    +70.07      121   -0.0000  586.0101    1.456   0.049   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   29       11    +78.57      122    0.0001  768.2805    1.208   0.137   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       12    +91.09      128    0.0001  734.4678    1.108   0.157   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31       10    +72.09      128    0.0000  455.5768    1.198   0.159   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32       10    +70.14       91    0.0000  555.9721    1.600   0.028   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33        8    +53.02      158    0.0000  370.6875    1.292   0.051   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       14   +114.28       82   -0.0000  1319.4644    1.436   0.110   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       13   +100.99      117    0.0000  749.9065    1.256   0.113   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   36       12    +91.73      100   -0.0000  952.8486    1.499   0.062   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       11    +79.94      105   -0.0001  686.7074    1.405   0.106   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       13   +102.61      113   -0.0001  1020.4442    1.113   0.071   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       11    +82.78      132   -0.0000  570.6128    1.111   0.161   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40        9    +61.29      166    0.0000  328.6218    1.167   0.160   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       15   +125.26      168   -0.0000  1255.2343    1.237   0.167   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       10    +70.13      124    0.0000  564.7442    1.462   0.048   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       13   +100.61      126   -0.0002  1098.0561    1.225   0.104   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       10    +70.77      129    0.0001  666.6465    1.112   0.147   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       13   +104.00      132    0.0000  744.3588    1.220   0.130   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   46       13   +102.30       96   -0.0000  910.4208    1.608   0.066   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47        7    +42.47      154    0.0000  269.6607    1.272   0.096   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   48       10    +72.56       82   -0.0000  836.6667    1.436   0.098   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49        8    +47.49      110    0.0000  226.9361    1.221   0.122   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_final.pt
+best:   epoch 22, rolling mean pickups = 13.30
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 42 --demand-split train --save-every 10 --best-window 10 --degradation tunnel_triggered --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1 --outage-duration 30.0
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       13   +101.35      126   -0.0009  1080.6608    1.542   0.221   0.0002     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       14   +110.72      127   -0.0007  1267.6850    1.319   0.206   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2       15   +122.98      133   -0.0002  1647.0456    1.230   0.274   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3       13   +103.92      133    0.0002  1134.7072    1.313   0.237   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       12    +91.53       95   -0.0001  957.4696    1.662   0.080   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5        9    +63.75      161   -0.0002  661.5652    1.382   0.129   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       10    +71.86       77   -0.0003  933.5343    1.490   0.208   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +90.39      120    0.0002  724.7090    1.349   0.190   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       14   +112.79      104   -0.0004  1559.3666    1.569   0.214   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       10    +69.03      102   -0.0012  667.7447    1.465   0.220   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       12    +92.12      114    0.0013  1033.4210    1.217   0.254   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       12    +93.06      139   -0.0003  739.4269    1.238   0.252   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12       12    +92.99      167    0.0000  669.6691    1.261   0.224   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       15   +125.65      171    0.0000  1480.4177    1.329   0.144   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       11    +80.75      121   -0.0001  699.6473    1.516   0.185   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   15       15   +119.97      122   -0.0007  1184.4737    1.291   0.225   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   16       12    +91.54      134    0.0003  847.8564    1.239   0.289   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   17       14   +115.37      139    0.0000  1377.9927    1.352   0.242   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       10    +70.66       94   -0.0004  661.7778    1.668   0.176   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19       14   +116.57      167    0.0006  1256.3882    1.415   0.187   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       12    +93.18       83   -0.0001  1238.0497    1.524   0.277   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21        9    +58.59      112   -0.0009  383.6583    1.331   0.293   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   22       13   +101.22      104   -0.0002  1051.4106    1.586   0.155   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   23       12    +88.78      108    0.0003  608.7386    1.502   0.318   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   24       14   +112.69      119   -0.0003  1128.1257    1.250   0.361   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   25       10    +72.47      131   -0.0001  462.8573    1.212   0.261   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   26        8    +50.86      162   -0.0008  274.8501    1.246   0.363   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       15   +125.98      172   -0.0001  1498.1246    1.342   0.339   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28        9    +59.76      118   -0.0005  524.1357    1.511   0.231   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   29       13   +100.04      129    0.0003  865.0147    1.319   0.358   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   30       10    +69.55      132    0.0001  550.4311    1.221   0.420   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31        8    +50.77      128   -0.0014  250.8824    1.289   0.318   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32        9    +58.97      100    0.0005  295.3328    1.673   0.275   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33        9    +63.10      161    0.0001  310.4699    1.384   0.356   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       13   +105.03       94   -0.0006  1302.2702    1.553   0.330   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       12    +89.95      119    0.0002  557.5405    1.364   0.323   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   36       11    +80.50      103   -0.0002  658.6710    1.583   0.277   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       10    +68.80      102    0.0001  477.1654    1.479   0.244   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   38       11    +81.82      116   -0.0001  738.3678    1.235   0.362   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       13   +103.73      137    0.0001  721.1641    1.240   0.308   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   40        7    +40.04      165   -0.0000  161.3979    1.261   0.343   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       18   +156.81      172    0.0000  1816.7087    1.345   0.321   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       13   +101.84      131   -0.0004  905.4640    1.557   0.231   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       15   +121.28      131   -0.0004  1328.7704    1.341   0.315   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       11    +81.46      132   -0.0002  668.2448    1.238   0.393   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45        8    +50.35      133   -0.0006  215.0678    1.330   0.430   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   46       14   +112.97       99    0.0001  1029.1347    1.678   0.177   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   47        9    +63.54      162   -0.0006  439.5248    1.400   0.235   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       12    +93.54       87   -0.0002  890.2358    1.539   0.253   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       12    +90.10      122    0.0000  649.7414    1.379   0.245   0.0000     0.000     0.7
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_final.pt
+best:   epoch 17, rolling mean pickups = 12.70
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 43 --demand-split train --save-every 10 --best-window 10 --degradation tunnel_triggered --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1 --outage-duration 30.0
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       13   +102.00      127   -0.0003  1149.0792    1.537   0.368   0.0002     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       20   +174.75      137   -0.0011  2552.6906    1.361   0.299   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2       17   +143.51      139   -0.0029  1776.1663    1.271   0.353   0.0006     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3        8    +50.29      132   -0.0027  386.9161    1.323   0.337   0.0006     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       11    +80.48       94   -0.0058  836.9493    1.665   0.122   0.0005     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5        7    +42.23      155   -0.0024  385.9321    1.342   0.105   0.0004     0.000     0.6
+Warning: Could not set locale to 'C'.
+    6       17   +147.46       86   -0.0008  2357.6599    1.492   0.163   0.0006     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +89.98      119   -0.0039  701.1621    1.294   0.121   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       15   +122.16      101   -0.0032  1588.0179    1.508   0.086   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    9       13   +100.91      107   -0.0021  930.1344    1.394   0.080   0.0002     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       12    +91.56      112   -0.0030  1043.4531    1.055   0.089   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       13   +103.42      133   -0.0010  875.1222    1.037   0.062   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12        9    +61.06      165    0.0003  431.2677    1.059   0.086   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       14   +114.06      168    0.0001  1266.5219    1.137   0.074   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       12    +90.73      124    0.0004  843.7993    1.389   0.048   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   15       17   +141.89      126    0.0001  1656.7295    1.121   0.019   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   16       10    +69.70      127   -0.0001  602.4926    0.975   0.065   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   17       10    +71.75      127    0.0001  581.0551    1.064   0.069   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   18        9    +59.82       88   -0.0000  397.5733    1.532   0.029   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19       12    +95.72      160   -0.0001  1010.1840    1.210   0.040   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       10    +71.91       82   -0.0000  774.1220    1.345   0.061   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       12    +89.76      116   -0.0003  634.8275    1.144   0.052   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   22       14   +111.93      102    0.0001  1175.8119    1.428   0.024   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   23       13   +100.02      101    0.0001  801.8380    1.278   0.025   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   24       13   +102.91      112   -0.0001  988.4681    0.958   0.018   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25       13   +103.67      137   -0.0003  765.7042    0.986   0.043   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   26        8    +50.64      163   -0.0002  281.9457    0.986   0.039   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   27       14   +115.36      165   -0.0000  1468.9557    1.075   0.029   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       14   +112.58      129   -0.0005  1288.9042    1.376   0.011   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   29        9    +57.52      120   -0.0002  435.5910    1.041   0.030   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       13   +101.85      133   -0.0000  948.0518    0.957   0.044   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31       11    +82.89      130    0.0000  626.8591    1.028   0.022   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   32        6    +28.36       86    0.0000  277.2363    1.499   0.015   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33       12    +95.56      158   -0.0000  855.1197    1.156   0.031   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       12    +93.98       80    0.0001  1271.6921    1.287   0.037   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       14   +111.11      118   -0.0000  739.0171    1.102   0.000   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   36       14   +112.60      102    0.0001  1479.0962    1.395   0.024   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       14   +110.36      103   -0.0000  972.5929    1.248   0.012   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       10    +71.18      110   -0.0000  641.8556    0.894   0.064   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       12    +93.36      133   -0.0000  683.7862    0.915   0.018   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40       10    +72.15      163   -0.0000  452.9824    0.944   0.019   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       14   +114.51      163   -0.0000  1004.4769    1.031   0.010   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       11    +80.57      123   -0.0001  777.4832    1.336   0.012   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       15   +121.78      124    0.0001  1210.8147    1.041   0.029   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       14   +113.19      136    0.0000  1178.3153    0.953   0.034   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       10    +71.69      133   -0.0000  369.4872    1.032   0.032   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   46       13   +102.53       95   -0.0000  986.9751    1.511   0.000   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47        9    +63.04      154   -0.0000  351.4345    1.127   0.011   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       11    +82.05       78   -0.0000  833.9577    1.271   0.026   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       12    +89.70      116   -0.0000  409.4188    1.085   0.031   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/ckpt_final.pt
+best:   epoch 15, rolling mean pickups = 13.40
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 44 --demand-split train --save-every 10 --best-window 10 --degradation tunnel_triggered --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1 --outage-duration 30.0
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       11    +80.41      126   -0.0019  692.6099    1.516   0.349   0.0006     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       10    +69.05      124    0.0007  783.1102    1.300   0.298   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2        9    +59.95      138   -0.0018  599.8251    1.258   0.322   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    3       12    +93.97      139   -0.0007  824.4649    1.355   0.333   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+    4       12    +92.22      106   -0.0011  1108.0150    1.689   0.256   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    5       13   +105.46      159    0.0012  1121.0109    1.388   0.293   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       10    +72.11       88   -0.0019  909.7327    1.541   0.318   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +89.75      119   -0.0003  722.2341    1.362   0.253   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       11    +80.59      100    0.0002  831.1469    1.572   0.212   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       13   +101.17      103    0.0003  1110.1737    1.476   0.145   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   10       12    +92.51      117   -0.0004  1162.8745    1.230   0.291   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   11        9    +62.07      133   -0.0000  466.3408    1.209   0.212   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12       13   +103.61      167   -0.0001  822.3260    1.262   0.243   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   13       14   +114.58      164   -0.0002  1120.1400    1.305   0.202   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   14       13   +101.76      126    0.0002  1091.4038    1.541   0.151   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   15       17   +143.18      131    0.0001  1849.9530    1.340   0.288   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   16       17   +144.06      137    0.0000  1665.1204    1.260   0.256   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   17       13   +104.73      135   -0.0003  1145.2168    1.336   0.232   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   18       10    +70.18       93    0.0000  556.3545    1.668   0.178   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19       11    +84.69      160   -0.0004  696.2459    1.387   0.150   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20       15   +125.07       89    0.0001  1620.2816    1.538   0.213   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       11    +79.21      120   -0.0000  442.3800    1.362   0.270   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   22       11    +80.54       99    0.0001  771.5037    1.568   0.165   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   23       11    +79.10      101   -0.0002  565.1640    1.470   0.210   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   24       16   +134.32      119   -0.0007  1686.7024    1.246   0.261   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25       11    +82.21      132   -0.0013  464.0159    1.216   0.268   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   26       11    +82.35      165   -0.0005  515.3432    1.264   0.257   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       11    +82.67      164    0.0011  712.2612    1.314   0.260   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       11    +80.35      127   -0.0001  762.9252    1.548   0.276   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   29       11    +78.69      129   -0.0009  405.4932    1.335   0.303   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   30       14   +113.42      134    0.0007  1187.9023    1.249   0.316   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   31       13   +103.46      134    0.0001  798.7037    1.335   0.223   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   32       11    +80.94       96   -0.0010  556.8389    1.676   0.171   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   33        8    +52.81      159    0.0004  347.9207    1.387   0.263   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       16   +135.84       86    0.0000  1700.6958    1.534   0.198   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35        9    +58.00      117   -0.0000  255.2758    1.355   0.196   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   36       16   +133.18      106    0.0001  1418.2077    1.590   0.174   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       16   +132.42      109   -0.0002  1186.5611    1.502   0.169   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38        9    +59.99      108   -0.0010  372.2174    1.192   0.269   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       11    +82.52      139   -0.0011  476.5920    1.243   0.218   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   40       10    +71.94      166    0.0004  341.4460    1.257   0.264   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       14   +115.39      164   -0.0001  1269.9344    1.300   0.144   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       13   +101.50      125    0.0001  683.9718    1.531   0.176   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       17   +142.41      127   -0.0000  1609.8456    1.314   0.178   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       13   +102.14      137    0.0000  912.5513    1.250   0.256   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       10    +71.74      131   -0.0000  317.1507    1.308   0.286   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   46       14   +112.68       97    0.0000  977.1156    1.668   0.130   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47        9    +63.60      158   -0.0000  372.7896    1.373   0.163   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   48       11    +83.63       80   -0.0003  962.9128    1.506   0.113   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       11    +79.83      120   -0.0002  423.5780    1.357   0.280   0.0000     0.000     0.7
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/ckpt_final.pt
+best:   epoch 21, rolling mean pickups = 13.40
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 45 --demand-split train --save-every 10 --best-window 10 --degradation tunnel_triggered --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1 --outage-duration 30.0
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       12    +91.18      128   -0.0018  1119.4409    1.546   0.284   0.0003     0.000     1.8
+Warning: Could not set locale to 'C'.
+    1       14   +111.27      129   -0.0007  1530.2602    1.335   0.303   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+    2       14   +112.24      136   -0.0026  1183.6683    1.258   0.293   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    3       14   +114.71      142   -0.0001  1174.7844    1.368   0.265   0.0002     0.000     0.7
+Warning: Could not set locale to 'C'.
+    4       12    +92.04       95    0.0005  1136.1520    1.670   0.080   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5       10    +73.79      156   -0.0001  723.2759    1.370   0.208   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    6       16   +136.66       90   -0.0001  2195.6026    1.544   0.178   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       12    +90.56      122   -0.0002  732.8406    1.375   0.206   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       11    +80.64      100   -0.0001  917.6814    1.572   0.150   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       10    +68.54      102   -0.0004  520.9200    1.473   0.207   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10       10    +70.02      110    0.0002  743.2082    1.195   0.273   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       10    +72.58      135    0.0000  595.8071    1.219   0.261   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12       12    +93.22      170   -0.0004  711.6448    1.274   0.227   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13       13   +102.88      163   -0.0004  1053.0959    1.291   0.223   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14       11    +80.66      124    0.0001  663.4263    1.521   0.226   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   15       14   +109.34      126   -0.0003  980.7216    1.297   0.217   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   16       14   +112.86      132    0.0002  1318.9283    1.207   0.205   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   17       12    +93.41      132   -0.0002  814.9825    1.296   0.239   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   18       13   +102.34       97    0.0001  1088.2307    1.659   0.143   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   19        9    +63.55      154   -0.0000  507.8228    1.345   0.181   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   20       12    +92.55       80    0.0000  1143.2565    1.499   0.150   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21        9    +58.35      119   -0.0009  312.3582    1.347   0.182   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   22       13   +102.04      101   -0.0037  1227.9275    1.571   0.198   0.0003     0.000     0.6
+Warning: Could not set locale to 'C'.
+   23       11    +79.27      107    0.0001  563.8219    1.495   0.264   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+   24        9    +60.44      114    0.0009  496.8752    1.228   0.368   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   25       10    +71.80      136   -0.0003  348.5752    1.238   0.293   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   26       11    +82.20      169   -0.0009  498.2893    1.283   0.239   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   27       13   +104.25      163    0.0006  1093.7295    1.306   0.262   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   28       12    +91.38      125   -0.0004  846.7778    1.538   0.153   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   29       14   +111.24      130    0.0001  1200.9065    1.333   0.191   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   30       11    +79.82      131   -0.0007  602.4482    1.226   0.225   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   31       11    +82.73      131   -0.0000  635.9029    1.310   0.165   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   32       10    +70.88       93   -0.0001  696.4396    1.661   0.164   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33       11    +84.56      163   -0.0013  561.8041    1.387   0.184   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       11    +83.26       82   -0.0023  1038.5023    1.504   0.183   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       11    +79.33      120    0.0000  411.5636    1.338   0.190   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   36       11    +81.10      104   -0.0001  899.3836    1.557   0.119   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   37       14   +110.79      107    0.0002  953.6642    1.460   0.080   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       12    +91.67      119   -0.0000  723.6119    1.205   0.218   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       12    +94.14      134   -0.0002  825.9068    1.179   0.202   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40        7    +40.06      159   -0.0001  162.1398    1.182   0.222   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   41       16   +136.32      171    0.0001  1525.4183    1.300   0.135   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       11    +80.65      125   -0.0000  602.8708    1.508   0.106   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       17   +142.16      129    0.0000  1632.8602    1.293   0.202   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   44       12    +91.52      132   -0.0000  878.1736    1.192   0.196   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       16   +135.69      137    0.0001  1068.7041    1.307   0.175   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   46       14   +112.92       98   -0.0000  1042.6519    1.648   0.038   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   47        8    +52.83      154   -0.0000  311.6670    1.327   0.202   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       16   +135.40       84   -0.0000  1644.9251    1.495   0.119   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49       11    +79.91      118    0.0000  406.7556    1.320   0.163   0.0000     0.000     0.7
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/ckpt_final.pt
+best:   epoch 46, rolling mean pickups = 13.10
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/ckpt_best.pt
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/train.py --area central_park --policy gat --epochs 50 --seed 46 --demand-split train --save-every 10 --best-window 10 --degradation tunnel_triggered --run-dir '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46' --deterministic-torch --anneal-lr --lr 0.0001 --gamma 0.99 --gae-lambda 0.95 --clip-ratio 0.2 --ppo-epochs 4 --minibatch-size 256 --vf-coef 0.25 --ent-coef 0.05 --entropy-floor 0.2 --max-ent-coef 0.2 --max-grad-norm 0.5 --value-clip-ratio 0.2 --target-kl 0.015 --dispatch-credit-reward 1.0 --critic-encoder-gradient-scale 0.1 --outage-duration 30.0
+run dir: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46
+device:  cpu
+demand:  14 'train' variants, rotated round-robin per epoch
+policy:  gat — 113,731 params
+
+epoch  pickups    reward  n_steps    π_loss    V_loss    H_dec    noop       KL  clipfrac  wall_s
+--------------------------------------------------------------------------------------------------------
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+    0       10    +70.27      127   -0.0014  712.0888    1.546   0.218   0.0002     0.000     1.7
+Warning: Could not set locale to 'C'.
+    1       15   +121.07      128   -0.0036  1327.5793    1.331   0.296   0.0003     0.000     0.7
+Warning: Could not set locale to 'C'.
+    2        9    +59.82      130    0.0007  543.0743    1.229   0.273   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    3       10    +71.88      131    0.0000  584.0747    1.320   0.220   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    4        6    +28.19       90   -0.0003  257.6955    1.665   0.114   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    5       12    +94.92      161   -0.0003  893.3034    1.396   0.238   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+    6       10    +71.63       77   -0.0003  1008.0492    1.506   0.325   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+    7       10    +68.69      118   -0.0001  514.1225    1.363   0.327   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    8       10    +70.19       94   -0.0011  918.3798    1.560   0.257   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+    9       14   +110.52      109   -0.0003  1163.9828    1.504   0.258   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   10        8    +49.91      113   -0.0009  393.4842    1.220   0.336   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   11       10    +72.12      134   -0.0021  592.8000    1.221   0.360   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   12       11    +82.13      169    0.0007  674.8530    1.269   0.358   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   13        9    +61.11      167    0.0001  434.3636    1.308   0.402   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   14        9    +59.26      125   -0.0000  515.8902    1.523   0.259   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   15       12    +90.14      131   -0.0001  1028.2742    1.319   0.441   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   16        9    +59.70      130   -0.0001  556.1846    1.206   0.418   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   17       13   +103.99      133   -0.0007  971.4524    1.308   0.280   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   18       13   +102.59      102   -0.0001  1044.0871    1.669   0.280   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   19       12    +94.46      168   -0.0022  716.8141    1.408   0.417   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   20        9    +61.34       89    0.0003  673.7895    1.538   0.303   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   21       11    +78.75      119   -0.0000  542.8358    1.364   0.283   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   22       13   +101.46      109   -0.0000  1072.1721    1.597   0.180   0.0000     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   23       15   +121.30      115   -0.0010  1007.1742    1.523   0.284   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   24       12    +91.72      116   -0.0014  677.5911    1.238   0.328   0.0002     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   25       10    +72.70      134   -0.0003  575.3877    1.228   0.351   0.0002     0.000     0.6
+Warning: Could not set locale to 'C'.
+   26       12    +92.91      168   -0.0001  644.3812    1.277   0.278   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   27       15   +125.15      168    0.0000  1359.2789    1.327   0.204   0.0000     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   28       13   +102.04      126   -0.0007  1032.9168    1.539   0.163   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   29       17   +143.21      132   -0.0011  1957.7464    1.337   0.223   0.0001     0.000     0.7  ★ new best
+Warning: Could not set locale to 'C'.
+   30       15   +122.57      137   -0.0012  1211.2179    1.245   0.222   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   31       12    +93.61      129   -0.0002  775.3627    1.287   0.270   0.0001     0.000     0.6  ★ new best
+Warning: Could not set locale to 'C'.
+   32       11    +81.31       94   -0.0009  808.2445    1.652   0.081   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   33       13   +105.64      164   -0.0007  969.1567    1.373   0.202   0.0001     0.000     0.7
+Warning: Could not set locale to 'C'.
+   34       11    +82.09       82    0.0001  880.7261    1.485   0.244   0.0001     0.000     0.6
+Warning: Could not set locale to 'C'.
+   35       11    +79.73      116    0.0001  529.5649    1.303   0.208   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   36       12    +91.29      105   -0.0003  947.2029    1.548   0.082   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   37       11    +79.43      102    0.0001  568.6306    1.430   0.098   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   38       12    +93.05      113   -0.0000  1011.7707    1.154   0.115   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   39       10    +71.91      131   -0.0005  361.7145    1.140   0.162   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   40       10    +71.94      163    0.0002  394.6656    1.178   0.175   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   41       17   +147.23      172   -0.0001  1861.0150    1.277   0.170   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   42       10    +70.41      119    0.0000  581.3128    1.462   0.076   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   43       15   +121.02      127    0.0000  1314.0955    1.251   0.187   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   44       15   +123.97      137    0.0001  1658.9265    1.177   0.162   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   45       11    +82.39      129    0.0000  455.8326    1.227   0.124   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   46       12    +91.47       98   -0.0000  751.5086    1.624   0.051   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   47       12    +95.37      164   -0.0000  648.8600    1.336   0.144   0.0000     0.000     0.7
+Warning: Could not set locale to 'C'.
+   48       13   +103.54       81    0.0000  1174.4174    1.451   0.148   0.0000     0.000     0.6
+Warning: Could not set locale to 'C'.
+   49        8    +48.10      119   -0.0000  259.9257    1.287   0.131   0.0000     0.000     0.6
+
+done. logs: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/train_log.jsonl
+final:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/ckpt_final.pt
+best:   epoch 31, rolling mean pickups = 13.40
+        checkpoint: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/ckpt_best.pt

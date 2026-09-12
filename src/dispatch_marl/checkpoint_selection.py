@@ -23,7 +23,7 @@ def select_best_candidate(candidates: Iterable[dict[str, Any]]) -> dict[str, Any
 def select_trained_candidate(
     candidates: Iterable[dict[str, Any]],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Return the initialization diagnostic and best trained checkpoint."""
+    """Return the earliest diagnostic snapshot and best later checkpoint."""
     values = list(candidates)
     if not values:
         raise ValueError("at least one checkpoint candidate is required")

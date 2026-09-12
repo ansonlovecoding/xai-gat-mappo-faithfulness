@@ -1,0 +1,157 @@
+{
+  "schema_version": 2,
+  "protocol_version": "2.0",
+  "checkpoint": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_selected.pt",
+  "epoch": 20,
+  "area": "central_park",
+  "degradation": "off",
+  "outage_duration_s": 0.0,
+  "stochastic": true,
+  "seed": 47,
+  "episodes": 6,
+  "demand_split": "test",
+  "demand_files": [
+    "central_park_taxis_v017.rou.xml",
+    "central_park_taxis_v018.rou.xml",
+    "central_park_taxis_v019.rou.xml"
+  ],
+  "per_episode": [
+    {
+      "completed_passenger_journeys": 12,
+      "total_pickups": 12,
+      "total_reward": 93.23988718089954,
+      "final_mean_pending_wait_s": 834.6052631578947,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v017.rou.xml",
+      "wall_s": 1.6
+    },
+    {
+      "completed_passenger_journeys": 8,
+      "total_pickups": 8,
+      "total_reward": 47.305806529009836,
+      "final_mean_pending_wait_s": 907.1666666666666,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v018.rou.xml",
+      "wall_s": 0.6
+    },
+    {
+      "completed_passenger_journeys": 18,
+      "total_pickups": 18,
+      "total_reward": 157.1865950186112,
+      "final_mean_pending_wait_s": 841.03125,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v019.rou.xml",
+      "wall_s": 0.6
+    },
+    {
+      "completed_passenger_journeys": 15,
+      "total_pickups": 15,
+      "total_reward": 125.14301175986746,
+      "final_mean_pending_wait_s": 833.3428571428572,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v017.rou.xml",
+      "wall_s": 0.5
+    },
+    {
+      "completed_passenger_journeys": 11,
+      "total_pickups": 11,
+      "total_reward": 79.06141322753919,
+      "final_mean_pending_wait_s": 898.8461538461538,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v018.rou.xml",
+      "wall_s": 0.5
+    },
+    {
+      "completed_passenger_journeys": 14,
+      "total_pickups": 14,
+      "total_reward": 115.34088032335268,
+      "final_mean_pending_wait_s": 831.3333333333334,
+      "rl_steps": 120,
+      "empirical_degradation_rate": 0.0,
+      "decisions_seen": 0,
+      "stale_exposed_decisions_seen": 0,
+      "stale_exposed_decisions_scored": 0,
+      "cadence_decisions_scored": 0,
+      "demand_variant": "central_park_taxis_v019.rou.xml",
+      "wall_s": 0.5
+    }
+  ],
+  "mean_completed_passenger_journeys": 13.0,
+  "std_completed_passenger_journeys": 3.1622776601683795,
+  "mean_pickups": 13.0,
+  "std_pickups": 3.1622776601683795,
+  "mean_reward": 102.87959900654664,
+  "std_reward": 34.99730780968936,
+  "checkpoint_sha256": "6466e7d0ce5b6ba7e90179f2535a28e9e9b3229c8d147092ab91104a65220457",
+  "provenance": {
+    "python": "3.11.14 (main, Oct  9 2025, 16:16:55) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "executable": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+    "platform": "macOS-14.2.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "hardware": {
+      "cpu_model": "Apple M3 Pro",
+      "logical_cpus": 12,
+      "installed_memory_bytes": 19327352832
+    },
+    "command": [
+      "scripts/eval_policy.py",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_selected.pt",
+      "--episodes",
+      "6",
+      "--seed",
+      "47",
+      "--demand-split",
+      "test",
+      "--output",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/evaluations/B2_gat/seed_45/eval_seed_47.json",
+      "--stochastic"
+    ],
+    "cwd": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "gymnasium": "1.3.0",
+      "pettingzoo": "1.26.1",
+      "traci": "1.20.0",
+      "sumolib": "1.20.0",
+      "eclipse-sumo": "1.20.0"
+    },
+    "sumo": {
+      "binary_version": "1.20.0",
+      "binary": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/runtime/sumo-1.20.0/bin/sumo",
+      "backend": "traci",
+      "using_libsumo": false
+    },
+    "git": {
+      "revision": "2c604e73fe1501a9a1a370520857e12cdaeb74a8",
+      "dirty": false,
+      "status": [],
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

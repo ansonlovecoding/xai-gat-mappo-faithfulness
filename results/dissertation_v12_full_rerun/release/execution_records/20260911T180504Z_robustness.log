@@ -1,0 +1,308 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/check_environment.py
+python: 3.11.14
+torch:  2.2.2
+numpy:  1.26.4
+SUMO:   1.20.0 via traci
+traci:  1.20.0
+git:    2c604e73fe1501a9a1a370520857e12cdaeb74a8 (clean)
+environment: PASS
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_42' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_42
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_42
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_43' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_43
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_43
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_44' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_44
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_44
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_45' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_45
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_45
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_46' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_46
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_46
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_42' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_42
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_42
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_43' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_43
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_43
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_44' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_44
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_44
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_45' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_45
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_45
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/sweep_severity.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/ckpt_selected.pt' --episodes 3 --seeds 42 43 44 45 46 47 48 49 --outage-durations 30.0 --with-dropout-axis --dropout-rate 0.0023 --demand-split test --corruption freeze --faithfulness-every 16 --faithfulness-random-baselines 5 --random-baseline type_matched --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_46' --faithfulness-exposed-every 1
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_46
+
+[  1/24] clean_0_seed42: exists, skipping
+[  2/24] clean_0_seed43: exists, skipping
+[  3/24] clean_0_seed44: exists, skipping
+[  4/24] clean_0_seed45: exists, skipping
+[  5/24] clean_0_seed46: exists, skipping
+[  6/24] clean_0_seed47: exists, skipping
+[  7/24] clean_0_seed48: exists, skipping
+[  8/24] clean_0_seed49: exists, skipping
+[  9/24] outage_duration_30_seed42: exists, skipping
+[ 10/24] outage_duration_30_seed43: exists, skipping
+[ 11/24] outage_duration_30_seed44: exists, skipping
+[ 12/24] outage_duration_30_seed45: exists, skipping
+[ 13/24] outage_duration_30_seed46: exists, skipping
+[ 14/24] outage_duration_30_seed47: exists, skipping
+[ 15/24] outage_duration_30_seed48: exists, skipping
+[ 16/24] outage_duration_30_seed49: exists, skipping
+[ 17/24] dropout_outage_duration_30_seed42: exists, skipping
+[ 18/24] dropout_outage_duration_30_seed43: exists, skipping
+[ 19/24] dropout_outage_duration_30_seed44: exists, skipping
+[ 20/24] dropout_outage_duration_30_seed45: exists, skipping
+[ 21/24] dropout_outage_duration_30_seed46: exists, skipping
+[ 22/24] dropout_outage_duration_30_seed47: exists, skipping
+[ 23/24] dropout_outage_duration_30_seed48: exists, skipping
+[ 24/24] dropout_outage_duration_30_seed49: exists, skipping
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/H5_gat_degraded/seed_46

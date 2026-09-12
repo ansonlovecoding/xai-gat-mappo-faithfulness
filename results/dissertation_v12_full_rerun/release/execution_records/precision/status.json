@@ -1,0 +1,138 @@
+{
+  "started_utc": "2026-09-11T19:07:25.876477+00:00",
+  "workers": 3,
+  "tasks": [
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_42/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 22.07394233300147
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_43/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 22.190142374995048
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_44/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 22.26304054100183
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_45/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 20.51878558399767
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/B2_gat/seed_46/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 21.149990874997457
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_42/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 20.91158562500641
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_43/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 20.3536359169957
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_44/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 21.041709540993907
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_45/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 20.525554041996656
+    },
+    {
+      "command": [
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+        "scripts/analyze_hypotheses.py",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46",
+        "--input-round-decimals",
+        "4",
+        "--output",
+        "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/sweeps/H5_gat_degraded/seed_46/analysis_rounded4.json"
+      ],
+      "returncode": 0,
+      "wall_seconds": 20.27551150000363
+    }
+  ],
+  "wall_seconds": 83.22333237499697,
+  "finished_utc": "2026-09-11T19:08:49.100274+00:00"
+}

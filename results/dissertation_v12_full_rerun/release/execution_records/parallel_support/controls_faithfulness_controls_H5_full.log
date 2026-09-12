@@ -1,0 +1,181 @@
+[1/30] H5_gat_degraded_train42_clean_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.003 gap=+0.005 n=39
+[2/30] H5_gat_degraded_train42_clean_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.004 gap=+0.006 n=39
+[3/30] H5_gat_degraded_train42_clean_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.004 gap=+0.005 n=40
+[4/30] H5_gat_degraded_train42_outage_60s_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.003 gap=+0.005 n=39
+[5/30] H5_gat_degraded_train42_outage_60s_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.004 gap=+0.005 n=39
+[6/30] H5_gat_degraded_train42_outage_60s_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.004 gap=+0.005 n=40
+[7/30] H5_gat_degraded_train43_clean_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.006 loo=+0.002 gap=+0.008 n=39
+[8/30] H5_gat_degraded_train43_clean_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.007 loo=+0.002 gap=+0.010 n=39
+[9/30] H5_gat_degraded_train43_clean_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.007 loo=+0.003 gap=+0.010 n=38
+[10/30] H5_gat_degraded_train43_outage_60s_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.006 loo=+0.002 gap=+0.008 n=39
+[11/30] H5_gat_degraded_train43_outage_60s_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.006 loo=+0.002 gap=+0.008 n=39
+[12/30] H5_gat_degraded_train43_outage_60s_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.006 loo=+0.003 gap=+0.009 n=38
+[13/30] H5_gat_degraded_train44_clean_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.001 loo=+0.006 gap=+0.006 n=38
+[14/30] H5_gat_degraded_train44_clean_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.006 gap=+0.006 n=40
+[15/30] H5_gat_degraded_train44_clean_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.004 gap=+0.004 n=40
+[16/30] H5_gat_degraded_train44_outage_60s_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.004 gap=+0.005 n=38
+[17/30] H5_gat_degraded_train44_outage_60s_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.004 gap=+0.004 n=40
+[18/30] H5_gat_degraded_train44_outage_60s_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.003 gap=+0.003 n=40
+[19/30] H5_gat_degraded_train45_clean_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.005 gap=+0.005 n=38
+[20/30] H5_gat_degraded_train45_clean_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.007 gap=+0.007 n=39
+[21/30] H5_gat_degraded_train45_clean_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=+0.000 loo=+0.005 gap=+0.005 n=39
+[22/30] H5_gat_degraded_train45_outage_60s_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.005 gap=+0.005 n=38
+[23/30] H5_gat_degraded_train45_outage_60s_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.007 gap=+0.007 n=39
+[24/30] H5_gat_degraded_train45_outage_60s_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.000 loo=+0.005 gap=+0.005 n=39
+[25/30] H5_gat_degraded_train46_clean_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.004 loo=+0.004 gap=+0.008 n=38
+[26/30] H5_gat_degraded_train46_clean_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.003 loo=+0.004 gap=+0.007 n=39
+[27/30] H5_gat_degraded_train46_clean_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.004 loo=+0.003 gap=+0.007 n=40
+[28/30] H5_gat_degraded_train46_outage_60s_eval42.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.004 loo=+0.003 gap=+0.007 n=38
+[29/30] H5_gat_degraded_train46_outage_60s_eval43.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.003 loo=+0.004 gap=+0.007 n=39
+[30/30] H5_gat_degraded_train46_outage_60s_eval44.json
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+  attention=-0.004 loo=+0.004 gap=+0.008 n=40
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/faithfulness_controls/H5_full/summary.json

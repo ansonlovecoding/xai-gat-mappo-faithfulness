@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "errors": [],
+  "training_runs": 15,
+  "epochs_per_run": 50,
+  "clean_cells": 120,
+  "diagnostic_cells": 10,
+  "cells": {
+    "main": 400,
+    "random_loss": 240,
+    "controls": 120
+  },
+  "source_revisions": [
+    "2c604e73fe1501a9a1a370520857e12cdaeb74a8"
+  ],
+  "hardware": [
+    {
+      "cpu_model": "Apple M3 Pro",
+      "installed_memory_bytes": 19327352832,
+      "logical_cpus": 12
+    }
+  ]
+}

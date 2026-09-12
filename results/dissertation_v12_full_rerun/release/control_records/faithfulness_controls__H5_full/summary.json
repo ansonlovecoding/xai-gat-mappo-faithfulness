@@ -1,0 +1,225 @@
+{
+  "protocol": {
+    "models": [
+      "H5_gat_degraded"
+    ],
+    "training_seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "eval_seeds": [
+      42,
+      43,
+      44
+    ],
+    "episodes": 3,
+    "conditions": [
+      "clean",
+      "outage_60s"
+    ],
+    "demand_split": "test",
+    "demand_files": [
+      "central_park_taxis_v017.rou.xml",
+      "central_park_taxis_v018.rou.xml",
+      "central_park_taxis_v019.rou.xml"
+    ],
+    "stochastic": true,
+    "faithfulness_every": 8,
+    "chosen_request_protected": true,
+    "random_baseline": "type_matched",
+    "action_row_only": false,
+    "checkpoint_root": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training"
+  },
+  "runtime": {
+    "python": "3.11.14 (main, Oct  9 2025, 16:16:55) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "executable": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+    "platform": "macOS-14.2.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "hardware": {
+      "cpu_model": "Apple M3 Pro",
+      "logical_cpus": 12,
+      "installed_memory_bytes": 19327352832
+    },
+    "command": [
+      "scripts/run_faithfulness_controls.py",
+      "--models",
+      "H5_gat_degraded",
+      "--training-seeds",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "--eval-seeds",
+      "42",
+      "43",
+      "44",
+      "--episodes",
+      "3",
+      "--conditions",
+      "clean",
+      "outage_60s",
+      "--checkpoint-root",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training",
+      "--faithfulness-every",
+      "8",
+      "--out",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/faithfulness_controls/H5_full"
+    ],
+    "cwd": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "gymnasium": "1.3.0",
+      "pettingzoo": "1.26.1",
+      "traci": "1.20.0",
+      "sumolib": "1.20.0",
+      "eclipse-sumo": "1.20.0"
+    },
+    "sumo": {
+      "binary_version": "1.20.0",
+      "binary": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/runtime/sumo-1.20.0/bin/sumo",
+      "backend": "traci",
+      "using_libsumo": false
+    },
+    "git": {
+      "revision": "2c604e73fe1501a9a1a370520857e12cdaeb74a8",
+      "dirty": false,
+      "status": [],
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "summary": {
+    "H5_gat_degraded:clean": {
+      "n_cells": 15,
+      "n_positive_control_decisions": 585,
+      "attention_control_def_m_mean_of_cells": -0.0024448054375463936,
+      "attention_control_g_comp_m_mean_of_cells": -0.0015311886905497705,
+      "attention_control_g_suff_m_mean_of_cells": -0.0033584221845430165,
+      "loo_oracle_def_m_mean_of_cells": 0.004184734219185181,
+      "loo_oracle_g_comp_m_mean_of_cells": 0.004308029806281613,
+      "loo_oracle_g_suff_m_mean_of_cells": 0.004061438632088752,
+      "grad_x_input_def_m_mean_of_cells": 0.0001797506608906002,
+      "grad_x_input_g_comp_m_mean_of_cells": -0.0003964811802668139,
+      "grad_x_input_g_suff_m_mean_of_cells": 0.0007559825020480145,
+      "loo_control_gap_m_mean_of_cells": 0.006629539656731575,
+      "attention_loo_topk_agreement_mean_of_cells": 0.28360311391013143,
+      "expected_random_topk_overlap_mean_of_cells": 0.4322502124256512,
+      "taxi_attention_loo_spearman_mean_of_cells": -0.02599725592422591,
+      "n_action_row_request_decisions": 0,
+      "self_row_request_def_m_mean_of_cells": null,
+      "action_row_request_def_m_mean_of_cells": null,
+      "action_row_request_gap_m_mean_of_cells": null
+    },
+    "H5_gat_degraded:outage_60s": {
+      "n_cells": 15,
+      "n_positive_control_decisions": 585,
+      "attention_control_def_m_mean_of_cells": -0.0022833639072352896,
+      "attention_control_g_comp_m_mean_of_cells": -0.001399447206574527,
+      "attention_control_g_suff_m_mean_of_cells": -0.0031672806078960523,
+      "loo_oracle_def_m_mean_of_cells": 0.0038377695734646716,
+      "loo_oracle_g_comp_m_mean_of_cells": 0.00395564997833111,
+      "loo_oracle_g_suff_m_mean_of_cells": 0.0037198891685982336,
+      "grad_x_input_def_m_mean_of_cells": 0.00042088953879030493,
+      "grad_x_input_g_comp_m_mean_of_cells": -0.00016513634099271602,
+      "grad_x_input_g_suff_m_mean_of_cells": 0.0010069154185733255,
+      "loo_control_gap_m_mean_of_cells": 0.0061211334806999616,
+      "attention_loo_topk_agreement_mean_of_cells": 0.28337244464437444,
+      "expected_random_topk_overlap_mean_of_cells": 0.4322502124256512,
+      "taxi_attention_loo_spearman_mean_of_cells": -0.019245141971944737,
+      "n_action_row_request_decisions": 0,
+      "self_row_request_def_m_mean_of_cells": null,
+      "action_row_request_def_m_mean_of_cells": null,
+      "action_row_request_gap_m_mean_of_cells": null,
+      "aggregation_sensitivity": {
+        "first_head_0": {
+          "mean_stale_attention_shift": 0.0004443101839994221,
+          "n_stale_exposed_decisions": 163
+        },
+        "first_head_1": {
+          "mean_stale_attention_shift": 0.0028613760991274937,
+          "n_stale_exposed_decisions": 163
+        },
+        "first_head_2": {
+          "mean_stale_attention_shift": 0.002511699239251815,
+          "n_stale_exposed_decisions": 163
+        },
+        "first_head_3": {
+          "mean_stale_attention_shift": 0.0032338716176917694,
+          "n_stale_exposed_decisions": 163
+        },
+        "first_max": {
+          "mean_stale_attention_shift": 0.0009061792956659801,
+          "n_stale_exposed_decisions": 163
+        },
+        "first_mean": {
+          "mean_stale_attention_shift": 0.0022628143236655953,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_head_0": {
+          "mean_stale_attention_shift": 0.0005932305251808159,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_head_1": {
+          "mean_stale_attention_shift": 0.002869384319173057,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_head_2": {
+          "mean_stale_attention_shift": -0.0013347042695378958,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_head_3": {
+          "mean_stale_attention_shift": 0.0017420728894922486,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_max": {
+          "mean_stale_attention_shift": -0.0003089398610007326,
+          "n_stale_exposed_decisions": 163
+        },
+        "last_mean": {
+          "mean_stale_attention_shift": 0.0009674961538061054,
+          "n_stale_exposed_decisions": 163
+        },
+        "rollout_mean": {
+          "mean_stale_attention_shift": 0.0010374363765965119,
+          "n_stale_exposed_decisions": 163
+        }
+      }
+    }
+  },
+  "cell_files": [
+    "H5_gat_degraded_train42_clean_eval42.json",
+    "H5_gat_degraded_train42_clean_eval43.json",
+    "H5_gat_degraded_train42_clean_eval44.json",
+    "H5_gat_degraded_train42_outage_60s_eval42.json",
+    "H5_gat_degraded_train42_outage_60s_eval43.json",
+    "H5_gat_degraded_train42_outage_60s_eval44.json",
+    "H5_gat_degraded_train43_clean_eval42.json",
+    "H5_gat_degraded_train43_clean_eval43.json",
+    "H5_gat_degraded_train43_clean_eval44.json",
+    "H5_gat_degraded_train43_outage_60s_eval42.json",
+    "H5_gat_degraded_train43_outage_60s_eval43.json",
+    "H5_gat_degraded_train43_outage_60s_eval44.json",
+    "H5_gat_degraded_train44_clean_eval42.json",
+    "H5_gat_degraded_train44_clean_eval43.json",
+    "H5_gat_degraded_train44_clean_eval44.json",
+    "H5_gat_degraded_train44_outage_60s_eval42.json",
+    "H5_gat_degraded_train44_outage_60s_eval43.json",
+    "H5_gat_degraded_train44_outage_60s_eval44.json",
+    "H5_gat_degraded_train45_clean_eval42.json",
+    "H5_gat_degraded_train45_clean_eval43.json",
+    "H5_gat_degraded_train45_clean_eval44.json",
+    "H5_gat_degraded_train45_outage_60s_eval42.json",
+    "H5_gat_degraded_train45_outage_60s_eval43.json",
+    "H5_gat_degraded_train45_outage_60s_eval44.json",
+    "H5_gat_degraded_train46_clean_eval42.json",
+    "H5_gat_degraded_train46_clean_eval43.json",
+    "H5_gat_degraded_train46_clean_eval44.json",
+    "H5_gat_degraded_train46_outage_60s_eval42.json",
+    "H5_gat_degraded_train46_outage_60s_eval43.json",
+    "H5_gat_degraded_train46_outage_60s_eval44.json"
+  ]
+}

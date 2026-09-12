@@ -1,0 +1,230 @@
+{
+  "schema_version": 2,
+  "experiment_id": "a1d90ab86e4f",
+  "protocol_version": "2.0",
+  "kind": "severity_sweep",
+  "checkpoint": "runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt",
+  "checkpoint_sha256": "0baf06cc3d10bcdbbb2fc59fe3f4a93a96ad610d24f8ff64dc61a49055ae937e",
+  "epoch": 28,
+  "policy_type": "gat",
+  "area": "central_park",
+  "corruption": "freeze",
+  "episodes_per_cell_seed": 3,
+  "stochastic": true,
+  "demand_split": "test",
+  "demand_files": [
+    "central_park_taxis_v017.rou.xml",
+    "central_park_taxis_v018.rou.xml",
+    "central_park_taxis_v019.rou.xml"
+  ],
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49
+  ],
+  "cells": [
+    {
+      "axis": "clean",
+      "level": 0.0,
+      "mode": "off",
+      "dropout_rate": 0.0,
+      "outage_s": 0.0
+    },
+    {
+      "axis": "outage_duration",
+      "level": 30.0,
+      "mode": "tunnel_triggered",
+      "dropout_rate": 0.0,
+      "outage_s": 30.0
+    },
+    {
+      "axis": "dropout_outage_duration",
+      "level": 30.0,
+      "mode": "random_dropout",
+      "dropout_rate": 0.0023,
+      "outage_s": 30.0
+    }
+  ],
+  "faithfulness_config": {
+    "top_k_values": [
+      1,
+      2,
+      3
+    ],
+    "n_random_baselines": 5,
+    "faithfulness_every": 16,
+    "faithfulness_exposed_every": 1,
+    "random_baseline": "type_matched",
+    "exclusion_variant": true,
+    "minimum_stale_exposed_records_per_degraded_cell": 0,
+    "minimum_stale_exposed_episodes_per_degraded_cell": 0
+  },
+  "code_revision": "2c604e73fe1501a9a1a370520857e12cdaeb74a8",
+  "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "input_inventory": [
+    {
+      "path": "runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt",
+      "bytes": 1415994,
+      "sha256": "0baf06cc3d10bcdbbb2fc59fe3f4a93a96ad610d24f8ff64dc61a49055ae937e"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park.net.xml",
+      "bytes": 806899,
+      "sha256": "6d623cd101a881a3b73052124d99d2491e2d6566978d16ebba6619480cb3a5f7"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park.rou.xml",
+      "bytes": 91260,
+      "sha256": "009391c9d3288b75ae440a50d219b3e3f03bc411ca09e5c8026dccfc111263e2"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park.sumocfg",
+      "bytes": 386,
+      "sha256": "473b00d773a0aaf5f724c8e350cbc0bba5790c09f4bc8b5b395aba342de5275c"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park_taxis_v017.rou.xml",
+      "bytes": 8467,
+      "sha256": "e8762f1b62c67318a599c4b82ab19e28e0d7e6891b503934f176ecb46a6813ad"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park_taxis_v018.rou.xml",
+      "bytes": 8458,
+      "sha256": "2259899611fa375560fd4b5c6f32b433656288deb5e46de536554354e83e5186"
+    },
+    {
+      "path": "scenarios/yubei/central_park/central_park_taxis_v019.rou.xml",
+      "bytes": 8527,
+      "sha256": "124543e3f678de2c6a4982c265153a444c736b6c14fd1b3f12f25187f977301d"
+    },
+    {
+      "path": "scenarios/yubei/central_park/demand_manifest.json",
+      "bytes": 3165,
+      "sha256": "3cc149614d1bdff95cc57f03b19e2fca7905d84bdec33828db7e3645850fdb55"
+    },
+    {
+      "path": "scenarios/yubei/central_park/tunnels.json",
+      "bytes": 711,
+      "sha256": "cafb9fd18b1273f9d2524b390b857f951e381120c1d1a8b5f9da1fc671aa1f8b"
+    }
+  ],
+  "provenance": {
+    "python": "3.11.14 (main, Oct  9 2025, 16:16:55) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "executable": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+    "platform": "macOS-14.2.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "hardware": {
+      "cpu_model": "Apple M3 Pro",
+      "logical_cpus": 12,
+      "installed_memory_bytes": 19327352832
+    },
+    "command": [
+      "scripts/sweep_severity.py",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt",
+      "--episodes",
+      "3",
+      "--seeds",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47",
+      "48",
+      "49",
+      "--outage-durations",
+      "30.0",
+      "--with-dropout-axis",
+      "--dropout-rate",
+      "0.0023",
+      "--demand-split",
+      "test",
+      "--corruption",
+      "freeze",
+      "--faithfulness-every",
+      "16",
+      "--faithfulness-random-baselines",
+      "5",
+      "--random-baseline",
+      "type_matched",
+      "--out",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_43",
+      "--faithfulness-exposed-every",
+      "1"
+    ],
+    "cwd": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "gymnasium": "1.3.0",
+      "pettingzoo": "1.26.1",
+      "traci": "1.20.0",
+      "sumolib": "1.20.0",
+      "eclipse-sumo": "1.20.0"
+    },
+    "sumo": {
+      "binary_version": "1.20.0",
+      "binary": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/runtime/sumo-1.20.0/bin/sumo",
+      "backend": "traci",
+      "using_libsumo": false
+    },
+    "git": {
+      "revision": "2c604e73fe1501a9a1a370520857e12cdaeb74a8",
+      "dirty": false,
+      "status": [],
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "inputs": [
+      {
+        "path": "runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt",
+        "bytes": 1415994,
+        "sha256": "0baf06cc3d10bcdbbb2fc59fe3f4a93a96ad610d24f8ff64dc61a49055ae937e"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park.net.xml",
+        "bytes": 806899,
+        "sha256": "6d623cd101a881a3b73052124d99d2491e2d6566978d16ebba6619480cb3a5f7"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park.rou.xml",
+        "bytes": 91260,
+        "sha256": "009391c9d3288b75ae440a50d219b3e3f03bc411ca09e5c8026dccfc111263e2"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park.sumocfg",
+        "bytes": 386,
+        "sha256": "473b00d773a0aaf5f724c8e350cbc0bba5790c09f4bc8b5b395aba342de5275c"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park_taxis_v017.rou.xml",
+        "bytes": 8467,
+        "sha256": "e8762f1b62c67318a599c4b82ab19e28e0d7e6891b503934f176ecb46a6813ad"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park_taxis_v018.rou.xml",
+        "bytes": 8458,
+        "sha256": "2259899611fa375560fd4b5c6f32b433656288deb5e46de536554354e83e5186"
+      },
+      {
+        "path": "scenarios/yubei/central_park/central_park_taxis_v019.rou.xml",
+        "bytes": 8527,
+        "sha256": "124543e3f678de2c6a4982c265153a444c736b6c14fd1b3f12f25187f977301d"
+      },
+      {
+        "path": "scenarios/yubei/central_park/demand_manifest.json",
+        "bytes": 3165,
+        "sha256": "3cc149614d1bdff95cc57f03b19e2fca7905d84bdec33828db7e3645850fdb55"
+      },
+      {
+        "path": "scenarios/yubei/central_park/tunnels.json",
+        "bytes": 711,
+        "sha256": "cafb9fd18b1273f9d2524b390b857f951e381120c1d1a8b5f9da1fc671aa1f8b"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+model_id,model,condition,field,label,mean,ci95,n_episode_blocks,n_request_decisions
+B2_gat,GAT,clean,self_row_request_def_m,Fixed self row,-0.0011678499271707964,"[-0.0013882786500862955, -0.0009406293150642788]",45,490
+B2_gat,GAT,outage_60s,self_row_request_def_m,Fixed self row,-0.000968861903599503,"[-0.0011566109933759169, -0.0007697236295661396]",45,489
+H5_gat_degraded,GAT-Outage,clean,self_row_request_def_m,Fixed self row,-0.002608182994703838,"[-0.003434982846459133, -0.0018822915594611826]",45,515
+H5_gat_degraded,GAT-Outage,outage_60s,self_row_request_def_m,Fixed self row,-0.0023040076146218585,"[-0.002997003030695201, -0.001651656572444532]",45,515
+B2_gat,GAT,clean,action_row_request_def_m,Selected request row,-0.000531143134008387,"[-0.0008960551119294641, -0.00017935868426902242]",45,490
+B2_gat,GAT,outage_60s,action_row_request_def_m,Selected request row,-0.0004382314279987358,"[-0.0007622330825622389, -0.00011116299481872451]",45,489
+H5_gat_degraded,GAT-Outage,clean,action_row_request_def_m,Selected request row,0.0007114478594819889,"[0.0002523919586114469, 0.0012188188702176423]",45,515
+H5_gat_degraded,GAT-Outage,outage_60s,action_row_request_def_m,Selected request row,0.0007620961897422663,"[0.00029663805093864485, 0.0012543049743514731]",45,515
+B2_gat,GAT,clean,action_row_request_gap_m,Request row minus self row,0.0006367067931624096,"[0.0002698761830363834, 0.0010196410632198332]",45,490
+B2_gat,GAT,outage_60s,action_row_request_gap_m,Request row minus self row,0.0005306304756007672,"[0.00016710656304263406, 0.0008781049246828899]",45,489
+H5_gat_degraded,GAT-Outage,clean,action_row_request_gap_m,Request row minus self row,0.0033196308541858276,"[0.0022523177663615703, 0.0044489768719374895]",45,515
+H5_gat_degraded,GAT-Outage,outage_60s,action_row_request_gap_m,Request row minus self row,0.003066103804364125,"[0.00207818149970188, 0.00406752555493024]",45,515

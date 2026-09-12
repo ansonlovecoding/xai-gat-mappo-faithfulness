@@ -1,0 +1,7 @@
+python: 3.11.14
+torch:  2.2.2
+numpy:  1.26.4
+SUMO:   1.20.0 via traci
+traci:  1.20.0
+git:    2c604e73fe1501a9a1a370520857e12cdaeb74a8 (clean)
+environment: PASS

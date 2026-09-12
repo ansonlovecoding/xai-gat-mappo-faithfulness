@@ -1,0 +1,218 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/check_environment.py
+python: 3.11.14
+torch:  2.2.2
+numpy:  1.26.4
+SUMO:   1.20.0 via traci
+traci:  1.20.0
+git:    2c604e73fe1501a9a1a370520857e12cdaeb74a8 (clean)
+environment: PASS
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_42/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_42.json'
+checkpoint: ckpt_selected.pt  (epoch 40, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0        7      +39.66  844.8604651162791       120      1.6
+Warning: Could not set locale to 'C'.
+  1       10      +68.93       888.65       120      0.5
+Warning: Could not set locale to 'C'.
+  2        5      +18.13  868.0444444444445       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 7.33 ± 2.05
+  reward:    +42.24 ± 20.82
+  mean_wait: 867.2s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_42.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_43/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_43.json'
+checkpoint: ckpt_selected.pt  (epoch 28, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0        8      +49.88  854.3095238095239       120      1.6
+Warning: Could not set locale to 'C'.
+  1       11      +79.06  895.4358974358975       120      0.5
+Warning: Could not set locale to 'C'.
+  2        4       +7.21  878.5869565217391       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 7.67 ± 2.87
+  reward:    +45.38 ± 29.50
+  mean_wait: 876.1s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_43.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_44/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_44.json'
+checkpoint: ckpt_selected.pt  (epoch 10, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0       13     +103.06  866.081081081081       120      1.6
+Warning: Could not set locale to 'C'.
+  1        9      +57.34  912.8536585365854       120      0.5
+Warning: Could not set locale to 'C'.
+  2        4       +7.55  878.6521739130435       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 8.67 ± 3.68
+  reward:    +55.98 ± 39.00
+  mean_wait: 885.9s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_44.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_45/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_45.json'
+checkpoint: ckpt_selected.pt  (epoch 20, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0       13     +102.62        868.0       120      1.6
+Warning: Could not set locale to 'C'.
+  1       10      +68.53      904.225       120      0.5
+Warning: Could not set locale to 'C'.
+  2       11      +80.82  887.5384615384615       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 11.33 ± 1.25
+  reward:    +83.99 ± 14.10
+  mean_wait: 886.6s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_45.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/B2_gat/seed_46/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_46.json'
+checkpoint: ckpt_selected.pt  (epoch 10, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0        7      +39.82  852.9069767441861       120      1.6
+Warning: Could not set locale to 'C'.
+  1        5      +15.44  913.2666666666667       120      0.5
+Warning: Could not set locale to 'C'.
+  2        4       +7.26  878.3913043478261       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 5.33 ± 1.25
+  reward:    +20.84 ± 13.83
+  mean_wait: 881.5s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/B2_gat/seed_46.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_42/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_42.json'
+checkpoint: ckpt_selected.pt  (epoch 10, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0        8      +51.00  837.6904761904761       120      1.7
+Warning: Could not set locale to 'C'.
+  1       11      +79.67  885.9230769230769       120      0.5
+Warning: Could not set locale to 'C'.
+  2        8      +49.97  852.952380952381       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 9.00 ± 1.41
+  reward:    +60.21 ± 13.76
+  mean_wait: 858.9s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_42.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_43/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_43.json'
+checkpoint: ckpt_selected.pt  (epoch 10, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0        8      +49.87  857.8333333333334       120      1.6
+Warning: Could not set locale to 'C'.
+  1       10      +68.03        908.6       120      0.5
+Warning: Could not set locale to 'C'.
+  2        5      +17.69  880.7555555555556       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 7.67 ± 2.05
+  reward:    +45.20 ± 20.81
+  mean_wait: 882.4s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_43.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_44/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_44.json'
+checkpoint: ckpt_selected.pt  (epoch 30, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0       13     +103.02  863.5945945945946       120      1.6
+Warning: Could not set locale to 'C'.
+  1        9      +57.34  912.8536585365854       120      0.5
+Warning: Could not set locale to 'C'.
+  2        8      +49.60  881.3333333333334       120      0.6
+
+mean over 3 episodes:
+  completed passenger journeys: 10.00 ± 2.16
+  reward:    +69.99 ± 23.57
+  mean_wait: 885.9s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_44.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_45/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_45.json'
+checkpoint: ckpt_selected.pt  (epoch 20, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0       11      +81.89  846.2820512820513       120      1.6
+Warning: Could not set locale to 'C'.
+  1        9      +57.34  912.219512195122       120      0.5
+Warning: Could not set locale to 'C'.
+  2        7      +38.97  879.1162790697674       120      0.5
+
+mean over 3 episodes:
+  completed passenger journeys: 9.00 ± 1.63
+  reward:    +59.40 ± 17.59
+  mean_wait: 879.2s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_45.json
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/eval_policy.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training/H5_gat_degraded/seed_46/ckpt_selected.pt' --episodes 3 --seed 42 --demand-split test --output '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_46.json'
+checkpoint: ckpt_selected.pt  (epoch 31, 113,731 params)
+env:        central_park  |  degradation: off  |  device: cpu
+policy:     argmax (deterministic)
+
+ ep  pickups      reward  mean_wait_s  rl_steps   wall_s
+------------------------------------------------------------
+demand:     3 'test' variants, rotated per episode
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+  0       13     +103.22  853.081081081081       120      1.6
+Warning: Could not set locale to 'C'.
+  1        7      +36.70  910.7441860465116       120      0.5
+Warning: Could not set locale to 'C'.
+  2        6      +28.65  874.7045454545455       120      0.6
+
+mean over 3 episodes:
+  completed passenger journeys: 8.67 ± 3.09
+  reward:    +56.19 ± 33.42
+  mean_wait: 879.5s
+summary: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/deterministic_diagnostics/H5_gat_degraded/seed_46.json

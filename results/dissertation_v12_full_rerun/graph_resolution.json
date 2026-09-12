@@ -1,0 +1,59 @@
+{
+  "source": "Main-sweep records with primary_def and at least one available request, all conditions; decision-weighted descriptive distribution",
+  "rows": [
+    {
+      "model": "B2_gat",
+      "field": "valid_taxis",
+      "n": 20096,
+      "mean": 5.0,
+      "median": 5.0,
+      "p05": 5.0,
+      "p95": 5.0
+    },
+    {
+      "model": "B2_gat",
+      "field": "valid_reservations",
+      "n": 20096,
+      "mean": 2.543889331210191,
+      "median": 2.0,
+      "p05": 1.0,
+      "p95": 5.0
+    },
+    {
+      "model": "B2_gat",
+      "field": "valid_non_self_nodes",
+      "n": 20096,
+      "mean": 7.543889331210191,
+      "median": 7.0,
+      "p05": 6.0,
+      "p95": 10.0
+    },
+    {
+      "model": "H5_gat_degraded",
+      "field": "valid_taxis",
+      "n": 20056,
+      "mean": 5.0,
+      "median": 5.0,
+      "p05": 5.0,
+      "p95": 5.0
+    },
+    {
+      "model": "H5_gat_degraded",
+      "field": "valid_reservations",
+      "n": 20056,
+      "mean": 2.5370462704427603,
+      "median": 2.0,
+      "p05": 1.0,
+      "p95": 5.0
+    },
+    {
+      "model": "H5_gat_degraded",
+      "field": "valid_non_self_nodes",
+      "n": 20056,
+      "mean": 7.53704627044276,
+      "median": 7.0,
+      "p05": 6.0,
+      "p95": 10.0
+    }
+  ]
+}

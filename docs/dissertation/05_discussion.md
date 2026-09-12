@@ -5,8 +5,7 @@
 The central problem is whether a graph-attention map can still be trusted when
 some vehicle readings are stale. In the tested setting, the averaged self-row attention channel does not
 meet the specified explanation-release requirements. The attention map remains available during
-an outage, but the results do not show that degradation reduces faithfulness: the clean dispatch control already fails, and paired probability DEF rises
-slightly. The evidence is insufficient to show the tested attention map as an
+an outage, but degradation does not have one consistent effect on faithfulness. The pooled clean dispatch control fails, while paired probability DEF has positive intervals in seven checkpoints and negative intervals in two. The evidence is insufficient to show the tested attention map as an
 explanation. It does not establish that stale data always cause attention
 explanations to fail.
 
@@ -24,7 +23,7 @@ consistent evidence, so every tested checkpoint receives `WITHHOLD`.
 
 The experiment provides four related but different forms of evidence.
 
-**Clean baseline.** Under clean telemetry, raw-attention margin-DEF is below
+**Clean baseline.** Under clean telemetry, pooled raw-attention margin-DEF is below
 its type-matched random control for both models, while the LOO positive control
 is clearly above zero. The evaluator can therefore reward a ranking built from
 output changes, but raw attention does not provide the required evidence of
@@ -37,19 +36,14 @@ reallocation is assessed separately using stale-attention share and mass. It doe
 not show that data age causes faithfulness to decline because AoI is part of the
 WAMSN definition.
 
-**Duration and within-policy association.** The proposed negative relationships
-are not supported. DEF does not decline as outage duration or WAMSN increases.
-The observed directions differ from those predicted, while the failed clean
-dispatch control limits any interpretation as improved explanation quality.
+**Duration and within-policy association.** The proposed negative relationships are supported for a minority of checkpoints. Both seed-45 checkpoints support H1 and H4, and GAT-Outage seed 46 additionally supports H1. The evidence therefore shows checkpoint dependence rather than a uniform decline. Conversely, a positive DEF change in other checkpoints is not sufficient to validate explanation quality.
+
+The H1 finding for GAT-Outage seed 46 is borderline and changes under the four-decimal sensitivity check. The two seed-45 results remain supported under that check. This distinction matters when interpreting the minority of supporting checkpoints.
 
 **Direct paired change.** The clean/degraded pairs compare the same decision
-before and after the observation-layer change. Three checkpoints show a clear
-shift toward stale nodes, two show a clear shift away, and one is inconclusive.
-DEF increases slightly in all six, which is opposite to the expected decline.
-This does not validate attention: the clean decision-relevance control has
-already failed.
+before and after the observation-layer change. Seven checkpoints shift attention toward stale nodes and three shift away. Paired DEF intervals are positive in seven checkpoints, negative in both seed-45 checkpoints, and inconclusive for GAT-Outage seed 46. The direction cannot be generalized from one checkpoint. The pooled clean decision-relevance control also fails, so a positive paired change alone does not establish a useful explanation.
 
-![Evidence interpretation summary](../figures/v10_evidence_path_summary.png)
+![Evidence interpretation summary](../figures/v12_evidence_path_summary.png)
 
 **Figure 5.1.** How the four forms of evidence should be interpreted. Each form
 answers a different question and leads to a separate audit requirement.
@@ -63,9 +57,7 @@ faithfulness effect.
 The negative clean result is consistent with the need to test attention rather
 than equate it with explanation [12], [13]. It also fits the argument of Shin et al. [46] that naive attention aggregation can miss computation paths. It does
 not independently validate their GAtt method, which was not implemented here.
-The distinction matters: a failed raw self-row channel leaves room for better
-attribution methods but choosing whichever row gives a favorable result after testing would not
-validate it.
+The selected-request-row control gives positive margin-DEF for GAT-Outage in both clean and 60-second conditions, while GAT remains negative. This result supports further testing of the alternative row under a separately fixed protocol. It does not retrospectively validate the declared self-row channel, and choosing a favorable extraction rule after inspecting results would require new evaluation.
 
 The separation between stable capability and weak explanation evidence is
 also relevant to Li et al. [44] and Azzolin et al. [47]. Their settings show
@@ -85,10 +77,7 @@ the random trigger does not create identical stale-node populations and cannot
 rule out scenario effects. The result therefore supports checkpoint dependence,
 not a general effect of telemetry loss.
 
-**Action composition.** Dispatch accounts for 80.2% of GAT and 69.8% of GAT-Outage
-scorable decisions in the corrected experiment. Dispatch DEF increases slightly under degradation,
-whereas no-op DEF decreases in every checkpoint. The combined positive shift conceals the decline for no-op decisions, which
-require separate interpretation.
+**Action composition.** Dispatch accounts for 74.4% of GAT and 78.3% of GAT-Outage scorable decisions. No-op and dispatch paired DEF move in opposite directions in nine checkpoints. GAT seed 45 decreases in both groups; GAT-Outage seed 45 increases for no-op but decreases for dispatch. Reporting only the combined estimate would hide these differences.
 
 **Attention extraction.** Different heads, layers, aggregations, or query rows
 can change the direction or strength of the result. The network does not supply
@@ -146,11 +135,7 @@ more consistent across independently trained policies. Training with stale
 observations may improve robustness for other purposes, but the present results
 do not show that it makes raw attention a more reliable explanation.
 
-The different training budgets also prevent us from isolating the effect of
-training with degraded observations. In addition, the reward contains no term for
-explanation stability or faithfulness. A future
-test of model improvement would require a common training budget, independent
-training runs, and an explicit explanation objective.
+Training budgets and optimization settings are matched, but the validation telemetry differs between conditions. This prevents isolation of training telemetry alone. The reward also contains no term for explanation stability or faithfulness. A future test of model improvement should hold the selection environment fixed and assess an explicit explanation objective on new data.
 
 Recent delay-aware methods such as DFBT [56] and robust communication methods
 such as MAGI [59] optimize state estimation or useful information exchange.
@@ -232,13 +217,11 @@ cases, attention must not be presented as the reason for the action.
 ### 5.6.3 Application to this study
 
 Applying the framework to the completed evidence gives `WITHHOLD` for GAT and
-GAT-Outage and for all six individual checkpoints. The decision follows from
+GAT-Outage and for all ten individual checkpoints. The decision follows from
 insufficient support for explanation release: the dispatch-action
 decision-relevance intervals do not exceed the matched-random boundary,
 attention extraction can reverse the stale-attention direction, and the
-stale-attention response changes direction across training seeds. The random
-trigger check passes for GAT-Outage but is indeterminate for GAT because one
-checkpoint interval crosses zero. The argmax diagnostic completes journeys,
+stale-attention response changes direction across training seeds. The random-trigger check is indeterminate for both models: intervals cross zero for GAT seeds 42/45 and GAT-Outage seeds 43/46, despite agreement in point-estimate directions. GAT seed 45 passes its individual dispatch-relevance check, but still fails extraction stability. The argmax diagnostic completes journeys,
 but it remains descriptive because the audit scope uses sampled actions.
 
 The supplementary no-op results (Section 4.12) include positive absolute
@@ -268,18 +251,15 @@ conditions, but it offers no equivalent distribution-free guarantee.
 
 The study uses one simulated district, 20 taxis, and 50 requests. Tunnel
 exposure remains scenario-dependent, although the event-aware audit scores
-every observed stale-exposed decision. It evaluates three independent training
-seeds per model. Three seeds reveal variation but cannot estimate the wider
+every observed stale-exposed decision. It evaluates five independent training
+seeds per model. Five seeds reveal variation but provide limited information about the wider
 distribution of training outcomes. The selected policies pass the training
 stability gates, but their held-out completed-journey results overlap the
 legal-random CI and the simple greedy range. These baselines show that the policies can complete journeys, but do not
 establish a performance advantage. The experiment also
 does not isolate the contribution of graph edges to policy capability.
 
-Clean GAT and GAT-Outage also use different maximum training budgets and
-learning-rate decay horizons, selected from validation-only stability
-diagnostics. Their matched-seed comparison describes the two fitted
-configurations but cannot isolate the effect of degraded training observations.
+GAT and GAT-Outage share a 50-epoch budget, optimizer settings and checkpoint-selection criterion. However, their validation observations match their respective training conditions. The matched-seed comparison therefore describes two training-and-selection configurations and cannot isolate training telemetry alone. The protocol was refined during pilot work on the same scenario collection; the rerun does not provide independent validation on a previously unexamined dataset.
 
 The local graph is small. Type matching makes random top-k sets overlap heavily
 with the explanation, which compresses DEF. LOO is based on the same
@@ -305,18 +285,11 @@ The descriptive EDA adds another boundary: test demand has a lower median
 straight-line origin-destination separation than training demand, while all
 splits share taxi initialization, background traffic and road geometry.
 Repeating evaluation with different seeds varies the sampled actions; it
-does not test new cities or independently generated demand processes. Historical CPU model,
-installed memory and complete stage timings were not retained, limiting
-assessment of computational cost and exact hardware reproducibility.
+does not test new cities or independently generated demand processes. The full rerun records the workstation configuration and execution timings, but these measurements describe one machine and workload. They do not establish computational scalability or a hardware speed advantage.
 
 ## 5.8 Future work
 
-Three directions follow from these limitations. The first is a matched
-comparison of clean and outage training using common budgets, learning-rate
-schedules and checkpoint-selection rules, with more independent training
-seeds. Per-seed capability and paired DEF should be evaluated on untouched
-demand. Recording CPU/GPU details, memory use and elapsed time for each stage
-would also allow computational cost to be assessed.
+Three directions follow from these limitations. The first is a comparison that holds validation telemetry fixed as well as training budgets and optimization settings, with more independent training seeds. Capability and paired DEF should be evaluated on newly reserved demand data. Measuring peak memory and computational cost across larger fleets would extend the workstation timings reported here.
 
 The second is broader evaluation across road networks, demand processes,
 public mobility traces and telemetry failures. Varying tunnel placement and calibrating random-loss rates

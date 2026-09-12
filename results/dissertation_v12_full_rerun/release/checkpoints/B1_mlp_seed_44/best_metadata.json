@@ -1,0 +1,7 @@
+{
+  "best_epoch": 29,
+  "best_rolling_mean_completed_passenger_journeys": 13.9,
+  "best_rolling_mean_pickups": 13.9,
+  "window": 10,
+  "note": "Rolling mean of completed passenger journeys over the last 10 epochs. Updated whenever it improves."
+}

@@ -1,0 +1,125 @@
+sweep: 3 cells × 8 seeds = 24 runs × 3 episodes  |  corruption=freeze  demand=test
+out:   /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_42
+
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  1/24] clean_0_seed42: pickups=12.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  2/24] clean_0_seed43: pickups=12.7  deg_rate=0.000  DEF_m=-0.000  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  3/24] clean_0_seed44: pickups=12.3  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  4/24] clean_0_seed45: pickups=13.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  5/24] clean_0_seed46: pickups=13.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  6/24] clean_0_seed47: pickups=14.3  deg_rate=0.000  DEF_m=-0.000  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  7/24] clean_0_seed48: pickups=12.7  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  8/24] clean_0_seed49: pickups=13.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[  9/24] outage_duration_30_seed42: pickups=12.0  deg_rate=0.019  DEF_m=-0.000  WAMSN=0.039  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 10/24] outage_duration_30_seed43: pickups=12.7  deg_rate=0.025  DEF_m=-0.000  WAMSN=0.037  drift=0.0001  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 11/24] outage_duration_30_seed44: pickups=12.3  deg_rate=0.024  DEF_m=-0.001  WAMSN=0.038  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 12/24] outage_duration_30_seed45: pickups=13.0  deg_rate=0.022  DEF_m=-0.001  WAMSN=0.037  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 13/24] outage_duration_30_seed46: pickups=13.0  deg_rate=0.018  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 14/24] outage_duration_30_seed47: pickups=14.3  deg_rate=0.024  DEF_m=-0.000  WAMSN=0.037  drift=0.0001  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 15/24] outage_duration_30_seed48: pickups=12.7  deg_rate=0.025  DEF_m=-0.000  WAMSN=0.038  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 16/24] outage_duration_30_seed49: pickups=13.0  deg_rate=0.025  DEF_m=-0.001  WAMSN=0.037  drift=0.0001  (8s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 17/24] dropout_outage_duration_30_seed42: pickups=12.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.004  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 18/24] dropout_outage_duration_30_seed43: pickups=12.7  deg_rate=0.000  DEF_m=-0.000  WAMSN=0.000  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 19/24] dropout_outage_duration_30_seed44: pickups=12.3  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.015  drift=0.0000  (5s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 20/24] dropout_outage_duration_30_seed45: pickups=13.0  deg_rate=0.003  DEF_m=-0.001  WAMSN=0.008  drift=0.0000  (5s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 21/24] dropout_outage_duration_30_seed46: pickups=13.0  deg_rate=0.000  DEF_m=-0.001  WAMSN=0.002  drift=0.0000  (4s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 22/24] dropout_outage_duration_30_seed47: pickups=14.3  deg_rate=0.011  DEF_m=-0.000  WAMSN=0.038  drift=0.0000  (7s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 23/24] dropout_outage_duration_30_seed48: pickups=12.7  deg_rate=0.009  DEF_m=-0.001  WAMSN=0.023  drift=0.0001  (5s)
+ Retrying in 1 seconds
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+Warning: Could not set locale to 'C'.
+[ 24/24] dropout_outage_duration_30_seed49: pickups=13.0  deg_rate=0.003  DEF_m=-0.001  WAMSN=0.018  drift=0.0000  (5s)
+
+done. analyse with: python scripts/analyze_hypotheses.py /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s/B2_gat/seed_42

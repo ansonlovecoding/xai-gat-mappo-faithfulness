@@ -1,0 +1,22 @@
+{
+  "status": "complete",
+  "artifacts": {
+    "docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_Final.docx": {
+      "bytes": 9258627,
+      "sha256": "83724db7c19a0fbda8cb77fc6abe6d3f0adf806d72736ae99f7e8c9f44f7bd09"
+    },
+    "docs/When_Explanations_Outlive_Their_Data_DMU_Thesis_Final.pdf": {
+      "bytes": 4766960,
+      "sha256": "a35c3c8e7581b85c29be9e79c7bde6a09626c86e38eb0dc24c79c3cc994a0dea"
+    }
+  },
+  "pdf_pages": 76,
+  "page_map_stable": true,
+  "figures": 21,
+  "tables": 24,
+  "used_references": 67,
+  "recent_references": 30,
+  "unit_tests_passed": 46,
+  "release_files_hash_verified": 529,
+  "visual_review": "All pages surveyed; changed result figures and tables inspected at readable scale."
+}

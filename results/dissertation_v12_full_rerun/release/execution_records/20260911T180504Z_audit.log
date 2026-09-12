@@ -1,0 +1,23 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/audit_explanations.py --config configs/experiments/dissertation_v12_full_rerun.toml
+overall decision: WITHHOLD
+  GAT: WITHHOLD
+    PASS       Evidence integrity
+    PASS       Freshness is visible
+    PASS       Action-aware controls
+    FAIL       Decision relevance
+    PASS       Action composition
+    FAIL       Attention extraction stability
+    FAIL       Checkpoint consistency
+    NOT APPLICABLE Deployment-action capability
+    INDETERMINATE Trigger robustness
+  GAT-Outage: WITHHOLD
+    PASS       Evidence integrity
+    PASS       Freshness is visible
+    PASS       Action-aware controls
+    FAIL       Decision relevance
+    PASS       Action composition
+    FAIL       Attention extraction stability
+    FAIL       Checkpoint consistency
+    NOT APPLICABLE Deployment-action capability
+    INDETERMINATE Trigger robustness
+report: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/evidence/explanation_audit/AUDIT_REPORT.md

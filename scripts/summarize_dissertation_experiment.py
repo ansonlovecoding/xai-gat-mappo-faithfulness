@@ -380,7 +380,7 @@ def main() -> int:
     atomic_write_json(args.root / "training_seed_synthesis.json", {
         "interpretation": (
             "The independently trained policy is the replication unit. "
-            "With three seeds, consistency is reported descriptively and no "
+            "Consistency across the configured training seeds is reported descriptively; no "
             "cross-seed population p-value is claimed."
         ),
         "rows": training_seed_rows,

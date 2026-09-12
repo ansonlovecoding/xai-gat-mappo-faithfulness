@@ -1,7 +1,6 @@
 # 4. Results
 
-All nine clean capability evaluations and all six faithfulness sweeps passed
-their preflight checks. Results are reported by training seed because one
+All 15 training runs passed the stability gates, all 120 clean evaluation cells completed, and all ten faithfulness sweeps passed their preflight checks. Results are reported by training seed because one
 checkpoint, rather than each decision, is the independent trained-policy
 replicate. Unless stated otherwise, intervals are 95% confidence intervals
 (CIs) formed from episode blocks.
@@ -9,18 +8,18 @@ replicate. Unless stated otherwise, intervals are 95% confidence intervals
 ## 4.1 Policy capability and training stability
 
 Validation selected different epochs for different training seeds, as shown in
-Table 3.3. Epoch 0 was retained only as an initialization diagnostic and could
+Table 3.3. Epoch 0, saved after the first training epoch, was retained only as an early-training diagnostic and could
 not be selected. Every training run passed the declared stability gates.
 
-![GAT and GAT-Outage training and checkpoint-selection diagnostics](../figures/v10_gat_training_diagnostics.png)
+![GAT and GAT-Outage training and checkpoint-selection diagnostics](../figures/v12_gat_training_diagnostics.png)
 
 **Figure 4.1.** Training diagnostics for GAT (upper panels) and GAT-Outage
 (lower panels). Curves use a ten-epoch moving mean; stars mark the checkpoints
-selected on validation data. All six runs passed the stability gates, although
+selected on validation data. All ten GAT runs passed the stability gates, although
 the curves still show variation between epochs.
 
 Table 4.1 reports clean held-out capability. The learned policies complete
-about 12.5 to 13.0 passenger journeys per episode. Their results overlap the
+between 11.729 and 13.146 passenger journeys per episode across individual training seeds. Their results overlap the
 legal-random CI and the range of the simple greedy policy. Therefore, the
 comparison establishes that the audited policies can dispatch and complete
 journeys; it does not show that GAT is better than the baselines or MLP.
@@ -29,16 +28,16 @@ journeys; it does not show that GAT is better than the baselines or MLP.
 |---|---:|---:|
 | Legal random | 12.708 | 95% episode CI [11.875, 13.542] |
 | Greedy nearest request | 12.000 | 95% demand-variant CI [10.000, 15.000] |
-| MLP | 12.472 | training-seed range 12.458-12.500 |
-| GAT | 12.674 | training-seed range 12.563-12.833 |
-| GAT-Outage | 12.799 | training-seed range 12.667-13.000 |
+| MLP | 12.521 | training-seed range 11.729-13.146 |
+| GAT | 12.850 | training-seed range 12.792-12.917 |
+| GAT-Outage | 12.721 | training-seed range 12.271-12.958 |
 
 The legal-random estimate uses 48 episode records. The greedy policy is
 deterministic for a fixed demand file, so its effective replication unit is the
 three held-out demand variants. Each learned-policy point uses 48 held-out
 episodes: eight action-sampling seeds and six episodes per seed.
 
-![Clean-telemetry performance by training seed](../figures/v10_clean_performance_by_training_seed.png)
+![Clean-telemetry performance by training seed](../figures/v12_clean_performance_by_training_seed.png)
 
 **Figure 4.2.** Clean-test completed journeys for each selected policy. The
 shaded band is the legal-random 95% CI and the dashed line is the greedy mean.
@@ -46,8 +45,7 @@ Performance shows whether the policies can complete journeys; explanation
 faithfulness is evaluated separately.
 
 The separate argmax diagnostic also completes journeys. Across three held-out
-episodes, GAT checkpoint means are 8.0, 7.3, and 9.7; GAT-Outage means are 7.0,
-7.7, and 10.0. None of the 18 checkpoint-episodes has zero completed journeys.
+episodes, GAT checkpoint means are 7.3, 7.7, 8.7, 11.3 and 5.3 for seeds 42-46; GAT-Outage means are 9.0, 7.7, 10.0, 9.0 and 8.7. None of the 30 checkpoint-episodes has zero completed journeys.
 
 ## 4.2 Protocol correction and precision audit
 
@@ -55,91 +53,82 @@ The corrected experiment addresses four implementation risks found during the
 code review: rewards earned while a taxi was busy are now accumulated over the
 whole decision interval; completed passenger journeys are counted globally;
 request-linked actions are protected in dispatch DEF; and unrounded numeric
-values are stored for analysis. Checkpoint selection was then repeated using
-validation data, followed by a new held-out evaluation. No corrected result is
-combined with an earlier run.
+values are stored for analysis. All models were trained afresh under the corrected protocol, followed by validation selection and test evaluation on the current workstation. No result is combined with an earlier run.
 
 Table 4.2 reports the numeric-precision check. Repeating the hypothesis
-analysis after rounding stored values to four decimals changed some estimates
-slightly but changed no direction or verdict. Full precision remains the
+analysis after rounding stored values to four decimals preserved the signs of H1 rho, H4 rho and paired DEF for all ten checkpoints, but changed one H1 verdict. Full precision remains the
 official analysis.
 
 | Precision check | Checkpoints tested | Direction changes | Verdict changes | Use in thesis |
 |---|---:|---:|---:|---|
-| Full precision versus four-decimal sensitivity | 6 | 0 | 0 | full precision |
+| Full precision versus four-decimal sensitivity | 10 | 0 | 1 (H1, GAT-Outage seed 46) | full precision |
 
-The agreement is useful given the small DEF values: the reported signs and
-hypothesis decisions are unchanged by the tested rounding precision.
+For GAT-Outage seed 46, the H1 Holm-adjusted p-value changes from 0.0495 to 0.0867 after rounding. Its paired DEF interval also changes from crossing zero to slightly above zero. This borderline checkpoint is precision-sensitive and should not carry a general claim. The full-precision result remains official, while the rounding check qualifies its interpretation.
 
 ## 4.3 Decision-relevance controls
 
 The supporting control experiment evaluates raw attention, Gradient x Input
 (GxI), and leave-one-out (LOO) rankings under clean and 60-second outages.
-Each model-condition estimate combines 27 episode blocks: three training
+Each model-condition estimate combines 45 episode blocks: five training
 seeds, three evaluation seeds, and three episodes.
 
 | Model | Condition | Raw-attention margin-DEF [95% CI] | GxI margin-DEF [95% CI] | LOO margin-DEF [95% CI] |
 |---|---|---:|---:|---:|
-| GAT | clean | -0.001355 [-0.002316, -0.000589] | -0.000388 [-0.001083, 0.000303] | +0.005595 [0.004053, 0.007436] |
-| GAT | 60 s | -0.001027 [-0.001867, -0.000401] | +0.000002 [-0.000647, 0.000672] | +0.005735 [0.004151, 0.007636] |
-| GAT-Outage | clean | -0.000596 [-0.000812, -0.000404] | -0.000584 [-0.001059, -0.000131] | +0.004001 [0.003037, 0.005108] |
-| GAT-Outage | 60 s | -0.000454 [-0.000656, -0.000274] | -0.000553 [-0.001001, -0.000117] | +0.003949 [0.002968, 0.005064] |
+| GAT | clean | -0.000907 [-0.001075, -0.000729] | -0.000366 [-0.000986, +0.000161] | +0.003228 [+0.002591, +0.003927] |
+| GAT | 60 s | -0.000767 [-0.000916, -0.000612] | -0.000014 [-0.000461, +0.000378] | +0.003066 [+0.002492, +0.003698] |
+| GAT-Outage | clean | -0.002493 [-0.003356, -0.001674] | +0.000131 [-0.000671, +0.000958] | +0.004328 [+0.003486, +0.005286] |
+| GAT-Outage | 60 s | -0.002307 [-0.003045, -0.001613] | +0.000389 [-0.000367, +0.001149] | +0.003941 [+0.003194, +0.004787] |
 
 Raw attention does not beat its type-matched random control: all four CIs are
 below zero. LOO is positive in every case. This shows that the evaluator can
 reward a perturbation-based ranking, but LOO is a positive control rather than
-a ground-truth explanation. GxI gives mixed or negative results.
+a ground-truth explanation. All four GxI intervals include zero.
 
-![Faithfulness perturbation controls by checkpoint](../figures/v10_faithfulness_positive_controls.png)
+![Faithfulness perturbation controls by checkpoint](../figures/v12_faithfulness_positive_controls.png)
 
 **Figure 4.3.** Top: clean logit-margin DEF. Bottom: independently evaluated
-60-second result minus clean. LOO gives the clearest positive response; raw
-attention does not show a matched-random advantage.
+60-second result minus clean. LOO gives the clearest positive response; the pooled raw-attention estimates do not show a matched-random advantage.
 
 The attention result also depends on how weights are extracted. Every
 checkpoint has at least one audited layer, head, maximum, or rollout choice
 that reverses the direction of its default stale-attention shift.
 
-![Attention aggregation sensitivity](../figures/v10_attention_aggregation_sensitivity.png)
+![Attention aggregation sensitivity](../figures/v12_attention_aggregation_sensitivity.png)
 
 **Figure 4.4.** Stale-attention shift under alternative extraction rules,
 multiplied by 1,000. Positive and negative values within the same checkpoint
 show that the conclusion can depend on the chosen layer or head.
 
 For dispatch decisions, the declared self-row margin-DEF is negative for both
-models under clean and 60-second conditions. Using the selected request row
-moves the estimate closer to zero, but its CIs include zero and it does not
-provide consistent positive evidence.
+models under clean and 60-second conditions. Using the selected request row gives a different result. GAT remains below zero in both conditions, while GAT-Outage is positive: +0.000711 [0.000252, 0.001219] when clean and +0.000762 [0.000297, 0.001254] at 60 seconds. This is positive evidence for the alternative row in this configuration, but it does not validate the predeclared self-row channel or establish consistency across both model conditions.
 
-![Attention query-row sensitivity](../figures/v10_action_query_row_sensitivity.png)
+![Attention query-row sensitivity](../figures/v12_action_query_row_sensitivity.png)
 
 **Figure 4.5.** Dispatch-action margin-DEF from the fixed self row and selected
 request row. The lower panels show the independently evaluated 60-second minus
-clean change. Changing the query row does not make decision relevance
-reliable.
+clean change. The selected request row improves GAT-Outage estimates above zero, while GAT remains below zero. The result is specific to the extraction rule and model configuration.
 
 ## 4.4 Small-graph resolution
 
 The scored graph contains five visible peer taxis in nearly every record and a
 smaller, variable number of request nodes. Table 4.4 describes the eligible
-non-self nodes.
+non-self nodes in main-sweep records with at least one available request and a recorded primary DEF. The distribution is descriptive and weighted by scored decisions.
 
 | Model | Node type | Mean | Median | 5th percentile | 95th percentile |
 |---|---|---:|---:|---:|---:|
 | GAT | peer taxis | 5.00 | 5 | 5 | 5 |
-| GAT | requests | 2.53 | 2 | 1 | 5 |
-| GAT | all non-self nodes | 7.53 | 7 | 6 | 10 |
+| GAT | requests | 2.54 | 2 | 1 | 5 |
+| GAT | all non-self nodes | 7.54 | 7 | 6 | 10 |
 | GAT-Outage | peer taxis | 5.00 | 5 | 5 | 5 |
-| GAT-Outage | requests | 2.55 | 2 | 1 | 5 |
-| GAT-Outage | all non-self nodes | 7.55 | 7 | 6 | 10 |
+| GAT-Outage | requests | 2.54 | 2 | 1 | 5 |
+| GAT-Outage | all non-self nodes | 7.54 | 7 | 6 | 10 |
 
 In a small candidate set, a top-k explanation and a matched random set can
-overlap by chance. For GAT, attention-LOO agreement is below the expected
-random overlap at k=1, 2, and 3. For GAT-Outage, it is slightly above random at
-k=1 but below random at k=2 and 3. The overlap reduces DEF's ability to
+overlap by chance. For both models, attention-LOO agreement is below the expected
+random overlap at k=1, 2, and 3. The overlap reduces DEF's ability to
 separate rankings, especially as k increases.
 
-![Top-k overlap diagnostic](../figures/v10_def_overlap_diagnostic.png)
+![Top-k overlap diagnostic](../figures/v12_def_overlap_diagnostic.png)
 
 **Figure 4.6.** Observed attention-LOO agreement compared with expected random
 overlap. Large expected overlap limits the resolution of a top-k comparison;
@@ -147,17 +136,12 @@ it does not by itself prove or disprove faithfulness.
 
 ## 4.5 Telemetry manipulation and stale exposure
 
-The outage manipulation worked as intended. Conditional WAMSN rises from about
-0.027-0.029 at 10 seconds to about 0.071-0.076 at 60 seconds. Across the six
-checkpoints, H3 correlations between duration and WAMSN are 0.458-0.477 and
-remain significant after Holm correction. H3 is therefore supported for all
-six checkpoints.
+The outage manipulation worked as intended. Conditional WAMSN rises from 0.027-0.029 at 10 seconds to 0.071-0.077 at 60 seconds. Across the ten checkpoints, H3 correlations between duration and WAMSN are 0.466-0.486 and remain significant after Holm correction. H3 is therefore supported for all ten checkpoints.
 
-![WAMSN, probability DEF and completed journeys by outage duration](../figures/v10_decoupling_by_outage_duration.png)
+![WAMSN, probability DEF and completed journeys by outage duration](../figures/v12_decoupling_by_outage_duration.png)
 
 **Figure 4.7.** Longer observation outages increase WAMSN for every
-checkpoint. Completed journeys remain broadly stable. Probability DEF does
-not show the proposed decline. WAMSN verifies stale exposure; it does not show
+checkpoint. Completed journeys remain broadly stable. Probability DEF has no consistent direction across checkpoints. WAMSN verifies stale exposure; it does not show
 that AoI causes a change in faithfulness.
 
 ## 4.6 Paired clean and degraded observations
@@ -169,60 +153,49 @@ means that measured DEF is higher, not lower, under degradation.
 
 | Model | Seed | Stale-attention shift x 1,000 [95% CI] | Probability-DEF shift x 10,000 [95% CI] |
 |---|---:|---:|---:|
-| GAT | 42 | +3.834 [+3.725, +3.943] | +0.852 [+0.763, +0.940] |
-| GAT | 43 | +0.015 [-0.005, +0.037] | +1.222 [+1.048, +1.418] |
-| GAT | 44 | -2.639 [-2.708, -2.574] | +1.889 [+1.772, +2.008] |
-| GAT-Outage | 42 | +3.347 [+3.254, +3.443] | +0.855 [+0.739, +0.979] |
-| GAT-Outage | 43 | +0.928 [+0.913, +0.943] | +1.596 [+1.489, +1.699] |
-| GAT-Outage | 44 | -3.578 [-3.646, -3.508] | +0.514 [+0.455, +0.574] |
+| GAT | 42 | +3.805 [+3.689, +3.930] | +0.653 [+0.460, +0.872] |
+| GAT | 43 | +0.650 [+0.636, +0.665] | +1.225 [+1.097, +1.342] |
+| GAT | 44 | -3.444 [-3.530, -3.354] | +0.819 [+0.747, +0.891] |
+| GAT | 45 | +4.022 [+3.929, +4.116] | -0.075 [-0.104, -0.048] |
+| GAT | 46 | +2.474 [+2.418, +2.527] | +0.828 [+0.720, +0.940] |
+| GAT-Outage | 42 | +3.331 [+3.233, +3.431] | +0.965 [+0.840, +1.095] |
+| GAT-Outage | 43 | -0.736 [-0.769, -0.702] | +1.344 [+1.176, +1.514] |
+| GAT-Outage | 44 | -2.440 [-2.512, -2.367] | +1.619 [+1.459, +1.774] |
+| GAT-Outage | 45 | +3.918 [+3.823, +4.009] | -0.445 [-0.494, -0.398] |
+| GAT-Outage | 46 | +2.083 [+2.033, +2.132] | +0.039 [-0.019, +0.103] |
 
 The estimates summarize stale-exposed decisions across the evaluated degraded
 conditions using the saved episode-block analysis. Attention uses all eligible
 stale-exposed records; DEF additionally requires a scorable action, so their
-record and episode-block counts can differ. They do not estimate variation across new, independently trained policies. The unscaled paired probability-DEF increases
-range from approximately 0.000051 to 0.000189. These are changes in the
-composite, random-adjusted DEF score, not percentage-point improvements in
-success probability. Their consistent positive direction contradicts the
-predicted decline but does not establish practically useful explanations.
-No deployment utility threshold for this effect size has been validated.
+record and episode-block counts can differ. They do not estimate variation across new, independently trained policies. The unscaled paired probability-DEF changes range from approximately -0.000044 to +0.000162. These are changes in the composite, random-adjusted DEF score, not percentage-point changes in success probability. Seven checkpoints have positive intervals, both seed-45 checkpoints have negative intervals, and GAT-Outage seed 46 is inconclusive. No deployment utility threshold for these small effects has been validated.
 
-Three checkpoints show a clear increase in attention to stale nodes, two show
-a clear decrease, and GAT seed 43 is inconclusive because its 95% CI crosses
-zero. The direction follows the training seed more closely than the training
-condition: both seed-44 checkpoints are negative. All six paired DEF changes
-are small and positive, which is opposite to the proposed degradation-related
-decline.
+Seven checkpoints show a clear increase in attention to stale nodes and three show a clear decrease: GAT seed 44 and GAT-Outage seeds 43 and 44. The two models share the direction for four of five matched seeds. This pattern shows substantial checkpoint dependence, rather than a uniform effect of outage training.
 
-![Paired attention and faithfulness shifts](../figures/v10_paired_attention_and_faithfulness_shift.png)
+![Paired attention and faithfulness shifts](../figures/v12_paired_attention_and_faithfulness_shift.png)
 
 **Figure 4.8.** Exposure-conditioned degraded-minus-clean shifts by frozen
-checkpoint. Error bars are episode-block bootstrap CIs. Attention direction
-varies across checkpoints, while probability DEF increases slightly in all
-six.
+checkpoint. Error bars are episode-block bootstrap CIs. Both attention and probability DEF vary across checkpoints. Seven DEF intervals are positive, two negative, and one crosses zero.
 
 ## 4.7 Analysis by action type
 
-The corrected reward handling changes the action composition compared with the
-earlier experiment. For GAT, dispatch accounts for 9,649 of 12,028 scorable
-decisions (80.2%); no-op accounts for 2,379 (19.8%). For GAT-Outage,
-dispatch accounts for 8,392 of 12,022 decisions (69.8%) and no-op for
-3,630 (30.2%). Table 4.6 shows that this
-balance still differs by checkpoint.
+Dispatch accounts for 14,953 of 20,096 scorable GAT decisions (74.4%) and 15,714 of 20,056 GAT-Outage decisions (78.3%). No-op accounts for the remaining 5,143 and 4,342 records. Table 4.6 separates the paired changes by checkpoint and action type.
 
 | Checkpoint | No-op (%) | Dispatch (%) | All-action DEF shift x 10,000 | No-op DEF shift x 10,000 | Dispatch DEF shift x 10,000 |
 |---|---:|---:|---:|---:|---:|
-| GAT, seed 42 | 16.3 | 83.7 | +0.852 | -0.228 | +1.095 |
-| GAT, seed 43 | 25.8 | 74.2 | +1.222 | -0.420 | +2.146 |
-| GAT, seed 44 | 17.3 | 82.7 | +1.889 | -1.093 | +2.660 |
-| GAT-Outage, seed 42 | 33.8 | 66.2 | +0.855 | -0.450 | +1.584 |
-| GAT-Outage, seed 43 | 26.0 | 74.0 | +1.596 | -1.024 | +2.760 |
-| GAT-Outage, seed 44 | 30.8 | 69.2 | +0.514 | -0.456 | +0.999 |
+| GAT, seed 42 | 29.8 | 70.2 | +0.653 | -0.193 | +1.041 |
+| GAT, seed 43 | 21.5 | 78.5 | +1.225 | -2.483 | +2.345 |
+| GAT, seed 44 | 24.3 | 75.7 | +0.819 | -0.630 | +1.399 |
+| GAT, seed 45 | 25.5 | 74.5 | -0.075 | -0.010 | -0.071 |
+| GAT, seed 46 | 26.9 | 73.1 | +0.828 | -0.167 | +1.443 |
+| GAT-Outage, seed 42 | 25.7 | 74.3 | +0.965 | -0.416 | +1.540 |
+| GAT-Outage, seed 43 | 7.3 | 92.7 | +1.344 | -0.644 | +1.566 |
+| GAT-Outage, seed 44 | 31.6 | 68.4 | +1.619 | -1.619 | +3.537 |
+| GAT-Outage, seed 45 | 23.0 | 77.0 | -0.445 | +0.157 | -0.646 |
+| GAT-Outage, seed 46 | 20.6 | 79.4 | +0.039 | -0.065 | +0.065 |
 
-The two action groups move in opposite directions in every checkpoint: no-op
-DEF decreases, while dispatch DEF increases. The positive all-action estimate obscures this difference between the two
-action types, making the separate results necessary for interpretation.
+No-op DEF decreases in all five GAT checkpoints and four of five GAT-Outage checkpoints. Dispatch DEF increases in eight checkpoints and decreases in both seed-45 checkpoints. Nine checkpoints therefore have opposite no-op and dispatch directions. GAT seed 45 decreases in both groups; GAT-Outage seed 45 increases for no-op but decreases for dispatch. The combined estimate does not describe every action type equally well.
 
-![Faithfulness analysis by action type](../figures/v10_action_stratified_faithfulness.png)
+![Faithfulness analysis by action type](../figures/v12_action_stratified_faithfulness.png)
 
 **Figure 4.9.** (a) Scorable action counts and dispatch share; (b) selected
 action probability; (c) all, no-op, and dispatch paired DEF changes; and (d)
@@ -234,64 +207,52 @@ CIs.
 The random-loss control replaces tunnel entry with an independent per-taxi,
 per-step trigger while retaining a 30-second observation-layer freeze. The
 configured trigger rate is fixed, but observed random exposure is only about
-18% of tunnel exposure. This is a trigger-location sensitivity check, not an
+15% of tunnel exposure (median across checkpoints). This is a trigger-location sensitivity check, not an
 exposure-matched causal comparison.
 
 | Result compared between tunnel and random triggers | Checkpoints agreeing in direction | Interpretation |
 |---|---:|---|
-| Stale-attention shift | 5/6 | broad seed pattern remains, with one near-zero mismatch |
-| Probability-DEF shift | 6/6 | both triggers give a small positive shift |
-| Exposure rate | 0/6 matched | random condition has much lower realized exposure |
+| Stale-attention shift | 10/10 | point-estimate directions agree for every checkpoint |
+| Probability-DEF shift | 10/10 | checkpoint-specific directions agree, including decreases |
+| Exposure rate | 0/10 matched | random condition has much lower realized exposure |
 
-![Random telemetry-loss robustness check](../figures/v10_random_loss_robustness.png)
+![Random telemetry-loss robustness check](../figures/v12_random_loss_robustness.png)
 
 **Figure 4.10.** Tunnel and random triggers under a 30-second freeze. The
-random condition creates less exposure. Attention direction agrees for five
-checkpoints and DEF direction for all six, but several random-condition CIs
+random condition creates less exposure. Point-estimate directions agree for all ten checkpoints for both metrics, but several random-condition CIs
 are wide because few stale-exposed decisions occur.
 
 ## 4.9 Hypothesis results
 
-Figure 4.11 shows increasing DEF rank across within-episode WAMSN groups.
-All six checkpoint correlations are positive, providing no support for the
-negative association predicted by H4.
+Figure 4.11 reports the within-episode association between WAMSN and DEF. Seven checkpoint estimates are positive and three are negative. The negative relationship predicted by H4 is supported after Holm correction for the two seed-45 checkpoints only.
 
-![Within-episode WAMSN-DEF relationship and H4 results](../figures/v10_h4_correlation_by_training_seed.png)
+![Within-episode WAMSN-DEF relationship and H4 results](../figures/v12_h4_correlation_by_training_seed.png)
 
-**Figure 4.11.** Panel (a) groups WAMSN within each episode and shows mean DEF
-rank. Panel (b) reports the per-checkpoint mean Spearman correlation and CI.
-H4 predicted a negative relationship; all six estimates are positive, so H4
-is not supported.
+**Figure 4.11.** Panel (a) groups WAMSN within each episode and shows mean DEF rank. Panel (b) reports the per-checkpoint mean Spearman correlation and CI. H4 is supported for GAT and GAT-Outage seed 45, with no consistent support across all training seeds.
 
 | Hypothesis | GAT seeds supporting | GAT-Outage seeds supporting | Verdict |
 |---|---:|---:|---|
-| H1: DEF decreases as outage duration increases | 0/3 | 0/3 | not supported |
-| H2: faithfulness declines faster than performance | 0/3 | 0/3 | not supported |
-| H3: WAMSN increases as outage duration increases | 3/3 | 3/3 | supported manipulation check |
-| H4: higher WAMSN is associated with lower DEF | 0/3 | 0/3 | not supported |
-| H5: GAT-Outage gives weaker H1 and H4 relationships | n/a | 2/3 matched comparisons | not consistent across seeds |
+| H1: DEF decreases as outage duration increases | 1/5 | 2/5 | checkpoint-dependent support |
+| H2: faithfulness declines faster than performance | 1/5 | 1/5 | limited exploratory support |
+| H3: WAMSN increases as outage duration increases | 5/5 | 5/5 | supported manipulation check |
+| H4: higher WAMSN is associated with lower DEF | 1/5 | 1/5 | checkpoint-dependent support |
+| H5: GAT-Outage gives weaker H1 and H4 relationships | n/a | 2/5 matched comparisons | not consistent across seeds |
 
-H1 correlations are non-negative (0.015-0.226), and H4 mean within-episode
-correlations are also non-negative (0.097-0.518). H2 cannot be supported when
-the expected faithfulness decline is absent. GAT-Outage has weaker absolute H1
-and H4 relationships than its matched GAT checkpoint for seeds 42 and 44, but
-not seed 43; H5 is therefore not consistent.
+H1 correlations range from -0.114 to +0.198. H1 is supported for GAT seed 45 and GAT-Outage seeds 45 and 46; the latter is close to the 0.05 boundary (Holm-adjusted p=0.0495). H4 mean within-episode correlations range from -0.152 to +0.383. Both seed-45 checkpoints support H1, H2 and H4, so the proposed response occurs for some trained policies. It is not a general result across checkpoints.
+
+H2 remains exploratory because its clean-relative rate can become large when clean DEF is close to zero; GAT-Outage seed 45 illustrates this sensitivity. GAT-Outage has weaker absolute H1 and H4 associations than its matched GAT checkpoint for seeds 43 and 46 only. H5 is descriptive and does not establish that outage training improves explanation reliability.
 
 ## 4.10 Answers to the research questions
 
 **RQ1:** The tested averaged self-row attention does not establish reliable
 dispatch decision relevance under clean telemetry. Its dispatch margin-DEF
 is below the matched-random control, while LOO gives a positive control
-response. Selected-request-row sensitivity does not establish a consistent
-advantage over random controls; this does not reject all attention-based
-explanation methods. No-op evidence is reported separately in Section 4.12.
+response. The selected request row is positive for GAT-Outage but negative for GAT; these results leave room for alternative attention-based explanation methods while showing that the extraction rule matters. No-op evidence is reported separately in Section 4.12.
 
 **RQ2:** Degradation changes stale-node attention, but not in one consistent
-direction. Three checkpoints show a clear shift toward stale nodes, two show a
-clear shift away, and one is inconclusive.
+direction. Seven checkpoints show a clear shift toward stale nodes and three show a clear shift away.
 
-**RQ3:** Longer outages consistently increase stale exposure, but the proposed
-decline in DEF is not observed. The result also differs by action type and by
+**RQ3:** Longer outages consistently increase stale exposure, but a decline in DEF occurs for some checkpoints but is not consistent across seeds. The result also differs by action type and by
 attention-extraction choice.
 
 **RQ4:** The tested outage-trained configuration does not remove checkpoint
@@ -299,7 +260,7 @@ variation or make raw attention pass the decision-relevance check.
 
 ## 4.11 Explanation-release audit
 
-The final framework decision is `WITHHOLD` for GAT, GAT-Outage, and all six
+The final framework decision is `WITHHOLD` for GAT, GAT-Outage, and all ten
 checkpoints. This means that the evidence is complete enough to audit, but raw
 attention should not be presented as the reason for a dispatch or no-op
 decision. This is a conservative decision for the whole declared explanation
@@ -312,13 +273,15 @@ no-op analysis in Section 4.12 does not alter the original release criteria.
 | Evidence integrity | PASS | PASS | all sweep preflights passed |
 | Freshness visibility | PASS | PASS | AoI-derived exposure is reported separately |
 | Action-aware controls | PASS | PASS | type matching, action protection, and LOO are present |
-| Decision relevance | FAIL | FAIL | dispatch self-row margin-DEF CIs are below zero |
+| Decision relevance | FAIL | FAIL | pooled dispatch self-row margin-DEF CIs are below zero |
 | Action composition | PASS | PASS | no-op and dispatch are reported separately |
 | Extraction stability | FAIL | FAIL | alternative heads or layers reverse direction |
 | Checkpoint consistency | FAIL | FAIL | stale-attention direction differs across seeds |
 | Deployment-action capability | NOT APPLICABLE | NOT APPLICABLE | audit scope uses sampled actions |
-| Trigger robustness | INDETERMINATE | PASS | GAT seed 43 random-trigger interval crosses zero |
+| Trigger robustness | INDETERMINATE | INDETERMINATE | intervals cross zero for GAT seeds 42/45 and GAT-Outage seeds 43/46 |
 | Model decision | WITHHOLD | WITHHOLD | required release checks do not pass |
+
+GAT seed 45 passes its individual dispatch-relevance check, but fails extraction stability and has indeterminate trigger robustness. The model-level failure must not be interpreted as failure of every individual checkpoint on every check.
 
 Under this decision, attention remains available for internal model diagnosis,
 with freshness displayed separately. It is not released as an audited
@@ -345,26 +308,22 @@ decisions; episodes without eligible no-op records do not contribute.
 
 | Model / seed | Clean mean [95% CI] | 60 s mean [95% CI] | E/D clean; 60 s |
 |---|---|---|---|
-| GAT / 42 | +0.448 [+0.274, +0.628] | +0.150 [+0.082, +0.221] | 26/41; 47/194 |
-| GAT / 43 | -3.475 [-6.850, -0.758] | -4.939 [-6.841, -3.226] | 37/64; 48/322 |
-| GAT / 44 | +0.031 [-0.060, +0.145] | -0.852 [-0.964, -0.742] | 25/40; 46/209 |
-| GAT-Outage / 42 | +0.660 [+0.539, +0.783] | +0.173 [+0.111, +0.241] | 41/92; 48/417 |
-| GAT-Outage / 43 | +0.266 [+0.078, +0.459] | -0.102 [-0.216, +0.021] | 37/65; 48/324 |
-| GAT-Outage / 44 | +0.460 [+0.175, +0.782] | +0.238 [+0.052, +0.447] | 40/82; 48/383 |
+| GAT / 42 | +0.498 [+0.314, +0.683] | +0.336 [+0.239, +0.425] | 38/66; 48/388 |
+| GAT / 43 | +0.212 [-0.008, +0.453] | -0.604 [-1.327, -0.088] | 30/43; 48/288 |
+| GAT / 44 | +0.567 [+0.260, +0.906] | +0.003 [-0.157, +0.171] | 35/52; 48/326 |
+| GAT / 45 | -0.086 [-0.189, +0.014] | +0.022 [-0.006, +0.050] | 36/54; 48/342 |
+| GAT / 46 | +0.888 [+0.342, +1.606] | +0.470 [+0.214, +0.760] | 35/55; 48/356 |
+| GAT-Outage / 42 | +0.869 [+0.680, +1.063] | +0.165 [+0.086, +0.243] | 36/54; 48/343 |
+| GAT-Outage / 43 | -4.049 [-8.877, -0.006] | -8.090 [-11.038, -5.530] | 10/14; 37/95 |
+| GAT-Outage / 44 | +0.112 [+0.029, +0.208] | -0.592 [-0.704, -0.477] | 39/73; 48/412 |
+| GAT-Outage / 45 | -0.023 [-0.136, +0.081] | +0.146 [+0.105, +0.185] | 35/49; 48/306 |
+| GAT-Outage / 46 | +0.566 [-0.021, +1.226] | +1.053 [+0.732, +1.383] | 29/41; 48/276 |
 
 All margin-DEF values in Table 4.10 are multiplied by 1,000 for readability.
-GAT seed 42 and GAT-Outage seeds 42 and 44 have positive margin-DEF intervals
-in both conditions. GAT seed 43 is below zero in both; GAT seed 44 is
-inconclusive when clean and below zero at 60 seconds; GAT-Outage seed 43 is
-positive when clean and inconclusive at 60 seconds. Probability DEF is less
-consistent: only GAT seed 42 and GAT-Outage seed 42 have positive intervals
-in both conditions. Thus a decline under degradation need not imply an
-absolute failure against the random comparator, and the dispatch result must
-not be generalized to every no-op explanation. Small effects, score choice,
-sampling differences and checkpoint variation limit interpretation.
+GAT seeds 42 and 46 and GAT-Outage seed 42 have positive intervals in both conditions for both margin and probability DEF. Other checkpoints have at least one negative or inconclusive interval. A decline under degradation need not imply an absolute failure against the random comparator, and the pooled dispatch result must not be generalized to every no-op explanation. Small effects, score choice, sampling differences and checkpoint variation limit interpretation.
 
 The original whole-channel decision remains WITHHOLD because its dispatch
 and stability requirements are not met. This supplementary analysis does not
-certify any checkpoint for explanation release. Appendix C summarizes the original hypothesis tests and identifies the
+certify any checkpoint for explanation release. Appendix C summarizes the rerun hypothesis tests and identifies the
 supporting files containing full-precision estimates, sample counts and
 archive hashes.

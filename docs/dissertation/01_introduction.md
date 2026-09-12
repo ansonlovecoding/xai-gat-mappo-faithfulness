@@ -43,9 +43,7 @@ whether attention provides reliable evidence under the tested conditions.
 The term identifies the risk being investigated, rather than a result assumed
 in advance. Showing that degradation reduces faithfulness would require a valid clean
 faithfulness baseline and a lower score in the paired degraded observation.
-As reported below, the experiment does not establish that decline. Its
-contribution includes identifying why raw attention fails the release audit
-and distinguishing that failure from the predicted decline under degradation.
+The rerun finds declines in some checkpoints but no consistent response across seeds. Its contribution includes identifying why the declared attention channel fails the release audit and distinguishing that model-level decision from checkpoint-specific changes under degradation.
 
 ## 1.3 Research questions
 
@@ -106,7 +104,7 @@ relevance and stability. Figure 1.1 summarizes the practical consequence: an
 attention map can remain visible as telemetry becomes stale, even when the
 evidence is insufficient to present it as an explanation.
 
-![Summary of stale data and the explanation-release decision](../figures/v10_main_findings_summary.png)
+![Summary of stale data and the explanation-release decision](../figures/v12_main_findings_summary.png)
 
 **Figure 1.1.** Main finding. A tunnel-triggered outage leaves the policy with a
 stale observation. Attention remains available, but the audit withholds it
@@ -118,19 +116,9 @@ margin-DEF below its type-matched random control for both model families. A leav
 positive response, showing that the evaluator can detect a more
 decision-relevant ranking even though raw attention does not provide one.
 
-Longer outages consistently increase the measured exposure to stale vehicle
-information. However, the paired attention response differs across trained
-policies: three checkpoints show a clear increase in attention to stale nodes,
-two show a clear decrease, and one is inconclusive. Probability DEF shows a
-small increase, rather than the expected decline, for all six checkpoints. The
-study therefore does not find the proposed degradation-related loss of
-faithfulness, or one consistent attention response.
+Longer outages consistently increase the measured exposure to stale vehicle information. However, the paired response differs across trained policies: seven checkpoints shift attention toward stale nodes and three shift away. Probability-DEF intervals are positive for seven checkpoints, negative for both seed-45 checkpoints, and inconclusive for GAT-Outage seed 46. The study finds degradation-related loss of faithfulness in some checkpoints, but no consistent effect across all seeds.
 
-The interpretation also depends on how attention is extracted and on whether
-the selected action is dispatch or no-op. Dispatch accounts for most scorable
-decisions in the corrected experiment, but the two action groups have opposite
-paired DEF directions. Degradation-aware training does not remove the
-checkpoint variation.
+The interpretation also depends on how attention is extracted and whether the selected action is dispatch or no-op. Nine checkpoints have opposite paired DEF directions for these action groups. The selected-request-row control is positive for GAT-Outage but negative for GAT, although the default self-row control is negative for both model families. Outage training does not remove checkpoint variation.
 
 The practical conclusion is that data freshness and explanation faithfulness
 must be checked separately for each trained policy. In the present experiment,

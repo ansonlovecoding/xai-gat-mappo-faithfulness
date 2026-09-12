@@ -1,0 +1,9 @@
+$ '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python' scripts/analyze_random_loss_robustness.py '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/robustness/random_loss_30s' --out '/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/evidence/random_loss_robustness'
+{
+  "n_checkpoints": 10,
+  "attention_direction_agreement": 10,
+  "probability_def_direction_agreement": 10,
+  "median_exposure_rate_ratio_random_over_tunnel": 0.15230929772176988
+}
+json: /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/evidence/random_loss_robustness.json
+csv:  /Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/evidence/random_loss_robustness.csv

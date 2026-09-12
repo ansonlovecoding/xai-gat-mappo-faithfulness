@@ -1,0 +1,225 @@
+{
+  "protocol": {
+    "models": [
+      "B2_gat"
+    ],
+    "training_seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "eval_seeds": [
+      42,
+      43,
+      44
+    ],
+    "episodes": 3,
+    "conditions": [
+      "clean",
+      "outage_60s"
+    ],
+    "demand_split": "test",
+    "demand_files": [
+      "central_park_taxis_v017.rou.xml",
+      "central_park_taxis_v018.rou.xml",
+      "central_park_taxis_v019.rou.xml"
+    ],
+    "stochastic": true,
+    "faithfulness_every": 8,
+    "chosen_request_protected": true,
+    "random_baseline": "type_matched",
+    "action_row_only": false,
+    "checkpoint_root": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training"
+  },
+  "runtime": {
+    "python": "3.11.14 (main, Oct  9 2025, 16:16:55) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "executable": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/.venv/bin/python",
+    "platform": "macOS-14.2.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "hardware": {
+      "cpu_model": "Apple M3 Pro",
+      "logical_cpus": 12,
+      "installed_memory_bytes": 19327352832
+    },
+    "command": [
+      "scripts/run_faithfulness_controls.py",
+      "--models",
+      "B2_gat",
+      "--training-seeds",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "--eval-seeds",
+      "42",
+      "43",
+      "44",
+      "--episodes",
+      "3",
+      "--conditions",
+      "clean",
+      "outage_60s",
+      "--checkpoint-root",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/training",
+      "--faithfulness-every",
+      "8",
+      "--out",
+      "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/dissertation_v12_sumo120/faithfulness_controls/B2_full"
+    ],
+    "cwd": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "gymnasium": "1.3.0",
+      "pettingzoo": "1.26.1",
+      "traci": "1.20.0",
+      "sumolib": "1.20.0",
+      "eclipse-sumo": "1.20.0"
+    },
+    "sumo": {
+      "binary_version": "1.20.0",
+      "binary": "/Users/hongweilin/Documents/workspace/documents/Personal/DMU/Final Dissertation/dissertation-v12-full-rerun/runs/runtime/sumo-1.20.0/bin/sumo",
+      "backend": "traci",
+      "using_libsumo": false
+    },
+    "git": {
+      "revision": "2c604e73fe1501a9a1a370520857e12cdaeb74a8",
+      "dirty": false,
+      "status": [],
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "summary": {
+    "B2_gat:clean": {
+      "n_cells": 15,
+      "n_positive_control_decisions": 587,
+      "attention_control_def_m_mean_of_cells": -0.0009144950148633174,
+      "attention_control_g_comp_m_mean_of_cells": -5.665759545801054e-05,
+      "attention_control_g_suff_m_mean_of_cells": -0.001772332434268625,
+      "loo_oracle_def_m_mean_of_cells": 0.0031548139459364423,
+      "loo_oracle_g_comp_m_mean_of_cells": 0.003159959943738566,
+      "loo_oracle_g_suff_m_mean_of_cells": 0.003149667948134319,
+      "grad_x_input_def_m_mean_of_cells": -0.00031691866198492897,
+      "grad_x_input_g_comp_m_mean_of_cells": -0.00048767643698617824,
+      "grad_x_input_g_suff_m_mean_of_cells": -0.0001461608869836796,
+      "loo_control_gap_m_mean_of_cells": 0.004069308960799761,
+      "attention_loo_topk_agreement_mean_of_cells": 0.311496351277053,
+      "expected_random_topk_overlap_mean_of_cells": 0.4081792872494628,
+      "taxi_attention_loo_spearman_mean_of_cells": 0.04516865040977101,
+      "n_action_row_request_decisions": 0,
+      "self_row_request_def_m_mean_of_cells": null,
+      "action_row_request_def_m_mean_of_cells": null,
+      "action_row_request_gap_m_mean_of_cells": null
+    },
+    "B2_gat:outage_60s": {
+      "n_cells": 15,
+      "n_positive_control_decisions": 587,
+      "attention_control_def_m_mean_of_cells": -0.0007706928171780509,
+      "attention_control_g_comp_m_mean_of_cells": -4.0401983277196e-05,
+      "attention_control_g_suff_m_mean_of_cells": -0.0015009836510789063,
+      "loo_oracle_def_m_mean_of_cells": 0.002994442243775243,
+      "loo_oracle_g_comp_m_mean_of_cells": 0.002991415656188078,
+      "loo_oracle_g_suff_m_mean_of_cells": 0.0029974688313624074,
+      "grad_x_input_def_m_mean_of_cells": 1.6409647085645827e-05,
+      "grad_x_input_g_comp_m_mean_of_cells": -0.00017610621123317303,
+      "grad_x_input_g_suff_m_mean_of_cells": 0.00020892550540446472,
+      "loo_control_gap_m_mean_of_cells": 0.003765135060953293,
+      "attention_loo_topk_agreement_mean_of_cells": 0.3200486079872044,
+      "expected_random_topk_overlap_mean_of_cells": 0.4115985655020744,
+      "taxi_attention_loo_spearman_mean_of_cells": 0.04279016261023058,
+      "n_action_row_request_decisions": 0,
+      "self_row_request_def_m_mean_of_cells": null,
+      "action_row_request_def_m_mean_of_cells": null,
+      "action_row_request_gap_m_mean_of_cells": null,
+      "aggregation_sensitivity": {
+        "first_head_0": {
+          "mean_stale_attention_shift": 0.0013757444136795489,
+          "n_stale_exposed_decisions": 164
+        },
+        "first_head_1": {
+          "mean_stale_attention_shift": 0.002131789338085725,
+          "n_stale_exposed_decisions": 164
+        },
+        "first_head_2": {
+          "mean_stale_attention_shift": 0.0024596134413109754,
+          "n_stale_exposed_decisions": 164
+        },
+        "first_head_3": {
+          "mean_stale_attention_shift": 0.0035691626777492377,
+          "n_stale_exposed_decisions": 164
+        },
+        "first_max": {
+          "mean_stale_attention_shift": 0.0012486018873222478,
+          "n_stale_exposed_decisions": 164
+        },
+        "first_mean": {
+          "mean_stale_attention_shift": 0.002384076305401369,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_head_0": {
+          "mean_stale_attention_shift": 0.0005122098545033609,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_head_1": {
+          "mean_stale_attention_shift": 0.004528074792282877,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_head_2": {
+          "mean_stale_attention_shift": -0.001589869601529142,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_head_3": {
+          "mean_stale_attention_shift": 0.002413165301225792,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_max": {
+          "mean_stale_attention_shift": 0.002173262612501843,
+          "n_stale_exposed_decisions": 164
+        },
+        "last_mean": {
+          "mean_stale_attention_shift": 0.0014658943442428956,
+          "n_stale_exposed_decisions": 164
+        },
+        "rollout_mean": {
+          "mean_stale_attention_shift": 0.0011354604042725272,
+          "n_stale_exposed_decisions": 164
+        }
+      }
+    }
+  },
+  "cell_files": [
+    "B2_gat_train42_clean_eval42.json",
+    "B2_gat_train42_clean_eval43.json",
+    "B2_gat_train42_clean_eval44.json",
+    "B2_gat_train42_outage_60s_eval42.json",
+    "B2_gat_train42_outage_60s_eval43.json",
+    "B2_gat_train42_outage_60s_eval44.json",
+    "B2_gat_train43_clean_eval42.json",
+    "B2_gat_train43_clean_eval43.json",
+    "B2_gat_train43_clean_eval44.json",
+    "B2_gat_train43_outage_60s_eval42.json",
+    "B2_gat_train43_outage_60s_eval43.json",
+    "B2_gat_train43_outage_60s_eval44.json",
+    "B2_gat_train44_clean_eval42.json",
+    "B2_gat_train44_clean_eval43.json",
+    "B2_gat_train44_clean_eval44.json",
+    "B2_gat_train44_outage_60s_eval42.json",
+    "B2_gat_train44_outage_60s_eval43.json",
+    "B2_gat_train44_outage_60s_eval44.json",
+    "B2_gat_train45_clean_eval42.json",
+    "B2_gat_train45_clean_eval43.json",
+    "B2_gat_train45_clean_eval44.json",
+    "B2_gat_train45_outage_60s_eval42.json",
+    "B2_gat_train45_outage_60s_eval43.json",
+    "B2_gat_train45_outage_60s_eval44.json",
+    "B2_gat_train46_clean_eval42.json",
+    "B2_gat_train46_clean_eval43.json",
+    "B2_gat_train46_clean_eval44.json",
+    "B2_gat_train46_outage_60s_eval42.json",
+    "B2_gat_train46_outage_60s_eval43.json",
+    "B2_gat_train46_outage_60s_eval44.json"
+  ]
+}

@@ -55,7 +55,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path,
-        default=ROOT / "configs/experiments/dissertation_v10_corrected.toml",
+        default=ROOT / "configs/experiments/dissertation_v12_full_rerun.toml",
     )
     parser.add_argument("--run-root", type=Path, default=None)
     parser.add_argument("--out", type=Path, default=None)
@@ -73,7 +73,7 @@ def main() -> int:
         if config.get("checkpoint_root")
         else run_root / "training"
     )
-    models = [model for model in config["models"] if model.get("faithfulness_sweep")]
+    models = config["models"]
     entries: list[dict] = []
 
     for model in models:
@@ -82,15 +82,41 @@ def main() -> int:
             source_dir = checkpoint_root / model["id"] / f"seed_{seed}"
             checkpoint_out = out / "checkpoints" / label
             checkpoint_out.mkdir(parents=True, exist_ok=True)
-            for name in ("ckpt_selected.pt", "checkpoint_selection.json"):
+            for name in ("ckpt_selected.pt", "checkpoint_selection.json",
+                         "manifest.json", "train_log.jsonl", "training_stability.json", "args.json", "best_metadata.json",
+                         "timing.json"):
                 source = source_dir / name
+                if name == "timing.json" and not source.exists():
+                    continue  # Historical runs did not record elapsed training time.
                 destination = checkpoint_out / name
                 copy_evidence(
                     source, destination, root=out,
-                    kind="checkpoint" if name.endswith(".pt") else "selection_record",
+                    kind="checkpoint" if name.endswith(".pt") else "training_record",
                     entries=entries, model=model["id"], training_seed=seed,
                 )
 
+            for source in sorted(source_dir.glob("validation*/*.json")):
+                copy_evidence(
+                    source, checkpoint_out / source.relative_to(source_dir),
+                    root=out, kind="validation_evaluation", entries=entries,
+                    model=model["id"], training_seed=seed,
+                )
+            evaluation_dir = run_root / "evaluations" / model["id"] / f"seed_{seed}"
+            for source in sorted(evaluation_dir.glob("*.json")):
+                copy_evidence(
+                    source, out / "performance_evidence" / label / source.name,
+                    root=out, kind="performance_evaluation", entries=entries,
+                    model=model["id"], training_seed=seed,
+                )
+            diagnostic = run_root / "deterministic_diagnostics" / model["id"] / f"seed_{seed}.json"
+            if diagnostic.is_file():
+                copy_evidence(
+                    diagnostic, out / "deterministic_evidence" / f"{label}.json",
+                    root=out, kind="deterministic_evaluation", entries=entries,
+                    model=model["id"], training_seed=seed,
+                )
+            if not model.get("faithfulness_sweep"):
+                continue
             sweep_dir = run_root / "sweeps" / model["id"] / f"seed_{seed}"
             cells = sweep_dir / "cells"
             archive = out / "audit_records" / f"{label}_cells.tar.gz"
@@ -105,13 +131,27 @@ def main() -> int:
                 "sha256": sha256(archive),
             })
 
-            for name in ("manifest.json", "preflight.json", "analysis.json"):
+            for name in ("manifest.json", "preflight.json", "analysis.json", "analysis_rounded4.json"):
                 copy_evidence(
                     sweep_dir / name,
                     out / "sweep_evidence" / label / name,
                     root=out, kind=f"sweep_{Path(name).stem}", entries=entries,
                     model=model["id"], training_seed=seed,
                 )
+
+    for category, pattern in (("control_records", "faithfulness_controls/*/cells"),
+                              ("robustness_records", "robustness/*/*/*/cells")):
+        for cells in sorted(run_root.glob(pattern)):
+            relative = cells.parent.relative_to(run_root)
+            label = "__".join(relative.parts)
+            archive = out / category / f"{label}_cells.tar.gz"
+            archive_cells(cells, archive)
+            entries.append({"kind": category, "source_files": len(list(cells.glob("*.json"))),
+                            "path": str(archive.relative_to(out)), "bytes": archive.stat().st_size,
+                            "sha256": sha256(archive)})
+            for source in sorted(cells.parent.glob("*.json")):
+                copy_evidence(source, out / category / label / source.name,
+                              root=out, kind=category + "_metadata", entries=entries)
 
     copy_evidence(
         args.config.resolve(), out / "experiment_config.toml",
@@ -122,6 +162,8 @@ def main() -> int:
         "docs/REPRODUCE_EXPERIMENTS.md",
         "docs/FRESHNESS_AWARE_EXPLANATION_AUDIT.md",
         "requirements.txt",
+        "requirements-v12-lock.txt",
+        "docs/FULL_RERUN_V12.md",
         "requirements-macos-intel.txt",
         "pyproject.toml",
     ):
@@ -148,6 +190,11 @@ def main() -> int:
                 source, out / "summaries" / name,
                 root=out, kind="summary", entries=entries,
             )
+
+    for source in sorted((run_root / "execution_records").rglob("*")):
+        if source.is_file():
+            copy_evidence(source, out / "execution_records" / source.relative_to(run_root / "execution_records"),
+                          root=out, kind="execution_record", entries=entries)
 
     if evidence_root.is_dir():
         for source in sorted(evidence_root.rglob("*")):

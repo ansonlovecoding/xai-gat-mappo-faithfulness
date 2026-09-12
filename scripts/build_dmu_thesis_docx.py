@@ -152,7 +152,7 @@ FIGURES = [
 
 TABLES = [(f"Table {chapter}.{number}", title)
           for (chapter, number), title in TABLE_TITLES.items()]
-TABLES.append(("Table C.1", "Original per-checkpoint hypothesis statistics"))
+TABLES.append(("Table C.1", "Rerun per-checkpoint hypothesis statistics"))
 
 FIGURE_PAGES = {
     "Figure 1.1": "3",
@@ -507,9 +507,9 @@ def equation_spec(code: str) -> tuple[str, str] | None:
         return "(3.6)", _mathml(_mrow(_mtext("WAMSN"), _mo("="), _frac(_mrow(numerator), _mrow(denominator))))
 
     count_specs = {
-        "3 models x": ("(3.7)", "3 x 3 x 8 x 6 = 432"),
-        "2 models x 3 training seeds x 5 conditions": ("(3.8)", "2 x 3 x 5 x 8 x 6 = 1,440"),
-        "2 models x 3 training seeds x 2 conditions": ("(3.9)", "2 x 3 x 2 x 3 x 3 = 108"),
+        "3 models x": ("(3.7)", "3 x 5 x 8 x 6 = 720"),
+        "2 models x 5 training seeds x 5 conditions": ("(3.8)", "2 x 5 x 5 x 8 x 6 = 2,400"),
+        "2 models x 5 training seeds x 2 conditions": ("(3.9)", "2 x 5 x 2 x 3 x 3 = 180"),
     }
     for prefix, (number, expression) in count_specs.items():
         if code.startswith(prefix):
@@ -807,7 +807,7 @@ def add_caption_before(doc: Document, anchor, text: str):
 
 def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
     caption_paragraph = add_caption_before(doc, anchor, title)
-    if title.startswith(("Table 2.1:", "Table 4.10:")):
+    if title.startswith(("Table 2.1:", "Table 4.8:", "Table 4.10:")):
         caption_paragraph.paragraph_format.page_break_before = True
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = None
@@ -932,7 +932,7 @@ def add_image_before(doc: Document, anchor, source: Path, alt_text: str):
     paragraph.paragraph_format.space_before = Pt(6)
     paragraph.paragraph_format.space_after = Pt(2)
     run = paragraph.add_run()
-    width = 5.1 if source.name == "v10_gat_training_diagnostics.png" else 6.15
+    width = 5.5 if source.name.endswith("gat_training_diagnostics.png") else 6.15
     run.add_picture(str(source), width=Inches(width))
     drawing = run._r.find(qn("w:drawing"))
     if drawing is not None:
@@ -1392,9 +1392,9 @@ def style_references_and_appendices(doc: Document) -> None:
                 "The complete procedure is provided in docs/REPRODUCE_EXPERIMENTS.md. "
                 "The guide identifies the required environment, fixed configurations, "
                 "commands, validation checks, and expected outputs. The final audit "
-                "uses configs/experiments/dissertation_v10_corrected.toml, and its "
+                "uses configs/experiments/dissertation_v12_full_rerun.toml, and its "
                 "version-controlled results are stored under "
-                "results/dissertation_v10_corrected/."
+                "results/dissertation_v12_full_rerun/."
             )
         if paragraph.text.startswith((
             "The project repository contains", "The repository contains"
@@ -1489,29 +1489,29 @@ def add_statistical_appendix(doc: Document) -> None:
     paragraph = add_paragraph_before(doc, anchor, "Appendix C: Statistical details", "Heading 2")
     paragraph.paragraph_format.page_break_before = True
     add_paragraph_before(doc, anchor,
-        "Table C.1 reproduces the original checkpoint-specific H1-H4 statistics. "
+        "Table C.1 reproduces the rerun checkpoint-specific H1-H4 statistics. "
         "H1 and H3 report Spearman rho; H2 reports the clean-relative rate difference "
         "and remains exploratory; H4 reports mean within-episode rho. N is the number "
         "of scored records for H1/H3, comparison cells for H2, and episodes for H4. "
         "B is the episode-block count where available. Holm adjustment is within "
         "each checkpoint's H1-H4 family. These are not cross-training-seed tests.")
-    source = ROOT / "results/dissertation_v10_corrected/supplementary_review/hypothesis_statistics.csv"
+    source = ROOT / "results/dissertation_v12_full_rerun/supplementary_review/hypothesis_statistics.csv"
     rows = [["Model/seed", "H", "Statistic", "Raw p", "Holm p", "N / B"]]
     for row in csv.DictReader(source.open()):
         label = ("GAT-O" if row["checkpoint"].startswith("H5") else "GAT") + "/" + row["checkpoint"][-2:]
         rows.append([label, row["hypothesis"], f'{float(row["statistic"]):+.4g}',
                      f'{float(row["raw_p"]):.4g}', f'{float(row["holm_p"]):.4g}',
                      row["n"] + " / " + (row["n_episode_blocks"] or "n/a")])
-    caption = add_table_before(doc, anchor, rows, "Table C.1: Original per-checkpoint hypothesis statistics")
+    caption = add_table_before(doc, anchor, rows, "Table C.1: Rerun per-checkpoint hypothesis statistics")
     add_bookmark(doc, caption, bookmark_name("table", "Table C.1"))
     add_paragraph_before(doc, anchor,
-        "GAT-O denotes GAT-Outage. Full-precision values and the original H1/H3 "
+        "GAT-O denotes GAT-Outage. Full-precision values and the H1/H3 "
         "confidence intervals are retained in hypothesis_statistics.csv under "
-        "results/dissertation_v10_corrected/supplementary_review/. Missing original "
+        "results/dissertation_v12_full_rerun/supplementary_review/. Missing "
         "intervals are not estimated retrospectively. The same directory contains "
         "all probability and margin no-op estimates, sample counts and input hashes. "
-        "The prospective five-seed matched-budget configuration is documented in "
-        "docs/MATCHED_BUDGET_FOLLOWUP.md; it has not produced results for this thesis.")
+        "The completed five-seed, 50-epoch protocol and runtime are documented in "
+        "docs/FULL_RERUN_V12.md.")
 
 
 def main() -> int:

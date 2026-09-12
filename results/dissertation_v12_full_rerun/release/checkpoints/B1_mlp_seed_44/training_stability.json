@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "checks": {
+    "final_mean_pickups": true,
+    "maximum_consecutive_zero_pickups": true,
+    "selected_validation_pickups": true,
+    "final_validation_retention": true
+  },
+  "observed": {
+    "epochs": 50,
+    "final_window": 10,
+    "final_mean_pickups": 12.4,
+    "longest_consecutive_zero_pickups": 0,
+    "selected_validation_mean_pickups": 12.875,
+    "final_validation_mean_pickups": 11.5,
+    "final_validation_retention": 0.8932038834951457
+  },
+  "thresholds": {
+    "minimum_final_mean_pickups": 5.0,
+    "maximum_consecutive_zero_pickups": 4,
+    "minimum_selected_mean_pickups": 5.0,
+    "minimum_final_validation_retention": 0.8
+  }
+}
