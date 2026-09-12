@@ -259,6 +259,8 @@ legal-random CI and the simple greedy range. These baselines show that the polic
 establish a performance advantage. The experiment also
 does not isolate the contribution of graph edges to policy capability.
 
+The audit therefore concerns trained graph policies whose performance has not been shown to depend on their learned action ranking or graph structure. This limits transfer to stronger policies, but does not remove the need to test whether the displayed attention reflects the audited decisions. Similar completion means do not prove that the policies behave identically or that the environment determines the outcome. The shared reward may make individual credit assignment difficult, but the coefficients in Equations 3.3 and 3.4 alone cannot establish this mechanism. Reward-component analysis and graph or action-ranking ablations would be needed to test it.
+
 GAT and GAT-Outage share a 50-epoch budget, optimizer settings and checkpoint-selection criterion. However, their validation observations match their respective training conditions. The matched-seed comparison therefore describes two training-and-selection configurations and cannot isolate training telemetry alone. The protocol was refined during pilot work on the same scenario collection; the rerun does not provide independent validation on a previously unexamined dataset.
 
 The local graph is small. Type matching makes random top-k sets overlap heavily

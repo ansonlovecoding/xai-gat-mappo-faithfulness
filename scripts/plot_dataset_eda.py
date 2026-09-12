@@ -57,9 +57,8 @@ def main():
         for ax,col,scale in ((axes[0],0,1),(axes[1],5,1000)):
             x=np.sort(a[:,col]/scale); ax.step(x,np.arange(1,len(x)+1)/len(x),where="post",label=labels[split],color=colors[split])
         summary[split]={"variants":len(manifest["split"][split]),"requests":len(a),"arrival_mean_s":float(a[:,0].mean()),"arrival_median_s":float(np.median(a[:,0])),"arrival_min_s":float(a[:,0].min()),"arrival_max_s":float(a[:,0].max()),"od_median_m":float(np.median(a[:,5])),"od_p10_m":float(np.quantile(a[:,5],.1)),"od_p90_m":float(np.quantile(a[:,5],.9))}
-    axes[0].set(xlabel="Request arrival time (s)",ylabel="Cumulative proportion",title="Demand arrives during the first 600 s",xlim=(0,1200))
-    axes[0].axvspan(600,1200,color="#E7E7E7",alpha=.7)
-    axes[1].set(xlabel="Straight-line OD proxy (km)",ylabel="Cumulative proportion",title="Spatial separation by held-out split")
+    axes[0].set(xlabel="Request arrival time (s)",ylabel="Cumulative proportion",title="Request arrival times by split",xlim=(0,600))
+    axes[1].set(xlabel="Straight-line OD proxy (km)",ylabel="Cumulative proportion",title="Origin–destination separation by split")
     axes[1].legend(fontsize=8)
     fig.savefig(OUT/"dataset_split_eda.png",dpi=230); plt.close(fig)
     (OUT/"dataset_eda_summary.json").write_text(json.dumps({"definition":"Euclidean distance between lane-0 polyline midpoints; not routed distance or observed travel time", "non_internal_edges":len(edges),"trigger_edges":len(tunnels),"splits":summary,"input_sha256":checks},indent=2)+"\n")

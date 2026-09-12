@@ -826,6 +826,8 @@ def add_table_before(doc: Document, anchor, rows: list[list[str]], title: str):
         widths = [1100, 2500, 2000, 3420]
     elif title.startswith("Table 3.9:"):
         widths = [1100, 2900, 3000, 2020]
+    elif title.startswith("Table 4.2:"):
+        widths = [2200, 1400, 1750, 2270, 1400]
     elif title.startswith("Table 4.6:"):
         widths = [1600, 850, 850, 1900, 1900, 1920]
     elif title.startswith("Table 4.9:"):

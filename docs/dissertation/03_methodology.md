@@ -69,6 +69,15 @@ of every real city.
 
 ### 3.2.1 Data generation and selection rationale
 
+SUMO was selected because the study needs an interactive traffic environment
+with access to the physical state of each vehicle [22]. Through TraCI, the
+implementation reads vehicle states and applies taxi-dispatch actions at each
+decision step. A separate observation layer can then retain outdated readings
+while vehicles continue moving in the simulation. This separation allows the
+same decision state to be evaluated with current and degraded telemetry, which
+is central to the paired explanation audit. Fixed road, demand and seed inputs
+also support repeatable evaluations across policies and outage settings.
+
 The committed demand generator samples distinct origin and destination edge
 identifiers for each request and an integer arrival time uniformly from 0 to
 600 seconds. Requests therefore arrive during the first half of the episode;
@@ -126,10 +135,10 @@ observed travel time.
 
 ![Empirical cumulative distributions of arrivals and origin-destination separation](../figures/dataset_split_eda.png)
 
-**Figure 3.2.** Demand-split EDA. Left: arrival times, with the second half of
-the simulation shaded to show the interval with no newly generated requests.
-Right: straight-line origin-destination separation. Each curve is normalized
-within its split; sample sizes are 700, 150 and 150 requests.
+**Figure 3.2.** Demand-split EDA. Left: request-arrival times. Right: straight-line
+origin-destination separation. Requests are generated during the first 600 seconds
+of each 1,200-second episode; the remaining time allows ongoing journeys to finish.
+Each curve is normalized within its split; sample sizes are 700, 150 and 150 requests.
 
 The retained route files each contain 20 taxi trips and 50 requests, and every
 request origin and destination resolves to an edge in the committed network.
@@ -586,8 +595,7 @@ taxis choose the same request, the environment accepts the first action in the
 step and rejects the later conflicts; there is no fleet-wide assignment or
 conflict optimization. The policy is deterministic for a fixed demand variant,
 so its uncertainty is based on three independent demand variants rather than
-the repeated evaluation-seed records. It is therefore interpreted only as a
-lower bound, not as a competitive dispatch algorithm.
+the repeated evaluation-seed records. It is therefore used as simple performance context, rather than as an optimized fleet-dispatch benchmark.
 
 The relation column refers only to GAT-Outage; the clean-trained GAT has not
 seen any imposed outage duration during training. The evaluation changes the

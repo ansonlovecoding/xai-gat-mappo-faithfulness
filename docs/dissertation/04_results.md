@@ -37,6 +37,8 @@ deterministic for a fixed demand file, so its effective replication unit is the
 three held-out demand variants. Each learned-policy point uses 48 held-out
 episodes: eight action-sampling seeds and six episodes per seed.
 
+The lower greedy mean may partly reflect independent taxis selecting the same request without coordination. However, the baseline records do not quantify rejected conflicts, so their contribution to the difference is unknown. The point estimates alone do not establish that random dispatch is generally better than greedy dispatch.
+
 ![Clean-telemetry performance by training seed](../figures/v12_clean_performance_by_training_seed.png)
 
 **Figure 4.2.** Clean-test completed journeys for each selected policy. The
@@ -47,6 +49,8 @@ faithfulness is evaluated separately.
 The separate argmax diagnostic also completes journeys. Across three held-out
 episodes, GAT checkpoint means are 7.3, 7.7, 8.7, 11.3 and 5.3 for seeds 42-46; GAT-Outage means are 9.0, 7.7, 10.0, 9.0 and 8.7. None of the 30 checkpoint-episodes has zero completed journeys.
 
+The argmax means are lower than the corresponding sampled-action means. This suggests that the action-selection rule matters, but the diagnostic uses only three episodes per checkpoint, compared with 48 for sampling. A deployment using argmax would need its own matched evaluation; the present capability claim concerns the sampled policies.
+
 ## 4.2 Protocol correction and precision audit
 
 The corrected experiment addresses four implementation risks found during the
@@ -55,13 +59,17 @@ whole decision interval; completed passenger journeys are counted globally;
 request-linked actions are protected in dispatch DEF; and unrounded numeric
 values are stored for analysis. All models were trained afresh under the corrected protocol, followed by validation selection and test evaluation on the current workstation. No result is combined with an earlier run.
 
+Earlier pilot estimates are superseded because they were obtained under a protocol with known implementation defects. The rerun also changes the trained checkpoints, seed coverage, training budgets and runtime environment. Differences from the pilot cannot therefore be attributed to an individual correction, or used to estimate the effect of any one implementation change.
+
 Table 4.2 reports the numeric-precision check. Repeating the hypothesis
 analysis after rounding stored values to four decimals preserved the signs of H1 rho, H4 rho and paired DEF for all ten checkpoints, but changed one H1 verdict. Full precision remains the
 official analysis.
 
-| Precision check | Checkpoints tested | Direction changes | Verdict changes | Use in thesis |
+| Precision check | Checkpoints tested | Point-estimate sign changes | H1-H4 significance decisions changed | Use in thesis |
 |---|---:|---:|---:|---|
 | Full precision versus four-decimal sensitivity | 10 | 0 | 1 (H1, GAT-Outage seed 46) | full precision |
+
+Sign changes refer to H1 rho, H4 rho and the paired DEF point estimate. The next column counts H1-H4 tests crossing the Holm-adjusted 0.05 threshold. Changes in whether the paired DEF confidence interval includes zero are reported separately below.
 
 For GAT-Outage seed 46, the H1 Holm-adjusted p-value changes from 0.0495 to 0.0867 after rounding. Its paired DEF interval also changes from crossing zero to slightly above zero. This borderline checkpoint is precision-sensitive and should not carry a general claim. The full-precision result remains official, while the rounding check qualifies its interpretation.
 
@@ -86,8 +94,7 @@ a ground-truth explanation. All four GxI intervals include zero.
 
 ![Faithfulness perturbation controls by checkpoint](../figures/v12_faithfulness_positive_controls.png)
 
-**Figure 4.3.** Top: clean logit-margin DEF. Bottom: independently evaluated
-60-second result minus clean. LOO gives the clearest positive response; the pooled raw-attention estimates do not show a matched-random advantage.
+**Figure 4.3.** Clean logit-margin DEF (top) and independently evaluated 60-second minus clean change (bottom), by training seed. Pooled raw attention shows no matched-random advantage.
 
 The attention result also depends on how weights are extracted. Every
 checkpoint has at least one audited layer, head, maximum, or rollout choice
